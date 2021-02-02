@@ -270,6 +270,66 @@ public:
     }
 };
 
+class FGScenery::ElevationMeshListener : public SGPropertyChangeListener
+{
+protected:
+    const char* root_node_path = "/scenery/elevation-mesh";
+    const char* lod_node_path = "/sim/rendering/static-lod";
+public:
+    ElevationMeshListener()
+    {
+        SGPropertyNode_ptr elevationMeshNode = fgGetNode(root_node_path, true);
+        setupPropertyListener(elevationMeshNode, "constraint-gap-m");
+        setupPropertyListener(elevationMeshNode, "lod-range-factor");
+        setupPropertyListener(elevationMeshNode, "lod-max-range");
+        setupPropertyListener(elevationMeshNode, "sample-ratio");
+        setupPropertyListener(elevationMeshNode, "vertical-scale");
+
+        // We also need to set the maximum range based on the LOD ranges
+        SGPropertyNode_ptr lodNode = fgGetNode(lod_node_path, true);
+        setupPropertyListener(lodNode, "detailed");
+        setupPropertyListener(lodNode, "rough-delta");
+        setupPropertyListener(lodNode, "bare-delta");
+    }
+
+    ~ElevationMeshListener()
+    {
+        SGPropertyNode_ptr node = fgGetNode(root_node_path);
+        for (int i = 0; i < node->nChildren(); ++i) {
+            node->getChild(i)->removeChangeListener(this);
+        }
+    }
+
+    void setupPropertyListener(SGPropertyNode_ptr elevationMeshNode, const char *node)
+    {
+        elevationMeshNode->getChild(node, 0, true)->addChangeListener(this, true);
+    }
+
+    virtual void valueChanged(SGPropertyNode * node)
+    {
+        float f = node->getFloatValue();
+        std::string name(node->getNameString());
+
+        if (name == "constraint-gap-m") {
+            SGSceneFeatures::instance()->setVPBConstraintGap(f);
+        } else if (name == "lod-range-factor") {
+            SGSceneFeatures::instance()->setVPBRangeFactor(f);
+        } else if (name == "sample-ratio") {
+            SGSceneFeatures::instance()->setVPBSampleRatio(f);
+        } else if (name == "vertical-scale") {
+            SGSceneFeatures::instance()->setVPBVerticalScale(f);
+        } else if ((name == "detailed") || (name == "rough-delta") || (name == "bare-delta")) {
+            double range = fgGetNode("/sim/rendering/static-lod/detailed", true)->getDoubleValue() +
+                           fgGetNode("/sim/rendering/static-lod/rough-delta", true)->getDoubleValue() +
+                           fgGetNode("/sim/rendering/static-lod/bare-delta", true)->getDoubleValue();
+
+            SGSceneFeatures::instance()->setVPBMaxRange(range);
+        } else {
+            SG_LOG(SG_TERRAIN, SG_ALERT, "Unexpected property in listener " << node->getPath());
+        }
+    }
+};
+
 class FGScenery::ScenerySwitchListener : public SGPropertyChangeListener
 {
 public:
@@ -291,7 +351,6 @@ public:
     auto vpb_active = fgGetNode("/scenery/use-vpb");
     vpb_active->addChangeListener(this);
     SGSceneFeatures::instance()->setVPBActive(vpb_active->getBoolValue());
-    // SGSceneFeatures::instance()->setVPBActive(true);
   }
 
   ~ScenerySwitchListener()
@@ -338,7 +397,7 @@ private:
 
 // Scenery Management system
 FGScenery::FGScenery() :
-    _listener(nullptr), _textureCacheListener(nullptr)
+    _listener(nullptr), _textureCacheListener(nullptr), _elevationMeshListener(nullptr)
 {
     // keep reference to pager singleton, so it cannot be destroyed while FGScenery lives
     _pager = FGScenery::getPagerSingleton();
@@ -420,6 +479,8 @@ void FGScenery::init() {
 
     _listener = new ScenerySwitchListener(this);
     _textureCacheListener = new TextureCacheListener();
+    _elevationMeshListener = new ElevationMeshListener();
+
     // Toggle the setup flag.
     _inited = true;
 }

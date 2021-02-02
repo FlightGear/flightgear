@@ -67,6 +67,11 @@ class FGScenery : public SGSubsystem
     class TextureCacheListener;
     friend class TextureCacheListener;
     TextureCacheListener* _textureCacheListener;
+
+    class ElevationMeshListener;
+    friend class ElevationMeshListener;
+    ElevationMeshListener* _elevationMeshListener;
+
 public:
     FGScenery();
     ~FGScenery();
