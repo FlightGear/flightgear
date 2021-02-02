@@ -748,6 +748,15 @@ static void getViewOffsets(
         offset.z() -= ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/z-offset-m)");
         offset_m += offset;
     }
+
+    /* Handle headtracking :
+    Add offsets coming from the headtracker if there is one. The headtracker offsets have to be added ; they
+    cannot replace /sim/currentview/config/?-offset-m otherwise the offsets of each view are lost, making the
+    headtracking position unusable. */
+    offset_m.x() += ViewPropertyEvaluator::getDoubleValue("(/sim/viewer/camera-offset-x)");
+    offset_m.y() += ViewPropertyEvaluator::getDoubleValue("(/sim/viewer/camera-offset-y)");
+    offset_m.z() += ViewPropertyEvaluator::getDoubleValue("(/sim/viewer/camera-offset-z)");
+
 }
 
 // recalculate for LookFrom view type...
