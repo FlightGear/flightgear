@@ -124,5 +124,5 @@ void AIManagerTests::testAircraftWaypoints()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(250.0, aiAircraft->getSpeed(), 1);
 
     std::unique_ptr<FGAIFlightPlan> aiFP(new FGAIFlightPlan);
-    ai->setFlightPlan(std::move(aiFP));
+    ai->setFlightPlan(std::move(aiFP));    
 }
