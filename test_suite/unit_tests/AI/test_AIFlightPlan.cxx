@@ -22,10 +22,11 @@
 #include <cstring>
 #include <memory>
 
+#include "config.h"
+#include "test_suite/FGTestApi/testGlobals.hxx"
 #include "test_suite/FGTestApi/NavDataCache.hxx"
 #include "test_suite/FGTestApi/TestDataLogger.hxx"
 #include "test_suite/FGTestApi/TestPilot.hxx"
-#include "test_suite/FGTestApi/testGlobals.hxx"
 
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
@@ -37,6 +38,8 @@
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
 
+
+using namespace flightgear;
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -237,6 +240,52 @@ void AIFlightPlanTests::testAIFlightPlan()
     CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getNextWaypoint());
 }
 
+void AIFlightPlanTests::testAIFlightPlanLeftCircle()
+{
+    auto aiFP = new FGAIFlightPlan;
+    aiFP->setName("Bob");
+    aiFP->setRunway("24");
+
+    CPPUNIT_ASSERT_EQUAL(string{"Bob"}, aiFP->getName());
+    CPPUNIT_ASSERT_EQUAL(string{"24"}, aiFP->getRunway());
+
+    CPPUNIT_ASSERT_EQUAL(0, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getPreviousWaypoint());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getNextWaypoint());
+    CPPUNIT_ASSERT_EQUAL(0, aiFP->getLeg());
+
+    FGPositioned::TypeFilter ty(FGPositioned::VOR);
+    auto cache = flightgear::NavDataCache::instance();
+    auto shannonVOR = cache->findClosestWithIdent("SHA", SGGeod::fromDeg(-8, 52), &ty);
+    CPPUNIT_ASSERT_EQUAL(string{"SHANNON VOR-DME"}, shannonVOR->name());
+    auto wp1 = new FGAIWaypoint;
+    wp1->setPos(shannonVOR->geod());
+    wp1->setName("testWp_0");
+    wp1->setOn_ground(true);
+    wp1->setGear_down(true);
+    wp1->setSpeed(10);
+    aiFP->addWaypoint(wp1);
+
+    auto lastWp = wp1;
+
+    int course = 0;
+
+    for(int i = 1; i <= 10; i++) {
+        auto wp = new FGAIWaypoint;
+        course += 10;
+        const auto g1 = SGGeodesy::direct(lastWp->getPos(), course, SG_NM_TO_METER * 5.0);
+        wp->setPos(g1);
+        wp->setName("testWp_" + i);
+        wp->setOn_ground(true);
+        wp->setGear_down(true);
+        wp->setSpeed(10);
+        aiFP->addWaypoint(wp);
+        lastWp = wp;
+    }
+    CPPUNIT_ASSERT_EQUAL(aiFP->getNrOfWayPoints(), 11);
+}
+
 void AIFlightPlanTests::testAIFlightPlanLoadXML()
 {
     const auto xml = R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -279,3 +328,36 @@ void AIFlightPlanTests::testAIFlightPlanLoadXML()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, wp2->getFlaps(), 0.1);
 }
 
+void AIFlightPlanTests::testLeftTurnFlightplanXML()
+{
+    std::unique_ptr<FGAIFlightPlan> aiFP(new FGAIFlightPlan);
+    const auto fpath = SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "AI"/"Flightplan"/"left_onground.xml";
+
+    std::fstream fs(fpath.c_str());
+
+    bool ok = aiFP->readFlightplan(fs, sg_location("In-memory test_ai_fp.xml"));
+    CPPUNIT_ASSERT(ok);
+
+    CPPUNIT_ASSERT_EQUAL(false, aiFP->getCurrentWaypoint()->getInAir());
+
+    auto wp2 = aiFP->getNextWaypoint();
+    CPPUNIT_ASSERT_EQUAL(false, wp2->getInAir());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(10.0, wp2->getSpeed(), 0.1);
+}
+
+void AIFlightPlanTests::testRightTurnFlightplanXML()
+{
+    std::unique_ptr<FGAIFlightPlan> aiFP(new FGAIFlightPlan);
+    const auto fpath = SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "AI"/"Flightplan"/"right_onground.xml";
+
+    std::fstream fs(fpath.c_str());
+
+    bool ok = aiFP->readFlightplan(fs, sg_location("In-memory test_ai_fp.xml"));
+    CPPUNIT_ASSERT(ok);
+
+    CPPUNIT_ASSERT_EQUAL(false, aiFP->getCurrentWaypoint()->getInAir());
+
+    auto wp2 = aiFP->getNextWaypoint();
+    CPPUNIT_ASSERT_EQUAL(false, wp2->getInAir());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(10.0, wp2->getSpeed(), 0.1);
+}

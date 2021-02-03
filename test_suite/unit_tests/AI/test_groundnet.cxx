@@ -85,30 +85,11 @@ void GroundnetTests::testShortestRoute()
 {
     FGAirportRef egph = FGAirport::getByIdent("EGPH");
 
-    FGAISchedule* schedule = new FGAISchedule;
-
-    FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
-
-    // std::cout << "*** Start ***\n";
-
     FGGroundNetwork* network = egph->groundNetwork();    
-
     FGParkingRef startParking = network->findParkingByName("main-apron10");
-
     FGRunwayRef runway = egph->getRunwayByIndex(0);
-
-    // std::cout << startParking->getName() << "\n";
-
-    // std::cout << runway->name() << " " << runway->begin() << " " << runway->end() << "\n";
-
     FGTaxiNodeRef end = network->findNearestNodeOnRunway(runway->threshold());
-
-    // std::cout << end->geod() << "\n";
-
     FGTaxiRoute route = network->findShortestRoute(startParking, end); 
-
-    // std::cout << route.size() << "\n";
-
     CPPUNIT_ASSERT_EQUAL(true, network->exists());
     CPPUNIT_ASSERT_EQUAL(25, route.size());
 }
