@@ -389,6 +389,7 @@ void FGScenery::init() {
     particles_branch->setName("Particles");
     scene_graph->addChild(particles_branch.get());
     paricles->setSwitchNode(fgGetNode("/sim/rendering/particles", true));
+    paricles->initFromMainThread();
 
     // Set up the precipitation system.
     precipitation_branch = new osg::Group;
@@ -437,6 +438,8 @@ void FGScenery::shutdown()
 
     // Toggle the setup flag.
     _inited = false;
+
+    simgear::ParticlesGlobalManager::clear();
 }
 
 
