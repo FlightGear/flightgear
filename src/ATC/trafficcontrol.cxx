@@ -1264,6 +1264,7 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
+        return;
     } else {
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
         current = i;
@@ -1273,7 +1274,8 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
     int state = i->getState();
 
     // Sentry FLIGHTGEAR-2Q : don't crash on null TrafficRef
-    if (!i->getAircraft()->getTrafficRef()) {
+    // Sentry FLIGHTGEAR-129: don't crash on null aircraft
+    if (!i->getAircraft() || !i->getAircraft()->getTrafficRef()) {
         SG_LOG(SG_ATC, SG_ALERT, "AI traffic: updating aircraft without traffic ref");
         return;
     }
