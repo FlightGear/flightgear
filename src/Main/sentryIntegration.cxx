@@ -311,8 +311,6 @@ void initSentry()
     sentry_options_add_attachment(options, logPath.c_str());
 #endif
     
-    sentry_value_t user = sentry_value_new_object();
-
     const auto uuidPath = fgHomePath() / "sentry_uuid.txt";
     bool generateUuid = true;
     std::string uuid;
@@ -339,12 +337,13 @@ void initSentry()
         f << uuid << endl;
     }
 
+    sentry_init(options);
+    static_sentryEnabled = true;
+
+    sentry_value_t user = sentry_value_new_object();
     sentry_value_t userUuidV = sentry_value_new_string(uuid.c_str());
     sentry_value_set_by_key(user, "id", userUuidV);
     sentry_set_user(user);
-
-    sentry_init(options);
-    static_sentryEnabled = true;
 
     sglog().addCallback(new SentryLogCallback);
     setThrowCallback(sentryTraceSimgearThrow);
