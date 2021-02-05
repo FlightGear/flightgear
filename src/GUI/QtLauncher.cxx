@@ -218,14 +218,18 @@ private:
             return;
 
         flightgear::PolyLineList::const_iterator begin = m_parsedLines.begin() + m_lineInsertCount;
-        unsigned int numToAdd = std::min<unsigned int>(1000U, static_cast<unsigned int>(m_parsedLines.size()) - m_lineInsertCount);
+
+        // add lines in batches of 100; this is a tradeoff to ensure we don't lock
+        // the database for too long. (Which triggers SQLITE_BUSY)
+        const int lineInsertBatchSize = 100U;
+        unsigned int numToAdd = std::min<unsigned int>(100U, static_cast<unsigned int>(m_parsedLines.size()) - m_lineInsertCount);
         flightgear::PolyLineList::const_iterator end = begin + numToAdd;
         flightgear::PolyLine::bulkAddToSpatialIndex(begin, end);
 
         if (end == m_parsedLines.end()) {
             deleteLater(); // commit suicide
         } else {
-            m_lineInsertCount += 1000;
+            m_lineInsertCount += lineInsertBatchSize;
             QTimer::singleShot(50, this, SLOT(onFinished()));
         }
     }

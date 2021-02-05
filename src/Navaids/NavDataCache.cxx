@@ -458,6 +458,8 @@ public:
   {
     int retries = 0;
     int result;
+    int retryMSec = 10;
+
     while (retries < MAX_RETRIES) {
       result = sqlite3_step(stmt);
       if (result == SQLITE_ROW) {
@@ -473,7 +475,8 @@ public:
       }
 
       SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache contention on select, will retry:" << retries);
-      SGTimeStamp::sleepForMSec(++retries * 10);
+      SGTimeStamp::sleepForMSec(retryMSec);
+      retryMSec *= 2; // double the back-off time, each time
     } // of retry loop for DB locked
 
     if (retries >= MAX_RETRIES) {
