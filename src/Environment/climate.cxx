@@ -867,21 +867,21 @@ void FGClimate::set_environment()
     }
     else
     {
-        double wetness = std::max(_gl.precipitation - 20.0, 0.0);
-        wetness = powf(sin(atan(12.0*wetness/990.0)), 2.0);
+        double wetness = 12.0*_gl.precipitation/990.0;
+        wetness = pow(sin(atan(SGD_PI*wetness)), 2.0);
 
-        _set(_dust_cover, 0.0);
+        _dust_cover = 0.0;
 
-        if (_gl.temperature_mean < -5.0) {
-            _set(_snow_thickness, wetness);
+        if (_gl.temperature_mean < 5.0) {
+            _snow_thickness = wetness;
         } else {
-            _set(_snow_thickness, 0.0);
+            _snow_thickness = 0.0;
         }
 
-        if (_gl.temperature_mean > 0.0) {
-            _set(_wetness, pow(wetness, 2.0));
+        if (_gl.temperature_mean < 0.0) {
+            _wetness = 0.0;
         } else {
-            _set(_wetness, 0.0);
+            _wetness = wetness;
         }
 
         double cover = std::min(_gl.precipitation_annual, 990.0)/990.0;
