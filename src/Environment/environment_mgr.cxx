@@ -269,8 +269,7 @@ FGEnvironmentMgr::update (double dt)
   auto particlesManager = simgear::ParticlesGlobalManager::instance();
   particlesManager->setWindFrom(_environment->get_wind_from_heading_deg(),
                                 _environment->get_wind_speed_kt());
-  particlesManager->setSimTime(dt);
-  particlesManager->setCurrentPosition(globals->get_aircraft_position());
+  particlesManager->update(dt, globals->get_aircraft_position());
 
   if( _cloudLayersDirty ) {
     _cloudLayersDirty = false;
