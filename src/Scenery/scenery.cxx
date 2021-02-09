@@ -281,7 +281,6 @@ public:
         SGPropertyNode_ptr elevationMeshNode = fgGetNode(root_node_path, true);
         setupPropertyListener(elevationMeshNode, "constraint-gap-m");
         setupPropertyListener(elevationMeshNode, "lod-range-factor");
-        setupPropertyListener(elevationMeshNode, "lod-max-range");
         setupPropertyListener(elevationMeshNode, "sample-ratio");
         setupPropertyListener(elevationMeshNode, "vertical-scale");
 
