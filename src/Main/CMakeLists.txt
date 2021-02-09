@@ -30,6 +30,7 @@ set(SOURCES
     util.cxx
     XLIFFParser.cxx
     sentryIntegration.cxx
+    ErrorReporter.cxx
     ${MS_RESOURCE_FILE}
 )
 
@@ -51,6 +52,7 @@ set(HEADERS
     util.hxx
     XLIFFParser.hxx
     sentryIntegration.hxx
+    ErrorReporter.hxx
 )
 
 flightgear_component(Main "${SOURCES}" "${HEADERS}")

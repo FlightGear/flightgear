@@ -66,16 +66,17 @@
 #include <flightgearBuildId.h>
 
 #include "fg_commands.hxx"
-#include "fg_io.hxx"
-#include "main.hxx"
-#include "util.hxx"
 #include "fg_init.hxx"
+#include "fg_io.hxx"
 #include "fg_os.hxx"
 #include "fg_props.hxx"
+#include "main.hxx"
+#include "options.hxx"
 #include "positioninit.hxx"
 #include "screensaver_control.hxx"
 #include "subsystemFactory.hxx"
-#include "options.hxx"
+#include "util.hxx"
+#include <Main/ErrorReporter.hxx>
 #include <Main/sentryIntegration.hxx>
 
 #include <simgear/embedded_resources/EmbeddedResourceManager.hxx>
@@ -703,6 +704,9 @@ int fgMainInit( int argc, char **argv )
     
     fgInitSecureMode();
     fgInitAircraftPaths(false);
+
+    auto errorManager = globals->add_new_subsystem<flightgear::ErrorReporter>();
+    errorManager->preinit();
 
     configResult = fgInitAircraft(false);
     if (configResult == flightgear::FG_OPTIONS_ERROR) {
