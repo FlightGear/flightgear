@@ -867,25 +867,27 @@ void FGClimate::set_environment()
     }
     else
     {
-        double wetness = 12.0*_gl.precipitation/990.0;
-        wetness = pow(sin(atan(SGD_PI*wetness)), 2.0);
-
         _dust_cover = 0.0;
 
-        if (_gl.temperature_mean < 5.0) {
+        if (_gl.temperature_mean < 5.0)
+        {
+            double wetness = 12.0*_gl.precipitation/990.0;
+            wetness = pow(sin(atan(SGD_PI*wetness)), 2.0);
             _snow_thickness = wetness;
         } else {
             _snow_thickness = 0.0;
         }
 
-        if (_gl.temperature_mean < 0.0) {
-            _wetness = 0.0;
+        if (_gl.temperature_mean > 0.0)
+        {
+            // https://weatherins.com/rain-guidelines/
+            _wetness = 12.0*std::max(_gl.precipitation-50.0, 0.0)/990.0;
         } else {
-            _wetness = wetness;
+            _wetness = 0.0;
         }
 
         double cover = std::min(_gl.precipitation_annual, 990.0)/990.0;
-        _set(_lichen_cover, 0.5*pow(wetness*cover, 1.5));
+        _set(_lichen_cover, 0.5*pow(_wetness*cover, 1.5));
     }
 
     _rootNode->setDoubleValue("daytime-pct", _daytime*100.0);
