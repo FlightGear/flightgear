@@ -254,7 +254,6 @@ void SubmodelsTests::testInitialState()
                                  * speed
                                  + speed_east,
                                  sm->_get_speed_east_fps(), 0.1);
-    // In AIBase, attribute 'vs' is in fpm, but AIBallistic uses it as fps?!
     CPPUNIT_ASSERT_DOUBLES_EQUAL(sin((pitch + pitch_offset) * SG_DEGREES_TO_RADIANS) * speed,
-                                 sm->_getVS_fps() * 60, 0.1);
+                                 sm->_getVS_fps(), 0.1);
 }

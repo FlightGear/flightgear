@@ -136,7 +136,7 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     _otype(ot)
 {
     tgt_heading = hdg = tgt_altitude_ft = tgt_speed = 0.0;
-    tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
+    tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs_fps = pitch = 0.0;
     bearing = elevation = range = rdot = 0.0;
     x_shift = y_shift = rotation = 0.0;
     in_range = false;
@@ -946,7 +946,7 @@ double FGAIBase::_getRdot() const {
 }
 
 double FGAIBase::_getVS_fps() const {
-    return vs/60.0;
+    return vs_fps;
 }
 
 double FGAIBase::_get_speed_east_fps() const {
@@ -958,7 +958,7 @@ double FGAIBase::_get_speed_north_fps() const {
 }
 
 void FGAIBase::_setVS_fps( double _vs ) {
-    vs = _vs*60.0;
+    vs_fps = _vs;
 }
 
 double FGAIBase::_getAltitude() const {

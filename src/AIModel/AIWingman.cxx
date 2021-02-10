@@ -136,7 +136,7 @@ void FGAIWingman::bind() {
         (*this, &FGAIBallistic::getElevHitchToUser));
 
     tie("velocities/vertical-speed-fps",
-        SGRawValuePointer<double>(&vs));
+        SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getVS_fps, &FGAIBase::_setVS_fps));
     tie("velocities/true-airspeed-kt",
         SGRawValuePointer<double>(&speed));
     tie("velocities/speed-east-fps",
@@ -475,9 +475,9 @@ void FGAIWingman::Run(double dt) {
 
     // calculate vertical and horizontal speed components
     if (speed == 0.0) {
-        hs = vs = 0.0;
+        hs = vs_fps = 0.0;
     } else {
-        vs = sin( pitch * SG_DEGREES_TO_RADIANS ) * speed_fps;
+        vs_fps = sin( pitch * SG_DEGREES_TO_RADIANS ) * speed_fps;
         hs = cos( pitch * SG_DEGREES_TO_RADIANS ) * speed_fps;
     }
 
@@ -506,8 +506,8 @@ void FGAIWingman::Run(double dt) {
     if (hs <= 0.00001)
         hs = 0;
 
-    if (vs <= 0.00001 && vs >= -0.00001)
-        vs = 0;
+    if (vs_fps <= 0.00001 && vs_fps >= -0.00001)
+        vs_fps = 0;
 
     //cout << "lat " << pos.getLatitudeDeg()<< endl;
     // set new position
@@ -515,18 +515,18 @@ void FGAIWingman::Run(double dt) {
             + (speed_north_deg_sec - wind_speed_from_north_deg_sec) * dt );
     pos.setLongitudeDeg( pos.getLongitudeDeg()
             + (speed_east_deg_sec - wind_speed_from_east_deg_sec ) * dt );
-    pos.setElevationFt(pos.getElevationFt() + vs * dt);
+    pos.setElevationFt(pos.getElevationFt() + vs_fps * dt);
 
     //cout << _name << " run hs " << hs << " vs " << vs << endl;
 
     // recalculate total speed
-    if ( vs == 0 && hs == 0)
+    if ( vs_fps == 0 && hs == 0)
         speed = 0;
     else
-        speed = sqrt( vs * vs + hs * hs) / SG_KT_TO_FPS;
+        speed = sqrt( vs_fps * vs_fps + hs * hs) / SG_KT_TO_FPS;
 
     // recalculate elevation and azimuth (velocity vectors)
-    pitch = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
+    pitch = atan2( vs_fps, hs ) * SG_RADIANS_TO_DEGREES;
     hdg   = atan2((speed_east_fps),(speed_north_fps))* SG_RADIANS_TO_DEGREES;
 
     // rationalise heading

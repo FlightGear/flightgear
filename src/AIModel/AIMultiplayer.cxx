@@ -521,7 +521,7 @@ void FGAIMultiplayer::update(double dt)
       if (dt < 1.0)
           Weighting = dt;
       // simple smoothing over 1 second
-      vs = (1.0-Weighting)*vs +  Weighting * (altitude_ft - recent_alt_ft) / dT * 60;
+      vs_fps = (1.0-Weighting)*vs_fps +  Weighting * (altitude_ft - recent_alt_ft) / dT * 60;
   }
   lastUpdateTime = curtime;
 

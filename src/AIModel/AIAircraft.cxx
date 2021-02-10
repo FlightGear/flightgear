@@ -1329,10 +1329,10 @@ void FGAIAircraft::updateActualState(double dt)
     roll = _performance->actualBankAngle(this, tgt_roll, dt);
 
     // adjust altitude (meters) based on current vertical speed (fpm)
-    altitude_ft += vs / 60.0 * dt;
+    altitude_ft += vs_fps * dt;
     pos.setElevationFt(altitude_ft);
 
-    vs = _performance->actualVerticalSpeed(this, tgt_vs, dt);
+    vs_fps = _performance->actualVerticalSpeed(this, tgt_vs, dt) / 60;
     pitch = _performance->actualPitch(this, tgt_pitch, dt);
 }
 
