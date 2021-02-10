@@ -144,11 +144,11 @@ struct SviewPosDir
 /* Generic damping support. Improved version of class in view.hxx and view.cxx.
 
 We model dx/dt = (target-current)/damping_time, do damping_time is time for
-value to change by a factor or e. */
+value to change by a factor of e. */
 struct Damping {
 
     /* If m_wrap_max is non-zero, we wrap to ensure values are always between 0
-    and m_wrap_max. E.g. use m_wrap_max=360 for an angle. */
+    and m_wrap_max. E.g. use m_wrap_max=360 for an angle in degrees. */
     Damping(double damping_time, double wrap_max=0, double current=0)
     :
     m_damping_time(damping_time),
@@ -1353,7 +1353,10 @@ struct SviewViewEyeTarget : SviewView
                             step->getDoubleValue("heading"),
                             step->getDoubleValue("pitch"),
                             step->getDoubleValue("roll"),
-                            step->getBoolValue("fixed")
+                            step->getBoolValue("fixed"),
+                            step->getDoubleValue("damping-heading"),
+                            step->getDoubleValue("damping-pitch"),
+                            step->getDoubleValue("damping-roll")
                             ));
                 }
                 else if (!strcmp(type, "rotate-current-view")) {

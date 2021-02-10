@@ -132,6 +132,9 @@ An sview-step is:
                 fixed:
                     If false (the default), mouse drags modify heading and
                     pitch.
+                damping-time-heading, damping-time-pitch, damping-time-roll:
+                    Damping times for heading, pitch and roll; zero gives no
+                    damping. See 'agl' below for details of damping.
             "rotate-current-view":
                 Rotate view direction by current /sim/current-view/....
             "rotate-to-target":
