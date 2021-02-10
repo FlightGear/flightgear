@@ -30,6 +30,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/scene/util/OsgMath.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Main/fg_props.hxx>
 #include "view.hxx"
@@ -251,8 +252,8 @@ void FGViewMgr::view_push()
 
 void s_clone_internal(const SGPropertyNode* config, const std::string& type)
 {
-    SGPropertyNode_ptr  config2 = new SGPropertyNode;
-    const_cast<SGPropertyNode*>(config)->copy(config2);
+    SGPropertyNode_ptr config2 = new SGPropertyNode;
+    copyProperties(config, config2);
     config2->setStringValue("type", type);
     SviewCreate(config2);
 }

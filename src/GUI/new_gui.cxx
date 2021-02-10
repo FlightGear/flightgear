@@ -468,7 +468,7 @@ NewGUI::setStyle (void)
     // n->copy() doesn't delete existing nodes, so need to clear them all
     // first.
     selected_style->removeAllChildren();
-    n->copy(selected_style);
+    copyProperties(n, selected_style);
 
     //if (selected_style && n)
     //    n->alias(selected_style);

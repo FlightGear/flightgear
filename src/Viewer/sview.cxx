@@ -1524,11 +1524,11 @@ static SGPropertyNode_ptr SviewConfigForCurrentView()
     SGPropertyNode* config_view = config->getNode("view", true /*create*/);
     if (callsign == "") {
         /* User aircraft. */
-        globals->get_props()->getNode("/sim/view", view_number_raw)->copy(config_view);
+        copyProperties(globals->get_props()->getNode("/sim/view", view_number_raw), config_view);
     }
     else {
         /* Multiplayer aircraft. */
-        root->getNode("set/sim/view", view_number_raw)->copy(config_view);
+        copyProperties(root->getNode("set/sim/view", view_number_raw), config_view);
     }
     
     config->setDoubleValue(
@@ -1652,6 +1652,7 @@ std::shared_ptr<SviewView> SviewCreate(SGPropertyNode* config)
         return nullptr;
     }
 
+
     osgViewer::View* main_view = renderer->getView();
     osg::Node* scene_data = main_view->getSceneData();
     
@@ -1672,7 +1673,7 @@ std::shared_ptr<SviewView> SviewCreate(SGPropertyNode* config)
     }
     else if (!strcmp(type, "current")) {
         SGPropertyNode_ptr config2 = SviewConfigForCurrentView();
-        config->copy(config2);
+        copyProperties(config, config2);
         config2->setStringValue("type", "legacy"); /* restore it after copy() sets to "current". */
         sview_view.reset(new SviewViewEyeTarget(view, config2));
     }
