@@ -338,6 +338,32 @@ namespace flightgear
 
 static std::unique_ptr<QApplication> static_qApp;
 
+
+// becuase QTranslator::load (find_translation, internally) doesn't handle the
+// sciprt part of a language code like: zh-Hans-CN, use this code borrowed from
+// Qt Creator to do the search manually.
+void selectUITranslation()
+{
+    QStringList uiLanguages = QLocale::system().uiLanguages();
+    qWarning() << "UI languages:" << uiLanguages;
+
+    for (QString locale : qAsConst(uiLanguages)) {
+        // remove script if it exists, eg zh-Hans-CN -> zh-CN
+        locale = QLocale(locale).name();
+        locale.replace('-', '_');
+
+        QTranslator* translator = new QTranslator;
+        ;
+
+        if (translator->load("FlightGear_" + locale, QLatin1String(":/"))) {
+            static_qApp->installTranslator(translator);
+            return;
+        }
+
+        delete translator;
+    }
+}
+
 // Only requires FGGlobals to be initialized if 'doInitQSettings' is true.
 // Safe to call several times.
 void initApp(int& argc, char** argv, bool doInitQSettings)
@@ -395,9 +421,6 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
             static_qApp->installTranslator(fallbackTranslator);
         }
 
-        qWarning() << "UI languages:" << QLocale().uiLanguages();
-        
-        QTranslator* translator = new QTranslator(static_qApp.get());
         // check for --langauge=xx option and prefer that over QLocale
         // detection of the locale if it exists
         auto lang = simgear::strutils::replace(
@@ -405,6 +428,7 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
             "-",
             "_");
         if (!lang.empty()) {
+            QTranslator* translator = new QTranslator(static_qApp.get());
             QString localeFile = "FlightGear_" + QString::fromStdString(lang);
             if (translator->load(localeFile, QLatin1String(":/"))) {
                 qInfo() << "Loaded translations based on --language from:" << localeFile;
@@ -413,13 +437,8 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
                 qInfo() << "--langauge was set, but no translations found at:" << localeFile;
                 delete translator;
             }
-        } else if (translator->load(QLocale(), QLatin1String("FlightGear"), QLatin1String("_"), QLatin1String(":/"))) {
-            // QLocale().name() looks like ' "it_IT" ' (without the outer
-            // quotes) when running FG on Linux with LANG=it_IT.UTF-8.
-            qWarning() << "Loaded translations for locale" << QLocale().name();
-            static_qApp->installTranslator(translator);
         } else {
-            delete translator;
+            selectUITranslation();
         }
 
         // temporary code: only enable getting-started tips for English, to give translators time to
