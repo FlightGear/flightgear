@@ -186,11 +186,11 @@ double PerformanceData::actualAltitude(FGAIAircraft* ac, double tgt_altitude, do
         //FIXME: a return sensible value here
         return 0.0; // 0 for now to avoid compiler errors
     } else
-        return ac->getAltitude() + ac->getVerticalSpeed()*dt/60.0;
+        return ac->getAltitude() + ac->getVerticalSpeedFPM()*dt/60.0;
 }
 
 double PerformanceData::actualVerticalSpeed(FGAIAircraft* ac, double tgt_vs, double dt) {
-    double vs = ac->getVerticalSpeed();
+    double vs = ac->getVerticalSpeedFPM();
     double vs_diff = tgt_vs - vs;
 
     if (fabs(vs_diff) > .001) {

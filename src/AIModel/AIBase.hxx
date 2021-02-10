@@ -187,7 +187,7 @@ protected:
     double pitch;       // degrees, nose-down is negative
     double speed;       // knots true airspeed
     double altitude_ft; // feet above sea level
-    double vs;          // vertical speed, feet per minute
+    double vs_fps;      // vertical speed
     double speed_north_deg_sec;
     double speed_east_deg_sec;
     double turn_radius_ft; // turn radius ft at 15 kts rudder angle 15 degrees

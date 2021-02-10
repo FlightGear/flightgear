@@ -64,7 +64,7 @@ void AIWakeGroup::AddAI(FGAIAircraft* ai)
                                                     ai->getPitch(), 0.0);
 
     double hVel = ai->getSpeed()*SG_KT_TO_FPS;
-    double vVel = ai->getVerticalSpeed()/60;
+    double vVel = ai->getVerticalSpeedFPM()/60;
     double gamma = atan2(vVel, hVel);
     double vel = sqrt(hVel*hVel + vVel*vVel);
     double weight = perfData->weight();

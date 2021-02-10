@@ -225,7 +225,7 @@ void FGAIBallistic::bind() {
         tie("position/global-z",
             SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getCartPosZ, 0));
         tie("velocities/vertical-speed-fps",
-            SGRawValuePointer<double>(&vs));
+            SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getVS_fps, &FGAIBase::_setVS_fps));
         tie("velocities/true-airspeed-kt",
             SGRawValuePointer<double>(&speed));
         tie("velocities/horizontal-speed-fps",
@@ -780,8 +780,8 @@ void FGAIBallistic::Run(double dt) {
                     normal_force_lbs = 0;
 
                 pos.setElevationFt(0 + _ground_offset);
-                if (vs < 0)
-                    vs = -vs * 0.5;
+                if (vs_fps < 0)
+                    vs_fps *= -0.5;
 
                 // Calculate friction. We assume a static coefficient of
                 // friction (mu) of 0.62 (wood on concrete)
@@ -844,10 +844,10 @@ void FGAIBallistic::Run(double dt) {
 
     // adjust vertical speed for acceleration of gravity, buoyancy, and vertical force
     double gravity = SG_METER_TO_FEET * (Environment::Gravity::instance()->getGravity(pos));
-    vs -= (gravity - _buoyancy - v_force_acc_fpss - normal_force_fpss) * dt;
+    vs_fps -= (gravity - _buoyancy - v_force_acc_fpss - normal_force_fpss) * dt;
 
-    if (vs <= 0.00001 && vs >= -0.00001)
-        vs = 0;
+    if (vs_fps <= 0.00001 && vs_fps >= -0.00001)
+        vs_fps = 0;
 
     // set new position
     if (_slave_load_to_ac) {
@@ -878,19 +878,19 @@ void FGAIBallistic::Run(double dt) {
         pos.setLongitudeDeg( pos.getLongitudeDeg()
             + (speed_east_deg_sec - wind_speed_from_east_deg_sec 
             + force_speed_east_deg_sec + friction_force_speed_east_deg_sec) * dt );
-        pos.setElevationFt(pos.getElevationFt() + vs * dt);
+        pos.setElevationFt(pos.getElevationFt() + vs_fps * dt);
     }
 
 //    cout << _name << " run hs " << hs << " vs " << vs << endl;
 
     // recalculate total speed
-    if ( vs == 0 && hs == 0)
+    if ( vs_fps == 0 && hs == 0)
         speed = 0;
     else
-        speed = sqrt( vs * vs + hs * hs) / SG_KT_TO_FPS;
+        speed = sqrt( vs_fps * vs_fps + hs * hs) / SG_KT_TO_FPS;
 
     // recalculate elevation and azimuth (velocity vectors)
-    _elevation = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
+    _elevation = atan2( vs_fps, hs ) * SG_RADIANS_TO_DEGREES;
     _azimuth =  atan2((_speed_east_fps + force_speed_east_fps + friction_force_speed_east_fps), 
         (_speed_north_fps + force_speed_north_fps + friction_force_speed_north_fps))
         * SG_RADIANS_TO_DEGREES;
@@ -1147,10 +1147,10 @@ void FGAIBallistic::calcVSHS() {
     double speed_fps = speed * SG_KT_TO_FPS;
 
     if (speed == 0.0) {
-        hs = vs = 0.0;
+        hs = vs_fps = 0.0;
     }
     else {
-        vs = sin( _elevation * SG_DEGREES_TO_RADIANS ) * speed_fps;
+        vs_fps = sin( _elevation * SG_DEGREES_TO_RADIANS ) * speed_fps;
         hs = cos( _elevation * SG_DEGREES_TO_RADIANS ) * speed_fps;
     }
 }

@@ -97,7 +97,7 @@ public:
     inline double getRoll() const { return roll; };
     inline double getPitch() const { return pitch; };
     inline double getAltitude() const { return altitude_ft; };
-    inline double getVerticalSpeed() const { return vs; };
+    inline double getVerticalSpeedFPM() const { return vs_fps * 60; };
     inline double altitudeAGL() const { return props->getFloatValue("position/altitude-agl-ft");};
     inline double airspeed() const { return props->getFloatValue("velocities/airspeed-kt");};
     const std::string& atGate();
