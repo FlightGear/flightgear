@@ -82,6 +82,12 @@ CanvasWidget::CanvasWidget( int x, int y,
   if( load )
   {
     const char *s = load->getStringValue();
+    // avoid crash FLIGHTGEAR-5FQ
+    if (!s) {
+        SG_LOG(SG_GUI, SG_ALERT, "Empty 'load' script for Canvas widget:" << cprops->getStringValue("name"));
+        return;
+    }
+
     nas->handleCommand(module.c_str(), file.c_str(), s, cprops);
   }
 }
