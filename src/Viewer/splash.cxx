@@ -697,6 +697,7 @@ void fgSplashProgress( const char *identifier, unsigned int percent )
         std::ostringstream oss;
         unsigned int kbytesPerSec = fgGetInt("/sim/terrasync/transfer-rate-bytes-sec") / 1024;
         unsigned int kbytesPending = fgGetInt("/sim/terrasync/pending-kbytes");
+        unsigned int kbytesPendingExtract = fgGetInt("/sim/terrasync/extract-pending-kbytes");
         if (kbytesPending > 0) {
             if (kbytesPending > 1024) {
                 int mBytesPending = kbytesPending >> 10;
@@ -705,15 +706,45 @@ void fgSplashProgress( const char *identifier, unsigned int percent )
                 oss << " " << kbytesPending << "KB";
             }
         }
-        if (kbytesPerSec > 0) {
-            if (kbytesPerSec > 100) {
-                double mbytesPerSec = kbytesPerSec / 1024.0;
-                oss << " - " << std::fixed << std::setprecision(1) << mbytesPerSec << "MB/sec";
+
+        if (kbytesPerSec > 100) {
+            double mbytesPerSec = kbytesPerSec / 1024.0;
+            oss << " - " << std::fixed << std::setprecision(1) << mbytesPerSec << "MB/sec";
+        } else if (kbytesPerSec > 0) {
+            oss << " - " << kbytesPerSec << " KB/sec";
+        } else if (kbytesPendingExtract > 0) {
+            const string extractText = globals->get_locale()->getLocalizedString("scenery-extract", "sys");
+            std::ostringstream os2;
+
+            if (kbytesPendingExtract > 1024) {
+                int mBytesPendingExtract = kbytesPendingExtract >> 10;
+                os2 << mBytesPendingExtract << "MB";
             } else {
-                oss << " - " << kbytesPerSec << " KB/sec";
+                os2 << kbytesPendingExtract << "KB";
             }
+            auto finalText = simgear::strutils::replace(extractText, "[VALUE]", os2.str());
+            oss << " - " << finalText;
         }
         fgSetString("/sim/startup/splash-progress-spinner", oss.str());
+    }
+
+    if (!strcmp(identifier, "loading-scenery")) {
+        unsigned int kbytesPendingExtract = fgGetInt("/sim/terrasync/extract-pending-kbytes");
+        if (kbytesPendingExtract > 0) {
+            const string extractText = globals->get_locale()->getLocalizedString("scenery-extract", "sys");
+            std::ostringstream oss;
+            if (kbytesPendingExtract > 1024) {
+                int mBytesPendingExtract = kbytesPendingExtract >> 10;
+                oss << mBytesPendingExtract << "MB";
+            } else {
+                oss << kbytesPendingExtract << "KB";
+            }
+
+            auto finalText = simgear::strutils::replace(extractText, "[VALUE]", oss.str());
+            fgSetString("/sim/startup/splash-progress-spinner", finalText);
+        } else {
+            fgSetString("/sim/startup/splash-progress-spinner", "");
+        }
     }
 
     // over-write the spinner
