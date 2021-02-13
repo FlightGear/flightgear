@@ -137,7 +137,7 @@ void TimeManagerTests::testTimeZones()
 
     timeManager->update(0.0);
 
-    CPPUNIT_ASSERT_EQUAL(18000L, globals->get_time_params()->get_local_offset());
+    CPPUNIT_ASSERT_EQUAL((time_t) 18000, globals->get_time_params()->get_local_offset());
 
     auto gmt = globals->get_time_params()->getGmt();
     CPPUNIT_ASSERT_EQUAL(79, gmt->tm_year);
@@ -177,5 +177,5 @@ void TimeManagerTests::testSpecifyTimeOffset()
 
     auto localTime = globals->get_time_params()->get_cur_time();
 
-    CPPUNIT_ASSERT_EQUAL(0L, localTime);
+    CPPUNIT_ASSERT_EQUAL((time_t) 0, localTime);
 }
