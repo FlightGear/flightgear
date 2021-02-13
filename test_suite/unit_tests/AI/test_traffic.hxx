@@ -28,6 +28,8 @@
 
 class SGGeod;
 
+class FGAIAircraft;
+
 // The flight plan unit tests.
 class TrafficTests : public CppUnit::TestFixture
 {
@@ -48,4 +50,6 @@ public:
     // The tests.
     void testTrafficManager();
     void testPushback();
+private:
+    void dump(FGAIAircraft* aiAircraft);
 };
