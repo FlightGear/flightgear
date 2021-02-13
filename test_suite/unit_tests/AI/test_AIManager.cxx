@@ -96,19 +96,22 @@ void AIManagerTests::testBasic()
 
 void AIManagerTests::testAircraftWaypoints()
 {
-    auto aim = globals->get_subsystem<FGAIManager>();
+    auto aim = globals->get_subsystem<FGAIManager>();   
 
     SGPropertyNode_ptr aircraftDefinition(new SGPropertyNode);
     aircraftDefinition->setStringValue("type", "aircraft");
     aircraftDefinition->setStringValue("callsign", "G-ARTA");
     // set class for performance data
 
+    
     auto eggd = FGAirport::findByIdent("EGGD");
     aircraftDefinition->setDoubleValue("heading", 90.0);
     aircraftDefinition->setDoubleValue("latitude", eggd->geod().getLatitudeDeg());
     aircraftDefinition->setDoubleValue("longitude", eggd->geod().getLongitudeDeg());
     aircraftDefinition->setDoubleValue("altitude", 6000.0);
     aircraftDefinition->setDoubleValue("speed", 250.0); // IAS or TAS?
+
+    FGTestApi::setPositionAndStabilise(eggd->geod());
 
     auto ai = aim->addObject(aircraftDefinition);
     CPPUNIT_ASSERT(ai);
