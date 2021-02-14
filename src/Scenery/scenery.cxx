@@ -507,6 +507,8 @@ void FGScenery::shutdown()
 
     // Toggle the setup flag.
     _inited = false;
+
+    simgear::ParticlesGlobalManager::clear();
 }
 
 
