@@ -2668,7 +2668,7 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
         try {
           readProperties(path, set);
         }
-        catch ( const std::exception &e ) {
+        catch ( const std::exception & ) {
           ok = false;
         }
         if (ok) {
