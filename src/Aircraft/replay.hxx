@@ -34,6 +34,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/io/iostreams/gzcontainerfile.hxx>
+#include <simgear/io/HTTPFileRequest.hxx>
 
 #include <MultiPlayer/multiplaymgr.hxx>
 
@@ -121,6 +122,27 @@ public:
 
     bool saveTape(const SGPropertyNode* ConfigData);
     bool loadTape(const SGPropertyNode* ConfigData);
+    
+    // If filerequest is set, the local file is a Continuous recording and
+    // it might increase in size as downloading progresses, so we need to
+    // incrementally index the file until the file request has finished the
+    // download.
+    //
+    bool loadTape(
+            const SGPath& Filename,
+            bool Preview,
+            SGPropertyNode& MetaMeta,
+            simgear::HTTP::FileRequest* filerequest=nullptr
+            );
+    
+    // Attempts to load Continuous recording header properties into
+    // <properties>. If in is null we use internal std::fstream, otherwise we
+    // use *in.
+    //
+    // Returns 0 on success, +1 if we may succeed after further download, or -1
+    // if recording is not a Continuous recording.
+    //
+    static int loadContinuousHeader(const std::string& path, std::istream* in, SGPropertyNode* properties);
 
 private:
     void clear();
@@ -159,7 +181,16 @@ private:
 
     bool listTapes(bool SameAircraftFilter, const SGPath& tapeDirectory);
     bool saveTape(const SGPath& Filename, SGPropertyNode_ptr MetaData);
-    bool loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMeta);
+    
+    // Build up in-memory cache of simulator time to file offset, so we can
+    // handle random access.
+    //
+    // We also cache any frames that modify extra-properties.
+    //
+    // Can be called multiple times, e.g. if recording is being downlaoded.
+    //
+    void indexContinuousRecording(const void* data, size_t numbytes);
+    
     SGPropertyNode_ptr continuousWriteHeader(
             std::ofstream&      out,
             const SGPath&       path,
@@ -215,9 +246,19 @@ private:
     std::ifstream                   m_continuous_in;
     bool                            m_continuous_in_multiplayer;
     bool                            m_continuous_in_extra_properties;
+    std::mutex                      m_continuous_in_time_to_frameinfo_lock;
     std::map<double, FGFrameInfo>   m_continuous_in_time_to_frameinfo;
     SGPropertyNode_ptr              m_continuous_in_config;
     double                          m_continuous_in_time_last;
+    
+    std::ifstream                   m_continuous_indexing_in;
+    std::streampos                  m_continuous_indexing_pos;
+    
+    // Only used for gathering statistics that are then written into
+    // properties.
+    //
+    int m_num_frames_extra_properties = 0;
+    int m_num_frames_multiplayer = 0;
 
     // For writing uncompressed fgtape file.
     SGPropertyNode_ptr  m_continuous_out_config;

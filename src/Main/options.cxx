@@ -42,6 +42,8 @@
 #include <string>
 #include <sstream>
 
+#include <simgear/io/HTTPClient.hxx>
+#include <simgear/io/HTTPFileRequest.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/props/props_io.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
@@ -78,6 +80,7 @@
 #include <Viewer/viewmgr.hxx>
 #include <Environment/presets.hxx>
 #include <Network/http/httpd.hxx>
+#include <Network/HTTPClient.hxx>
 #include "AircraftDirVisitorBase.hxx"
 
 #include <osg/Version>
@@ -1558,45 +1561,173 @@ fgOptSetProperty(const char* raw)
   return ret ? FG_OPTIONS_OK : FG_OPTIONS_ERROR;
 }
 
+/* If <url> is a URL, return suitable name for downloaded file. */
+static std::string urlToLocalPath(const char* url)
+{
+    bool http = simgear::strutils::starts_with(url, "http://");
+    bool https = simgear::strutils::starts_with(url, "https://");
+    if (!http && !https) {
+        return "";
+    }
+    // e.g. http://fg.com/foo/bar/wibble.fgtape
+    const char* s2 = (http) ? url+7 : url+8;  // fg.com/foo/bar/wibble.fgtape
+    const char* s3 = strchr(s2, '/'); // /foo/bar/wibble.fgtape
+    const char* s4 = (s3) ? strrchr(s3, '/') : NULL;  // /wibble.fgtape
+    std::string path;
+    if (s3) path = std::string(s2, s3-s2);    // fg.com
+    path += '_'; // fg.com_
+    if (s3 && s4 > s3) {
+        path += simgear::strutils::md5(s3, s4-s3).substr(0, 8);
+        path += '_';    // fg.com_12345678_
+    }
+    if (s4) path += (s4+1);   // fg.com_12345678_wibble.fgtape
+    if (!simgear::strutils::ends_with(path, ".fgtape")) path += ".fgtape";
+    return path;
+}
+
+
 static int
 fgOptLoadTape(const char* arg)
 {
-  // load a flight recorder tape but wait until the fdm is initialized
-  class DelayedTapeLoader : SGPropertyChangeListener {
-  public:
-    DelayedTapeLoader( const char * tape ) :
-      _tape(SGPath::fromUtf8(tape))
-    {
-      SGPropertyNode_ptr n = fgGetNode("/sim/signals/fdm-initialized", true);
-      n->addChangeListener( this );
+    // load a flight recorder tape but wait until the fdm is initialized.
+    //
+    struct DelayedTapeLoader : SGPropertyChangeListener {
+    
+        DelayedTapeLoader( const char * tape, simgear::HTTP::FileRequest* filerequest) :
+            _tape(SGPath::fromUtf8(tape)),
+            _filerequest(filerequest)
+        {
+            fgGetNode("/sim/signals/fdm-initialized", true)->addChangeListener( this );
+        }
+
+        virtual ~ DelayedTapeLoader() {}
+
+        virtual void valueChanged(SGPropertyNode * node)
+        {
+            if (!fgGetBool("/sim/signals/fdm-initialized")) {
+                return;
+            }
+            fgGetNode("/sim/signals/fdm-initialized", true)->removeChangeListener( this );
+
+            // tell the replay subsystem to load the tape
+            FGReplay* replay = globals->get_subsystem<FGReplay>();
+            assert(replay);
+            SGPropertyNode_ptr arg = new SGPropertyNode();
+            arg->setStringValue("tape", _tape.utf8Str() );
+            arg->setBoolValue( "same-aircraft", 0 );
+            if (!replay->loadTape(_tape, false /*preview*/, *arg, _filerequest)) {
+                // Force shutdown if we can't load tape specified on command-line.
+                SG_LOG(SG_GENERAL, SG_POPUP, "Exiting because unable to load fgtape: " << _tape.str());
+                flightgear::modalMessageBox("Exiting because unable to load fgtape", _tape.str(), "");
+                fgOSExit(1);
+            }
+            delete this; // commence suicide
+        }
+    private:
+        SGPath _tape;
+        simgear::HTTP::FileRequest* _filerequest;
+    };
+    
+    SGPropertyNode_ptr properties(new SGPropertyNode);
+    simgear::HTTP::FileRequest* filerequest = nullptr;
+    
+    std::string path = urlToLocalPath(arg);
+    if (path == "") {
+        // <arg> is a local file.
+        //
+        // Load the recording's header if it is a Continuous recording.
+        //
+        (void) FGReplay::loadContinuousHeader(arg, nullptr /*in*/, properties);
+    }
+    else {
+        // <arg> is a URL. Start download.
+        //
+        // Load the recording's header if it is a Continuous recording.
+        //
+        // This is a little messy - we need to create a FGHTTPClient subsystem
+        // in order to do the download, and we call its update() method
+        // directly in order to download at least the header.
+        //
+        const char* url = arg;
+        FGHTTPClient* http = globals->add_new_subsystem<FGHTTPClient>();
+        http->init();
+        filerequest = new simgear::HTTP::FileRequest(url, path, true /*append*/);
+        long max_download_speed = fgGetLong("/sim/replay/download-max-bytes-per-sec");
+        if (max_download_speed != 0) {
+            // Can be useful to limite download speed for testing background
+            // download.
+            //
+            SG_LOG(SG_GENERAL, SG_ALERT, "Limiting download speed"
+                    << " /sim/replay/download-max-bytes-per-sec=" << max_download_speed
+                    );
+            filerequest->setMaxBytesPerSec(max_download_speed);
+        }
+        http->client()->makeRequest(filerequest);
+        SG_LOG(SG_GENERAL, SG_DEBUG, ""
+                << " filerequest->responseCode()=" << filerequest->responseCode()
+                << " filerequest->responseReason()=" << filerequest->responseReason()
+                );
+        
+        // Load recording header, looping so that we wait for the initial
+        // portion of the recording to be downloaded. We give up after a fixed
+        // timeout.
+        //
+        time_t t0 = time(NULL);
+        for(;;) {
+            // Run http client's update() to download any pending data.
+            http->update(0);
+            
+            // Try to load properties from recording header.
+            int e = FGReplay::loadContinuousHeader(path, nullptr /*in*/, properties);
+            if (e == 0) {
+                // Success. We leave <filerequest> active - it will carry
+                // on downloading when the main update loop gets going
+                // later. Hopefully the delay before that happens will not
+                // cause a server timeout.
+                //
+                break;
+            }
+            if (e == -1) {
+                SG_LOG(SG_GENERAL, SG_POPUP, "Not a Continuous recording: url=" << url << " local filename=" << path);
+                // Replay from URL only works with Continuous recordings.
+                return FG_OPTIONS_EXIT;
+            }
+            
+            // If we get here, need to download some more.
+            if (time(NULL) - t0 > 30) {
+                SG_LOG(SG_GENERAL, SG_POPUP, "Timeout while reading downloaded recording from " << url << ". local path=" << path);
+                return FG_OPTIONS_EXIT;
+            }
+            sleep(1);
+        }
+    }
+        
+    // Set aircraft from recording header if we loaded it above; this has to
+    // happen now, before the FDM is initialised. Also set the airport; we
+    // don't actually have to do this because the replay doesn't need terrain
+    // to work, but we might as well load the correct terrain.
+    //
+    std::string aircraft = properties->getStringValue("meta/aircraft-type");
+    std::string airport = properties->getStringValue("meta/closest-airport-id");
+    SG_LOG(SG_GENERAL, SG_ALERT, "From recording header: aircraft=" << aircraft << " airport=" << airport);
+    if (aircraft != "") {
+        // Force --aircraft and --airport options to use values from the
+        // recording.
+        //
+        Options::sharedInstance()->setOption("aircraft", aircraft);
+    }
+    if (airport != "") {
+        // Looks like setting --airport option doesn't work - we need to call
+        // fgOptAirport() directly.
+        //
+        Options::sharedInstance()->setOption("airport", airport);
+        fgOptAirport(airport.c_str());
     }
 
-    virtual ~ DelayedTapeLoader() {}
-
-    virtual void valueChanged(SGPropertyNode * node)
-    {
-      node->removeChangeListener( this );
-
-      // tell the replay subsystem to load the tape
-      FGReplay* replay = globals->get_subsystem<FGReplay>();
-      SGPropertyNode_ptr arg = new SGPropertyNode();
-      arg->setStringValue("tape", _tape.utf8Str() );
-      arg->setBoolValue( "same-aircraft", 0 );
-      if (!replay->loadTape(arg)) {
-        // Force shutdown.
-        SG_LOG(SG_GENERAL, SG_POPUP, "Exiting because unable to load fgtape: " << _tape.str());
-        flightgear::modalMessageBox("Exiting because unable to load fgtape", _tape.str(), "");
-        fgOSExit(1);
-      }
-      delete this; // commence suicide
-    }
-  private:
-    SGPath _tape;
-
-  };
-
-  new DelayedTapeLoader(arg);
-  return FG_OPTIONS_OK;
+    // Arrange to load the recording after FDM has initialised.
+    new DelayedTapeLoader(path.c_str(), filerequest);
+    
+    return FG_OPTIONS_OK;
 }
 
 static int fgOptDisableGUI(const char*)

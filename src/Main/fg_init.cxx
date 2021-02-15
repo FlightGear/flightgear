@@ -974,7 +974,7 @@ void fgCreateSubsystems(bool duringReset) {
        throw sg_io_exception("Error loading materials file", mpath);
     }
 
-    // may exist already due to GUI startup
+    // may exist already due to GUI startup or --load-tape=http...
     if (!globals->get_subsystem<FGHTTPClient>()) {
         globals->add_new_subsystem<FGHTTPClient>();
     }

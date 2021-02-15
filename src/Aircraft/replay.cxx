@@ -1239,6 +1239,8 @@ FGReplay::replay( double time ) {
 
     replayMessage(time);
     
+    std::lock_guard<std::mutex> lock(m_continuous_in_time_to_frameinfo_lock);
+    
     if (!m_continuous_in_time_to_frameinfo.empty()) {
         // We are replaying a continuous recording.
         //
@@ -1615,6 +1617,7 @@ void FGReplay::replay(
 double
 FGReplay::get_start_time()
 {
+    std::lock_guard<std::mutex> lock(m_continuous_in_time_to_frameinfo_lock);
     if (!m_continuous_in_time_to_frameinfo.empty()) {
         double ret = m_continuous_in_time_to_frameinfo.begin()->first;
         SG_LOG(SG_SYSTEMS, SG_DEBUG,
@@ -1645,6 +1648,7 @@ FGReplay::get_start_time()
 double
 FGReplay::get_end_time()
 {
+    std::lock_guard<std::mutex> lock(m_continuous_in_time_to_frameinfo_lock);
     if (!m_continuous_in_time_to_frameinfo.empty()) {
         double ret = m_continuous_in_time_to_frameinfo.rbegin()->first;
         SG_LOG(SG_SYSTEMS, SG_DEBUG,
@@ -1824,142 +1828,225 @@ FGReplay::saveTape(const SGPropertyNode* Extra)
 }
 
 
+int FGReplay::loadContinuousHeader(const std::string& path, std::istream* in, SGPropertyNode* properties)
+{
+    std::ifstream   in0;
+    if (!in) {
+        in0.open(path);
+        in = &in0;
+    }
+    if (!*in) {
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Failed to open path=" << path);
+        return +1;
+    }
+    std::vector<char>   buffer(strlen( FlightRecorderFileMagic) + 1);
+    in->read(&buffer.front(), buffer.size());
+    SG_LOG(SG_SYSTEMS, SG_DEBUG, "in->gcount()=" << in->gcount() << " buffer.size()=" << buffer.size());
+    if ((size_t) in->gcount() != buffer.size()) {
+        // Further download is needed.
+        return +1;
+    }
+    if (strcmp(&buffer.front(), FlightRecorderFileMagic)) {
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "fgtape prefix doesn't match FlightRecorderFileMagic in path: " << path);
+        return -1;
+    }
+    bool ok = false;
+    try {
+        PropertiesRead(*in, properties);
+        ok = true;
+    }
+    catch (std::exception& e) {
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Failed to read Config properties in: " << path);
+    }
+    if (!ok) {
+        // Failed to read properties, so indicate that further download is needed.
+        return +1;
+    }
+    SG_LOG(SG_SYSTEMS, SG_BULK, "properties is:\n"
+            << writePropertiesInline(properties, true /*write_all*/) << "\n");
+    return 0;
+}
+
+void FGReplay::indexContinuousRecording(const void* data, size_t numbytes)
+{
+    SG_LOG(SG_SYSTEMS, SG_DEBUG, "Indexing Continuous recording "
+            << " data=" << data
+            << " numbytes=" << numbytes
+            << " m_continuous_indexing_pos=" << m_continuous_indexing_pos
+            << " m_continuous_in_time_to_frameinfo.size()=" << m_continuous_in_time_to_frameinfo.size()
+            );
+    time_t t0 = time(NULL);
+    std::streampos original_pos = m_continuous_indexing_pos;
+    size_t original_num_frames = m_continuous_in_time_to_frameinfo.size();
+    
+    // Reset any EOF because there might be new data.
+    m_continuous_indexing_in.clear();
+    
+    for(;;)
+    {
+        SG_LOG(SG_SYSTEMS, SG_BULK, "reading frame."
+                << " m_continuous_in.tellg()=" << m_continuous_in.tellg()
+                );
+        m_continuous_indexing_in.seekg(m_continuous_indexing_pos);
+        double sim_time;
+        m_continuous_indexing_in.read(reinterpret_cast<char*>(&sim_time), sizeof(sim_time));
+
+        SG_LOG(SG_SYSTEMS, SG_BULK, ""
+                << " m_continuous_indexing_pos=" << m_continuous_indexing_pos
+                << " m_continuous_indexing_in.tellg()=" << m_continuous_indexing_in.tellg()
+                << " sim_time=" << sim_time
+                );
+        FGFrameInfo frameinfo;
+        frameinfo.offset = m_continuous_indexing_pos;
+
+        auto datas = m_continuous_in_config->getChildren("data");
+        SG_LOG(SG_SYSTEMS, SG_BULK, "datas.size()=" << datas.size());
+        for (auto data: datas) {
+            uint32_t    length;
+            m_continuous_indexing_in.read(reinterpret_cast<char*>(&length), sizeof(length));
+            SG_LOG(SG_SYSTEMS, SG_BULK,
+                    "m_continuous_in.tellg()=" << m_continuous_indexing_in.tellg()
+                    << " Skipping data_type=" << data->getStringValue()
+                    << " length=" << length
+                    );
+            // Move forward <length> bytes.
+            m_continuous_indexing_in.seekg(length, std::ios_base::cur);
+            if (length) {
+                if (!strcmp(data->getStringValue(), "signals")) {
+                    frameinfo.has_signals = true;
+                }
+                else if (!strcmp(data->getStringValue(), "multiplayer")) {
+                    frameinfo.has_multiplayer = true;
+                    ++m_num_frames_multiplayer;
+                }
+                else if (!strcmp(data->getStringValue(), "extra-properties")) {
+                    frameinfo.has_extra_properties = true;
+                    ++m_num_frames_extra_properties;
+                }
+            }
+        }
+        SG_LOG(SG_SYSTEMS, SG_BULK, ""
+                << " pos=" << m_continuous_indexing_pos
+                << " sim_time=" << sim_time
+                << " m_num_frames_multiplayer=" << m_num_frames_multiplayer
+                << " m_num_frames_extra_properties=" << m_num_frames_extra_properties
+                );
+
+        if (!m_continuous_indexing_in) {
+            // Failed to read a frame, e.g. because of EOF. Leave
+            // m_continuous_indexing_pos unchanged so we can try again at same
+            // starting position if recording is upated by background download.
+            //
+            SG_LOG(SG_SYSTEMS, SG_BULK, "m_continuous_indexing_in failed, giving up");
+            break;
+        }
+        
+        // We have successfully read a frame, so add it to
+        // m_continuous_in_time_to_frameinfo[].
+        //
+        m_continuous_indexing_pos = m_continuous_indexing_in.tellg();
+        std::lock_guard<std::mutex> lock(m_continuous_in_time_to_frameinfo_lock);
+        m_continuous_in_time_to_frameinfo[sim_time] = frameinfo;
+    }
+    time_t t = time(NULL) - t0;
+    auto new_bytes = m_continuous_indexing_pos - original_pos;
+    auto num_frames = m_continuous_in_time_to_frameinfo.size();
+    auto num_new_frames = num_frames - original_num_frames;
+    if (num_new_frames) {
+        SG_LOG(SG_SYSTEMS, SG_ALERT, "Continuous recording: index updated:"
+                << " num_frames=" << num_frames
+                << " num_new_frames=" << num_new_frames
+                << " new_bytes=" << new_bytes
+                );
+    }
+    SG_LOG(SG_SYSTEMS, SG_DEBUG, "Indexed uncompressed recording."
+            << " time taken=" << t << "s."
+            << " num_new_frames=" << num_new_frames
+            << " m_continuous_indexing_pos=" << m_continuous_indexing_pos
+            << " m_continuous_in_time_to_frameinfo.size()=" << m_continuous_in_time_to_frameinfo.size()
+            << " m_num_frames_multiplayer=" << m_num_frames_multiplayer
+            << " m_num_frames_extra_properties=" << m_num_frames_extra_properties
+            );
+    // Probably don't need this lock because we're only reading
+    // m_continuous_in_time_to_frameinfo, and nothing else can be writing it.
+    //
+    std::lock_guard<std::mutex> lock(m_continuous_in_time_to_frameinfo_lock);
+    fgSetInt("/sim/replay/continuous-stats-num-frames", m_continuous_in_time_to_frameinfo.size());
+    fgSetInt("/sim/replay/continuous-stats-num-frames-extra-properties", m_num_frames_extra_properties);
+    fgSetInt("/sim/replay/continuous-stats-num-frames-multiplayer", m_num_frames_multiplayer);
+    if (!numbytes) {
+        SG_LOG(SG_SYSTEMS, SG_ALERT, "Continuous recording: indexing finished");
+        m_continuous_indexing_in.close();
+    }
+}
+
 /** Read a flight recorder tape with given filename from disk.
  * Copies MetaData's "meta" node into MetaMeta out-param.
  * Actual data and signal configuration is not read when in "Preview" mode.
  */
 bool
-FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMeta)
+FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMeta, simgear::HTTP::FileRequest* filerequest)
 {
     SG_LOG(SG_SYSTEMS, SG_DEBUG, "loading Preview=" << Preview << " Filename=" << Filename);
-    {
-        /* Try to load as uncompressed Continuous recording first. */
-        std::ifstream   in_preview;
-        std::ifstream&  in(Preview ? in_preview : m_continuous_in);
-        in.open( Filename.str());
-        if (!in) {
-            SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to open Filename=" << Filename);
-            return false;
-        }
-        std::vector<char>   buffer(strlen( FlightRecorderFileMagic) + 1);
-        in.read(&buffer.front(), buffer.size());
-        if (strcmp(&buffer.front(), FlightRecorderFileMagic)) {
-            SG_LOG(SG_SYSTEMS, SG_ALERT, "fgtape prefix doesn't match FlightRecorderFileMagic: '" << &buffer.front() << "'");
+
+    /* Try to load as uncompressed Continuous recording first. */
+    std::ifstream   in_preview;
+    std::ifstream&  in(Preview ? in_preview : m_continuous_in);
+    in.open(Filename.str());
+    if (!in) {
+        SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to open"
+                << " Filename=" << Filename.str()
+                << " in.is_open()=" << in.is_open()
+                );
+        return false;
+    }
+    m_continuous_in_config = new SGPropertyNode;
+    int e = loadContinuousHeader(Filename.str(), &in, m_continuous_in_config);
+    if (e == 0) {
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "m_continuous_in_config is:\n"
+                << writePropertiesInline(m_continuous_in_config, true /*write_all*/) << "\n");
+        copyProperties(m_continuous_in_config->getNode("meta", 0, true), &MetaMeta);
+        if (Preview) {
             in.close();
-        }
-        else {
-            SG_LOG(SG_SYSTEMS, SG_DEBUG, "fgtape is uncompressed: " << Filename);
-            m_continuous_in_config = new SGPropertyNode;
-            try {
-                PropertiesRead(in, m_continuous_in_config.get());
-            }
-            catch (std::exception& e) {
-                SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to read Config properties in: " << Filename);
-                in.close();
-                return false;
-            }
-            SG_LOG(SG_SYSTEMS, SG_DEBUG, "m_continuous_in_config is:\n"
-                    << writePropertiesInline(m_continuous_in_config, true /*write_all*/) << "\n");
-            copyProperties(m_continuous_in_config->getNode("meta", 0, true), &MetaMeta);
-            if (Preview) {
-                in.close();
-                return true;
-            }
-            m_pRecorder->reinit(m_continuous_in_config);
-            clear();
-            fillRecycler();
-            time_t t = time(NULL);
-            size_t  pos = 0;
-            m_continuous_in_time_last = -1;
-            m_continuous_in_time_to_frameinfo.clear();
-            int num_frames_extra_properties = 0;
-            int num_frames_multiplayer = 0;
-            // Read entire recording and build up in-memory cache of simulator
-            // time to file offset, so we can handle random access.
-            //
-            // We also cache any frames that modify extra-properties.
-            //
-            SG_LOG(SG_SYSTEMS, SG_DEBUG, "Indexing Continuous recording " << Filename);
-            for(;;)
-            {
-                SG_LOG(SG_SYSTEMS, SG_BULK, "reading frame."
-                        << " m_continuous_in.tellg()=" << m_continuous_in.tellg()
-                        );
-                pos = m_continuous_in.tellg();
-                m_continuous_in.seekg(pos);
-                double sim_time;
-                m_continuous_in.read(reinterpret_cast<char*>(&sim_time), sizeof(sim_time));
-                
-                SG_LOG(SG_SYSTEMS, SG_BULK,
-                        "pos=" << pos
-                        << " m_continuous_in.tellg()=" << m_continuous_in.tellg()
-                        << " sim_time=" << sim_time
-                        );
-                FGFrameInfo frameinfo;
-                frameinfo.offset = pos;
-                
-                //bool frame_has_property_changes = false;
-                auto datas = m_continuous_in_config->getChildren("data");
-                SG_LOG(SG_SYSTEMS, SG_DEBUG, "datas.size()=" << datas.size());
-                for (auto data: datas) {
-                    uint32_t    length;
-                    m_continuous_in.read(reinterpret_cast<char*>(&length), sizeof(length));
-                    SG_LOG(SG_SYSTEMS, SG_BULK,
-                            "m_continuous_in.tellg()=" << m_continuous_in.tellg()
-                            << " Skipping data_type=" << data->getStringValue()
-                            << " length=" << length
-                            );
-                    m_continuous_in.seekg(length, std::ios_base::cur);
-                    if (length) {
-                        if (!strcmp(data->getStringValue(), "signals")) {
-                            frameinfo.has_signals = true;
-                        }
-                        else if (!strcmp(data->getStringValue(), "multiplayer")) {
-                            frameinfo.has_multiplayer = true;
-                            ++num_frames_multiplayer;
-                        }
-                        else if (!strcmp(data->getStringValue(), "extra-properties")) {
-                            frameinfo.has_extra_properties = true;
-                            ++num_frames_extra_properties;
-                        }
-                    }
-                }
-                SG_LOG(SG_SYSTEMS, SG_BULK, ""
-                        << " pos=" << pos
-                        << " sim_time=" << sim_time
-                        << " num_frames_multiplayer=" << num_frames_multiplayer
-                        << " num_frames_extra_properties=" << num_frames_extra_properties
-                        );
-                
-                if (!m_continuous_in) {
-                    // EOF; we need to cope if last frame is incomplete, as
-                    // this can easily happen if Flightgear was killed while
-                    // recording.
-                    break;
-                }
-                
-                m_continuous_in_time_to_frameinfo[sim_time] = frameinfo;
-            }
-            t = time(NULL) - t;
-            SG_LOG(SG_SYSTEMS, SG_ALERT, "Indexed uncompressed recording"
-                    << ". time taken: " << t << "s"
-                    << ". recording size: " << pos
-                    << ". Number of frames: " << m_continuous_in_time_to_frameinfo.size()
-                    << ". num_frames_multiplayer: " << num_frames_multiplayer
-                    << ". num_frames_extra_properties: " << num_frames_extra_properties
-                    );
-            fgSetInt("/sim/replay/continuous-stats-num-frames", m_continuous_in_time_to_frameinfo.size());
-            fgSetInt("/sim/replay/continuous-stats-num-frames-extra-properties", num_frames_extra_properties);
-            fgSetInt("/sim/replay/continuous-stats-num-frames-multiplayer", num_frames_multiplayer);
-            start(true /*NewTape*/);
             return true;
         }
-    }
+        m_pRecorder->reinit(m_continuous_in_config);
+        clear();
+        fillRecycler();
+        m_continuous_in_time_last = -1;
+        m_continuous_in_time_to_frameinfo.clear();
+        m_num_frames_extra_properties = 0;
+        m_num_frames_multiplayer = 0;
+        m_continuous_indexing_in.open(Filename.str());
+        m_continuous_indexing_pos = in.tellg();
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "filerequest=" << filerequest);
 
-    SG_LOG(SG_SYSTEMS, SG_DEBUG, "Filename=" << Filename);
+        // Make an in-memory index of the recording.
+        if (filerequest) {
+            // Always call indexContinuousRecording once in case there is
+            // nothing to download.
+            indexContinuousRecording(nullptr, 1 /*Zero means EOF. */);
+            filerequest->setCallback( [this](const void* data, size_t numbytes) {
+                    SG_LOG(SG_GENERAL, SG_BULK, "calling indexContinuousRecording() data=" << data << " numbytes=" << numbytes);
+                    indexContinuousRecording(data, numbytes);
+                    });
+        }
+        else {
+            indexContinuousRecording(nullptr, 0);
+        }
+        start(true /*NewTape*/);
+        return true;
+    }
+    
+    // Not a continuous recording.
+    in.close();
+    if (filerequest) {
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Cannot load Filename=" << Filename << " because it is download but not Continuous recording");
+        return false;
+    }
     bool ok = true;
 
-    /* open input stream ********************************************/
+    /* Open as a gzipped Normal recording. ********************************************/
     gzContainerReader input(Filename, FlightRecorderFileMagic);
     if (input.eof() || !input.good())
     {
