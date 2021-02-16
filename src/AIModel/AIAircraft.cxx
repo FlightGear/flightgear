@@ -254,6 +254,9 @@ void FGAIAircraft::ClimbTo(double alt_ft ) {
 
 
 void FGAIAircraft::TurnTo(double heading) {
+    if( fabs(heading) < 0.1 ) {
+        SG_LOG(SG_AI, SG_WARN, "Heading reset");
+    }
     tgt_heading = heading;
     hdg_lock = true;
 }
@@ -338,10 +341,13 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         controlSpeed(curr, next);
     } else {
         if (curr->isFinished()) {     //end of the flight plan
-            if (fp->getRepeat())
+            SG_LOG(SG_AI, SG_BULK, "Flightplan ended");            
+            if (fp->getRepeat()) {
                 fp->restart();
-            else
+            }
+            else {
                 setDie(true);
+            }
             return;
         }
 
@@ -349,6 +355,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
             //TODO more intelligent method in AIFlightPlan, no need to send data it already has :-)
             tgt_heading = fp->getBearing(curr, next);
             spinCounter = 0;
+            SG_LOG(SG_AI, SG_BULK, "Set tgt_heading to " << tgt_heading);
         }
 
         //TODO let the fp handle this (loading of next leg)
@@ -363,7 +370,9 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         prev = fp->getPreviousWaypoint();
         SG_LOG(SG_AI, SG_BULK, "Previous WP \t" << prev->getName() << "\t" << prev->getPos());
         curr = fp->getCurrentWaypoint();
-        SG_LOG(SG_AI, SG_BULK, "Current WP \t" << curr->getName() << "\t" << curr->getPos());
+        if (curr) {
+          SG_LOG(SG_AI, SG_BULK, "Current WP \t" << curr->getName() << "\t" << curr->getPos());
+        }
         next = fp->getNextWaypoint();
         if(next) {
             SG_LOG(SG_AI, SG_BULK, "Next WP \t" << next->getName() << "\t" << next->getPos());
@@ -1089,13 +1098,19 @@ void FGAIAircraft::updateHeading(double dt) {
         if (onGround()) {
             double headingDiff = fabs(hdg-tgt_heading);
 
-            if (headingDiff > 180)
+            if (headingDiff > 180) {
                 headingDiff = fabs(headingDiff - 360);
+            }
 
             groundTargetSpeed = tgt_speed * cos(headingDiff * SG_DEGREES_TO_RADIANS);
 
-            if (sign(groundTargetSpeed) != sign(tgt_speed))
+            if (sign(groundTargetSpeed) != sign(tgt_speed)) {
+                if (fabs(speed) < 2 ) {
+                  SG_LOG(SG_AI, SG_DEBUG, "Oh dear we're stuck. Speed set to " << speed );
+                }
+                // Negative Cosinus means angle > 90°
                 groundTargetSpeed = 0.21 * sign(tgt_speed); // to prevent speed getting stuck in 'negative' mode
+            }
 
             // Only update the target values when we're not moving because otherwise we might introduce an enormous target change rate while waiting a the gate, or holding.
             if (speed != 0) {
@@ -1238,13 +1253,11 @@ const string& FGAIAircraft::atGate()
 
 void FGAIAircraft::handleATCRequests(double dt)
 {
+    if (!this->getTrafficRef()) {
+        return;
+    }
     time_t startTime = this->getTrafficRef()->getDepartureTime();
     time_t now = globals->get_time_params()->get_cur_time();
-
-    if ((startTime-now)>0) {
-        SG_LOG(SG_AI, SG_BULK, this->getCallSign()
-            << " is scheduled to depart in " << startTime-now << " seconds.");
-    }
 
     //TODO implement NullController for having no ATC to save the conditionals
     if (controller) {
@@ -1364,8 +1377,7 @@ void FGAIAircraft::resetPositionFromFlightPlan()
 
     setLatitude(prev->getLatitude());
     setLongitude(prev->getLongitude());
-    double tgt_heading = fp->getBearing(curr, next);
-    setHeading(tgt_heading);
+    setHeading(fp->getBearing(curr, next));
     setAltitude(prev->getAltitude());
     setSpeed(prev->getSpeed());
 }
@@ -1475,6 +1487,7 @@ void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
     o << "Callsign\t";
     o << "heading change rate\t";
     o << "headingErr\t";
+    o << "headingDiff\t";
     o << "hdg\t";
     o << "tgt_heading\t";
     o << "tgt_speed\t";
@@ -1495,6 +1508,7 @@ void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
     o << "Dist\t";
     o << "Departuretime\t";
     o << "Time\t";
+    o << "Startup diff\t";
     o << "Leg\t";
     o << "Num WP\t";
     o << "Leaddistance\t";
@@ -1502,12 +1516,19 @@ void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
 }
 
 void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
+    double headingDiff = fabs(hdg-tgt_heading);
+
+    if (headingDiff > 180) {
+        headingDiff = fabs(headingDiff - 360);
+    }
+
     o << lineIndex << "\t";
     o << this->getGeodPos().getLatitudeDeg() << "\t";
     o << this->getGeodPos().getLongitudeDeg() << "\t";
     o << this->getCallSign() << "\t";
     o << headingChangeRate << "\t";
     o << headingError << "\t";
+    o << headingDiff << "\t";
     o << hdg << "\t";
     o << tgt_heading << "\t";
     o << tgt_speed << "\t";

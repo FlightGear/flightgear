@@ -62,6 +62,7 @@ public:
     void testPushforwardParkYBBNRepeatGa();
     void testPushforwardParkYBBNRepeatGate();
 private:
+    long currentWorldTime;
     std::string getTimeString(int timeOffset);
     FGAIAircraft * flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::string fName);
 };

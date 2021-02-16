@@ -279,6 +279,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
 
     FGGroundNetwork *gn = apt->groundNetwork();
     if (!gn->exists()) {
+        SG_LOG(SG_AI, SG_DEBUG, "No groundnet " << apt->getId() << " creating default taxi.");
         createDefaultTakeoffTaxi(ac, apt, rwy);
         return true;
     }
@@ -307,18 +308,25 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
             // Handle case where parking doesn't have a node
             if (firstFlight) {
                 node = park;
-            } else {
+            } else if (lastNodeVisited) {
                 node = lastNodeVisited;
+            } else {
+                SG_LOG(SG_AI, SG_WARN, "Taxiroute could not be constructed no lastNodeVisited.");
             }
         }
+    } else {
+        SG_LOG(SG_AI, SG_WARN, "Taxiroute could not be constructed no parking.");
     }
     
     FGTaxiRoute taxiRoute;
-    if ( runwayNode && node)
+    if (runwayNode && node) {
         taxiRoute = gn->findShortestRoute(node, runwayNode);
+    } else {
+    }
 
     // This may happen with buggy ground networks
     if (taxiRoute.size() <= 1) {
+        SG_LOG(SG_AI, SG_DEBUG, "Taxiroute too short creating default taxi.");
         createDefaultTakeoffTaxi(ac, apt, rwy);
         return true;
     }
@@ -463,7 +471,7 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
         wpt->setRouteIndex(route);
         pushBackWaypoint(wpt);
     }
-    SG_LOG(SG_AI, SG_BULK, "Created taxi to " << gate.parking()->ident() << " at " << apt->getId());
+    SG_LOG(SG_AI, SG_BULK, "Created taxi from " << runwayNode->getIndex() <<  " to " << gate.parking()->ident() << " at " << apt->getId());
 
     return true;
 }

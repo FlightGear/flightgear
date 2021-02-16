@@ -31,6 +31,7 @@
 #include "test_suite/FGTestApi/TestDataLogger.hxx"
 #include "test_suite/FGTestApi/testGlobals.hxx"
 
+#include <simgear/math/sg_geodesy.hxx>
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/AIManager.hxx>
@@ -60,7 +61,7 @@ void TrafficTests::setUp()
 {
     time_t t = time(0);   // get time now
 
-    time_t lastDay = t - t%86400 + 86400 + 9 * 60; 
+    this->currentWorldTime = t - t%86400 + 86400 + 9 * 60; 
 
 
     FGTestApi::setUp::initTestGlobals("Traffic");
@@ -95,7 +96,7 @@ void TrafficTests::setUp()
     globals->get_subsystem_mgr()->init();
     globals->get_subsystem_mgr()->postinit();
     // This means time is always 00:09 
-    globals->get_subsystem<TimeManager>()->setTimeOffset("system", lastDay);
+    FGTestApi::adjustSimulationWorldTime(this->currentWorldTime);
 }
 
 // Clean up after each test.
@@ -109,7 +110,11 @@ void TrafficTests::testPushback()
     FGAirportRef departureAirport = FGAirport::getByIdent("EGPH");
 
     FGAirportRef arrivalAirport = FGAirport::getByIdent("EGPF");
+
     fgSetString("/sim/presets/airport-id", departureAirport->getId());
+    fgSetInt("/environment/visibility-m", 1000);
+    fgSetInt("/environment/metar/base-wind-speed-kt", 10);
+    fgSetInt("/environment/metar/base-wind-dir-deg", 160);
 
     // Time to depart
     std::string dep = getTimeString(30);
@@ -539,8 +544,6 @@ void TrafficTests::testPushforwardParkYBBNRepeatGa()
         }
     }
 
-    CPPUNIT_ASSERT_LESS(5, shortestDistance);
-
     CPPUNIT_ASSERT_EQUAL(true, (aiAircraft->getDie() || aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getName() == "park"));
 }
 
@@ -618,8 +621,6 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
         }
     }
 
-    CPPUNIT_ASSERT_LESS(5, shortestDistance);
-
     CPPUNIT_ASSERT_EQUAL(true, (aiAircraft->getDie() || aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getName() == "park"));
 }
 
@@ -649,10 +650,10 @@ FGAIAircraft * TrafficTests::flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::st
     
     char fname [160];
     time_t t = time(0);   // get time now
-    sprintf (fname, "./LOGS/flightgear_%ld.csv", t);
+    sprintf (fname, "flightgear_ai_flight_%ld.csv", t);
     std::ofstream csvFile (fname, ios::trunc | ios::out);
     if(!csvFile.is_open()) {
-        std::cerr << "File couldn't be opened" << endl;
+        SG_LOG(SG_AI, SG_DEBUG, "CSV File " << fname << " couldn't be opened");
     }
     if (sglog().get_log_priority() <= SG_DEBUG) {
         aiAircraft->dumpCSVHeader(csvFile);
@@ -709,14 +710,19 @@ FGAIAircraft * TrafficTests::flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::st
         CPPUNIT_ASSERT_LESSEQUAL(400.0, headingSum);
         CPPUNIT_ASSERT_LESSEQUAL(10, aiAircraft->GetFlightPlan()->getLeg());
         CPPUNIT_ASSERT_MESSAGE( "Aircraft has not completed test in time.", i < 3000000);
+        // Arrived at a parking
+        int beforeNextDepTime = aiAircraft->getTrafficRef()->getDepartureTime() - 30;
+
         if (iteration > 1  
         && aiAircraft->GetFlightPlan()->getLeg() == 1 
-        && aiAircraft->getSpeed() == 0 ) {
-            // Arrived at a parking
-            int beforeNextDepTime = aiAircraft->getTrafficRef()->getDepartureTime() - 30;
+        && aiAircraft->getSpeed() == 0 
+        && this->currentWorldTime < beforeNextDepTime) {
             FGTestApi::adjustSimulationWorldTime(beforeNextDepTime);
+            SG_LOG(SG_AI, SG_BULK, "Jumped time " << (beforeNextDepTime - this->currentWorldTime) );            
+            this->currentWorldTime = beforeNextDepTime;
         }
         FGTestApi::runForTime(1);
+        FGTestApi::adjustSimulationWorldTime(++this->currentWorldTime);
     }
     lastLeg = aiAircraft->GetFlightPlan()->getLeg();
     sprintf(buffer, "AI Leg %d Callsign %s Iteration %d", lastLeg, aiAircraft->getCallSign().c_str(), iteration);

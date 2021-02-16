@@ -530,11 +530,20 @@ void FGAIFlightPlan::addWaypoint(FGAIWaypoint* wpt)
 
 void FGAIFlightPlan::pushBackWaypoint(FGAIWaypoint *wpt)
 {
+  size_t pos = wpt_iterator - waypoints.begin();
+  if (waypoints.size()>0) {
+      double dist = SGGeodesy::distanceM( waypoints.back()->getPos(), wpt->getPos());
+      if( dist == 0 ) {
+        SG_LOG(SG_AI, SG_DEBUG, "Double WP : \t" << wpt->getName() << " not added ");
+      } else {
+        waypoints.push_back(wpt);
+      }
+  } else {
+    waypoints.push_back(wpt);
+  }
   // std::vector::push_back invalidates waypoints
   //  so we should restore wpt_iterator after push_back
   //  (or it could be an index in the vector)
-  size_t pos = wpt_iterator - waypoints.begin();
-  waypoints.push_back(wpt);
   wpt_iterator = waypoints.begin() + pos;
   SG_LOG(SG_AI, SG_BULK, "Added WP : \t" << wpt->getName() << "\t" << wpt->getPos() << "\t" << wpt->getSpeed());
 }
