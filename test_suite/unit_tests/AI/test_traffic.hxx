@@ -37,6 +37,7 @@ class TrafficTests : public CppUnit::TestFixture
     CPPUNIT_TEST_SUITE(TrafficTests);
     CPPUNIT_TEST(testTrafficManager);
     CPPUNIT_TEST(testPushback);
+    CPPUNIT_TEST(testPushback2);
     CPPUNIT_TEST_SUITE_END();
 
 
@@ -50,6 +51,7 @@ public:
     // The tests.
     void testTrafficManager();
     void testPushback();
+    void testPushback2();
 private:
     void dump(FGAIAircraft* aiAircraft);
 };

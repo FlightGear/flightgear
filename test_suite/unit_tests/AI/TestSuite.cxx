@@ -22,6 +22,7 @@
 #include "test_groundnet.hxx"
 #include "test_traffic.hxx"
 #include "test_submodels.hxx"
+#include "test_AIFlightPlan.hxx"
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AIFlightPlanTests, "Unit tests");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AIManagerTests, "Unit tests");

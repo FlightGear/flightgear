@@ -29,6 +29,7 @@
 #include "test_suite/FGTestApi/TestDataLogger.hxx"
 #include "test_suite/FGTestApi/testGlobals.hxx"
 
+#include <simgear/math/sg_geodesy.hxx>
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/AIManager.hxx>
@@ -87,6 +88,7 @@ void TrafficTests::testPushback()
     
     FGAirportRef egpf = FGAirport::getByIdent("EGPF");
     fgSetString("/sim/presets/airport-id", "EGPH");
+    fgSetInt("/environment/visibility-m", 1000);
 
     time_t rawtime;
     struct tm * timeinfo;
@@ -96,14 +98,11 @@ void TrafficTests::testPushback()
     time (&rawtime);
     rawtime = rawtime + 50;
     timeinfo = gmtime (&rawtime);
-    strftime (dep,11,"%u/%H:%M:%S",timeinfo);
+    strftime (dep,11,"%w/%H:%M:%S",timeinfo);
 
     rawtime = rawtime + 320;
     timeinfo = gmtime (&rawtime);
-    strftime (arr,11,"%u/%H:%M:%S",timeinfo);
-
-    cout << dep << "\t" << arr << "\r\n";
-
+    strftime (arr,11,"%w/%H:%M:%S",timeinfo);
 
 
     FGAISchedule* schedule = new FGAISchedule(
@@ -115,16 +114,11 @@ void TrafficTests::testPushback()
      
     const SGGeod position = egph->geod();
     ParkingAssignment parking = egph->getDynamics()->getParkingByName("north-cargo208");                                       
-    FGTestApi::setPositionAndStabilise(egph->geod());
+    FGTestApi::setPositionAndStabilise(egph->getDynamics()->getParkingByName("ga206").parking()->geod());
 
     aiAircraft->setPerformance("jet_transport", "");
     aiAircraft->setCompany("KLM");
     aiAircraft->setAcType("B737");
-    //   aiAircraft->setPath(modelPath.c_str());
-    //aircraft->setFlightPlan(flightPlanName);
-    aiAircraft->setLatitude(parking.parking()->geod().getLatitudeDeg());
-    aiAircraft->setLongitude(parking.parking()->geod().getLongitudeDeg());
-    //aiAircraft->setAltitude(flight->getCruiseAlt()*100); // convert from FL to feet
     aiAircraft->setSpeed(0);
     aiAircraft->setBank(0);
 
@@ -132,12 +126,12 @@ void TrafficTests::testPushback()
 
     const int radius = 18.0;
     const int cruiseAltFt = 32000;
-    const int cruiseSpeedKnots = 0;
+    const int cruiseSpeedKnots = 80;
 
     const double crs = SGGeodesy::courseDeg(egph->geod(), egpf->geod()); // direct course
     time_t departureTime;
     time(&departureTime); // now
-    departureTime = departureTime - 600; 
+    departureTime = departureTime - 50; 
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -149,24 +143,105 @@ void TrafficTests::testPushback()
                                                           aiAircraft->getAcType(),
                                                           aiAircraft->getCompany())); 
                                                           
-    FGAIFlightPlan::createPushBack(aiAircraft, true, egph, radius, "gate", aiAircraft->getAcType(),
-                                                          aiAircraft->getCompany());
-    fp->setGate(parking);
-    fp->setLeg(1);
     if (fp->isValidPlan()) {
         aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
         globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
     }
     flightgear::SGGeodVec geods = flightgear::SGGeodVec();
-    for (size_t i = 0; i < 50000 && aiAircraft->GetFlightPlan()->getLeg() < 2; i++)
+    for (size_t i = 0; i < 6000 && aiAircraft->GetFlightPlan()->getLeg() < 8; i++)
     {
-        this->dump(aiAircraft);
-        geods.insert(geods.end(), aiAircraft->getGeodPos());
-        FGTestApi::runForTime(1.0);    
+        //this->dump(aiAircraft);
+        
+        if(geods.empty()||SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
+          geods.insert(geods.end(), aiAircraft->getGeodPos());
+        }
+
+        FGTestApi::runForTime(3.0);    
     }
     FGTestApi::setUp::logPositionToKML("flightEDPH_" + std::to_string(departureTime));    
     FGTestApi::writeGeodsToKML("Aircraft", geods);
-    CPPUNIT_ASSERT_EQUAL(500, radius);
+    CPPUNIT_ASSERT_EQUAL( 5, aiAircraft->GetFlightPlan()->getLeg());
+}
+
+void TrafficTests::testPushback2()
+{
+    FGAirportRef egph = FGAirport::getByIdent("EGPH");
+    
+    FGAirportRef egpf = FGAirport::getByIdent("EGPF");
+    fgSetString("/sim/presets/airport-id", "EGPH");
+    fgSetInt("/environment/visibility-m", 1000);
+
+    time_t rawtime;
+    struct tm * timeinfo;
+    char dep [11];
+    char arr [11];
+
+    time (&rawtime);
+    rawtime = rawtime + 50;
+    timeinfo = gmtime (&rawtime);
+    strftime (dep,11,"%w/%H:%M:%S",timeinfo);
+
+    rawtime = rawtime + 320;
+    timeinfo = gmtime (&rawtime);
+    strftime (arr,11,"%w/%H:%M:%S",timeinfo);
+
+
+    FGAISchedule* schedule = new FGAISchedule(
+        "B737", "KLM", "EGPH", "G-BLA", "ID", false, "B737", "KLM", "N", "gate", 24, 8);
+    FGScheduledFlight* flight = new FGScheduledFlight("", "", "EGPH", "EGPF", 24, dep, arr, "WEEK", "HBR_BN_2");
+    schedule->assign(flight);
+
+    FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
+     
+    const SGGeod position = egph->geod();
+    ParkingAssignment parking = egph->getDynamics()->getParkingByName("north-cargo208");                                       
+    FGTestApi::setPositionAndStabilise(egph->getDynamics()->getParkingByName("ga206").parking()->geod());
+
+    aiAircraft->setPerformance("jet_transport", "");
+    aiAircraft->setCompany("KLM");
+    aiAircraft->setAcType("B737");
+    aiAircraft->setSpeed(0);
+    aiAircraft->setBank(0);
+
+    const string flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
+
+    const int radius = 25.0;
+    const int cruiseAltFt = 32000;
+    const int cruiseSpeedKnots = 80;
+
+    const double crs = SGGeodesy::courseDeg(egph->geod(), egpf->geod()); // direct course
+    time_t departureTime;
+    time(&departureTime); // now
+    departureTime = departureTime - 50; 
+
+    std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
+                                                          flightPlanName, crs, departureTime,
+                                                          egph, egpf, true, radius,
+                                                          cruiseAltFt, // cruise alt
+                                                          position.getLatitudeDeg(),
+                                                          position.getLongitudeDeg(),
+                                                          cruiseSpeedKnots, "gate",
+                                                          aiAircraft->getAcType(),
+                                                          aiAircraft->getCompany())); 
+                                                          
+    if (fp->isValidPlan()) {
+        aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
+        globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
+    }
+    flightgear::SGGeodVec geods = flightgear::SGGeodVec();
+    for (size_t i = 0; i < 6000 && aiAircraft->GetFlightPlan()->getLeg() < 8; i++)
+    {
+        this->dump(aiAircraft);
+        
+        if(geods.empty()||SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
+          geods.insert(geods.end(), aiAircraft->getGeodPos());
+        }
+
+        FGTestApi::runForTime(3.0);    
+    }
+    FGTestApi::setUp::logPositionToKML("flightEDPH_" + std::to_string(departureTime));    
+    FGTestApi::writeGeodsToKML("Aircraft", geods);
+    CPPUNIT_ASSERT_EQUAL( 5, aiAircraft->GetFlightPlan()->getLeg());
 }
 
 void TrafficTests::testTrafficManager()
@@ -266,7 +341,8 @@ void TrafficTests::testTrafficManager()
 }
 
 void TrafficTests::dump(FGAIAircraft* aiAircraft) {
+    std::cout << "********************\n";
     std::cout << "Geod " << aiAircraft->getGeodPos() << "\t Speed : " << aiAircraft->getSpeed() << "\n";
-    std::cout << "WP   " << aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getPos() << "\r\n";
+    std::cout << "WP   " << aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getName() << "\t" << aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getPos() << "\r\n";
     std::cout << "Heading " << aiAircraft->getTrueHeadingDeg() << "\t VSpeed : " << aiAircraft->getVerticalSpeed() << "\n";
 }
