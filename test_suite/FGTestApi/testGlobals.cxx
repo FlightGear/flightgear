@@ -20,6 +20,7 @@
 
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/timing/timestamp.hxx>
+#include <simgear/timing/sg_time.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/props/props_io.hxx>
 
@@ -270,8 +271,11 @@ void runForTime(double t)
     const int logInterval = 0.5 * tickHz;
     int nextLog = 0;
 
+    long startTime = globals->get_time_params()->get_cur_time();
+
     for (int t = 0; t < ticks; ++t) {
         globals->inc_sim_time_sec(tickDuration);
+        globals->get_time_params()->update(globals->get_view_position(), startTime, t * tickDuration);
         globals->get_subsystem_mgr()->update(tickDuration);
 
         if (nextLog == 0) {
