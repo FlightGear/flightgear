@@ -1980,6 +1980,13 @@ void FGReplay::indexContinuousRecording(const void* data, size_t numbytes)
     }
 }
 
+void FGReplay::call_indexContinuousRecording(void* ref, const void* data, size_t numbytes)
+{
+    FGReplay* self = (FGReplay*) ref;
+    SG_LOG(SG_GENERAL, SG_BULK, "calling indexContinuousRecording() data=" << data << " numbytes=" << numbytes);
+    self->indexContinuousRecording(data, numbytes);
+}
+
 /** Read a flight recorder tape with given filename from disk.
  * Copies MetaData's "meta" node into MetaMeta out-param.
  * Actual data and signal configuration is not read when in "Preview" mode.
@@ -2026,10 +2033,7 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMet
             // Always call indexContinuousRecording once in case there is
             // nothing to download.
             indexContinuousRecording(nullptr, 1 /*Zero means EOF. */);
-            filerequest->setCallback( [this](const void* data, size_t numbytes) {
-                    SG_LOG(SG_GENERAL, SG_BULK, "calling indexContinuousRecording() data=" << data << " numbytes=" << numbytes);
-                    indexContinuousRecording(data, numbytes);
-                    });
+            filerequest->setCallback(call_indexContinuousRecording, this);
         }
         else {
             indexContinuousRecording(nullptr, 0);

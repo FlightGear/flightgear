@@ -191,6 +191,10 @@ private:
     //
     void indexContinuousRecording(const void* data, size_t numbytes);
     
+    // Callback for use with simgear::HTTP::FileRequest::setCallback().
+    //
+    static void call_indexContinuousRecording(void* ref, const void* data, size_t numbytes);
+    
     SGPropertyNode_ptr continuousWriteHeader(
             std::ofstream&      out,
             const SGPath&       path,
