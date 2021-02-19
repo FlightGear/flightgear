@@ -18,8 +18,6 @@
 
 #include "canvas_mgr.hxx"
 
-#include <boost/bind.hpp>
-
 #include <Cockpit/od_gauge.hxx>
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalModelData.hxx>
@@ -79,17 +77,13 @@ void CanvasMgr::init()
           // add our two placement factories
           sc::Canvas::addPlacementFactory
           (
-            "object",
-            boost::bind
-            (
-              &FGODGauge::set_aircraft_texture,
-              _1,
-              boost::bind(&sc::Canvas::getTexture, _2),
-              boost::bind(&sc::Canvas::getCullCallback, _2),
-              _2
-            )
-          );
-
+           "object", [](SGPropertyNode* placement, sc::CanvasPtr canvas) {
+              return FGODGauge::set_aircraft_texture(placement,
+                                                     canvas->getTexture(),
+                                                     canvas->getCullCallback(),
+                                                     canvas);
+          });
+          
           sc::Canvas::addPlacementFactory("scenery-object", &addSceneObjectPlacement);
       }
   }
