@@ -76,13 +76,13 @@ static HTS_Boolean HTS_dp_match(const char *string, const char *pattern, size_t 
    if (string[0] == '\0' && pattern[0] == '\0')
       return TRUE;
    if (pattern[0] == '*') {
-      if (HTS_dp_match(string + 1, pattern, pos + 1, max) == 1)
+      if (HTS_dp_match(string + 1, pattern, pos + 1, max) == TRUE)
          return TRUE;
       else
          return HTS_dp_match(string, pattern + 1, pos, max);
    }
    if (string[0] == pattern[0] || pattern[0] == '?') {
-      if (HTS_dp_match(string + 1, pattern + 1, pos + 1, max + 1) == 1)
+      if (HTS_dp_match(string + 1, pattern + 1, pos + 1, max + 1) == TRUE)
          return TRUE;
    }
 
@@ -1165,7 +1165,7 @@ HTS_Boolean HTS_ModelSet_load(HTS_ModelSet * ms, char **voices, size_t num_voice
             if (vector_length[j] != temp_vector_length[j])
                error = TRUE;
          for (j = 0; j < ms->num_streams; j++)
-            if (is_msd[j] != is_msd[j])
+            if (is_msd[j] != temp_is_msd[j])
                error = TRUE;
          for (j = 0; j < ms->num_streams; j++)
             if (num_windows[j] != temp_num_windows[j])
@@ -1468,7 +1468,9 @@ HTS_Boolean HTS_ModelSet_load(HTS_ModelSet * ms, char **voices, size_t num_voice
    }
 
    if (gv_off_context != NULL) {
-      sprintf(buff1, "GV-Off { %s }", gv_off_context);
+      snprintf(buff1, HTS_MAXBUFLEN, "GV-Off { %s }", gv_off_context);
+      buff1[HTS_MAXBUFLEN - 1] = '\0';
+
       gv_off_context_fp = HTS_fopen_from_data((void *) buff1, strlen(buff1) + 1);
       ms->gv_off_context = (HTS_Question *) HTS_calloc(1, sizeof(HTS_Question));
       HTS_Question_initialize(ms->gv_off_context);
