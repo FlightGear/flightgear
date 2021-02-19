@@ -52,6 +52,8 @@
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/sound/soundmgr.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/timing/timestamp.hxx>
+
 #include <Autopilot/route_mgr.hxx>
 #include <Aircraft/replay.hxx>
 #include <Aircraft/initialstate.hxx>
@@ -1698,7 +1700,7 @@ fgOptLoadTape(const char* arg)
                 SG_LOG(SG_GENERAL, SG_POPUP, "Timeout while reading downloaded recording from " << url << ". local path=" << path);
                 return FG_OPTIONS_EXIT;
             }
-            sleep(1);
+            SGTimeStamp::sleepForMSec(1000);
         }
     }
         
