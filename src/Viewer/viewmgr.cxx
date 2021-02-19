@@ -80,9 +80,8 @@ FGViewMgr::init ()
         SG_LOG(SG_VIEW, SG_ALERT,
                 "Invalid /sim/current-view/view-number=" << _current
                 << ". views.size()=" << views.size()
-                << ". Will assert false and use zero."
+                << ". Will use zero."
                 );
-        assert(0);
         _current = 0;
     }
 
@@ -197,7 +196,13 @@ FGViewMgr::get_current_view()
 {
     if (views.empty())
         return nullptr;
-    assert(_current >= 0 && _current < (int) views.size());
+    if (_current < 0 || _current >= (int) views.size()) {
+        SG_LOG(SG_VIEW, SG_ALERT, "Invalid _current=" << _current
+                << ". views.size()=" << views.size()
+                << ". Will use zero."
+                );
+        _current = 0;
+    }
     return views[_current];
 }
 
@@ -305,20 +310,14 @@ void FGViewMgr::setCurrentViewIndex(int newview)
                 newview = i;
         }
         if (newview < 0) {
-            SG_LOG(SG_VIEW, SG_ALERT,
-                    "Failed to find -ve newview=" << newview
-                    << ". Will assert false and ignore."
-                    );
-            assert(0);
+            SG_LOG(SG_VIEW, SG_ALERT, "Failed to find -ve newview=" << newview);
             return;
         }
     }
     if (newview < 0 || newview >= (int) views.size()) {
-        SG_LOG(SG_VIEW, SG_ALERT, "Invalid newview=" << newview
+        SG_LOG(SG_VIEW, SG_ALERT, "Ignoring invalid newview=" << newview
                 << ". views.size()=" << views.size()
-                << ". Will assert false and ignore."
                 );
-        assert(0);
         return;
     }
 
