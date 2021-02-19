@@ -1953,7 +1953,7 @@ void FGReplay::indexContinuousRecording(const void* data, size_t numbytes)
     auto num_frames = m_continuous_in_time_to_frameinfo.size();
     auto num_new_frames = num_frames - original_num_frames;
     if (num_new_frames) {
-        SG_LOG(SG_SYSTEMS, SG_ALERT, "Continuous recording: index updated:"
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Continuous recording: index updated:"
                 << " num_frames=" << num_frames
                 << " num_new_frames=" << num_new_frames
                 << " new_bytes=" << new_bytes
