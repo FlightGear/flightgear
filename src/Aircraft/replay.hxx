@@ -28,6 +28,7 @@
 #  include <config.h>
 #endif
 
+#include <mutex>
 #include <simgear/compiler.h>
 
 #include <simgear/math/sg_types.hxx>
