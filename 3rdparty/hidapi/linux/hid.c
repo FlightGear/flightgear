@@ -104,6 +104,9 @@ static __u32 detect_kernel_version(void)
 static hid_device *new_hid_device(void)
 {
 	hid_device *dev = calloc(1, sizeof(hid_device));
+	if (dev == NULL)
+		return NULL;
+
 	dev->device_handle = -1;
 	dev->blocking = 1;
 	dev->uses_numbered_reports = 0;

@@ -1285,7 +1285,8 @@ int video_recv_video(struct iaxc_call *call, int sel_call,
 	if ( !call->vdecoder )
 	{
 		call->vdecoder = create_codec(format, 0);
-		fprintf(stderr,"**** Created decoder codec %s\n",call->vdecoder->name);
+		if (call->vdecoder != NULL)
+			fprintf(stderr,"**** Created decoder codec %s\n",call->vdecoder->name);
 	}
 
 	if ( !call->vdecoder )

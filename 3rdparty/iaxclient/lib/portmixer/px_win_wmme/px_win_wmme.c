@@ -137,6 +137,9 @@ PxMixer *Px_OpenMixer( void *pa_stream, int index )
       return NULL;
 
    mixer = (PxInfo *)malloc(sizeof(PxInfo));
+   if (mixer == NULL)
+      return NULL;
+
    mixer->hInputMixer = NULL;
    mixer->hOutputMixer = NULL;
 

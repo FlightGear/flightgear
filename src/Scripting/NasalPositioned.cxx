@@ -433,7 +433,7 @@ bool geodFromHash(naRef ref, SGGeod& result)
 
 int geodFromArgs(naRef* args, int offset, int argc, SGGeod& result)
 {
-  if (offset >= argc) {
+  if (offset >= argc || !args) {
     return 0;
   }
 

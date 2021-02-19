@@ -125,6 +125,9 @@ struct hid_device_ {
 static hid_device *new_hid_device(void)
 {
 	hid_device *dev = calloc(1, sizeof(hid_device));
+	if (dev == NULL)
+		return NULL;
+
 	dev->device_handle = NULL;
 	dev->blocking = 1;
 	dev->uses_numbered_reports = 0;
@@ -562,6 +565,9 @@ static void hid_report_callback(void *context, IOReturn result, void *sender,
 
 	/* Make a new Input Report object */
 	rpt = calloc(1, sizeof(struct input_report));
+	if (rpt == NULL)
+		return;
+
 	rpt->data = calloc(1, report_length);
 	memcpy(rpt->data, report, report_length);
 	rpt->len = report_length;

@@ -99,6 +99,9 @@ uint32_t pop_local_item(uint8_t tag);
 hid_item* build_item(uint8_t tag, uint8_t flags, hid_item* global_state)
 {
     hid_item* item = (hid_item*) calloc(sizeof(hid_item), 1);
+    if (item == NULL)
+        return NULL;
+
     item->flags = flags;
     item->usage = pop_local_item(HID_USAGE_ITEM);
     item->type = tag;

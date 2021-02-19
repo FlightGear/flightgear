@@ -121,6 +121,9 @@ PxMixer *Px_OpenMixer( void *pa_stream, int index )
       return NULL;
 
    info = (PxInfo *)malloc(sizeof(PxInfo));
+   if (info == NULL)
+      return NULL;
+
    info->index = PxDevice[index];
 
    if (PxDevices[index]==0)

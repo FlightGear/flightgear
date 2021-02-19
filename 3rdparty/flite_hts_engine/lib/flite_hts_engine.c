@@ -344,6 +344,8 @@ void Flite_Text_Analyzer_analysis(Flite_Text_Analyzer * analyzer, const char *te
 
    /* allocate */
    fu = (Flite_Utterance *) malloc(sizeof(Flite_Utterance));
+   if (fu == NULL)
+      return;
 
    /* create voice */
    fu->v = REGISTER_VOX(NULL);

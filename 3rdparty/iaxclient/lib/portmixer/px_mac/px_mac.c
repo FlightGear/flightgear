@@ -120,7 +120,10 @@ PxMixer *Px_OpenMixer( void *pa_stream, int index )
    Handle                       h;
    unsigned char               *data;
    
-   info = (PxInfo *)malloc(sizeof(PxInfo));   
+   info = (PxInfo *)malloc(sizeof(PxInfo));
+   if (info == NULL)
+      return NULL;
+
    past = (internalPortAudioStream *) pa_stream;
    macInfo = (PaHostSoundControl *) past->past_DeviceData;
 

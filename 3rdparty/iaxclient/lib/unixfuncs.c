@@ -369,6 +369,8 @@ int iaxci_prioboostbegin()
 {
 	struct sched_param   schp = { 0 };
 	prioboost *b = calloc(sizeof(*b),1);
+	if (b == NULL)
+		return 1;
 
 	int result = 0;
 
