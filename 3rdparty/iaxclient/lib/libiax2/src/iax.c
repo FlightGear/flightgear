@@ -1348,10 +1348,8 @@ static int send_command_samples(struct iax_session *i, char type, int command, u
 	return __send_command(i, type, command, ts, data, datalen, seqno, 0, 0, 0, 0, samples);
 }
 
-
 int iax_transfer(struct iax_session *session, const char *number)
 {
-	static int res;				//Return Code
 	struct iax_ie_data ied;			//IE Data Structure (Stuff To Send)
 
 	// Clear The Memory Used For IE Buffer
@@ -1361,7 +1359,7 @@ int iax_transfer(struct iax_session *session, const char *number)
 	iax_ie_append_str(&ied, IAX_IE_CALLED_NUMBER, number);
 
 	// Send The Transfer Command - Asterisk Will Handle The Rest!
-	res = send_command(session, AST_FRAME_IAX, IAX_COMMAND_TRANSFER, 0, ied.buf, ied.pos, -1);
+	send_command(session, AST_FRAME_IAX, IAX_COMMAND_TRANSFER, 0, ied.buf, ied.pos, -1);
 
 	// Return Success
 	return 0;
@@ -2530,7 +2528,7 @@ static void iax_handle_vnak(struct iax_session *session, struct ast_iax2_full_hd
 			{
 				/*
 				 * We cannot retransmit immediately, since the frames are ordered by retransmit time
-				 * We need to collect them and orrange them in ascending order of their oseqno
+				 * We need to collect them and arrange them in ascending order of their oseqno
 				 */
 				tmp = (struct iax_sched *)calloc(1, sizeof(struct iax_sched));
 				tmp->frame = sch->frame;
