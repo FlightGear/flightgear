@@ -11,16 +11,18 @@
 #include <string>
 #include <fstream>
 
-#include <simgear/sg_inlines.h>
+#include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/sg_random.h>
 #include <simgear/io/iostreams/sgstream.hxx>
-#include <simgear/structure/exception.hxx>
-#include <simgear/structure/commands.hxx>
+#include <simgear/math/sg_random.h>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/sg_inlines.h>
+#include <simgear/structure/commands.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/structure/exception.hxx>
 #include <simgear/timing/sg_time.hxx>
+
 #include <Network/RemoteXMLRequest.hxx>
 
 #include <FDM/flight.hxx>
@@ -756,6 +758,8 @@ do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
           {
               if (!quiet) {
                   SG_LOG(SG_IO, SG_ALERT, "loadxml: Cannot find XML property file '" << file << "'.");
+                  simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::XMLLoadCommand,
+                                         "loadxml: no such file:" + file.utf8Str(), file);
               }
               return false;
           }
@@ -764,6 +768,8 @@ do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
         if (!XMLLoader::findAirportData(icao, file.utf8Str(), file)) {
             if (!quiet) {
                 SG_LOG(SG_IO, SG_INFO, "loadxml: failed to find airport data for " << file << " at ICAO:" << icao);
+                simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::XMLLoadCommand,
+                                       "loadxml: no airprot data file for:" + icao, file);
             }
           return false;
         }
@@ -791,15 +797,17 @@ do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
 
     // don't report Sentry errors for Nasal-loaded XML, since it makes
     // for very noisy reports
-    flightgear::sentryThreadReportXMLErrors(false);
+    flightgear::SentryXMLErrorSupression xmls;
     try {
         readProperties(validated_path, targetnode, true);
     } catch (const sg_exception &e) {
+        if (!quiet) {
+            simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::XMLLoadCommand,
+                                   "loadxml exception:" + e.getFormattedMessage(), e.getLocation());
+        }
         SG_LOG(SG_IO, quiet ? SG_DEV_WARN : SG_WARN, "loadxml exception: " << e.getFormattedMessage());
-        flightgear::sentryThreadReportXMLErrors(true);
         return false;
     }
-    flightgear::sentryThreadReportXMLErrors(true);
 
     return true;
 }

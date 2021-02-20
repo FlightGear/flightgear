@@ -28,11 +28,13 @@
 
 #include "FGDeviceConfigurationMap.hxx"
 
+#include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/sentryIntegration.hxx>
 #include <Navaids/NavDataCache.hxx>
 
 using simgear::PropertyList;
@@ -158,15 +160,21 @@ void FGDeviceConfigurationMap::readCachedData(const SGPath& path)
 
 void FGDeviceConfigurationMap::refreshCacheForFile(const SGPath& path)
 {
-  SG_LOG(SG_INPUT, SG_DEBUG, "Reading device file " << path);
-  SGPropertyNode_ptr n(new SGPropertyNode);
-  try {
-    readProperties(path, n);
-  } catch (sg_exception&) {
-    SG_LOG(SG_INPUT, SG_ALERT, "parse failure reading:" << path);
-    return;
-  }
-  
+    simgear::ErrorReportContext ectx("input-device", path.utf8Str());
+
+    SG_LOG(SG_INPUT, SG_DEBUG, "Reading device file " << path);
+    SGPropertyNode_ptr n(new SGPropertyNode);
+    flightgear::SentryXMLErrorSupression dontReportXmlErrors;
+    try {
+        readProperties(path, n);
+    } catch (sg_exception& e) {
+        SG_LOG(SG_INPUT, SG_ALERT, "parse failure reading:" << path);
+        simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::InputDeviceConfig,
+                               "Failed to load input device configuration:" + e.getFormattedMessage(),
+                               path);
+        return;
+    }
+
   std::string suffix = computeSuffix(n);
   string_list names;
   for (auto nameProp : n->getChildren("name")) {

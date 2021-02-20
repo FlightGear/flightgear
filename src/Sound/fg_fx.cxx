@@ -31,15 +31,17 @@
 
 #include "fg_fx.hxx"
 
-#include <algorithm>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
+#include <Main/sentryIntegration.hxx>
 #include <Sound/soundmanager.hxx>
 #include <Main/sentryIntegration.hxx>
+#include <algorithm>
 
+#include <simgear/debug/ErrorReportingCallback.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/misc/sg_path.hxx>
 #include <simgear/sound/xmlsound.hxx>
 
 FGFX::FGFX ( const std::string &refname, SGPropertyNode *props ) :
@@ -121,6 +123,8 @@ FGFX::init()
     SGPath path = globals->resolve_aircraft_path(path_str);
     if (path.isNull())
     {
+        simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::AudioFX,
+                               "Failed to find FX XML file:" + path_str, sg_location{path_str});
         SG_LOG(SG_SOUND, SG_ALERT,
                "File not found: '" << path_str);
         return;
@@ -132,7 +136,9 @@ FGFX::init()
     try {
         flightgear::SentryXMLErrorSupression sup;
         readProperties(path, &root);
-    } catch (const sg_exception &) {
+    } catch (const sg_exception& e) {
+        simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::AudioFX,
+                               "Failure loading FX XML:" + e.getFormattedMessage(), e.getLocation());
         SG_LOG(SG_SOUND, SG_ALERT,
                "Error reading file '" << path << '\'');
         return;
@@ -152,6 +158,8 @@ FGFX::init()
                 }
             } catch ( sg_exception &e ) {
                 SG_LOG(SG_SOUND, SG_ALERT, e.getFormattedMessage());
+                simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::AudioFX,
+                                       "Failure creating Audio FX:" + e.getFormattedMessage(), path);
             }
         }
     }

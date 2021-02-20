@@ -32,7 +32,9 @@
 
 #include <cmath>
 
+#include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/props/props_io.hxx>
+
 #include "FGDeviceConfigurationMap.hxx"
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalSys.hxx>
@@ -202,6 +204,9 @@ void FGJoystickInput::postinit()
     if (!js_node || js->notWorking())
       continue;
 
+    // FIXME : need to get input device path to disambiguate
+    simgear::ErrorReportContext errCtx("input-device", "");
+
 #ifdef WIN32
     JOYCAPS jsCaps ;
     joyGetDevCaps( i, &jsCaps, sizeof(jsCaps) );
@@ -244,7 +249,12 @@ void FGJoystickInput::postinit()
     unsigned int j;
     for (j = 0; j < nasal.size(); j++) {
       nasal[j]->setStringValue("module", module.c_str());
-      nasalsys->handleCommand(nasal[j],nullptr);
+      bool ok = nasalsys->handleCommand(nasal[j], nullptr);
+      if (!ok) {
+          // TODO: get the Nasal errors logged properly
+          simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::InputDeviceConfig,
+                                 "Failed to parse input device Nasal");
+      }
     }
 
     //

@@ -31,10 +31,13 @@
 #include <string>
 #include <vector>
 
+#include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
+
 #include <Main/fg_props.hxx>
+#include <Main/sentryIntegration.hxx>
 
 using std::vector;
 using simgear::PropertyList;
@@ -189,13 +192,13 @@ void FGXMLAutopilotGroup::addAutopilotFromFile( const std::string& name,
   SGPath config = globals->resolve_maybe_aircraft_path(path);
   if( config.isNull() )
   {
-    SG_LOG
-    (
-      SG_AUTOPILOT,
-      SG_ALERT,
-      "Cannot find property-rule configuration file '" << path << "'."
-    );
-    return;
+      simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::AircraftSystems,
+                             string{"Autopilot XML not found:"} + path, sg_location{path});
+      SG_LOG(
+          SG_AUTOPILOT,
+          SG_ALERT,
+          "Cannot find property-rule configuration file '" << path << "'.");
+      return;
   }
   SG_LOG
   (
@@ -206,11 +209,13 @@ void FGXMLAutopilotGroup::addAutopilotFromFile( const std::string& name,
 
   try
   {
-    SGPropertyNode_ptr configNode = new SGPropertyNode();
-    readProperties( config, configNode );
+      flightgear::SentryXMLErrorSupression xmlc;
 
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "adding  property-rule subsystem " << name);
-    addAutopilot(name, apNode, configNode);
+      SGPropertyNode_ptr configNode = new SGPropertyNode();
+      readProperties(config, configNode);
+
+      SG_LOG(SG_AUTOPILOT, SG_INFO, "adding  property-rule subsystem " << name);
+      addAutopilot(name, apNode, configNode);
   }
   catch (const sg_exception& e)
   {
@@ -221,6 +226,8 @@ void FGXMLAutopilotGroup::addAutopilotFromFile( const std::string& name,
       "Failed to load property-rule configuration: " << config
                                              << ": " << e.getMessage()
     );
+    simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::AircraftSystems,
+                           string{"Autopilot XML faield to load:"} + e.getFormattedMessage(), e.getLocation());
     return;
   }
 }
