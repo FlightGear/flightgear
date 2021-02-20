@@ -298,7 +298,8 @@ void iaxci_usermsg(int type, const char *fmt, ...)
 	e.ev.text.type = type;
 	e.ev.text.callNo = -1;
 	va_start(args, fmt);
-	vsnprintf(e.ev.text.message, IAXC_EVENT_BUFSIZ, fmt, args);
+	vsnprintf(e.ev.text.message, IAXC_EVENT_BUFSIZ - 1, fmt, args);
+	e.ev.text.message[IAXC_EVENT_BUFSIZ - 1] = '\0';
 	va_end(args);
 
 	iaxci_post_event(e);
@@ -319,15 +320,20 @@ void iaxci_do_state_callback(int callNo)
 	iaxc_event e;
 	if ( callNo < 0 || callNo >= max_calls )
 		return;
+
 	e.type = IAXC_EVENT_STATE;
 	e.ev.call.callNo = callNo;
 	e.ev.call.state = calls[callNo].state;
 	e.ev.call.format = calls[callNo].format;
 	e.ev.call.vformat = calls[callNo].vformat;
-	strncpy(e.ev.call.remote,        calls[callNo].remote,        IAXC_EVENT_BUFSIZ);
-	strncpy(e.ev.call.remote_name,   calls[callNo].remote_name,   IAXC_EVENT_BUFSIZ);
-	strncpy(e.ev.call.local,         calls[callNo].local,         IAXC_EVENT_BUFSIZ);
-	strncpy(e.ev.call.local_context, calls[callNo].local_context, IAXC_EVENT_BUFSIZ);
+	strncpy(e.ev.call.remote,        calls[callNo].remote,        IAXC_EVENT_BUFSIZ - 1);
+	e.ev.call.remote[IAXC_EVENT_BUFSIZ - 1] = '\0';
+	strncpy(e.ev.call.remote_name,   calls[callNo].remote_name,   IAXC_EVENT_BUFSIZ - 1);
+	e.ev.call.remote_name[IAXC_EVENT_BUFSIZ - 1] = '\0';
+	strncpy(e.ev.call.local,         calls[callNo].local,         IAXC_EVENT_BUFSIZ - 1);
+	e.ev.call.local[IAXC_EVENT_BUFSIZ - 1] = '\0';
+	strncpy(e.ev.call.local_context, calls[callNo].local_context, IAXC_EVENT_BUFSIZ - 1);
+	e.ev.call.local_context[IAXC_EVENT_BUFSIZ - 1] = '\0';
 	iaxci_post_event(e);
 }
 
@@ -614,8 +620,10 @@ EXPORT int iaxc_initialize(int num_calls)
 
 	for ( i = 0; i < max_calls; i++ )
 	{
-		strncpy(calls[i].callerid_name,   DEFAULT_CALLERID_NAME,   IAXC_EVENT_BUFSIZ);
-		strncpy(calls[i].callerid_number, DEFAULT_CALLERID_NUMBER, IAXC_EVENT_BUFSIZ);
+		strncpy(calls[i].callerid_name,   DEFAULT_CALLERID_NAME,   IAXC_EVENT_BUFSIZ - 1);
+		calls[i].callerid_name[IAXC_EVENT_BUFSIZ - 1] = '\0';
+		strncpy(calls[i].callerid_number, DEFAULT_CALLERID_NUMBER, IAXC_EVENT_BUFSIZ - 1);
+		calls[i].callerid_number[IAXC_EVENT_BUFSIZ - 1] = '\0';
 	}
 
 	if ( !test_mode )
@@ -726,8 +734,10 @@ EXPORT void iaxc_set_callerid(const char * name, const char * number)
 
 	for ( i = 0; i < max_calls; i++ )
 	{
-		strncpy(calls[i].callerid_name,   name,   IAXC_EVENT_BUFSIZ);
-		strncpy(calls[i].callerid_number, number, IAXC_EVENT_BUFSIZ);
+		strncpy(calls[i].callerid_name,   name,   IAXC_EVENT_BUFSIZ - 1);
+		calls[i].callerid_name[IAXC_EVENT_BUFSIZ - 1] = '\0';
+		strncpy(calls[i].callerid_number, number, IAXC_EVENT_BUFSIZ - 1);
+		calls[i].callerid_number[IAXC_EVENT_BUFSIZ - 1] = '\0';
 	}
 }
 
@@ -1271,9 +1281,12 @@ EXPORT int iaxc_register_ex(const char * user, const char * pass, const char * h
 	newreg->last = iax_tvnow();
 	newreg->refresh = refresh;  
 
-	strncpy(newreg->host, host, 256);
-	strncpy(newreg->user, user, 256);
-	strncpy(newreg->pass, pass, 256);
+	strncpy(newreg->host, host, 255);
+	newreg->host[255] = '\0';
+	strncpy(newreg->user, user, 255);
+	newreg->user[255] = '\0';
+	strncpy(newreg->pass, pass, 255);
+	newreg->pass[255] = '\0';
 
 	/* send out the initial registration with refresh seconds */
 	iax_register(newreg->session, host, user, pass, refresh);
@@ -1361,22 +1374,31 @@ EXPORT int iaxc_call_ex(const char *num, const char* callerid_name, const char* 
 
 	if ( ext )
 	{
-		strncpy(calls[callNo].remote_name, num, IAXC_EVENT_BUFSIZ);
-		strncpy(calls[callNo].remote,    ++ext, IAXC_EVENT_BUFSIZ);
+		strncpy(calls[callNo].remote_name, num, IAXC_EVENT_BUFSIZ - 1);
+		strncpy(calls[callNo].remote,    ++ext, IAXC_EVENT_BUFSIZ - 1);
 	} else
 	{
-		strncpy(calls[callNo].remote_name, num, IAXC_EVENT_BUFSIZ);
-		strncpy(calls[callNo].remote,      "" , IAXC_EVENT_BUFSIZ);
+		strncpy(calls[callNo].remote_name, num, IAXC_EVENT_BUFSIZ - 1);
+		strncpy(calls[callNo].remote,      "" , IAXC_EVENT_BUFSIZ - 1);
+	}
+	calls[callNo].remote_name[IAXC_EVENT_BUFSIZ - 1] = '\0';
+	calls[callNo].remote[IAXC_EVENT_BUFSIZ - 1] = '\0';
+
+	if ( callerid_number != NULL ) {
+		strncpy(calls[callNo].callerid_number, callerid_number, IAXC_EVENT_BUFSIZ - 1);
+		calls[callNo].callerid_number[IAXC_EVENT_BUFSIZ - 1] = '\0';
 	}
 
-	if ( callerid_number != NULL )
-		strncpy(calls[callNo].callerid_number, callerid_number, IAXC_EVENT_BUFSIZ);
+	if ( callerid_name != NULL ) {
+		strncpy(calls[callNo].callerid_name, callerid_name, IAXC_EVENT_BUFSIZ - 1);
+		calls[callNo].callerid_name[IAXC_EVENT_BUFSIZ - 1] = '\0';
+	}
 
-	if ( callerid_name != NULL )
-		strncpy(calls[callNo].callerid_name, callerid_name, IAXC_EVENT_BUFSIZ);
+	strncpy(calls[callNo].local        , calls[callNo].callerid_name, IAXC_EVENT_BUFSIZ - 1);
+	calls[callNo].local[IAXC_EVENT_BUFSIZ - 1] = '\0';
 
-	strncpy(calls[callNo].local        , calls[callNo].callerid_name, IAXC_EVENT_BUFSIZ);
-	strncpy(calls[callNo].local_context, "default", IAXC_EVENT_BUFSIZ);
+	strncpy(calls[callNo].local_context, "default", IAXC_EVENT_BUFSIZ - 1);
+	calls[callNo].local_context[IAXC_EVENT_BUFSIZ - 1] = '\0';
 
 	calls[callNo].state = IAXC_CALL_STATE_ACTIVE | IAXC_CALL_STATE_OUTGOING;
 
@@ -1716,31 +1738,35 @@ static void iaxc_handle_connect(struct iax_event * e)
 
 	if ( e->ies.called_number )
 		strncpy(calls[callno].local, e->ies.called_number,
-				IAXC_EVENT_BUFSIZ);
+				IAXC_EVENT_BUFSIZ - 1);
 	else
 		strncpy(calls[callno].local, "unknown",
-				IAXC_EVENT_BUFSIZ);
+				IAXC_EVENT_BUFSIZ - 1);
+	calls[callno].local[IAXC_EVENT_BUFSIZ - 1] = '\0';
 
 	if ( e->ies.called_context )
 		strncpy(calls[callno].local_context, e->ies.called_context,
-				IAXC_EVENT_BUFSIZ);
+				IAXC_EVENT_BUFSIZ - 1);
 	else
 		strncpy(calls[callno].local_context, "",
-				IAXC_EVENT_BUFSIZ);
+				IAXC_EVENT_BUFSIZ - 1);
+	calls[callno].local_context[IAXC_EVENT_BUFSIZ - 1] = '\0';
 
 	if ( e->ies.calling_number )
 		strncpy(calls[callno].remote, e->ies.calling_number,
-				IAXC_EVENT_BUFSIZ);
+				IAXC_EVENT_BUFSIZ - 1);
 	else
 		strncpy(calls[callno].remote, "unknown",
-				IAXC_EVENT_BUFSIZ);
+				IAXC_EVENT_BUFSIZ - 1);
+	calls[callno].remote[IAXC_EVENT_BUFSIZ - 1] = '\0';
 
 	if ( e->ies.calling_name )
 		strncpy(calls[callno].remote_name, e->ies.calling_name,
-				IAXC_EVENT_BUFSIZ);
+				IAXC_EVENT_BUFSIZ - 1);
 	else
 		strncpy(calls[callno].remote_name, "unknown",
-				IAXC_EVENT_BUFSIZ);
+				IAXC_EVENT_BUFSIZ - 1);
+	calls[callno].remote_name[IAXC_EVENT_BUFSIZ - 1] = '\0';
 
 	iaxc_note_activity(callno);
 	iaxci_usermsg(IAXC_STATUS, "Call from (%s)", calls[callno].remote);
