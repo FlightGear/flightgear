@@ -8,9 +8,10 @@
 #include <simgear/structure/SGBinding.hxx>
 #include <simgear/props/props_io.hxx>
 
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/locale.hxx>
-#include <Main/fg_props.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #include "new_gui.hxx"
 #include "FGPUIMenuBar.hxx"
@@ -160,6 +161,8 @@ FGPUIMenuBar::fireItem (puObject * item)
     const char * name = item->getLegend();
     vector<SGBinding *> &bindings = _bindings[name];
     int nBindings = bindings.size();
+
+    flightgear::addSentryBreadcrumb("fire menu item:" + string{item->getLabel()}, "info");
 
     for (int i = 0; i < nBindings; i++)
         bindings[i]->fire();

@@ -62,15 +62,15 @@ auto OSG_messageWhitelist = {
 };
 
 auto XML_messageWhitelist = {
-     "Cannot open file",
-     "not well-formed (invalid token)",
-     "mismatched tag",
-     "syntax error",
-     "no element found",
-     "Root element name is",
-     "XML or text declaration not at start of entity",
-     "Failed to open file"
-};
+    "Cannot open file",
+    "not well-formed (invalid token)",
+    "mismatched tag",
+    "syntax error",
+    "no element found",
+    "Root element name is",
+    "XML or text declaration not at start of entity",
+    "Failed to open file",
+    "unclosed token"};
 
 auto exception_messageWhitelist = {
     "position is invalid, NaNs",    ///< avoid spam when NaNs occur
@@ -550,6 +550,16 @@ void addSentryTag(const std::string& tag, const std::string& value)
         return;
     
     addSentryTag(tag.c_str(), value.c_str());
+}
+
+SentryXMLErrorSupression::SentryXMLErrorSupression()
+{
+    sentryThreadReportXMLErrors(false);
+}
+
+SentryXMLErrorSupression::~SentryXMLErrorSupression()
+{
+    sentryThreadReportXMLErrors(true);
 }
 
 } // of namespace flightgear
