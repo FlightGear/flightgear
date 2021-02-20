@@ -235,9 +235,9 @@ const cst_val *cg_phone_rindex(const cst_item *p)
 const cst_val *cg_is_pau(const cst_item *p)
 {
     if (p && cst_streq("pau",item_feat_string(p,"name")))
-        return &val_int_1;
+        return VAL_INT_1;
     else
-        return &val_int_0;
+        return VAL_INT_0;
 }
 
 const cst_val *cg_find_phrase_number(const cst_item *p)
@@ -483,7 +483,7 @@ static const cst_val *word_punc(const cst_item *word)
     ww = item_as(word,"Token");
 
     if ((ww != NULL) && (item_next(ww) != 0))
-	v = &val_string_empty;
+	v = (cst_val *) &val_string_empty;
     else
 	v = ffeature(item_parent(ww),"punc");
 
