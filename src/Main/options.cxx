@@ -1595,7 +1595,7 @@ fgOptLoadTape(const char* arg)
     //
     struct DelayedTapeLoader : SGPropertyChangeListener {
     
-        DelayedTapeLoader( const char * tape, simgear::HTTP::FileRequest* filerequest) :
+        DelayedTapeLoader( const char * tape, simgear::HTTP::FileRequestRef filerequest) :
             _tape(SGPath::fromUtf8(tape)),
             _filerequest(filerequest)
         {
@@ -1627,11 +1627,11 @@ fgOptLoadTape(const char* arg)
         }
     private:
         SGPath _tape;
-        simgear::HTTP::FileRequest* _filerequest;
+        simgear::HTTP::FileRequestRef _filerequest;
     };
     
     SGPropertyNode_ptr properties(new SGPropertyNode);
-    simgear::HTTP::FileRequest* filerequest = nullptr;
+    simgear::HTTP::FileRequestRef filerequest;
     
     std::string path = urlToLocalPath(arg);
     if (path == "") {
@@ -1653,7 +1653,7 @@ fgOptLoadTape(const char* arg)
         const char* url = arg;
         FGHTTPClient* http = globals->add_new_subsystem<FGHTTPClient>();
         http->init();
-        filerequest = new simgear::HTTP::FileRequest(url, path, true /*append*/);
+        filerequest.reset(new simgear::HTTP::FileRequest(url, path, true /*append*/));
         long max_download_speed = fgGetLong("/sim/replay/download-max-bytes-per-sec");
         if (max_download_speed != 0) {
             // Can be useful to limite download speed for testing background

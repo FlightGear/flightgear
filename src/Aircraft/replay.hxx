@@ -133,7 +133,7 @@ public:
             const SGPath& Filename,
             bool Preview,
             SGPropertyNode& MetaMeta,
-            simgear::HTTP::FileRequest* filerequest=nullptr
+            simgear::HTTP::FileRequestRef filerequest=nullptr
             );
     
     // Attempts to load Continuous recording header properties into

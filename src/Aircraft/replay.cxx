@@ -1992,7 +1992,7 @@ void FGReplay::call_indexContinuousRecording(void* ref, const void* data, size_t
  * Actual data and signal configuration is not read when in "Preview" mode.
  */
 bool
-FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMeta, simgear::HTTP::FileRequest* filerequest)
+FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMeta, simgear::HTTP::FileRequestRef filerequest)
 {
     SG_LOG(SG_SYSTEMS, SG_DEBUG, "loading Preview=" << Preview << " Filename=" << Filename);
 
@@ -2026,14 +2026,16 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMet
         m_num_frames_multiplayer = 0;
         m_continuous_indexing_in.open(Filename.str());
         m_continuous_indexing_pos = in.tellg();
-        SG_LOG(SG_SYSTEMS, SG_DEBUG, "filerequest=" << filerequest);
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "filerequest=" << filerequest.get());
 
         // Make an in-memory index of the recording.
         if (filerequest) {
-            // Always call indexContinuousRecording once in case there is
-            // nothing to download.
-            indexContinuousRecording(nullptr, 1 /*Zero means EOF. */);
-            filerequest->setCallback(call_indexContinuousRecording, this);
+            filerequest->setCallback(
+                    [this](const void* data, size_t numbytes)
+                    {
+                        indexContinuousRecording(data, numbytes);
+                    }
+                    );
         }
         else {
             indexContinuousRecording(nullptr, 0);
