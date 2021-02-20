@@ -10,7 +10,9 @@
 #include <cstring>		// for strcmp()
 
 #include <simgear/compiler.h>
+#include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/debug/logstream.hxx>
+
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/placement.hxx>
@@ -74,13 +76,20 @@ FGAircraftModel::init ()
         return;
     }
 
+    simgear::ErrorReportContext ec("primary-aircraft", "yes");
+
     SGPropertyNode_ptr sim = fgGetNode("/sim", true);
     for (auto model : sim->getChildren("model")) {
         std::string path = model->getStringValue("path", "Models/Geometry/glider.ac");
         std::string usage = model->getStringValue("usage", "external");
 
+        simgear::ErrorReportContext ec("aircraft-model", path);
+
         SGPath resolvedPath = globals->resolve_aircraft_path(path);
         if (resolvedPath.isNull()) {
+            simgear::reportFailure(simgear::LoadFailure::NotFound,
+                                   simgear::ErrorCode::XMLModelLoad,
+                                   "Failed to find aircraft model", SGPath::fromUtf8(path));
             SG_LOG(SG_AIRCRAFT, SG_ALERT, "Failed to find aircraft model: " << path);
             continue;
         }
@@ -89,6 +98,10 @@ FGAircraftModel::init ()
         try {
             node = fgLoad3DModelPanel( resolvedPath, globals->get_props());
         } catch (const sg_exception &ex) {
+            simgear::reportFailure(simgear::LoadFailure::BadData,
+                                   simgear::ErrorCode::XMLModelLoad,
+                                   "Failed to load aircraft model:" + ex.getFormattedMessage(),
+                                   ex.getLocation());
             SG_LOG(SG_AIRCRAFT, SG_ALERT, "Failed to load aircraft from " << path << ':');
             SG_LOG(SG_AIRCRAFT, SG_ALERT, "  " << ex.getFormattedMessage());
         }

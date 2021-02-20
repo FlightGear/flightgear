@@ -12,12 +12,14 @@
 #include <sys/types.h>
 
 #include <simgear/compiler.h>
-#include <simgear/structure/exception.hxx>
-#include <simgear/props/props_io.hxx>
+#include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/misc/sg_dir.hxx>
+#include <simgear/props/props_io.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Add-ons/AddonManager.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #if defined(SG_UNIX) && !defined(SG_MAC) 
 #include "GL/glx.h"
@@ -207,9 +209,13 @@ NewGUI::showDialog (const string &name)
   
     // check we know about the dialog by name
     if (_dialog_names.find(name) == _dialog_names.end()) {
+        simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::GUIDialog, "Dialog not found:" + name);
         SG_LOG(SG_GENERAL, SG_ALERT, "Dialog " << name << " not defined");
         return false;
     }
+
+    flightgear::addSentryBreadcrumb("showing GUI dialog:" + name, "info");
+
     _active_dialogs[name] = new FGPUIDialog(getDialogProperties(name));
     fgSetString("/sim/gui/dialogs/current-dialog", name);
 
@@ -261,6 +267,8 @@ bool
 NewGUI::closeDialog (const string& name)
 {
     if(_active_dialogs.find(name) != _active_dialogs.end()) {
+        flightgear::addSentryBreadcrumb("closing GUI dialog:" + name, "info");
+
         if(_active_dialog == _active_dialogs[name])
             _active_dialog = 0;
         delete _active_dialogs[name];

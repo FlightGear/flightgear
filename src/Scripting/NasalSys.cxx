@@ -33,19 +33,20 @@
 #include <fstream>
 #include <sstream>
 
-#include <simgear/nasal/nasal.h>
-#include <simgear/nasal/iolib.h>
-#include <simgear/props/props.hxx>
-#include <simgear/math/sg_random.h>
-#include <simgear/misc/sg_path.hxx>
-#include <simgear/io/iostreams/sgstream.hxx>
-#include <simgear/misc/sg_dir.hxx>
-#include <simgear/misc/strutils.hxx>
-#include <simgear/misc/SimpleMarkdown.hxx>
-#include <simgear/structure/commands.hxx>
-#include <simgear/math/sg_geodesy.hxx>
-#include <simgear/structure/event_mgr.hxx>
 #include <simgear/debug/BufferedLogCallback.hxx>
+#include <simgear/debug/ErrorReportingCallback.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
+#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/sg_random.h>
+#include <simgear/misc/SimpleMarkdown.hxx>
+#include <simgear/misc/sg_dir.hxx>
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/strutils.hxx>
+#include <simgear/nasal/iolib.h>
+#include <simgear/nasal/nasal.h>
+#include <simgear/props/props.hxx>
+#include <simgear/structure/commands.hxx>
+#include <simgear/structure/event_mgr.hxx>
 
 #include <simgear/nasal/cppbind/from_nasal.hxx>
 #include <simgear/nasal/cppbind/to_nasal.hxx>

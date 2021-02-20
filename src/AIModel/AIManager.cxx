@@ -21,12 +21,13 @@
 #include <cstring>
 #include <algorithm>
 
-#include <simgear/sg_inlines.h>
+#include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/structure/exception.hxx>
-#include <simgear/structure/commands.hxx>
+#include <simgear/sg_inlines.h>
 #include <simgear/structure/SGBinding.hxx>
+#include <simgear/structure/commands.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Add-ons/AddonManager.hxx>
 #include <Airports/airport.hxx>
@@ -74,9 +75,15 @@ public:
         if (!loadScript.empty()) {
             FGNasalSys* nasalSys = globals->get_subsystem<FGNasalSys>();
             std::string moduleName = "scenario_" + _internalName;
-            nasalSys->createModule(moduleName.c_str(), moduleName.c_str(),
-                                   loadScript.c_str(), loadScript.size(),
-                                   nullptr);
+            bool ok = nasalSys->createModule(moduleName.c_str(), moduleName.c_str(),
+                                             loadScript.c_str(), loadScript.size(),
+                                             nullptr);
+
+            if (!ok) {
+                // TODO: get the Nasal errors logged properly
+                simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::ScenarioLoad,
+                                       "Failed to parse scenario Nasal");
+            }
         }
     }
 
@@ -213,8 +220,10 @@ SGPropertyNode_ptr FGAIManager::registerScenarioFile(SGPropertyNode_ptr root, co
     auto scenariosNode = root->getNode("/sim/ai/scenarios", true);
     SGPropertyNode_ptr sNode;
 
+    simgear::ErrorReportContext ectx("scenario", xmlPath.utf8Str());
+
     // don't report XML errors while loading scenarios, to Sentry
-    flightgear::sentryThreadReportXMLErrors(false);
+    flightgear::SentryXMLErrorSupression xml;
 
     try {
         SGPropertyNode_ptr scenarioProps(new SGPropertyNode);
@@ -246,12 +255,14 @@ SGPropertyNode_ptr FGAIManager::registerScenarioFile(SGPropertyNode_ptr root, co
             
             FGAICarrier::extractCarriersFromScenario(xs, sNode);
         } // of scenarios in the XML file
-    } catch (std::exception&) {
+    } catch (sg_exception& e) {
         SG_LOG(SG_AI, SG_WARN, "Skipping malformed scenario file:" << xmlPath);
+        simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::ScenarioLoad,
+                               string{"The scenario couldn't be loaded:"} + e.getFormattedMessage(),
+                               e.getLocation());
         sNode.reset();
     }
 
-    flightgear::sentryThreadReportXMLErrors(true);
     return sNode;
 }
 
@@ -590,6 +601,7 @@ FGAIBasePtr FGAIManager::getObjectFromProperty(const SGPropertyNode* aProp) cons
 bool
 FGAIManager::loadScenario( const string &id )
 {
+    simgear::ErrorReportContext("scenario", id);
     SGPropertyNode_ptr file = loadScenarioFile(id);
     if (!file) {
         return false;
@@ -646,7 +658,10 @@ FGAIManager::loadScenarioFile(const std::string& scenarioName)
 {
     auto s = fgGetNode("/sim/ai/scenarios");
     if (!s) return {};
-    
+
+    // don't report XML errors while loading scenarios, to Sentry
+    flightgear::SentryXMLErrorSupression xml;
+
     for (auto n : s->getChildren("scenario")) {
         if (n->getStringValue("id") == scenarioName) {
             SGPath path{n->getStringValue("path")};
@@ -657,6 +672,9 @@ FGAIManager::loadScenarioFile(const std::string& scenarioName)
             } catch (const sg_exception &t) {
                 SG_LOG(SG_AI, SG_ALERT, "Failed to load scenario '"
                        << path << "': " << t.getFormattedMessage());
+                simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::ScenarioLoad,
+                                       "Failed to laod scenario XML:" + t.getFormattedMessage(),
+                                       t.getLocation());
             }
         }
     }
