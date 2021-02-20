@@ -327,10 +327,10 @@ int ts_set_stream_pos(cst_tokenstream *ts, int pos)
 
     if (ts->fd)
 #ifdef FLITE_PLUS_HTS_ENGINE
-        ;
+        new_pos = pos < 0 ? 0 : pos;
 #else
-        new_pos = (int)cst_fseek(ts->fd,(long)pos,CST_SEEK_ABSOLUTE);
-#endif /* !FLITE_PLUS_HTS_ENGINE */
+        new_pos = (int)cst_fseek(ts->fd, (long)pos, CST_SEEK_ABSOLUTE);
+#endif
     else if (ts->string_buffer)
     {
         l = cst_strlen(ts->string_buffer);
@@ -343,6 +343,7 @@ int ts_set_stream_pos(cst_tokenstream *ts, int pos)
     }
     else
         new_pos = pos;  /* not sure it can get here */
+
     ts->file_pos = new_pos;
     ts->current_char = ' ';  /* To be safe */
 
@@ -364,26 +365,26 @@ static cst_string ts_getc(cst_tokenstream *ts)
     }
     else if (ts->string_buffer)
     {
-	if (ts->string_buffer[ts->file_pos] == '\0')
-	    ts->current_char = TS_EOF;
-	else
-	    ts->current_char = ts->string_buffer[ts->file_pos];
+    if (ts->string_buffer[ts->file_pos] == '\0')
+        ts->current_char = TS_EOF;
+    else
+        ts->current_char = ts->string_buffer[ts->file_pos];
     }
     
     if (ts->current_char != TS_EOF)
-	ts->file_pos++;
+        ts->file_pos++;
     if (ts->current_char == '\n')
-	ts->line_number++;
+        ts->line_number++;
     return ts->current_char;
 }
 
 const cst_string *ts_get_quoted_token(cst_tokenstream *ts,
-					 char quote,
-					 char escape)
+                                      char quote,
+                                      char escape)
 {
     /* for reading the next quoted token that starts with quote and
        ends with quote, quote may appear only if preceded by escape */
-    int l, p;
+    int p;
 
     /* Hmm can't change quotes within a ts */
     ts->charclass[(unsigned int)quote] |= TS_CHARCLASS_QUOTE;
@@ -391,14 +392,14 @@ const cst_string *ts_get_quoted_token(cst_tokenstream *ts,
 
     /* skipping whitespace */
     get_token_sub_part(ts,TS_CHARCLASS_WHITESPACE,
-		       &ts->whitespace,
-		       &ts->ws_max);
+               &ts->whitespace,
+               &ts->ws_max);
     ts->token_pos = ts->file_pos - 1;
 
     if (ts->current_char == quote)
     {   /* go until quote */
-	ts_getc(ts);
-	l=0;
+        ts_getc(ts);
+
         for (p=0; ((ts->current_char != TS_EOF) &&
                    (ts->current_char != quote));
              p++)
@@ -417,7 +418,7 @@ const cst_string *ts_get_quoted_token(cst_tokenstream *ts,
             }
         }
         ts->token[p] = '\0';
-	ts_getc(ts);
+        ts_getc(ts);
     }
     else /* its not quotes, like to be careful dont you */
     {    /* treat is as standard token                  */
