@@ -397,6 +397,7 @@ endif()
 # ASan is enabled in SimGear's configuration, in case you are
 # wondering why there is no option() for it above.
 if (ENABLE_ASAN)
+    message(STATUS "ASan enabled in SimGear, using for FlightGear as well")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
