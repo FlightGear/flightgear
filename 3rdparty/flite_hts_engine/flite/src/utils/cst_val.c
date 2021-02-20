@@ -516,39 +516,35 @@ cst_val *cst_utf8_explode(const cst_string *utf8string)
 {
     /* return a list of utf-8 characters as strings */
     const unsigned char *xxx = (const unsigned char *)utf8string;
-    cst_val *chars=NULL;
-    int i, l=0;
+    cst_val *chars = NULL;
     char utf8char[5];
 
-    for (i=0; xxx[i]; i++)
+    for (int i=0; xxx[i]; i++)
     {
         if (xxx[i] < 0x80)  /* one byte */
         {
-            sprintf(utf8char,"%c",xxx[i]);
-            l = 1;
+            sprintf(utf8char, "%c", xxx[i]);
         }
         else if (xxx[i] < 0xe0) /* two bytes */
         {
-            sprintf(utf8char,"%c%c",xxx[i],xxx[i+1]);
+            sprintf(utf8char, "%c%c", xxx[i], xxx[i+1]);
             i++;
-            l = 2;
         }
         else if (xxx[i] < 0xff) /* three bytes */
         {
-            sprintf(utf8char,"%c%c%c",xxx[i],xxx[i+1],xxx[i+2]);
+            sprintf(utf8char, "%c%c%c", xxx[i], xxx[i+1], xxx[i+2]);
             i++; i++;
-            l = 3;
         }
         else
         {
-            sprintf(utf8char,"%c%c%c%c",xxx[i],xxx[i+1],xxx[i+2],xxx[i+3]);
+            sprintf(utf8char, "%c%c%c%c", xxx[i], xxx[i+1], xxx[i+2], xxx[i+3]);
             i++; i++; i++;
-            l = 4;
         }
-        chars = cons_val(string_val(utf8char),chars);
-    }
-    return val_reverse(chars);
 
+        chars = cons_val(string_val(utf8char), chars);
+    }
+
+    return val_reverse(chars);
 }
 
 int val_stringp(const cst_val *v)
