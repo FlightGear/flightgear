@@ -211,7 +211,7 @@ void yasim_show_best_speed_at_heights(Airplane* a, Airplane::Configuration cfgID
 
 void findMinSpeed(Airplane* a, float alt)
 {
-    a->addControlSetting(Airplane::CRUISE, DEF_PROP_ELEVATOR_TRIM, 0.7f);
+    a->addControlSetting(Airplane::CRUISE, "/controls/flight/elevator-trim", 0.7f);
     _setup(a, Airplane::CRUISE, alt);
     float acc[3];
 

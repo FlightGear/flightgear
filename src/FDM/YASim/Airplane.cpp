@@ -900,16 +900,17 @@ void Airplane::solveAirplane(bool verbose)
     _solutionIterations = 0;
     _failureMsg = 0;
 
-    if (_approachElevator == nullptr) {        
-        setElevatorControl(DEF_PROP_ELEVATOR_TRIM);
+    if (_approachElevator == nullptr) {
+        setElevatorControl("/controls/flight/elevator-trim");
     }
-    
+
     if (_tailIncidence == nullptr) {
         // no control mapping from XML parser, so we just create "local" 
         // variables for solver instead of full mapping / property
         _tailIncidence = new ControlSetting;
         _tailIncidenceCopy = new ControlSetting;
     }
+
     if (verbose) {
         fprintf(stdout,"i\tdAoa\tdTail\tcl0\tcp1\n");
     }
