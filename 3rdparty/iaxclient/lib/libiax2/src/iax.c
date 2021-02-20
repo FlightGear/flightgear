@@ -1747,14 +1747,14 @@ int iax_video_bypass_jitter(struct iax_session *s, int mode)
 int iax_register(struct iax_session *session, const char *server, const char *peer, const char *secret, int refresh)
 {
 	/* Send a registration request */
-	char tmp[256];
+	char tmp[200];
 	char *p;
 	int res;
 	int portno = IAX_DEFAULT_PORTNO;
 	struct iax_ie_data ied;
 	struct hostent *hp;
 
-	tmp[255] = '\0';
+	tmp[199] = '\0';
 	strncpy(tmp, server, sizeof(tmp) - 1);
 	p = strchr(tmp, ':');
 	if (p) {
@@ -1773,9 +1773,11 @@ int iax_register(struct iax_session *session, const char *server, const char *pe
 	/* Connect first */
 	hp = gethostbyname(tmp);
 	if (!hp) {
-		snprintf(iax_errstr, sizeof(iax_errstr), "Invalid hostname: %s", tmp);
+		snprintf(iax_errstr, sizeof(iax_errstr) - 1, "Invalid hostname: %s", tmp);
+		iax_errstr[255] = '\0';
 		return -1;
 	}
+
 	memcpy(&session->peeraddr.sin_addr, hp->h_addr, sizeof(session->peeraddr.sin_addr));
 	session->peeraddr.sin_port = htons(portno);
 	session->peeraddr.sin_family = AF_INET;
@@ -1790,13 +1792,13 @@ int iax_register(struct iax_session *session, const char *server, const char *pe
 int iax_unregister(struct iax_session *session, const char *server, const char *peer, const char *secret, const char *reason)
 {
 	/* Send an unregistration request */
-	char tmp[256];
+	char tmp[200];
 	char *p;
 	int portno = IAX_DEFAULT_PORTNO;
 	struct iax_ie_data ied;
 	struct hostent *hp;
 
-	tmp[255] = '\0';
+	tmp[199] = '\0';
 	strncpy(tmp, server, sizeof(tmp) - 1);
 	p = strchr(tmp, ':');
 	if (p) {
@@ -1818,9 +1820,11 @@ int iax_unregister(struct iax_session *session, const char *server, const char *
 	/* Connect first */
 	hp = gethostbyname(tmp);
 	if (!hp) {
-		snprintf(iax_errstr, sizeof(iax_errstr), "Invalid hostname: %s", tmp);
+		snprintf(iax_errstr, sizeof(iax_errstr) - 1, "Invalid hostname: %s", tmp);
+		iax_errstr[255] = '\0';
 		return -1;
 	}
+
 	memcpy(&session->peeraddr.sin_addr, hp->h_addr, sizeof(session->peeraddr.sin_addr));
 	session->peeraddr.sin_port = htons(portno);
 	session->peeraddr.sin_family = AF_INET;
@@ -2761,7 +2765,8 @@ static struct iax_event *iax_header_to_event(struct iax_session *session, struct
 				if (e->ies.codec_prefs) {
 					strncpy(session->codec_order,
 							e->ies.codec_prefs,
-							sizeof(session->codec_order));
+							sizeof(session->codec_order) - 1);
+					session->codec_order[31] = '\0';
 					session->codec_order_len =
 						(int)strlen(session->codec_order);
 				}
