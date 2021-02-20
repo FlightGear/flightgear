@@ -56,5 +56,12 @@ void sentryReportFatalError(const std::string& msg, const std::string& more = {}
  */
 void sentryThreadReportXMLErrors(bool report);
 
+class SentryXMLErrorSupression
+{
+public:
+    SentryXMLErrorSupression();
+    ~SentryXMLErrorSupression();
+};
+
 } // of namespace flightgear
 
