@@ -149,7 +149,7 @@ void KLN89AptPage::Update(double dt) {
 			_kln89->DrawText("UTC", 2, 0, 2);
 			if(hrDiff != 0) {
 				_kln89->DrawText(ap->getLongitude() >= 0.0 ? "+" : "-", 2, 3, 2);
-				char buf[3];
+				char buf[10];
 				snprintf(buf, sizeof(buf), "%02i", hrDiff);
 				_kln89->DrawText((string)buf, 2, 4, 2);
 				_kln89->DrawText("(   DT)", 2, 6, 2);

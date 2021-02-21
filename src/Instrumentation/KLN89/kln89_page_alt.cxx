@@ -51,7 +51,7 @@ void KLN89AltPage::Update(double dt) {
 			if(_kln89->_userBaroSetting >= 745 && _kln89->_userBaroSetting <= 1117) {
 				_kln89->_userBaroSetting = (int)((float)_kln89->_userBaroSetting * 0.0295301 * 100 + 0.5);
 			}
-			char buf[6];
+			char buf[14];
 			snprintf(buf, sizeof(buf), "%2i.%02i", _kln89->_userBaroSetting/100, _kln89->_userBaroSetting % 100);
 			string s = buf;
 			if(!(_kln89->_mode == KLN89_MODE_CRSR && _uLinePos == 1 && _kln89->_blink)) {

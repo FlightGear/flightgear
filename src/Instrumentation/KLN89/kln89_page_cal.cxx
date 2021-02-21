@@ -97,12 +97,12 @@ void KLN89CalPage::Update(double dt) {
 		if(_uLinePos == 1 && crsr) { _kln89->Underline(2, 6, 3, 3); }
 		string th = fgGetString("/instrumentation/clock/indicated-hour");
 		string tm = fgGetString("/instrumentation/clock/indicated-min");
-		ClockTime t(atoi(th.c_str()), atoi(tm.c_str()));
+		ClockTime t(std::stoi(th), std::stoi(tm));
 		if(th.size() == 1) th = "0" + th;
 		if(tm.size() == 1) tm = "0" + tm;
 		_kln89->DrawText(th + tm, 2, 11, 3);
 		
-		char buf[6];
+		char buf[12];
 		_kln89->DrawText("Alarm at:", 2, 0, 2);
         _kln89->DrawText("in:", 2, 6, 1);
         if(_alarmAnnotate) {
@@ -118,7 +118,7 @@ void KLN89CalPage::Update(double dt) {
 		if(_alarmAnnotate && _alarmIn.hr() < 10) {
             snprintf(buf, sizeof(buf), "%01i", _alarmIn.hr());
 			if(!(_uLinePos == 4 && crsr && blink)) { _kln89->DrawText((string)buf, 2, 11, 1); }
-			sprintf(buf, "%02i", _alarmIn.min());
+			snprintf(buf, sizeof(buf), "%02i", _alarmIn.min());
 			if(!(_uLinePos == 5 && crsr && blink)) { _kln89->DrawText((string)buf, 2, 13, 1); }
         } else {
 			if(!(_uLinePos == 4 && crsr && blink)) { _kln89->DrawText("-", 2, 11, 1); }
@@ -216,8 +216,8 @@ void KLN89CalPage::Knob2Left1() {
 			if(_alarmAnnotate) {
 				_alarmTime = _alarmTime - t;
 			} else {
-				_alarmTime.set_hr(atoi(fgGetString("/instrumentation/clock/indicated-hour")));
-				_alarmTime.set_min(atoi(fgGetString("/instrumentation/clock/indicated-min")));
+				_alarmTime.set_hr(std::stoi(fgGetString("/instrumentation/clock/indicated-hour")));
+				_alarmTime.set_min(std::stoi(fgGetString("/instrumentation/clock/indicated-min")));
 				_alarmTime = _alarmTime - t;
 				_alarmAnnotate = true;
 			}
@@ -227,8 +227,8 @@ void KLN89CalPage::Knob2Left1() {
 			if(_alarmAnnotate) {
 				_alarmTime = _alarmTime - t;
 			} else {
-				_alarmTime.set_hr(atoi(fgGetString("/instrumentation/clock/indicated-hour")));
-				_alarmTime.set_min(atoi(fgGetString("/instrumentation/clock/indicated-min")));
+				_alarmTime.set_hr(std::stoi(fgGetString("/instrumentation/clock/indicated-hour")));
+				_alarmTime.set_min(std::stoi(fgGetString("/instrumentation/clock/indicated-min")));
 				_alarmTime = _alarmTime - t;
 				_alarmAnnotate = true;
 			}
@@ -246,8 +246,8 @@ void KLN89CalPage::Knob2Left1() {
 				_alarmAnnotate = true;
 			}
 			_alarmSet = true;
-			t.set_hr(atoi(fgGetString("/instrumentation/clock/indicated-hour")));
-			t.set_min(atoi(fgGetString("/instrumentation/clock/indicated-min")));
+			t.set_hr(std::stoi(fgGetString("/instrumentation/clock/indicated-hour")));
+			t.set_min(std::stoi(fgGetString("/instrumentation/clock/indicated-min")));
 			_alarmTime = t + _alarmIn;
 		} else if(_uLinePos == 5) {
 			ClockTime t(0,1);
@@ -260,8 +260,8 @@ void KLN89CalPage::Knob2Left1() {
 				_alarmAnnotate = true;
 			}
 			_alarmSet = true;
-			t.set_hr(atoi(fgGetString("/instrumentation/clock/indicated-hour")));
-			t.set_min(atoi(fgGetString("/instrumentation/clock/indicated-min")));
+			t.set_hr(std::stoi(fgGetString("/instrumentation/clock/indicated-hour")));
+			t.set_min(std::stoi(fgGetString("/instrumentation/clock/indicated-min")));
 			_alarmTime = t + _alarmIn;
 		}
 	}
@@ -281,8 +281,8 @@ void KLN89CalPage::Knob2Right1() {
 			if(_alarmAnnotate) {
 				_alarmTime = _alarmTime + t;
 			} else {
-				_alarmTime.set_hr(atoi(fgGetString("/instrumentation/clock/indicated-hour")));
-				_alarmTime.set_min(atoi(fgGetString("/instrumentation/clock/indicated-min")));
+				_alarmTime.set_hr(std::stoi(fgGetString("/instrumentation/clock/indicated-hour")));
+				_alarmTime.set_min(std::stoi(fgGetString("/instrumentation/clock/indicated-min")));
 				_alarmTime = _alarmTime + t;
 				_alarmAnnotate = true;
 			}
@@ -292,8 +292,8 @@ void KLN89CalPage::Knob2Right1() {
 			if(_alarmAnnotate) {
 				_alarmTime = _alarmTime + t;
 			} else {
-				_alarmTime.set_hr(atoi(fgGetString("/instrumentation/clock/indicated-hour")));
-				_alarmTime.set_min(atoi(fgGetString("/instrumentation/clock/indicated-min")));
+				_alarmTime.set_hr(std::stoi(fgGetString("/instrumentation/clock/indicated-hour")));
+				_alarmTime.set_min(std::stoi(fgGetString("/instrumentation/clock/indicated-min")));
 				_alarmTime = _alarmTime + t;
 				_alarmAnnotate = true;
 			}
@@ -309,8 +309,8 @@ void KLN89CalPage::Knob2Right1() {
 				_alarmAnnotate = true;
 			}
 			_alarmSet = true;
-			t.set_hr(atoi(fgGetString("/instrumentation/clock/indicated-hour")));
-			t.set_min(atoi(fgGetString("/instrumentation/clock/indicated-min")));
+			t.set_hr(std::stoi(fgGetString("/instrumentation/clock/indicated-hour")));
+			t.set_min(std::stoi(fgGetString("/instrumentation/clock/indicated-min")));
 			_alarmTime = t + _alarmIn;
 		} else if(_uLinePos == 5) {
 			ClockTime t(0,1);
@@ -323,8 +323,8 @@ void KLN89CalPage::Knob2Right1() {
 				_alarmAnnotate = true;
 			}
 			_alarmSet = true;
-			t.set_hr(atoi(fgGetString("/instrumentation/clock/indicated-hour")));
-			t.set_min(atoi(fgGetString("/instrumentation/clock/indicated-min")));
+			t.set_hr(std::stoi(fgGetString("/instrumentation/clock/indicated-hour")));
+			t.set_min(std::stoi(fgGetString("/instrumentation/clock/indicated-min")));
 			_alarmTime = t + _alarmIn;
 		}
 	}

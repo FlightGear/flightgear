@@ -228,8 +228,8 @@ void KLN89NavPage::Update(double dt) {
 				} else {
 					int etah = (int)tsec / 3600;
 					int etam = ((int)tsec - etah * 3600) / 60;
-					etah += atoi(fgGetString("/instrumentation/clock/indicated-hour"));
-					etam += atoi(fgGetString("/instrumentation/clock/indicated-min"));
+					etah += std::stoi(fgGetString("/instrumentation/clock/indicated-hour"));
+					etam += std::stoi(fgGetString("/instrumentation/clock/indicated-min"));
 					while(etam > 59) {
 						etam -= 60;
 						etah += 1;
