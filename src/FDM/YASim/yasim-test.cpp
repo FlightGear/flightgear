@@ -168,6 +168,8 @@ void yasim_best_speed_at_height(Airplane* a, const float alt, Airplane::Configur
 {
     o_best_speed_kts = 0;
     o_best_drag = 1e9;
+    o_best_aoa_deg = 0.0f;
+
     /* Could probably use a gradient-descent method, but for now we just use
     linear list of speeds. */
     for (float kts = 50; kts < 600; kts += 1) {
@@ -177,6 +179,7 @@ void yasim_best_speed_at_height(Airplane* a, const float alt, Airplane::Configur
         float drag = acc[0] / -9.8;
         float idrag = 9.8 * tan(aoa);
         float drag_total = drag + idrag;
+
         if (verbose) {
             printf("acc=(% 10.4f % 10.2g % 10.4f)."
                     " alt=% 10.4f kts=% 10.4f: aoa_deg=% 10.4f drag=% 10.4f"
@@ -185,6 +188,7 @@ void yasim_best_speed_at_height(Airplane* a, const float alt, Airplane::Configur
                     alt, kts, aoa_deg, drag,
                     idrag, drag_total);
         }
+
         if (drag_total < o_best_drag) {
             o_best_speed_kts = kts;
             o_best_drag = drag_total;
@@ -201,8 +205,10 @@ void yasim_show_best_speed_at_heights(Airplane* a, Airplane::Configuration cfgID
         float best_speed_kts;
         float best_drag;
         float best_aoa_deg;
+
         yasim_best_speed_at_height(a, alt_m, cfgID, false /*verbose*/,
                 best_speed_kts, best_drag, best_aoa_deg);
+
         printf("altitude=% 6ift: best_speed=%gkts best_aoa=%.2fdeg drag=%g\n",
                 alt_ft, best_speed_kts, best_aoa_deg, best_drag);
     }
