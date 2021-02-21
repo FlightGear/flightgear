@@ -143,7 +143,7 @@ public:
 
 private:
     mutable std::mutex _lock;
-    int _preceedingLogMessageCount = 6;
+    size_t _preceedingLogMessageCount = 6;
 
     using LogDeque = std::deque<string>;
     LogDeque _recentLogEntries;
