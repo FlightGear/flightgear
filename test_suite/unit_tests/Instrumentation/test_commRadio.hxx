@@ -17,17 +17,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test_commRadio.hxx"
-#include "test_dme.hxx"
-#include "test_gps.hxx"
-#include "test_hold_controller.hxx"
-#include "test_navRadio.hxx"
-#include "test_rnav_procedures.hxx"
 
-// Set up the unit tests.
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(NavRadioTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(GPSTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(HoldControllerTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(RNAVProcedureTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(DMEReceiverTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommRadioTests, "Unit tests");
+#pragma once
+
+
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
+
+class FGNavRadio;
+class SGGeod;
+
+// The flight plan unit tests.
+class CommRadioTests : public CppUnit::TestFixture
+{
+    // Set up the test suite.
+    CPPUNIT_TEST_SUITE(CommRadioTests);
+
+    CPPUNIT_TEST(testBasic);
+    CPPUNIT_TEST(testEightPointThree);
+
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    // Set up function for each test.
+    void setUp();
+
+    // Clean up after each test.
+    void tearDown();
+
+    //  std::string formatFrequency(double f);
+
+    // The tests.
+    void testBasic();
+    void testEightPointThree();
+};

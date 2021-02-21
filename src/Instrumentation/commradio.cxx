@@ -134,7 +134,9 @@ void AtisSpeaker::valueChanged(SGPropertyNode * node)
   }
 
   FGSoundManager * smgr = globals->get_subsystem<FGSoundManager>();
-  assert(smgr != NULL);
+  if (!smgr) {
+      return;
+  }
 
   SG_LOG(SG_INSTR, SG_DEBUG,"node->getPath()=" << node->getPath() << " AtisSpeaker voice is " << voice );
   FLITEVoiceSynthesizer * synthesizer = dynamic_cast<FLITEVoiceSynthesizer*>(smgr->getSynthesizer(voice));
@@ -417,8 +419,9 @@ private:
 			if( channelNum != _channelNum ) _channelNum = channelNum;
 
 			if( _frequency != channel ) {
-				_channel = _frequency; //triggers recursion
-			}
+                const double channelValue = c / 1000.0;
+                _channel = channelValue;
+            }
 		} else {
 			_channelSpacing = 8.33;
 

@@ -6,6 +6,7 @@ set(TESTSUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_hold_controller.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_rnav_procedures.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_dme.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_commRadio.cxx
     PARENT_SCOPE
 )
 
@@ -16,5 +17,6 @@ set(TESTSUITE_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/test_hold_controller.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_rnav_procedures.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_dme.hxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_commRadio.hxx
     PARENT_SCOPE
 )
