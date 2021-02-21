@@ -82,7 +82,9 @@ string_list static_errorIds = {
     "error-audio-fx-load",
     "error-xml-load-command",
     "error-aircraft-systems",
-    "error-input-device-config"};
+    "error-input-device-config"
+    "error-ai-traffic-schedule",
+    "error-airport-data"};
 
 string_list static_errorTypeIds = {
     "error-type-unknown",
@@ -125,7 +127,7 @@ public:
         _recentLogEntries.push_back(os.str());
 
         while (_recentLogEntries.size() > _preceedingLogMessageCount) {
-            _recentLogEntries.pop_back();
+            _recentLogEntries.pop_front();
         }
 
         return true;
@@ -492,6 +494,10 @@ void ErrorReporter::bind()
     SGPropertyNode_ptr n = fgGetNode("/sim/error-report", true);
 
     d->_enabledNode = n->getNode("enabled", true);
+    if (!d->_enabledNode->hasValue()) {
+        d->_enabledNode->setBoolValue(false); // default to off for now
+    }
+
     d->_displayNode = n->getNode("display", true);
     d->_activeErrorNode = n->getNode("active", true);
 }
@@ -519,6 +525,14 @@ void ErrorReporter::preinit()
 
 void ErrorReporter::init()
 {
+    if (!d->_enabledNode) {
+        SG_LOG(SG_GENERAL, SG_INFO, "Error reporting disabled");
+        simgear::setFailureCallback(simgear::FailureCallback());
+        simgear::setErrorContextCallback(simgear::ContextCallback());
+        sglog().removeCallback(d->_logCallback.get());
+        return;
+    }
+
     globals->get_commands()->addCommand("dismiss-error-report", d.get(), &ErrorReporterPrivate::dismissReportCommand);
     globals->get_commands()->addCommand("save-error-report-data", d.get(), &ErrorReporterPrivate::saveReportCommand);
 
@@ -534,6 +548,10 @@ void ErrorReporter::update(double dt)
     // beginning of locked section
     {
         std::lock_guard<std::mutex> g(d->_lock);
+
+        if (!d->_enabledNode->getBoolValue()) {
+            return;
+        }
 
         SGTimeStamp n = SGTimeStamp::now();
 
@@ -582,9 +600,11 @@ void ErrorReporter::update(double dt)
 
 void ErrorReporter::shutdown()
 {
-    globals->get_commands()->removeCommand("dismiss-error-report");
-    globals->get_commands()->removeCommand("save-error-report-data");
-    sglog().removeCallback(d->_logCallback.get());
+    if (d->_enabledNode) {
+        globals->get_commands()->removeCommand("dismiss-error-report");
+        globals->get_commands()->removeCommand("save-error-report-data");
+        sglog().removeCallback(d->_logCallback.get());
+    }
 }
 
 } // namespace flightgear

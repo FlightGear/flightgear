@@ -53,12 +53,13 @@
 #include <algorithm>
 
 #include <simgear/compiler.h>
-#include <simgear/misc/sg_path.hxx>
+#include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/sg_dir.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
-#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/threads/SGThread.hxx>
 #include <simgear/timing/sg_time.hxx>
 
@@ -379,6 +380,8 @@ private:
         simgear::Dir trafficDir(path);
         simgear::PathList d = trafficDir.children(simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
 
+        simgear::ErrorReportContext("ai-traffic-dir", path.utf8Str());
+
         for (const auto& p : d) {
             simgear::Dir d2(p);
             SG_LOG(SG_AI, SG_DEBUG, "parsing traffic in:" << p);
@@ -390,6 +393,8 @@ private:
                         return;
                     }
                 } catch (sg_exception& e) {
+                    simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::AITrafficSchedule,
+                                           "XML errors parsinng traffic:" + e.getFormattedMessage(), xml);
                     SG_LOG(SG_AI, SG_WARN, "XML error parsing traffic file:" << xml << "\n\t" << e.getFormattedMessage());
                 }
             }
