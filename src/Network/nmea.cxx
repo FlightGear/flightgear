@@ -136,12 +136,12 @@ bool FGNMEA::gen_message()
 
     double altitude_ft = mFdm.get_Altitude();
 
-    char date[10];
+    char date[16];
     {
-        int year = t->getGmt()->tm_year;
-        while ( year >= 100 ) { year -= 100; }
-        snprintf( date, sizeof(date), "%02d%02d%02d", t->getGmt()->tm_mday,
-             t->getGmt()->tm_mon+1, year );
+        unsigned short tm_mday = t->getGmt()->tm_mday;
+        unsigned short tm_mon = t->getGmt()->tm_mon + 1;
+        unsigned short tm_year = t->getGmt()->tm_year % 100;
+        snprintf(date, sizeof(date), "%02u%02u%02u", tm_mday, tm_mon, tm_year);
     }
 
     char magvar[10];
