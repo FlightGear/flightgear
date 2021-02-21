@@ -43,16 +43,19 @@ static const char* makeTTWString(double TTW)
   if ((TTW <= 0.0) || (TTW >= 356400.5)) { // 99 hours
     return "--:--:--";
   }
-      
-  unsigned int TTW_seconds = (int) (TTW + 0.5);
-  unsigned int TTW_minutes = 0;
-  unsigned int TTW_hours   = 0;
-  static char TTW_str[9];
+
+  unsigned TTW_seconds = (unsigned) (TTW + 0.5);
+  unsigned TTW_minutes = 0;
+  unsigned TTW_hours   = 0;
+
   TTW_hours   = TTW_seconds / 3600;
   TTW_minutes = (TTW_seconds / 60) % 60;
   TTW_seconds = TTW_seconds % 60;
-  snprintf(TTW_str, 9, "%02d:%02d:%02d",
+
+  static char TTW_str[16];
+  snprintf(TTW_str, 16, "%02u:%02u:%02u",
     TTW_hours, TTW_minutes, TTW_seconds);
+
   return TTW_str;
 }
 
