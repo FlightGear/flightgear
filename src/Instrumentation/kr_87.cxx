@@ -402,9 +402,10 @@ void FGKR_87::update( double dt_sec ) {
     if ( big > 99 ) {
         big = 99;
     }
-    char formatted_timer[128];
+
+    char formatted_timer[24];
     // cout << big << ":" << little << endl;
-    snprintf(formatted_timer, 6, "%02d:%02d", big, little);
+    snprintf(formatted_timer, 24, "%02d:%02d", big, little);
     fgSetString( "/instrumentation/kr-87/outputs/timer-string",
                  formatted_timer );
 
