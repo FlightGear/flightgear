@@ -7,18 +7,13 @@ include (CheckCXXSourceCompiles)
 include (CheckIncludeFile)
 include (CheckIncludeFileCXX)
 
-cmake_policy(SET CMP0054 NEW)
-cmake_policy(SET CMP0042 NEW) # Mac RPATH policy
-
-# AUTOMOC/AUTOUIC on generated files policy. Since we only
-# generate resource files with fgrcc which don't use Qt,
-# we set those files source property. See the help for this
-# policy for more info
-cmake_policy(SET CMP0071 NEW)
-
 # OpenGL VND policy : use the old definition for now, until we can audit this
 if(POLICY CMP0072)
     cmake_policy(SET CMP0072 OLD)
+endif()
+
+if(POLICY CMP0116)
+    cmake_policy(SET CMP0116 NEW)
 endif()
 
 message("CMAKE Build type: ${CMAKE_BUILD_TYPE}")
