@@ -128,9 +128,11 @@ bool FGAtlas::gen_message() {
     char altitude_ft[10];
     snprintf( altitude_ft, sizeof(altitude_ft), "%02d", (int)fdm->get_Altitude() );
 
-    char date[10];
-    snprintf( date, sizeof(date), "%02d%02d%02d", t->getGmt()->tm_mday, 
-	     t->getGmt()->tm_mon+1, t->getGmt()->tm_year );
+    char date[16];
+	unsigned short tm_mday = t->getGmt()->tm_mday;
+	unsigned short tm_mon = t->getGmt()->tm_mon + 1;
+	unsigned short tm_year = t->getGmt()->tm_year;
+    snprintf( date, sizeof(date), "%02u%02u%02u", tm_mday, tm_mon, tm_year);
 
     // $GPRMC,HHMMSS,A,DDMM.MMM,N,DDDMM.MMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E*XX
     snprintf( rmc, sizeof(rmc), "GPRMC,%s,A,%s,%s,%s,%s,%s,0.000,E",
