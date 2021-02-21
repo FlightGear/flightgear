@@ -146,7 +146,7 @@ int WeatherScenariosModel::rowCount(const QModelIndex&) const
 QVariant WeatherScenariosModel::data(const QModelIndex &index, int role) const
 {
     const int row = index.row();
-    if ((row < 0) || (row >= m_scenarios.size())) {
+    if ((row < 0) || (static_cast<std::vector<WeatherScenariosModel::WeatherScenario>::size_type>(row) >= m_scenarios.size())) {
            return QVariant();
     }
 
