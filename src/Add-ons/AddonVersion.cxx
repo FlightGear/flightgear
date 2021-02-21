@@ -133,7 +133,7 @@ AddonVersionSuffix::suffixStringToTuple(const std::string& suffix)
     const string preReleaseNum_s = results.str(2);
     const string devNum_s = results.str(3);
 
-    AddonVersionSuffixPrereleaseType preReleaseType;
+    AddonVersionSuffixPrereleaseType preReleaseType = AddonVersionSuffixPrereleaseType::none;
     int preReleaseNum = 0;
     int devNum = 0;
 
