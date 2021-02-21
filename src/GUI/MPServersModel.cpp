@@ -181,7 +181,7 @@ QString MPServersModel::currentServer() const
         return (m_currentIndex == 1) ? "__custom__" : "__noservers__";
     }
 
-    if (m_currentIndex == m_servers.size()) {
+    if (static_cast<std::vector<MPServersModel::ServerInfo>::size_type>(m_currentIndex) == m_servers.size()) {
         return "__custom__";
     }
 
