@@ -2143,9 +2143,9 @@ void FlightPlan::forEachLeg(const LegVisitor& lv)
 int FlightPlan::indexOfFirstNonDepartureWaypoint() const
 {
     const auto numLegs = _legs.size();
-    for (int i = 0; i < numLegs; ++i) {
+    for (size_t i = 0; i < numLegs; ++i) {
         if (!(_legs.at(i)->waypoint()->flags() & WPT_DEPARTURE))
-            return i ;
+            return static_cast<int>(i);
     }
     
     // all waypoints are marked as departure
@@ -2155,9 +2155,9 @@ int FlightPlan::indexOfFirstNonDepartureWaypoint() const
 int FlightPlan::indexOfFirstArrivalWaypoint() const
 {
     const auto numLegs = _legs.size();
-    for (int i = 0; i < numLegs; ++i) {
+    for (size_t i = 0; i < numLegs; ++i) {
         if (_legs.at(i)->waypoint()->flags() & WPT_ARRIVAL)
-            return i;
+            return static_cast<int>(i);
     }
     
     // no waypoints are marked as arrival
@@ -2167,9 +2167,9 @@ int FlightPlan::indexOfFirstArrivalWaypoint() const
 int FlightPlan::indexOfFirstApproachWaypoint() const
 {
     const auto numLegs = _legs.size();
-    for (int i = 0; i < numLegs; ++i) {
+    for (size_t i = 0; i < numLegs; ++i) {
         if (_legs.at(i)->waypoint()->flags() & WPT_APPROACH)
-            return i;
+            return static_cast<int>(i);
     }
     
     // no waypoints are marked as arrival
