@@ -234,7 +234,7 @@ void fgHiResDump()
     string message;
     bool menu_status = fgGetBool("/sim/menubar/visibility");
     char *filename = new char [24];
-    static int count = 1;
+    static unsigned short count = 1;
 
     SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
@@ -590,7 +590,7 @@ void fgDumpSceneGraph()
 {
     char *filename = new char [24];
     string message;
-    static int count = 1;
+    static unsigned short count = 1;
 
     SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
@@ -632,7 +632,7 @@ void fgDumpTerrainBranch()
 {
     char *filename = new char [24];
     string message;
-    static int count = 1;
+    static unsigned short count = 1;
 
     SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
