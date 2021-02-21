@@ -66,13 +66,13 @@ Clock::update (double delta_time_sec)
     }
 
     struct tm *t = globals->get_time_params()->getGmt();
-    int hour = t->tm_hour;
-    int min = t->tm_min;
-    int sec = t->tm_sec;
+    short hour = t->tm_hour;
+    short min = t->tm_min;
+    short sec = t->tm_sec;
 
     // compute local time zone hour
-    int tzoffset_hours = globals->get_time_params()->get_local_offset() / 3600;
-    int lhour = hour + tzoffset_hours;
+    short tzoffset_hours = globals->get_time_params()->get_local_offset() / 3600;
+    short lhour = hour + tzoffset_hours;
     if (lhour < 0)
         lhour += 24;
     if (lhour >= 24)
