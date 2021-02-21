@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <random>
 
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -868,14 +869,19 @@ string FGATCController::formatATCFrequency3_2(int freq)
 // The current version just returns a random string of four octal numbers.
 string FGATCController::genTransponderCode(const string& fltRules)
 {
-    if (fltRules == "VFR") {
+    if (fltRules == "VFR")
         return string("1200");
-    } else {
-        char buffer[5];
-        snprintf(buffer, sizeof(buffer), "%d%d%d%d", rand() % 8, rand() % 8, rand() % 8,
-                 rand() % 8);
-        return string(buffer);
-    }
+
+    std::default_random_engine generator;
+    std::uniform_int_distribution<unsigned> distribution(0, 7);
+
+    unsigned val = (
+        distribution(generator) * 1000 +
+        distribution(generator) * 100 +
+        distribution(generator) * 10 +
+        distribution(generator));
+
+    return std::to_string(val);
 }
 
 void FGATCController::eraseDeadTraffic(TrafficVector& vec)
