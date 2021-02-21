@@ -574,20 +574,19 @@ void HUD::textAlign(fntRenderer *rend, const char *s, int align,
 }
 
 
-
-
 // HUDText -- text container for TextList vector
-
-
 HUDText::HUDText(fntRenderer *fnt, float x, float y, const char *s, int align, int d) :
     _fnt(fnt),
     _x(x),
     _y(y),
     _digits(d)
 {
-    strncpy(_msg, s, BUFSIZE);
+    strncpy(_msg, s, BUFSIZE - 1);
+    _msg[BUFSIZE - 1] = '\0';
+
     if (!align || !s[0])
         return;
+
     float ign;
     HUD::textAlign(fnt, s, align, &_x, &_y, &ign, &ign, &ign, &ign);
 }
