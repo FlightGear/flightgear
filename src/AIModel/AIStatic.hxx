@@ -32,14 +32,12 @@ class FGAIStatic : public FGAIBase {
 
 public:
 
-	FGAIStatic();
-	~FGAIStatic();
+    FGAIStatic();
+    ~FGAIStatic();
 
-	virtual void update(double dt);
+    void update(double dt) override;
 
-        virtual const char* getTypeString(void) const { return "static"; }
+    const char* getTypeString(void) const override { return "static"; }
 };
-
-
 
 #endif  // _FG_AISTATIC_HXX

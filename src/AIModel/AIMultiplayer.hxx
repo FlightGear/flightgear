@@ -33,8 +33,8 @@ public:
   virtual ~FGAIMultiplayer();
 
   bool init(ModelSearchOrder searchOrder) override;
-  virtual void bind();
-  virtual void update(double dt);
+  void bind() override;
+  void update(double dt) override;
 
   void addMotionInfo(FGExternalMotionData& motionInfo, long stamp);
   void setDoubleProperty(const std::string& prop, double val);
@@ -75,7 +75,7 @@ public:
   
   void clearMotionInfo();
 
-  virtual const char* getTypeString(void) const { return "multiplayer"; }
+  const char* getTypeString(void) const override { return "multiplayer"; }
 
 private:
 

@@ -32,12 +32,12 @@ class FGAIStorm : public FGAIBase {
 
 public:
 
-	FGAIStorm();
-	~FGAIStorm();
-	
-        void readFromScenario(SGPropertyNode* scFileNode);
+        FGAIStorm();
+        ~FGAIStorm();
 
-	virtual void update(double dt);
+        void readFromScenario(SGPropertyNode* scFileNode) override;
+
+        void update(double dt) override;
         inline void setStrengthNorm( double s ) { strength_norm = s; };
         inline void setDiameter( double d ) { diameter = d; };
         inline void setHeight( double h ) { height = h; };
@@ -45,14 +45,13 @@ public:
         inline double getDiameter() const { return diameter; };
         inline double getHeight() const { return height; };
 
-        virtual const char* getTypeString(void) const { return "thunderstorm"; }
+        const char* getTypeString(void) const override { return "thunderstorm"; }
 
 private:
-
         double diameter;      // diameter of turbulence zone, in nm
         double height;        // top of turbulence zone, in feet MSL
         double strength_norm; // strength of turbulence
-	void Run(double dt);
+        void Run(double dt);
 
         // lightning stuff
         double delay;   // average time (sec) between lightning flashes
@@ -70,7 +69,5 @@ private:
         SGPropertyNode_ptr turb_rate_node;
 
 };
-
-
 
 #endif  // _FG_AIStorm_HXX

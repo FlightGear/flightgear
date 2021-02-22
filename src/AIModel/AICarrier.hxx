@@ -43,14 +43,14 @@ public:
     FGAICarrier();
     virtual ~FGAICarrier();
 
-    virtual void readFromScenario(SGPropertyNode* scFileNode);
+    void readFromScenario(SGPropertyNode* scFileNode) override;
 
     void setSign(const string& );
     void setDeckAltitude(const double altitude_feet);
     void setTACANChannelID(const string &);
-    virtual double getDefaultModelRadius() { return 350.0; }
+    double getDefaultModelRadius() override { return 350.0; }
 
-    virtual void bind();
+    void bind() override;
     void UpdateWind ( double dt );
     void setWind_from_east( double fps );
     void setWind_from_north( double fps );
@@ -68,7 +68,7 @@ public:
 
     bool init(ModelSearchOrder searchOrder) override;
 
-    virtual const char* getTypeString(void) const { return "carrier"; }
+    const char* getTypeString(void) const override { return "carrier"; }
 
     bool getParkPosition(const string& id, SGGeod& geodPos,
                          double& hdng, SGVec3d& uvw);
@@ -106,14 +106,11 @@ private:
     double heading_deg;
   };
 
-
-    void update(double dt);
+    void update(double dt) override;
     double wind_from_east;  // fps
     double wind_from_north; // fps
     double rel_wind_speed_kts;
     double rel_wind_from_deg;
-
-
 
     list<ParkPosition> ppositions;    // List of positions where an aircraft can start.
     string sign;                      // The sign of this carrier.

@@ -33,14 +33,14 @@ public:
     FGAIWingman();
     virtual ~FGAIWingman();
 
-    virtual void readFromScenario(SGPropertyNode* scFileNode);
+    void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;
-    virtual void bind();
-    virtual void reinit();
-    virtual void update (double dt);
+    void bind() override;
+    void reinit() override;
+    void update(double dt) override;
 
-    virtual const char* getTypeString(void) const { return "wingman"; }
+    const char* getTypeString(void) const override { return "wingman"; }
 
 private:
     void formateToAC(double dt);

@@ -36,17 +36,16 @@ public:
     FGAIGroundVehicle();
     virtual ~FGAIGroundVehicle();
 
-    virtual void readFromScenario(SGPropertyNode* scFileNode);
+    void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;
-    virtual void bind();
-    virtual void reinit();
-    virtual void update (double dt);
+    void bind() override;
+    void reinit() override;
+    void update(double dt) override;
 
-    virtual const char* getTypeString(void) const { return "groundvehicle"; }
+    const char* getTypeString(void) const override { return "groundvehicle"; }
 
 private:
-
     void setNoRoll(bool nr);
     void setContactX1offset(double x1);
     void setContactX2offset(double x2);

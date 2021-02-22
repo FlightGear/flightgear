@@ -38,11 +38,11 @@ public:
     FGAIAircraft(FGAISchedule *ref=0);
     ~FGAIAircraft();
 
-    virtual void readFromScenario(SGPropertyNode* scFileNode);
+    void readFromScenario(SGPropertyNode* scFileNode) override;
 
-    virtual void bind();
-    virtual void update(double dt);
-    virtual void unbind();
+    void bind() override;
+    void update(double dt) override;
+    void unbind() override;
 
     void setPerformance(const std::string& acType, const std::string& perfString);
 
@@ -82,7 +82,7 @@ public:
     void setTakeOffStatus(int status) { takeOffStatus = status; };
     void scheduleForATCTowerDepartureControl(int state);
 
-    virtual const char* getTypeString(void) const { return "aircraft"; }
+    const char* getTypeString(void) const override { return "aircraft"; }
 
     const std::string& GetTransponderCode() { return transponderCode; };
     void SetTransponderCode(const std::string& tc) { transponderCode = tc;};

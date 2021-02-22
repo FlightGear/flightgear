@@ -39,10 +39,10 @@ public:
     FGAITanker(FGAISchedule* ref = 0);
     ~FGAITanker();
 
-    virtual void readFromScenario(SGPropertyNode* scFileNode);
-    virtual void bind();
+    void readFromScenario(SGPropertyNode* scFileNode) override;
+    void bind() override;
 
-    virtual const char* getTypeString(void) const { return "tanker"; }
+    const char* getTypeString(void) const override { return "tanker"; }
 
     void setTACANChannelID(const std::string& id);
     
@@ -51,7 +51,7 @@ private:
     bool contact;                // set if this tanker is within fuelling range
 
     virtual void Run(double dt);
-    virtual void update (double dt);
+    void update(double dt) override;
 };
 
 #endif

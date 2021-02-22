@@ -31,17 +31,16 @@ class FGAIManager;
 class FGAIShip : public FGAIBase {
 
 public:
-
     FGAIShip(object_type ot = otShip);
     virtual ~FGAIShip();
 
-    virtual void readFromScenario(SGPropertyNode* scFileNode);
+    void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;
-    virtual void bind();
-    virtual void update(double dt);
-    virtual void reinit();
-    virtual double getDefaultModelRadius() { return 200.0; }
+    void bind() override;
+    void update(double dt) override;
+    void reinit() override;
+    double getDefaultModelRadius() override { return 200.0; }
 
     void setRudder(float r);
     void setRoll(double rl);
@@ -78,7 +77,7 @@ public:
     bool _tunnel, _initial_tunnel;
     bool _restart;
 
-    virtual const char* getTypeString(void) const { return "ship"; }
+    const char* getTypeString(void) const override { return "ship"; }
     double _rudder_constant, _speed_constant, _hdg_constant, _limit ;
     double _elevation_m, _elevation_ft;
     double _missed_range, _tow_angle, _wait_count, _missed_count,_wp_range;
@@ -91,8 +90,6 @@ public:
 protected:
 
 private:
-
-
     void setRepeat(bool r);
     void setRestart(bool r);
     void setMissed(bool m);
@@ -136,7 +133,6 @@ private:
     bool _repeat;
     bool _fp_init;
     bool _missed;
-   
 
 };
 

@@ -36,11 +36,11 @@ public:
 	FGAIThermal();
 	~FGAIThermal();
 
-	void readFromScenario(SGPropertyNode* scFileNode);
+	void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;
-	virtual void bind();
-	virtual void update(double dt);
+	void bind() override;
+	void update(double dt) override;
 
 	inline void setMaxStrength( double s ) { max_strength = s; };
 	inline void setDiameter( double d ) { diameter = d; };
@@ -56,7 +56,7 @@ public:
 	inline double getV_up_min() const { return v_up_min; };
 	inline double getR_up_frac() const { return r_up_frac; };
 
-	virtual const char* getTypeString(void) const { return "thermal"; }
+	const char* getTypeString(void) const override { return "thermal"; }
 	void getGroundElev(double dt);
 
 private:
