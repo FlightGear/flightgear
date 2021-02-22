@@ -13,9 +13,9 @@ class PerformanceData
 {
 public:
     PerformanceData();
-    
-    PerformanceData(PerformanceData* clone);
-  
+
+    explicit PerformanceData(PerformanceData* clone);
+
     void initFromProps(SGPropertyNode* props);
 
     ~PerformanceData() = default;
