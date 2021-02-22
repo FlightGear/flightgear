@@ -605,5 +605,5 @@ void TrafficTests::dump(FGAIAircraft* aiAircraft) {
     std::cout << "********************\n";
     std::cout << "Geod " << aiAircraft->getGeodPos() << "\t Speed : " << aiAircraft->getSpeed() << "\n";
     std::cout << "WP   " << aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getName() << "\t" << aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getPos() << "\r\n";
-    std::cout << "Heading " << aiAircraft->getTrueHeadingDeg() << "\t VSpeed : " << aiAircraft->getVerticalSpeed() << "\n";
+    std::cout << "Heading " << aiAircraft->getTrueHeadingDeg() << "\t VSpeed : " << aiAircraft->getVerticalSpeedFPM() << "\n";
 }
