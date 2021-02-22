@@ -227,7 +227,7 @@ void FGNMEA::parse_line() {
         tokens.push_back(pCurrent);
     }
 
-    if (tokens.size() == 0)
+    if (tokens.empty())
         return;
 
     if (tokens.size()>1)
@@ -259,8 +259,8 @@ void FGNMEA::parse_message(const std::vector<std::string>& tokens)
         SG_LOG( SG_IO, SG_DEBUG, "  junk = " << tokens[2] );
 
         // #3: lat val
-        lat_deg = atof( tokens[3].substr(0, 2).c_str() );
-        lat_min = atof( tokens[3].substr(2).c_str() );
+        lat_deg = std::stod(tokens[3].substr(0, 2));
+        lat_min = std::stod(tokens[3].substr(2));
         lat = lat_deg + ( lat_min / 60.0 );
 
         // #4: lat dir
@@ -270,8 +270,8 @@ void FGNMEA::parse_message(const std::vector<std::string>& tokens)
         mFdm.set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
 
         // #5: lon val
-        lon_deg = atof( tokens[5].substr(0, 3).c_str() );
-        lon_min = atof( tokens[5].substr(3).c_str() );
+        lon_deg = std::stod(tokens[5].substr(0, 3));
+        lon_min = std::stod(tokens[5].substr(3));
         lon = lon_deg + ( lon_min / 60.0 );
 
         // #6: lon dir
@@ -292,13 +292,13 @@ void FGNMEA::parse_message(const std::vector<std::string>& tokens)
 #endif
 
         // #7: speed
-        double speed = atof( tokens[7].c_str() );
+        double speed = std::stod(tokens[7]);
         mFdm.set_V_calibrated_kts( speed );
         // mFdm.set_V_ground_speed( speed );
         SG_LOG( SG_IO, SG_DEBUG, "  speed = " << speed );
 
         // #8: heading
-        double heading = atof( tokens[8].c_str() );
+        double heading = std::stod(tokens[8]);
         mFdm.set_Euler_Angles( mFdm.get_Phi(),
                          mFdm.get_Theta(),
                          heading * SGD_DEGREES_TO_RADIANS );
@@ -313,8 +313,8 @@ void FGNMEA::parse_message(const std::vector<std::string>& tokens)
         SG_LOG( SG_IO, SG_DEBUG, "  utc = " << utc );
 
         // #2: lat val
-        lat_deg = atof( tokens[2].substr(0, 2).c_str() );
-        lat_min = atof( tokens[2].substr(2).c_str() );
+        lat_deg = std::stod(tokens[2].substr(0, 2));
+        lat_min = std::stod(tokens[2].substr(2));
         lat = lat_deg + ( lat_min / 60.0 );
 
         // #3: lat dir
@@ -324,8 +324,8 @@ void FGNMEA::parse_message(const std::vector<std::string>& tokens)
         mFdm.set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
 
         // #4: lon val
-        lon_deg = atof( tokens[4].substr(0, 3).c_str() );
-        lon_min = atof( tokens[4].substr(3).c_str() );
+        lon_deg = std::stod(tokens[4].substr(0, 3));
+        lon_min = std::stod(tokens[4].substr(3));
         lon = lon_deg + ( lon_min / 60.0 );
 
         // #5: lon dir
@@ -345,7 +345,7 @@ void FGNMEA::parse_message(const std::vector<std::string>& tokens)
         SG_LOG( SG_IO, SG_DEBUG, "  junk = " << tokens[8] );
 
         // #9: altitude
-        double altitude = atof( tokens[9].c_str() );
+        double altitude = std::stod(tokens[9]);
 
         // #10: altitude unit
         const string& alt_units = tokens[10];
