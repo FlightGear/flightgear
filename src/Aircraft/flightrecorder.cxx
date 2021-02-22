@@ -222,10 +222,14 @@ static std::shared_ptr<RecordExtraProperties>   s_record_extra_properties;
 
 
 FGFlightRecorder::FGFlightRecorder(const char* pConfigName) :
-    m_RecorderNode(fgGetNode("/sim/flight-recorder", true)),
-    m_ReplayMultiplayer(fgGetNode("/sim/replay/multiplayer", true)),
-    m_RecordContinuous(fgGetNode("/sim/replay/record-continuous", true)),
-    m_RecordExtraProperties(fgGetNode("/sim/replay/record-extra-properties", true)),
+    m_RecorderNode              (fgGetNode("/sim/flight-recorder", true)),
+    m_ReplayMultiplayer         (fgGetNode("/sim/replay/multiplayer", true)),
+    m_ReplayExtraProperties     (fgGetNode("/sim/replay/replay-extra-properties", true)),
+    m_ReplayMainView            (fgGetNode("/sim/replay/replay-main-view", true)),
+    m_ReplayMainWindowPosition  (fgGetNode("/sim/replay/replay-main-window-position", true)),
+    m_ReplayMainWindowSize      (fgGetNode("/sim/replay/replay-main-window-size", true)),
+    m_RecordContinuous          (fgGetNode("/sim/replay/record-continuous", true)),
+    m_RecordExtraProperties     (fgGetNode("/sim/replay/record-extra-properties", true)),
     m_TotalRecordSize(0),
     m_ConfigName(pConfigName),
     m_usingDefaultConfig(false),
@@ -624,12 +628,29 @@ FGFlightRecorder::capture(double SimTime, FGReplayData* ReplayData)
     ReplayData->multiplayer_messages.clear();
     bool    replayMultiplayer = m_ReplayMultiplayer->getBoolValue();
     for(;;) {
-        auto MultiplayerMessage = m_MultiplayMgr->popMessageHistory();
-        if (!MultiplayerMessage) {
+        auto multiplayerMessage = m_MultiplayMgr->popMessageHistory();
+        if (!multiplayerMessage) {
             break;
         }
         if (replayMultiplayer) {
-            ReplayData->multiplayer_messages.push_back( MultiplayerMessage);
+            // Attempt to ignore chat messages. Unfortunately it seems
+            // that CHAT_MSG_ID is unused, and instead chat messages are
+            // included in POS_DATA_ID messages as sim/multiplay/chat in
+            // src/MultiPlayer/multiplaymgr.cxx's sIdPropertyList.
+            //
+            auto message_header = reinterpret_cast<const T_MsgHdr*>(&multiplayerMessage->front());
+            xdr_data_t message_id = message_header->MsgId;
+            if (message_id == CHAT_MSG_ID) {
+                SG_LOG(SG_GENERAL, SG_ALERT, "Not recording chat message: "
+                        << std::string(
+                                reinterpret_cast<const T_ChatMsg*>(message_header + 1)->Text,
+                                message_header->MsgLen - sizeof(*message_header)
+                                )
+                        );
+            }
+            else {
+                ReplayData->multiplayer_messages.push_back( multiplayerMessage);
+            }
         }
     }
     
@@ -637,7 +658,7 @@ FGFlightRecorder::capture(double SimTime, FGReplayData* ReplayData)
     //
     if (m_RecordContinuous->getBoolValue()) {
         if (!m_RecordExtraPropertiesReference) {
-            SG_LOG(SG_SYSTEMS, SG_ALERT, "m_RecordPropertiesReference is null");
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "m_RecordPropertiesReference is null");
             m_RecordExtraPropertiesReference = new SGPropertyNode;
         }
         s_record_extra_properties->capture(m_RecordExtraPropertiesReference, ReplayData);
@@ -698,7 +719,7 @@ weighting(TInterpolation interpolation, double ratio, double v1,double v2)
 void
 FGFlightRecorder::resetExtraProperties()
 {
-    SG_LOG(SG_SYSTEMS, SG_ALERT, "Clearing m_RecordExtraPropertiesReference");
+    SG_LOG(SG_SYSTEMS, SG_DEBUG, "Clearing m_RecordExtraPropertiesReference");
     m_RecordExtraPropertiesReference = nullptr;
 }
 
@@ -726,135 +747,128 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer,
         int* main_window_ysize
         )
 {
-    const char* pLastBuffer = (_pLastBuffer) ? &_pLastBuffer->raw_data.front() : nullptr;
-    const char* pBuffer = (_pNextBuffer) ? &_pNextBuffer->raw_data.front() : nullptr;
-    if (!pBuffer)
-        return;
-
-    int Offset = 0;
-    double ratio = 1.0;
-    if (pLastBuffer)
-    {
-        double NextSimTime = _pNextBuffer->sim_time;
-        double LastSimTime = _pLastBuffer->sim_time;
-        double Numerator = SimTime - LastSimTime;
-        double dt = NextSimTime - LastSimTime;
-        // avoid divide by zero and other quirks
-        if ((Numerator > 0.0)&&(dt != 0.0))
+    const char* pLastBuffer = (_pLastBuffer && !_pLastBuffer->raw_data.empty()) ? &_pLastBuffer->raw_data.front() : nullptr;
+    const char* pBuffer = (_pNextBuffer && !_pNextBuffer->raw_data.empty()) ? &_pNextBuffer->raw_data.front() : nullptr;
+    
+    if (pBuffer) {
+        /* Replay signals. */
+        int Offset = 0;
+        double ratio = 1.0;
+        if (pLastBuffer)
         {
-            ratio = Numerator / dt;
-            if (ratio > 1.0)
-                ratio = 1.0;
-        }
-    }
-
-    // 64bit aligned data first!
-    {
-        // restore doubles
-        const double* pDoubles = (const double*) &pBuffer[Offset];
-        const double* pLastDoubles = (const double*) &pLastBuffer[Offset];
-        unsigned int SignalCount = m_CaptureDouble.size();
-        for (unsigned int i=0; i<SignalCount; i++)
-        {
-            double v = pDoubles[i];
-            if (pLastBuffer)
+            double NextSimTime = _pNextBuffer->sim_time;
+            double LastSimTime = _pLastBuffer->sim_time;
+            double Numerator = SimTime - LastSimTime;
+            double dt = NextSimTime - LastSimTime;
+            // avoid divide by zero and other quirks
+            if ((Numerator > 0.0)&&(dt != 0.0))
             {
-                v = weighting(m_CaptureDouble[i].Interpolation, ratio,
-                              pLastDoubles[i], v);
+                ratio = Numerator / dt;
+                if (ratio > 1.0)
+                    ratio = 1.0;
             }
-            m_CaptureDouble[i].Signal->setDoubleValue(v);
         }
-        Offset += SignalCount * sizeof(double);
-    }
 
-    // 32bit aligned data comes second...
-    {
-        // restore floats
-        const float* pFloats = (const float*) &pBuffer[Offset];
-        const float* pLastFloats = (const float*) &pLastBuffer[Offset];
-        unsigned int SignalCount = m_CaptureFloat.size();
-        for (unsigned int i=0; i<SignalCount; i++)
+        // 64bit aligned data first!
         {
-            float v = pFloats[i];
-            if (pLastBuffer)
+            // restore doubles
+            const double* pDoubles = (const double*) &pBuffer[Offset];
+            const double* pLastDoubles = (const double*) &pLastBuffer[Offset];
+            unsigned int SignalCount = m_CaptureDouble.size();
+            for (unsigned int i=0; i<SignalCount; i++)
             {
-                v = weighting(m_CaptureFloat[i].Interpolation, ratio,
-                              pLastFloats[i], v);
+                double v = pDoubles[i];
+                if (pLastBuffer)
+                {
+                    v = weighting(m_CaptureDouble[i].Interpolation, ratio,
+                                  pLastDoubles[i], v);
+                }
+                m_CaptureDouble[i].Signal->setDoubleValue(v);
             }
-            m_CaptureFloat[i].Signal->setDoubleValue(v);//setFloatValue
+            Offset += SignalCount * sizeof(double);
         }
-        Offset += SignalCount * sizeof(float);
-    }
 
-    {
-        // restore integers (32bit aligned)
-        const int* pInt = (const int*) &pBuffer[Offset];
-        unsigned int SignalCount = m_CaptureInteger.size();
-        for (unsigned int i=0; i<SignalCount; i++)
+        // 32bit aligned data comes second...
         {
-            m_CaptureInteger[i].Signal->setIntValue(pInt[i]);
+            // restore floats
+            const float* pFloats = (const float*) &pBuffer[Offset];
+            const float* pLastFloats = (const float*) &pLastBuffer[Offset];
+            unsigned int SignalCount = m_CaptureFloat.size();
+            for (unsigned int i=0; i<SignalCount; i++)
+            {
+                float v = pFloats[i];
+                if (pLastBuffer)
+                {
+                    v = weighting(m_CaptureFloat[i].Interpolation, ratio,
+                                  pLastFloats[i], v);
+                }
+                m_CaptureFloat[i].Signal->setDoubleValue(v);//setFloatValue
+            }
+            Offset += SignalCount * sizeof(float);
         }
-        Offset += SignalCount * sizeof(int);
-    }
 
-    // 16bit aligned data is next...
-    {
-        // restore 16bit short integers
-        const short int* pShortInt = (const short int*) &pBuffer[Offset];
-        unsigned int SignalCount = m_CaptureInt16.size();
-        for (unsigned int i=0; i<SignalCount; i++)
         {
-            m_CaptureInt16[i].Signal->setIntValue(pShortInt[i]);
+            // restore integers (32bit aligned)
+            const int* pInt = (const int*) &pBuffer[Offset];
+            unsigned int SignalCount = m_CaptureInteger.size();
+            for (unsigned int i=0; i<SignalCount; i++)
+            {
+                m_CaptureInteger[i].Signal->setIntValue(pInt[i]);
+            }
+            Offset += SignalCount * sizeof(int);
         }
-        Offset += SignalCount * sizeof(short int);
-    }
 
-    // finally: byte aligned data is last...
-    {
-        // restore 8bit chars
-        const signed char* pChar = (const signed char*) &pBuffer[Offset];
-        unsigned int SignalCount = m_CaptureInt8.size();
-        for (unsigned int i=0; i<SignalCount; i++)
+        // 16bit aligned data is next...
         {
-            m_CaptureInt8[i].Signal->setIntValue(pChar[i]);
+            // restore 16bit short integers
+            const short int* pShortInt = (const short int*) &pBuffer[Offset];
+            unsigned int SignalCount = m_CaptureInt16.size();
+            for (unsigned int i=0; i<SignalCount; i++)
+            {
+                m_CaptureInt16[i].Signal->setIntValue(pShortInt[i]);
+            }
+            Offset += SignalCount * sizeof(short int);
         }
-        Offset += SignalCount * sizeof(signed char);
-    }
 
-    {
-        // restore 1bit booleans (8bit aligned)
-        const unsigned char* pFlags = (const unsigned char*) &pBuffer[Offset];
-        unsigned int SignalCount = m_CaptureBool.size();
-        int Size = (SignalCount+7)/8;
-        Offset += Size;
-        for (unsigned int i=0; i<SignalCount; i++)
+        // finally: byte aligned data is last...
         {
-            m_CaptureBool[i].Signal->setBoolValue(0 != (pFlags[i>>3] & (1 << (i&7))));
+            // restore 8bit chars
+            const signed char* pChar = (const signed char*) &pBuffer[Offset];
+            unsigned int SignalCount = m_CaptureInt8.size();
+            for (unsigned int i=0; i<SignalCount; i++)
+            {
+                m_CaptureInt8[i].Signal->setIntValue(pChar[i]);
+            }
+            Offset += SignalCount * sizeof(signed char);
+        }
+
+        {
+            // restore 1bit booleans (8bit aligned)
+            const unsigned char* pFlags = (const unsigned char*) &pBuffer[Offset];
+            unsigned int SignalCount = m_CaptureBool.size();
+            int Size = (SignalCount+7)/8;
+            Offset += Size;
+            for (unsigned int i=0; i<SignalCount; i++)
+            {
+                m_CaptureBool[i].Signal->setBoolValue(0 != (pFlags[i>>3] & (1 << (i&7))));
+            }
         }
     }
 
-    // Replay any multiplayer messages. But don't send the same multiplayer
-    // messages repeatedly when we are called with a timestamp that ends up
-    // picking the same _pNextBuffer as last time.
+    // Replay any multiplayer messages.
+    for (auto multiplayer_message: _pNextBuffer->multiplayer_messages) {
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Pushing multiplayer message to multiplay manager");
+        m_MultiplayMgr->pushMessageHistory(multiplayer_message);
+    }
+    
+    // Replay extra property changes.
     //
-    static const FGReplayData* _pNextBuffer_prev = nullptr;
-    if ( _pNextBuffer != _pNextBuffer_prev) {
-        _pNextBuffer_prev = _pNextBuffer;
-        for (auto multiplayer_message: _pNextBuffer->multiplayer_messages) {
-            m_MultiplayMgr->pushMessageHistory(multiplayer_message);
-        }
-    }
+    bool    replay_extra_properties = m_ReplayExtraProperties->getBoolValue();
+    bool    replay_main_view = m_ReplayMainView->getBoolValue();
+    bool    replay_main_window_position = m_ReplayMainWindowPosition->getBoolValue();
+    bool    replay_main_window_size = m_ReplayMainWindowSize->getBoolValue();
     
-    // Replay property changes.
-    //
-    
-    bool    replay_extra_property_removal = globals->get_props()->getBoolValue("sim/replay/replay-extra-property-removal");
-    bool    replay_extra_property_changes = globals->get_props()->getBoolValue("sim/replay/replay-extra-property-changes");
-    bool    replay_main_view = globals->get_props()->getBoolValue("sim/replay/replay-main-view");
-    bool    replay_main_window_position = globals->get_props()->getBoolValue("sim/replay/replay-main-window-position");
-    bool    replay_main_window_size = globals->get_props()->getBoolValue("sim/replay/replay-main-window-size");
-    
-    if (replay_extra_property_removal) {
+    if (replay_extra_properties) {
         for (auto extra_property_removed_path: _pNextBuffer->replay_extra_property_removals) {
             SG_LOG(SG_SYSTEMS, SG_DEBUG, "replaying extra property removal: " << extra_property_removed_path);
             globals->get_props()->removeChild(extra_property_removed_path);
@@ -875,7 +889,7 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer,
             const std::string& path = prop_change.first;
             const std::string& value = prop_change.second;
             if (simgear::strutils::starts_with(path, "/sim/current-view/view-number")) {
-                SG_LOG(SG_SYSTEMS, SG_DEBUG, "*** SimTime=" << SimTime << " replaying view " << path << "=" << value);
+                SG_LOG(SG_SYSTEMS, SG_DEBUG, "SimTime=" << SimTime << " replaying view " << path << "=" << value);
                 globals->get_props()->setStringValue(path, value);
             }
         }
@@ -905,7 +919,7 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer,
                 globals->get_props()->setStringValue(path, value);
             }
         }
-        else if (replay_extra_property_changes) {
+        else if (replay_extra_properties) {
             SG_LOG(SG_SYSTEMS, SG_DEBUG, "SimTime=" << SimTime
                     << " replaying extra_property change: " << path << "=" << value);
             globals->get_props()->setStringValue(path, value);

@@ -2299,169 +2299,169 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
         // Check the ID actually exists and get the type
         const IdPropertyList* plist = findProperty(id);
 
-    if (plist)
-    {
-      FGPropertyData* pData = new FGPropertyData;
-      if (plist->decode_received)
+      if (plist)
       {
-          //
-          // this needs the pointer prior to the extraction of the property id and possible shortint decode
-          // too allow the method to redecode as it wishes
-          xdr = (*plist->decode_received)(plist, xdr, pData);
-      }
-      else
-      {
-        pData->id = id;
-        pData->type = plist->type;
-        xdr++;
-        // How we decode the remainder of the property depends on the type
-        switch (pData->type) {
-        case simgear::props::BOOL:
-            /*
-             * For 2017.2 we support boolean arrays transmitted as a single int for 30 bools.
-             * this section handles the unpacking into the arrays.
-             */
-            if (pData->id >= BOOLARRAY_START_ID && pData->id <= BOOLARRAY_END_ID)
-            {
-                unsigned int val = XDR_decode_uint32(*xdr);
-                bool first_bool = true;
-                xdr++;
-                for (int bitidx = 0; bitidx <= 30; bitidx++)
-                {
-                    // ensure that this property is in the master list.
-                    const IdPropertyList* plistBool = findProperty(id + bitidx);
-
-                    if (plistBool)
-                    {
-                        if (first_bool)
-                            first_bool = false;
-                        else
-                            pData = new FGPropertyData;
-
-                        pData->id = id + bitidx;
-                        pData->int_value = (val & (1 << bitidx)) != 0;
-                        pData->type = simgear::props::BOOL;
-                        motionInfo.properties.push_back(pData);
-
-                        // ensure that this is null because this section of code manages the property data and list directly
-                        // it has to be this way because one MP value results in multiple properties being set.
-                        pData = nullptr;
-                    }
-                }
-                break;
-            }
-        case simgear::props::INT:
-        case simgear::props::LONG:
-            if (short_int_encoded)
-            {
-                pData->int_value = int_value;
-                pData->type = simgear::props::INT;
-            }
-            else
-            {
-                pData->int_value = XDR_decode_uint32(*xdr);
-                xdr++;
-            }
-            //cout << pData->int_value << "\n";
-            break;
-        case simgear::props::FLOAT:
-        case simgear::props::DOUBLE:
-            if (short_int_encoded)
-            {
-                switch (plist->TransmitAs)
-                {
-                case TT_SHORT_FLOAT_1:
-                    pData->float_value = (double)int_value / 10.0;
-                    break;
-                case TT_SHORT_FLOAT_2:
-                    pData->float_value = (double)int_value / 100.0;
-                    break;
-                case TT_SHORT_FLOAT_3:
-                    pData->float_value = (double)int_value / 1000.0;
-                    break;
-                case TT_SHORT_FLOAT_4:
-                    pData->float_value = (double)int_value / 10000.0;
-                    break;
-                case TT_SHORT_FLOAT_NORM:
-                    pData->float_value = (double)int_value / 32767.0;
-                    break;
-                default:
-                    break;
-                }
-            }
-            else
-            {
-                pData->float_value = XDR_decode_float(*xdr);
-                xdr++;
-            }
-            break;
-        case simgear::props::STRING:
-        case simgear::props::UNSPECIFIED:
+        FGPropertyData* pData = new FGPropertyData;
+        if (plist->decode_received)
         {
-            // if the string is using short int encoding then it is in the new format.
-            if (short_int_encoded)
-            {
-                uint32_t length = int_value;
-                pData->string_value = new char[length + 1];
-
-                char *cptr = (char*)xdr;
-                for (unsigned i = 0; i < length; i++)
-                {
-                    pData->string_value[i] = *cptr++;
-                }
-                pData->string_value[length] = '\0';
-                xdr = (xdr_data_t*)cptr;
-            }
-            else {
-                // String is complicated. It consists of
-                // The length of the string
-                // The string itself
-                // Padding to the nearest 4-bytes.
-                uint32_t length = XDR_decode_uint32(*xdr);
-                xdr++;
-                //cout << length << " ";
-                // Old versions truncated the string but left the length unadjusted.
-                if (length > MAX_TEXT_SIZE)
-                    length = MAX_TEXT_SIZE;
-                pData->string_value = new char[length + 1];
-                //cout << " String: ";
-                for (unsigned i = 0; i < length; i++)
-                {
-                    pData->string_value[i] = (char)XDR_decode_int8(*xdr);
-                    xdr++;
-                }
-
-                pData->string_value[length] = '\0';
-
-                // Now handle the padding
-                while ((length % 4) != 0)
-                {
-                    xdr++;
-                    length++;
-                    //cout << "0";
-                }
-                //cout << "\n";
-            }
+            //
+            // this needs the pointer prior to the extraction of the property id and possible shortint decode
+            // too allow the method to redecode as it wishes
+            xdr = (*plist->decode_received)(plist, xdr, pData);
         }
-        break;
+        else
+        {
+          pData->id = id;
+          pData->type = plist->type;
+          xdr++;
+          // How we decode the remainder of the property depends on the type
+          switch (pData->type) {
+          case simgear::props::BOOL:
+              /*
+               * For 2017.2 we support boolean arrays transmitted as a single int for 30 bools.
+               * this section handles the unpacking into the arrays.
+               */
+              if (pData->id >= BOOLARRAY_START_ID && pData->id <= BOOLARRAY_END_ID)
+              {
+                  unsigned int val = XDR_decode_uint32(*xdr);
+                  bool first_bool = true;
+                  xdr++;
+                  for (int bitidx = 0; bitidx <= 30; bitidx++)
+                  {
+                      // ensure that this property is in the master list.
+                      const IdPropertyList* plistBool = findProperty(id + bitidx);
 
-        default:
-            pData->float_value = XDR_decode_float(*xdr);
-            SG_LOG(SG_NETWORK, SG_DEBUG, "Unknown Prop type " << pData->id << " " << pData->type);
-            xdr++;
-            break;
-        }
-    }
-    if (pData) {
-      motionInfo.properties.push_back(pData);
+                      if (plistBool)
+                      {
+                          if (first_bool)
+                              first_bool = false;
+                          else
+                              pData = new FGPropertyData;
 
-      // Special case - we need the /sim/model/fallback-model-index to create
-      // the MP model
-      if (pData->id == FALLBACK_MODEL_ID) {
-        fallback_model_index = pData->int_value;
-        SG_LOG(SG_NETWORK, SG_DEBUG, "Found Fallback model index in message " << fallback_model_index);
+                          pData->id = id + bitidx;
+                          pData->int_value = (val & (1 << bitidx)) != 0;
+                          pData->type = simgear::props::BOOL;
+                          motionInfo.properties.push_back(pData);
+
+                          // ensure that this is null because this section of code manages the property data and list directly
+                          // it has to be this way because one MP value results in multiple properties being set.
+                          pData = nullptr;
+                      }
+                  }
+                  break;
+              }
+          case simgear::props::INT:
+          case simgear::props::LONG:
+              if (short_int_encoded)
+              {
+                  pData->int_value = int_value;
+                  pData->type = simgear::props::INT;
+              }
+              else
+              {
+                  pData->int_value = XDR_decode_uint32(*xdr);
+                  xdr++;
+              }
+              //cout << pData->int_value << "\n";
+              break;
+          case simgear::props::FLOAT:
+          case simgear::props::DOUBLE:
+              if (short_int_encoded)
+              {
+                  switch (plist->TransmitAs)
+                  {
+                  case TT_SHORT_FLOAT_1:
+                      pData->float_value = (double)int_value / 10.0;
+                      break;
+                  case TT_SHORT_FLOAT_2:
+                      pData->float_value = (double)int_value / 100.0;
+                      break;
+                  case TT_SHORT_FLOAT_3:
+                      pData->float_value = (double)int_value / 1000.0;
+                      break;
+                  case TT_SHORT_FLOAT_4:
+                      pData->float_value = (double)int_value / 10000.0;
+                      break;
+                  case TT_SHORT_FLOAT_NORM:
+                      pData->float_value = (double)int_value / 32767.0;
+                      break;
+                  default:
+                      break;
+                  }
+              }
+              else
+              {
+                  pData->float_value = XDR_decode_float(*xdr);
+                  xdr++;
+              }
+              break;
+          case simgear::props::STRING:
+          case simgear::props::UNSPECIFIED:
+          {
+              // if the string is using short int encoding then it is in the new format.
+              if (short_int_encoded)
+              {
+                  uint32_t length = int_value;
+                  pData->string_value = new char[length + 1];
+
+                  char *cptr = (char*)xdr;
+                  for (unsigned i = 0; i < length; i++)
+                  {
+                      pData->string_value[i] = *cptr++;
+                  }
+                  pData->string_value[length] = '\0';
+                  xdr = (xdr_data_t*)cptr;
+              }
+              else {
+                  // String is complicated. It consists of
+                  // The length of the string
+                  // The string itself
+                  // Padding to the nearest 4-bytes.
+                  uint32_t length = XDR_decode_uint32(*xdr);
+                  xdr++;
+                  //cout << length << " ";
+                  // Old versions truncated the string but left the length unadjusted.
+                  if (length > MAX_TEXT_SIZE)
+                      length = MAX_TEXT_SIZE;
+                  pData->string_value = new char[length + 1];
+                  //cout << " String: ";
+                  for (unsigned i = 0; i < length; i++)
+                  {
+                      pData->string_value[i] = (char)XDR_decode_int8(*xdr);
+                      xdr++;
+                  }
+
+                  pData->string_value[length] = '\0';
+
+                  // Now handle the padding
+                  while ((length % 4) != 0)
+                  {
+                      xdr++;
+                      length++;
+                      //cout << "0";
+                  }
+                  //cout << "\n";
+              }
+          }
+          break;
+
+          default:
+              pData->float_value = XDR_decode_float(*xdr);
+              SG_LOG(SG_NETWORK, SG_DEBUG, "Unknown Prop type " << pData->id << " " << pData->type);
+              xdr++;
+              break;
+          }
       }
-    }
+      if (pData) {
+        motionInfo.properties.push_back(pData);
+
+        // Special case - we need the /sim/model/fallback-model-index to create
+        // the MP model
+        if (pData->id == FALLBACK_MODEL_ID) {
+          fallback_model_index = pData->int_value;
+          SG_LOG(SG_NETWORK, SG_DEBUG, "Found Fallback model index in message " << fallback_model_index);
+        }
+      }
     }
     else
     {

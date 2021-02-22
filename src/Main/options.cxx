@@ -1658,7 +1658,8 @@ fgOptLoadTape(const char* arg)
         //
         // Load the recording's header if it is a Continuous recording.
         //
-        (void) FGReplay::loadContinuousHeader(arg, nullptr /*in*/, properties);
+        path = FGReplay::makeTapePath(arg);
+        (void) FGReplay::loadContinuousHeader(path.c_str(), nullptr /*in*/, properties);
     }
     else {
         // <arg> is a URL. Start download.
