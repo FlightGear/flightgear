@@ -1575,15 +1575,21 @@ static std::string urlToLocalPath(const char* url)
     const char* s2 = (http) ? url+7 : url+8;  // fg.com/foo/bar/wibble.fgtape
     const char* s3 = strchr(s2, '/'); // /foo/bar/wibble.fgtape
     const char* s4 = (s3) ? strrchr(s3, '/') : NULL;  // /wibble.fgtape
-    std::string path;
-    if (s3) path = std::string(s2, s3-s2);    // fg.com
-    path += '_'; // fg.com_
+    std::string path = "url_";
+    if (s3) path += std::string(s2, s3-s2);    // url_fg.com
+    path += '_'; // url_fg.com_
     if (s3 && s4 > s3) {
         path += simgear::strutils::md5(s3, s4-s3).substr(0, 8);
-        path += '_';    // fg.com_12345678_
+        path += '_';    // url_fg.com_12345678_
     }
-    if (s4) path += (s4+1);   // fg.com_12345678_wibble.fgtape
+    if (s4) path += (s4+1);   // url_fg.com_12345678_wibble.fgtape
     if (!simgear::strutils::ends_with(path, ".fgtape")) path += ".fgtape";
+    std::string dir = fgGetString("/sim/replay/tape-directory");
+    if (dir != "") {
+        SGPath path2 = dir;
+        path2.append(path);
+        path = path2.str();
+    }
     return path;
 }
 
@@ -1653,6 +1659,7 @@ fgOptLoadTape(const char* arg)
         const char* url = arg;
         FGHTTPClient* http = globals->add_new_subsystem<FGHTTPClient>();
         http->init();
+        SG_LOG(SG_GENERAL, SG_ALERT, "Replaying url " << url << " using local path: " << path);
         filerequest.reset(new simgear::HTTP::FileRequest(url, path, true /*append*/));
         long max_download_speed = fgGetLong("/sim/replay/download-max-bytes-per-sec");
         if (max_download_speed != 0) {
