@@ -1021,9 +1021,6 @@ void FGAIAircraft::updateHeading(double dt) {
 
             if (headingDiff > 180)
                 headingDiff = fabs(headingDiff - 360);
-            double sum = hdg + headingDiff;
-            if (sum > 360.0) 
-                sum -= 360.0;
 
             groundTargetSpeed = tgt_speed; // * cos(headingDiff * SG_DEGREES_TO_RADIANS);
 
