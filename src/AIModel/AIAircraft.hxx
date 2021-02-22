@@ -40,13 +40,11 @@ public:
 
     virtual void readFromScenario(SGPropertyNode* scFileNode);
 
-    // virtual bool init(bool search_in_AI_path=false);
     virtual void bind();
     virtual void update(double dt);
     virtual void unbind();
 
     void setPerformance(const std::string& acType, const std::string& perfString);
-  //  void setPerformance(PerformanceData *ps);
 
     void setFlightPlan(const std::string& fp, bool repat = false);
         
@@ -83,8 +81,6 @@ public:
     void resetTakeOffStatus() { takeOffStatus = 0;};
     void setTakeOffStatus(int status) { takeOffStatus = status; };
     void scheduleForATCTowerDepartureControl(int state);
-
-    //inline bool isScheduledForTakeoff() { return scheduledForTakeoff; };
 
     virtual const char* getTypeString(void) const { return "aircraft"; }
 
@@ -162,7 +158,6 @@ private:
     void handleATCRequests(double dt);
     inline bool isStationary() { return ((fabs(speed)<=0.0001)&&(fabs(tgt_speed)<=0.0001));}
     inline bool needGroundElevation() { if (!isStationary()) _needsGroundElevation=true;return _needsGroundElevation;}
-   
 
     double sign(double x);
 
@@ -194,6 +189,5 @@ private:
        std::string finalWptName;
    } trackCache;
 };
-
 
 #endif  // _FG_AIAircraft_HXX
