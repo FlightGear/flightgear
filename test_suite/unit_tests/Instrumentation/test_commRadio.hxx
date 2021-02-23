@@ -24,6 +24,8 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <simgear/structure/subsystem_mgr.hxx>
+
 class FGNavRadio;
 class SGGeod;
 
@@ -35,8 +37,12 @@ class CommRadioTests : public CppUnit::TestFixture
 
     CPPUNIT_TEST(testBasic);
     CPPUNIT_TEST(testEightPointThree);
+    CPPUNIT_TEST(testEPLLTuning833);
+    CPPUNIT_TEST(testEPLLTuning25);
 
     CPPUNIT_TEST_SUITE_END();
+
+    SGSubsystemRef setupStandardRadio(const std::string& name, int index, bool enable833);
 
 public:
     // Set up function for each test.
@@ -50,4 +56,6 @@ public:
     // The tests.
     void testBasic();
     void testEightPointThree();
+    void testEPLLTuning833();
+    void testEPLLTuning25();
 };

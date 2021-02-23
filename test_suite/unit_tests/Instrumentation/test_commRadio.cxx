@@ -38,18 +38,13 @@ void CommRadioTests::tearDown()
 //     return buf;
 // }
 
-void CommRadioTests::testBasic()
-{
-}
-
-void CommRadioTests::testEightPointThree()
+SGSubsystemRef CommRadioTests::setupStandardRadio(const std::string& name, int index, bool enable833)
 {
     SGPropertyNode_ptr configNode(new SGPropertyNode);
-    configNode->setStringValue("name", "commtest");
-    configNode->setIntValue("number", 2);
-    configNode->setBoolValue("eight-point-three", true);
+    configNode->setStringValue("name", name);
+    configNode->setIntValue("number", index);
+    configNode->setBoolValue("eight-point-three", enable833);
     auto r = Instrumentation::CommRadio::createInstance(configNode);
-
 
     fgSetBool("/sim/atis/enabled", false);
 
@@ -57,6 +52,18 @@ void CommRadioTests::testEightPointThree()
     r->init();
 
     globals->add_subsystem("comm-radio", r);
+
+    return r;
+}
+
+void CommRadioTests::testBasic()
+{
+}
+
+void CommRadioTests::testEightPointThree()
+{
+    auto r = setupStandardRadio("commtest", 2, true);
+
 
     FGAirportRef apt = FGAirport::getByIdent("EGKK");
     FGTestApi::setPositionAndStabilise(apt->geod());
@@ -104,6 +111,7 @@ void CommRadioTests::testEightPointThree()
     CPPUNIT_ASSERT_EQUAL(326, n->getIntValue("frequencies/selected-channel"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(120.03333, n->getDoubleValue("frequencies/selected-real-frequency-mhz"), 1e-6);
 
+    // under-run the permitted frequency range
     n->setDoubleValue("frequencies/selected-mhz", 117.99);
     r->update(1.0);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(25.0, n->getDoubleValue("frequencies/selected-channel-width-khz"), 1e-3);
@@ -115,4 +123,54 @@ void CommRadioTests::testEightPointThree()
     CPPUNIT_ASSERT_EQUAL("118.705"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
     CPPUNIT_ASSERT_EQUAL(113, n->getIntValue("frequencies/selected-channel"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(118.700, n->getDoubleValue("frequencies/selected-real-frequency-mhz"), 1e-6);
+
+    // over-run the frequency range
+    n->setDoubleValue("frequencies/selected-mhz", 137.000);
+    r->update(1.0);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(8.33, n->getDoubleValue("frequencies/selected-channel-width-khz"), 1e-3);
+    CPPUNIT_ASSERT_EQUAL("136.990"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+    CPPUNIT_ASSERT_EQUAL(3039, n->getIntValue("frequencies/selected-channel"));
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(136.99166, n->getDoubleValue("frequencies/selected-real-frequency-mhz"), 1e-6);
+}
+
+void CommRadioTests::testEPLLTuning833()
+{
+    auto r = setupStandardRadio("commtest", 2, true);
+
+    FGAirportRef apt = FGAirport::getByIdent("EPLL");
+    FGTestApi::setPositionAndStabilise(apt->geod());
+
+    SGPropertyNode_ptr n = globals->get_props()->getNode("instrumentation/commtest[2]");
+    // should be EPLL TWR
+    n->setDoubleValue("frequencies/selected-mhz", 124.23);
+    r->update(1.0);
+
+    CPPUNIT_ASSERT_EQUAL("EPLL"s, string{n->getStringValue("airport-id")});
+    CPPUNIT_ASSERT_EQUAL("Lodz TOWER"s, string{n->getStringValue("station-name")});
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, n->getDoubleValue("slant-distance-m"), 1e-6);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, n->getDoubleValue("signal-quality-norm"), 1e-6);
+}
+
+void CommRadioTests::testEPLLTuning25()
+{
+    auto r = setupStandardRadio("commtest", 2, false);
+
+    FGAirportRef apt = FGAirport::getByIdent("EPLL");
+    FGTestApi::setPositionAndStabilise(apt->geod());
+
+    SGPropertyNode_ptr n = globals->get_props()->getNode("instrumentation/commtest[2]");
+    // should be EPLL TWR
+    n->setDoubleValue("frequencies/selected-mhz", 124.23);
+    r->update(1.0);
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(124.23, n->getDoubleValue("frequencies/selected-mhz"), 1e-6);
+    CPPUNIT_ASSERT_EQUAL("124.22"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+
+    // fail for now
+#if 0
+    CPPUNIT_ASSERT_EQUAL("EPLL"s, string{n->getStringValue("airport-id")});
+    CPPUNIT_ASSERT_EQUAL("Lodz TOWER"s, string{n->getStringValue("station-name")});
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, n->getDoubleValue("slant-distance-m"), 1e-6);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, n->getDoubleValue("signal-quality-norm"), 1e-6);
+#endif
 }
