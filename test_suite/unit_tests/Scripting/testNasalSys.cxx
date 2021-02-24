@@ -21,6 +21,7 @@
 #include "testNasalSys.hxx"
 
 #include "test_suite/FGTestApi/testGlobals.hxx"
+#include "test_suite/FGTestApi/NavDataCache.hxx"
 
 #include <simgear/structure/commands.hxx>
 
@@ -36,6 +37,7 @@
 void NasalSysTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("NasalSys");
+    FGTestApi::setUp::initNavDataCache();
 
     fgInitAllowedPaths();
     globals->get_props()->getNode("nasal", true);
@@ -149,4 +151,18 @@ void NasalSysTests::testCommands()
     ok = globals->get_commands()->execute("do-foo", args);
     CPPUNIT_ASSERT(!ok);
     CPPUNIT_ASSERT_EQUAL(19, fgGetInt("/foo/test"));
+}
+
+void NasalSysTests::testAirportGhost()
+{
+    auto nasalSys = globals->get_subsystem<FGNasalSys>();
+    nasalSys->getAndClearErrorList();
+
+    bool ok = FGTestApi::executeNasal(R"(
+        var apt = airportinfo('LFBD');
+        var taxiways = apt.taxiways;    
+        unitTest.assert_equal(size(taxiways), 0);
+    )");
+    CPPUNIT_ASSERT(ok);
+
 }
