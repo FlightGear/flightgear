@@ -91,6 +91,11 @@ public:
     
     virtual FGNasalModelDataProxy* clone() const { return new FGNasalModelDataProxy(_root); }
 
+    ErrorContext getErrorContext() const override
+    {
+        return {}; // return nothing for now, not yet clear if this proxy needs it
+    }
+
 protected:
     SGPropertyNode_ptr _root;
     FGNasalModelDataRef _data;
