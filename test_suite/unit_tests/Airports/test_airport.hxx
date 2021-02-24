@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 James Turner
+ * Copyright (C) 2021 Keith Paterson
  *
  * This file is part of the program FlightGear.
  *
@@ -17,8 +17,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test_airport.hxx"
-#include "test_runway.hxx"
+#pragma once
 
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AirportTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(RunwayTests, "Unit tests");
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
+
+#include <memory>
+
+#include <simgear/props/props.hxx>
+
+class SGGeod;
+
+// The flight plan unit tests.
+class AirportTests : public CppUnit::TestFixture
+{
+    // Set up the test suite.
+    CPPUNIT_TEST_SUITE(AirportTests);
+    CPPUNIT_TEST(testAirport);
+    CPPUNIT_TEST_SUITE_END();
+
+
+public:
+    // Set up function for each test.
+    void setUp();
+
+    // Clean up after each test.
+    void tearDown();
+
+    // The tests.
+    void testAirport();
+};
