@@ -21,17 +21,20 @@
 
 #include "test_runway.hxx"
 
+#include <iostream>
 #include <cstring>
 #include <memory>
 #include <unistd.h>
 
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/SGGeod.hxx>
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/AIManager.hxx>
 #include <AIModel/performancedb.hxx>
 #include <Airports/airport.hxx>
 #include <Airports/airportdynamicsmanager.hxx>
+#include <Airports/runways.hxx>
 #include <Traffic/TrafficMgr.hxx>
 #include <Time/TimeManager.hxx>
 
@@ -48,10 +51,31 @@ void RunwayTests::setUp()
 }
 
 // Clean up after each test.
-void TrafficTests::tearDown()
+void RunwayTests::tearDown()
 {
 }
 
 void RunwayTests::testRunway()
 {
+    PositionedID aAirport = 0;
+    SGGeod aGeod = SGGeod::fromDeg(-33.92935800, 151.17160300);
+    double heading = 155;
+    int length = 3962;
+    double width = 45.0;
+    double displ_thresh = 79;
+    double stopway = 0;
+    FGRunway runway = FGRunway( FGPositioned::RUNWAY,
+           aAirport, 
+           "16R",
+            aGeod,
+            heading, 
+            length,
+            width,
+            displ_thresh,
+            stopway,
+            1);
+    int calculated = SGGeodesy::distanceM(runway.begin(), runway.end());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE("Distance between the runway endpoints should be runway length", length, calculated, 1);
+    calculated = SGGeodesy::distanceM(runway.begin(), runway.pointOnCenterline(-length));
+    CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE("Distance between the runway start and point on centerline should be runway length", length, calculated, 1);
 }

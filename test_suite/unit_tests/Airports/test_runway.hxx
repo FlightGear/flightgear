@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 James Turner
+ * Copyright (C) 2021 Keith Paterson
  *
  * This file is part of the program FlightGear.
  *
@@ -31,16 +31,11 @@ class SGGeod;
 class FGAIAircraft;
 
 // The flight plan unit tests.
-class TrafficTests : public CppUnit::TestFixture
+class RunwayTests : public CppUnit::TestFixture
 {
     // Set up the test suite.
-    CPPUNIT_TEST_SUITE(TrafficTests);
-    CPPUNIT_TEST(testTrafficManager);
-    CPPUNIT_TEST(testPushback);
-    CPPUNIT_TEST(testPushback2);
-    CPPUNIT_TEST(testChangeRunway);
-    CPPUNIT_TEST(testPushforward);
-    CPPUNIT_TEST(testPushforwardParkYBBN);
+    CPPUNIT_TEST_SUITE(RunwayTests);
+    CPPUNIT_TEST(testRunway);
     CPPUNIT_TEST_SUITE_END();
 
 
@@ -52,12 +47,5 @@ public:
     void tearDown();
 
     // The tests.
-    void testTrafficManager();
-    void testPushback();
-    void testPushback2();
-    void testChangeRunway();
-    void testPushforward();
-    void testPushforwardParkYBBN();
-private:
-    void dump(FGAIAircraft* aiAircraft);
+    void testRunway();
 };
