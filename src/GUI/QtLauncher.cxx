@@ -276,26 +276,33 @@ OpenGLStatus checkForWorkingOpenGL()
         return OpenGLStatus::Unknown;
     }
 
+    // from here on, we need to ensure orderly cleanup or some drivers
+    // crash. So we can't early return.
+
+    OpenGLStatus result = OpenGLStatus::Unknown;
     QOffscreenSurface offSurface;
     offSurface.setFormat(ctx.format()); // ensure it's compatible
     offSurface.create();
-    if (!ctx.makeCurrent(&offSurface)) {
-        return OpenGLStatus::Unknown;
-    }
 
-    std::string renderer = (char*)glGetString(GL_RENDERER);
-    if (renderer == "GDI Generic") {
-        flightgear::addSentryBreadcrumb("Detected GDI generic renderer", "info");
-        return OpenGLStatus::GDIGeneric;
-    } else if (simgear::strutils::starts_with(renderer, "Intel")) {
-        if (ctx.format().majorVersion() < 2) {
-            flightgear::addSentryBreadcrumb("Detected Intel < 2.1 renderer", "info");
-            return OpenGLStatus::Intel14;
+    if (ctx.makeCurrent(&offSurface)) {
+        result = OpenGLStatus::OpenGL21;
+        std::string renderer = (char*)glGetString(GL_RENDERER);
+        if (renderer == "GDI Generic") {
+            flightgear::addSentryBreadcrumb("Detected GDI generic renderer", "info");
+            result = OpenGLStatus::GDIGeneric;
+        } else if (simgear::strutils::starts_with(renderer, "Intel")) {
+            if (ctx.format().majorVersion() < 2) {
+                flightgear::addSentryBreadcrumb("Detected Intel < 2.1 renderer", "info");
+                result = OpenGLStatus::Intel14;
+            }
         }
-        // not worried about 2.0
+
+        // ensure the context is no longer current on the offscreen
+        ctx.doneCurrent();
     }
 
-    return OpenGLStatus::OpenGL21;
+    offSurface.destroy();
+    return result;
 }
 
 } // of anonymous namespace
