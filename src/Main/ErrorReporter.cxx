@@ -22,6 +22,7 @@
 #include "ErrorReporter.hxx"
 
 #include <algorithm>
+#include <ctime> // for strftime, etc
 #include <deque>
 #include <map>
 #include <mutex>
@@ -173,7 +174,7 @@ public:
         simgear::LoadFailure type;
         string detailedInfo;
         sg_location origin;
-        SGTimeStamp when;
+        time_t when;
         string_list log;
         ErrorContext context;
 
@@ -208,6 +209,8 @@ public:
 
         bool haveShownToUser = false;
         OccurrenceVec errors;
+
+        bool addOccurence(const ErrorOcurrence& err);
     };
 
 
@@ -224,7 +227,7 @@ public:
 
     void collectError(simgear::LoadFailure type, simgear::ErrorCode code, const std::string& details, const sg_location& location)
     {
-        ErrorOcurrence occurrence{code, type, details, location, SGTimeStamp::now()};
+        ErrorOcurrence occurrence{code, type, details, location, time(nullptr)};
 
         // snapshot the top of the context stacks into our occurence data
         for (const auto& c : thread_errorContextStack) {
@@ -235,10 +238,12 @@ public:
 
         std::lock_guard<std::mutex> g(_lock); // begin access to shared state
         auto it = getAggregateForOccurence(occurrence);
-        it->errors.push_back(occurrence);
-        it->lastErrorTime.stamp();
 
-        _reportsDirty = true;
+        // add to the occurence, if it's not a duplicate
+        if (it->addOccurence(occurrence)) {
+            it->lastErrorTime.stamp();
+            _reportsDirty = true;
+        }
     }
 
     void collectContext(const std::string& key, const std::string& value)
@@ -396,21 +401,32 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregate(Aggregation ag, const std
 
 void ErrorReporter::ErrorReporterPrivate::writeReportToStream(const AggregateReport& report, std::ostream& os) const
 {
-    // TODO: include date + time
-    os << "FlightGear " << VERSION << " error report, created at " << std::endl;
+    os << "FlightGear " << VERSION << " error report, created at ";
+    {
+        char buf[64];
+        time_t now = time(nullptr);
+        strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&now));
+        os << buf << endl;
+    }
 
     os << "Category:" << static_categoryIds.at(static_cast<int>(report.type)) << endl;
     if (!report.parameter.empty()) {
-        os << "\tParamter:" << report.parameter << endl;
+        os << "\tParameter:" << report.parameter << endl;
     }
 
     os << endl; // insert a blank line after header data
 
     int index = 1;
+    char whenBuf[64];
+
     for (const auto& err : report.errors) {
         os << "Error " << index++ << std::endl;
         os << "\tcode:" << static_errorIds.at(static_cast<int>(err.code)) << endl;
         os << "\ttype:" << static_errorTypeIds.at(static_cast<int>(err.type)) << endl;
+
+        strftime(whenBuf, sizeof(whenBuf), "%H:%M:%S GMT", gmtime(&err.when));
+        os << "\twhen:" << whenBuf << endl;
+
         os << "\t" << err.detailedInfo << std::endl;
         os << "\tlocation:" << err.origin.asString() << endl;
         writeContextToStream(err, os);
@@ -447,11 +463,20 @@ bool ErrorReporter::ErrorReporterPrivate::saveReportCommand(const SGPropertyNode
     const auto& report = _aggregated.at(_activeReportIndex);
 
     const string where = args->getStringValue("where");
+
+    string when;
+    {
+        char buf[64];
+        time_t now = time(nullptr);
+        strftime(buf, sizeof(buf), "%Y%m%d", gmtime(&now));
+        when = buf;
+    }
+
     if (where.empty() || (where == "!desktop")) {
-        SGPath p = SGPath::desktop() / "flightgear_error.txt";
+        SGPath p = SGPath::desktop() / ("flightgear_error_" + when + ".txt");
         int uniqueCount = 2;
         while (p.exists()) {
-            p = SGPath::desktop() / ("flightgear_error_" + std::to_string(uniqueCount++) + ".txt");
+            p = SGPath::desktop() / ("flightgear_error_" + when + "_" + std::to_string(uniqueCount++) + ".txt");
         }
 
         sg_ofstream f(p, std::ios_base::out);
@@ -480,6 +505,26 @@ void ErrorReporter::ErrorReporterPrivate::writeLogToStream(const ErrorOcurrence&
     for (const auto& c : error.log) {
         os << "\t\t" << c << "\n";
     }
+}
+
+bool ErrorReporter::ErrorReporterPrivate::AggregateReport::addOccurence(const ErrorOcurrence& err)
+{
+    auto it = std::find_if(errors.begin(), errors.end(), [err](const ErrorOcurrence& ext) {
+        // check if the two occurences match for the purposes of
+        // de-duplication.
+        return (ext.code == err.code) &&
+               (ext.type == err.type) &&
+               (ext.detailedInfo == err.detailedInfo) &&
+               (ext.origin.asString() == err.origin.asString());
+    });
+
+    if (it != errors.end()) {
+        return false; // duplicate, don't add
+    }
+
+    errors.push_back(err);
+    lastErrorTime.stamp();
+    return true;
 }
 
 ////////////////////////////////////////////
