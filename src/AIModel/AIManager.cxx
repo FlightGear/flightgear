@@ -58,6 +58,7 @@ public:
     Scenario(FGAIManager* man, const std::string& nm, SGPropertyNode* scenarios) :
         _internalName(nm)
     {
+        simgear::ErrorReportContext ec("scenario-name", _internalName);
         for (auto scEntry : scenarios->getChildren("entry")) {
             FGAIBasePtr ai = man->addObject(scEntry);
             if (ai) {
@@ -220,7 +221,7 @@ SGPropertyNode_ptr FGAIManager::registerScenarioFile(SGPropertyNode_ptr root, co
     auto scenariosNode = root->getNode("/sim/ai/scenarios", true);
     SGPropertyNode_ptr sNode;
 
-    simgear::ErrorReportContext ectx("scenario", xmlPath.utf8Str());
+    simgear::ErrorReportContext ectx("scenario-path", xmlPath.utf8Str());
 
     // don't report XML errors while loading scenarios, to Sentry
     flightgear::SentryXMLErrorSupression xml;
@@ -601,7 +602,7 @@ FGAIBasePtr FGAIManager::getObjectFromProperty(const SGPropertyNode* aProp) cons
 bool
 FGAIManager::loadScenario( const string &id )
 {
-    simgear::ErrorReportContext("scenario", id);
+    simgear::ErrorReportContext ec("scenario", id);
     SGPropertyNode_ptr file = loadScenarioFile(id);
     if (!file) {
         return false;
@@ -665,6 +666,7 @@ FGAIManager::loadScenarioFile(const std::string& scenarioName)
     for (auto n : s->getChildren("scenario")) {
         if (n->getStringValue("id") == scenarioName) {
             SGPath path{n->getStringValue("path")};
+            simgear::ErrorReportContext ec("scenario-path", path.utf8Str());
             try {
                 SGPropertyNode_ptr root = new SGPropertyNode;
                 readProperties(path, root);

@@ -32,11 +32,12 @@
 #include <osg/Node>
 #include <osgDB/FileUtils>
 
+#include <simgear/debug/ErrorReportingCallback.hxx>
+#include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/props/props.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
-#include <simgear/debug/logstream.hxx>
-#include <simgear/props/props.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -67,6 +68,16 @@ public:
     ~FGAIModelData() = default;
 
     FGAIModelData* clone() const override { return new FGAIModelData(); }
+
+    ErrorContext getErrorContext() const override
+    {
+        return _errorContext;
+    }
+
+    void addErrorContext(const std::string& key, std::string& value)
+    {
+        _errorContext[key] = value;
+    }
 
     /** osg callback, thread-safe */
     void modelLoaded(const std::string& path, SGPropertyNode *prop, osg::Node *n)
@@ -120,6 +131,8 @@ private:
     bool _interiorLoaded = false;
     float _radius = -1.0;
     SGPropertyNode* _root;
+
+    ErrorContext _errorContext;
 };
 
 FGAIBase::FGAIBase(object_type ot, bool enableHot) :
@@ -307,6 +320,7 @@ void FGAIBase::update(double dt) {
             const string& fxpath = _modeldata->get_sound_path();
             if (fxpath != "")
             {
+                simgear::ErrorReportContext ec("ai-model", _name);
                 props->setStringValue("sim/sound/path", fxpath.c_str());
 
                 // Remove any existing sound FX (e.g. from another model)
@@ -603,6 +617,7 @@ bool FGAIBase::init(ModelSearchOrder searchOrder)
 
     props->addChild("type")->setStringValue("AI");
     _modeldata = new FGAIModelData(props);
+    _modeldata->addErrorContext("ai", _name);
 
     vector<string> model_list = resolveModelPath(searchOrder);
     _model= SGModelLib::loadPagedModel(model_list, props, _modeldata);
