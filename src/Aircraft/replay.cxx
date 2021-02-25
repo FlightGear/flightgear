@@ -1102,8 +1102,10 @@ FGReplay::update( double dt )
                     rename(path_temp.c_str(), path.c_str());
                 }
                 else {
-                    std::string message = "Failed to update recovery file: " + path.str();
-                    popupTip(message.c_str(), 3 /*delay*/);
+                    std::string message = "Failed to update recovery snapshot file '" + path.str() + "';"
+                            + " See File / Flight Recorder Control / 'Maintain recovery snapshot'."
+                            ;
+                    popupTip(message.c_str(), 10 /*delay*/);
                 }
             }
         }
