@@ -75,7 +75,7 @@ public:
      */
     static void registerScenarios(SGPropertyNode_ptr root = {});
     static SGPropertyNode_ptr registerScenarioFile(SGPropertyNode_ptr root, const SGPath& p);
-    static SGPropertyNode_ptr loadScenarioFile(const std::string& id);
+    static SGPropertyNode_ptr loadScenarioFile(const std::string& id, SGPath& outPath);
 
     FGAIBasePtr addObject(const SGPropertyNode* definition);
     bool isVisible(const SGGeod& pos) const;
