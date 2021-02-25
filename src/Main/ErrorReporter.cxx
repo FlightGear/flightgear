@@ -83,7 +83,9 @@ string_list static_errorIds = {
     "error-audio-fx-load",
     "error-xml-load-command",
     "error-aircraft-systems",
-    "error-input-device-config"};
+    "error-input-device-config"
+    "error-ai-traffic-schedule",
+};
 
 string_list static_errorTypeIds = {
     "error-type-unknown",
@@ -268,6 +270,11 @@ public:
 
         _displayNode->setStringValue("category", catLabel);
 
+
+        auto ns = globals->get_locale()->getLocalizedString("error-next-steps", "sys");
+        _displayNode->setStringValue("next-steps", ns);
+
+
         // remove any existing error children
         _displayNode->removeChildren("error");
 
@@ -330,7 +337,7 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
         return getAggregate(Aggregation::HangarAircraft, fullId);
     }
 
-    if (oc.hasContextKey("scenery")) {
+    if (oc.hasContextKey("terrain-stg")) {
         // determine if it's custom scenery, TerraSync or FGData
 
         // bucket is no use here, we need to check the BTG/XML/STG path etc.
@@ -338,7 +345,7 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
         // STG references a model, XML or texture in FGData or TerraSync
         // incorrectly, we attribute the error to the scenery, which is
         // likely what we want/expect
-        const auto stgPath = oc.getContextValue("stg-path");
+        const auto stgPath = oc.getContextValue("terrain-stg");
 
         if (simgear::strutils::starts_with(stgPath, _fgdataPathPrefix)) {
             return getAggregate(Aggregation::FGData, {});
@@ -358,9 +365,9 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
         return getAggregate(Aggregation::CustomScenery, {});
     }
 
-    if (oc.hasContextKey("scenario")) {
-        const auto scenarioPath = oc.getContextValue("scenario");
-        return getAggregate(Aggregation::InputDevice, scenarioPath);
+    if (oc.hasContextKey("scenario-path")) {
+        const auto scenarioPath = oc.getContextValue("scenario-path");
+        return getAggregate(Aggregation::Scenario, scenarioPath);
     }
 
     if (oc.hasContextKey("input-device")) {
@@ -631,5 +638,15 @@ void ErrorReporter::shutdown()
     globals->get_commands()->removeCommand("save-error-report-data");
     sglog().removeCallback(d->_logCallback.get());
 }
+
+std::string ErrorReporter::threadSpecificContextValue(const std::string& key)
+{
+    auto it = thread_errorContextStack.find(key);
+    if (it == thread_errorContextStack.end())
+        return {};
+
+    return it->second.back();
+}
+
 
 } // namespace flightgear

@@ -39,11 +39,12 @@
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 
-#include <Main/globals.hxx>
+#include <Main/ErrorReporter.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
-#include <Scripting/NasalSys.hxx>
 #include <Scripting/NasalModelData.hxx>
+#include <Scripting/NasalSys.hxx>
 #include <Sound/fg_fx.hxx>
 
 #include "AIFlightPlan.hxx"
@@ -74,9 +75,17 @@ public:
         return _errorContext;
     }
 
-    void addErrorContext(const std::string& key, std::string& value)
+    void addErrorContext(const std::string& key, const std::string& value)
     {
         _errorContext[key] = value;
+    }
+
+    void captureErrorContext(const std::string& key)
+    {
+        const auto v = flightgear::ErrorReporter::threadSpecificContextValue(key);
+        if (!v.empty()) {
+            addErrorContext(key, v);
+        }
     }
 
     /** osg callback, thread-safe */
@@ -618,6 +627,7 @@ bool FGAIBase::init(ModelSearchOrder searchOrder)
     props->addChild("type")->setStringValue("AI");
     _modeldata = new FGAIModelData(props);
     _modeldata->addErrorContext("ai", _name);
+    _modeldata->captureErrorContext("scenario-path");
 
     vector<string> model_list = resolveModelPath(searchOrder);
     _model= SGModelLib::loadPagedModel(model_list, props, _modeldata);

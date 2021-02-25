@@ -43,6 +43,8 @@ public:
 
     static const char* staticSubsystemClassId() { return "error-reporting"; }
 
+    static std::string threadSpecificContextValue(const std::string& key);
+
 private:
     class ErrorReporterPrivate;
 

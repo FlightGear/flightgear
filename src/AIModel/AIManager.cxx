@@ -602,14 +602,18 @@ FGAIBasePtr FGAIManager::getObjectFromProperty(const SGPropertyNode* aProp) cons
 bool
 FGAIManager::loadScenario( const string &id )
 {
-    simgear::ErrorReportContext ec("scenario", id);
-    SGPropertyNode_ptr file = loadScenarioFile(id);
+    SGPath path;
+    SGPropertyNode_ptr file = loadScenarioFile(id, path);
     if (!file) {
         return false;
     }
 
+    simgear::ErrorReportContext ec("scenario-path", path.utf8Str());
     SGPropertyNode_ptr scNode = file->getChild("scenario");
     if (!scNode) {
+        simgear::reportFailure(simgear::LoadFailure::Misconfigured,
+                               simgear::ErrorCode::ScenarioLoad,
+                               "No <scenario> element in file", path);
         return false;
     }
 
@@ -655,7 +659,7 @@ FGAIManager::unloadAllScenarios()
 
 
 SGPropertyNode_ptr
-FGAIManager::loadScenarioFile(const std::string& scenarioName)
+FGAIManager::loadScenarioFile(const std::string& scenarioName, SGPath& outPath)
 {
     auto s = fgGetNode("/sim/ai/scenarios");
     if (!s) return {};
@@ -666,6 +670,7 @@ FGAIManager::loadScenarioFile(const std::string& scenarioName)
     for (auto n : s->getChildren("scenario")) {
         if (n->getStringValue("id") == scenarioName) {
             SGPath path{n->getStringValue("path")};
+            outPath = path;
             simgear::ErrorReportContext ec("scenario-path", path.utf8Str());
             try {
                 SGPropertyNode_ptr root = new SGPropertyNode;
