@@ -829,8 +829,8 @@ struct SviewStepDouble : SviewStep
         
         We require that:
         
-            EL is local aircraft's chase-distance (though at the moment we use
-            a fixed value) so that local aircraft is in perfect view.
+            EL is local aircraft's chase-distance so that local aircraft is in
+            perfect view.
         
             Angle LER is fixed to give good view of both aircraft in
             window. (Should be related to the vertical angular size of the
@@ -1647,6 +1647,8 @@ struct EventHandler : osgGA::EventHandler
 
 std::shared_ptr<SviewView> SviewCreate(SGPropertyNode* config)
 {    
+    assert(config);
+    
     FGRenderer* renderer = globals->get_renderer();
     osgViewer::ViewerBase* viewer_base = renderer->getViewerBase();
     osgViewer::CompositeViewer* composite_viewer = dynamic_cast<osgViewer::CompositeViewer*>(viewer_base);
@@ -1655,18 +1657,14 @@ std::shared_ptr<SviewView> SviewCreate(SGPropertyNode* config)
         return nullptr;
     }
 
-
     osgViewer::View* main_view = renderer->getView();
     osg::Node* scene_data = main_view->getSceneData();
     
     SG_LOG(SG_GENERAL, SG_ALERT, "main_view->getNumSlaves()=" << main_view->getNumSlaves());
 
     osgViewer::View* view = new osgViewer::View();
-    //EventHandler* event_handler = new EventHandler;
     flightgear::FGEventHandler* event_handler = globals->get_renderer()->getEventHandler();
     view->addEventHandler(event_handler);
-    
-    assert(config);
     
     std::shared_ptr<SviewView>  sview_view;
     
@@ -1708,6 +1706,7 @@ std::shared_ptr<SviewView> SviewCreate(SGPropertyNode* config)
     osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
     osg::ref_ptr<osg::GraphicsContext> gc;
     
+    /* When we implement canvas views, we won't create a new window here. */
     if (1) {
         /* Create a new window. */
         
