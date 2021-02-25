@@ -629,7 +629,7 @@ bool runLauncherDialog()
     // will happen as normal
     http->init();
 
-    std::unique_ptr<NaturalEarthDataLoaderThread> naturalEarthLoader{new NaturalEarthDataLoaderThread};
+    QPointer<NaturalEarthDataLoaderThread> naturalEarthLoader = new NaturalEarthDataLoaderThread;
     naturalEarthLoader->start();
 
     // avoid double Apple menu and other weirdness if both Qt and OSG
