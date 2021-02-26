@@ -1593,6 +1593,19 @@ static std::string urlToLocalPath(const char* url)
     return path;
 }
 
+// When loading a Continuous recording at startup, we need to override the
+// aircraft and airport. Unfortunately we can't simply set /sim/aircraft
+// because there may be --aircraft options later on in the command line. Also
+// fgMainInit() ends up calling Options::initAircraft() after we have processed
+// all options, and Options::initAircraft() seems to look directly at the
+// options again, instead of using /sim/aircraft.
+//
+// So we store any aircraft/airport override here, so that
+// Options::initAircraft() can use them if they are set, instead of going back
+// to any user-specified aircraft.
+//
+static std::string  g_load_tape_aircraft;
+static std::string  g_load_tape_airport;
 
 static int
 fgOptLoadTape(const char* arg)
@@ -1719,19 +1732,11 @@ fgOptLoadTape(const char* arg)
     std::string aircraft = properties->getStringValue("meta/aircraft-type");
     std::string airport = properties->getStringValue("meta/closest-airport-id");
     SG_LOG(SG_GENERAL, SG_ALERT, "From recording header: aircraft=" << aircraft << " airport=" << airport);
-    if (aircraft != "") {
-        // Force --aircraft and --airport options to use values from the
-        // recording.
-        //
-        Options::sharedInstance()->setOption("aircraft", aircraft);
-    }
-    if (airport != "") {
-        // Looks like setting --airport option doesn't work - we need to call
-        // fgOptAirport() directly.
-        //
-        Options::sharedInstance()->setOption("airport", airport);
-        fgOptAirport(airport.c_str());
-    }
+    // Override aircraft and airport settings to match what is in the
+    // recording.
+    //
+    g_load_tape_aircraft = aircraft;
+    g_load_tape_airport = airport;
 
     // Arrange to load the recording after FDM has initialised.
     new DelayedTapeLoader(path.c_str(), filerequest);
@@ -2378,7 +2383,11 @@ void Options::initPaths()
 OptionResult Options::initAircraft()
 {
   string aircraft;
-  if (isOptionSet("aircraft")) {
+  if (g_load_tape_aircraft != "") {
+    // Use Continuous recording's aircraft if we are replaying on startup.
+    aircraft = g_load_tape_aircraft;
+  }
+  else if (isOptionSet("aircraft")) {
     aircraft = valueForOption("aircraft");
   } else if (isOptionSet("vehicle")) {
     aircraft = valueForOption("vehicle");
@@ -2832,6 +2841,19 @@ OptionResult Options::processOptions()
         SGPath root(globals->get_fg_root());
         root.append("Scenery");
         globals->append_fg_scenery(root);
+    }
+
+    if (g_load_tape_aircraft != "") {
+        // This might not be necessary, because we always end up calling
+        // Options::initAircraft() later on, which also knows to use
+        // g_load_tape_aircraft if it is not "".
+        //
+        SG_LOG(SG_GENERAL, SG_ALERT, "overriding aircraft from " << fgGetString("/sim/aircraft") << " to " << g_load_tape_aircraft);
+        fgSetString("/sim/aircraft", g_load_tape_aircraft);
+    }
+    if (g_load_tape_airport != "") {
+        SG_LOG(SG_GENERAL, SG_ALERT, "overriding airport from " << fgGetString("/sim/presets/airport-id") << " to " << g_load_tape_airport);
+        fgOptAirport(g_load_tape_airport.c_str());
     }
 
   if (isOptionSet("json-report")) {
