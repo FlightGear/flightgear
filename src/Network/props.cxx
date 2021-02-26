@@ -1,5 +1,5 @@
 // \file props.cxx
-// Property server class.
+// Property server class. Used for telnet server.
 //
 // Written by Curtis Olson, started September 2000.
 // Modified by Bernie Bright, May 2002.
