@@ -26,119 +26,111 @@
 */
 
 #include <math.h>
-#include <stdio.h>
+#include <memory>
 #include <stdint.h>
+#include <stdio.h>
 
 #include <plib/netSocket.h>
 
 #include "FlightGear_js.h"
 
-void usage(char * progname)
+void usage(char* progname)
 {
     printf("This is an UDP based remote joystick server.\n");
     printf("usage: %s <hostname> <port>\n", progname);
 }
 
-int main ( int argc, char ** argv )
+int main(int argc, char** argv)
 {
-  jsJoystick * js ;
-  float      * ax;
-  int port = 16759;
-  char * host; /* = "192.168.1.7"; */
-  int activeaxes = 4;
+    int port = 16759;
+    char* host; /* = "192.168.1.7"; */
+    int activeaxes = 4;
 
-  if( argc != 3 )
-  {
-    usage(argv[0]); 
-    exit(1);
-  }
-  host = argv[1];
-  port = atoi(argv[2]);
+    if (argc != 3) {
+        usage(argv[0]);
+        exit(1);
+    }
+    host = argv[1];
+    port = atoi(argv[2]);
 
-  jsInit () ;
+    jsInit();
 
-  js = new jsJoystick ( 0 ) ;
+    auto js = std::make_unique<jsJoystick>(0);
 
-  if ( js->notWorking () )
-  {
-    printf ( "no Joystick detected... exitting\n" ) ;
-    exit(1);     
-  }
-  printf ( "Joystick is \"%s\"\n", js->getName() ) ;
+    if (js->notWorking()) {
+        printf("no Joystick detected... exitting\n");
+        exit(1);
+    }
+    printf("Joystick is \"%s\"\n", js->getName());
 
-  int numaxes = js->getNumAxes();
-  ax = new float [ numaxes ] ;
-  activeaxes = numaxes;
-  
-  if( numaxes > 4 )
-  {
-    printf("max 4 axes joysticks supported at the moment, however %i axes were detected\nWill only use the first 4 axes!\n", numaxes);
-    activeaxes = 4;
-  }
+    int numaxes = js->getNumAxes();
+    auto ax = std::make_unique<float[]>(numaxes);
+    activeaxes = numaxes;
 
-  // Must call this before any other net stuff
-  netInit( &argc,argv );
-
-  netSocket c;
-
-  if ( ! c.open( false ) ) {	// open a UDP socket
-	printf("error opening socket\n");
-	return -1;
+    if (numaxes > 4) {
+        printf("max 4 axes joysticks supported at the moment, however %i axes were detected\nWill only use the first 4 axes!\n", numaxes);
+        activeaxes = 4;
     }
 
-    c.setBlocking( false );
+    // Must call this before any other net stuff
+    netInit(&argc, argv);
 
-    if ( c.connect( host, port ) == -1 ) {
-	printf("error connecting to %s:%d\n", host, port);
-	return -1;
+    netSocket c;
+
+    if (!c.open(false)) { // open a UDP socket
+        printf("error opening socket\n");
+        return -1;
     }
 
+    c.setBlocking(false);
 
-  char packet[256] = "Hello world!";
-  while(1)
-  {
+    if (c.connect(host, port) == -1) {
+        printf("error connecting to %s:%d\n", host, port);
+        return -1;
+    }
+
+    char packet[256] = "Hello world!";
+    while (1) {
         int b;
-	int len = 0;
-	int axis = 0;
+        int len = 0;
+        int axis = 0;
 
-        js->read( &b, ax );
-	for ( axis = 0 ; axis < activeaxes ; axis++ )
-	{
-	  int32_t axisvalue = (int32_t)(ax[axis]*2147483647.0);
-	  printf("axisval=%li\n", (long)axisvalue);
-	  memcpy(packet+len, &axisvalue, sizeof(axisvalue));
-	  len+=sizeof(axisvalue);
-	}
-	// fill emtpy values into packes when less than 4 axes
-	for( ; axis < 4; axis++ )
-	{
-	  int32_t axisvalue = 0;
-	  memcpy(packet+len, &axisvalue, sizeof(axisvalue));
-	  len+=sizeof(axisvalue);
-	}
+        js->read(&b, ax.get());
+        for (axis = 0; axis < activeaxes; axis++) {
+            int32_t axisvalue = (int32_t)(ax[axis] * 2147483647.0);
+            printf("axisval=%li\n", (long)axisvalue);
+            memcpy(packet + len, &axisvalue, sizeof(axisvalue));
+            len += sizeof(axisvalue);
+        }
+        // fill emtpy values into packes when less than 4 axes
+        for (; axis < 4; axis++) {
+            int32_t axisvalue = 0;
+            memcpy(packet + len, &axisvalue, sizeof(axisvalue));
+            len += sizeof(axisvalue);
+        }
 
-	int32_t b_l = b;
-        memcpy(packet+len, &b_l, sizeof(b_l));
-        len+=sizeof(b_l);
+        int32_t b_l = b;
+        memcpy(packet + len, &b_l, sizeof(b_l));
+        len += sizeof(b_l);
 
-	const char * termstr = "\0\0\r\n";
-        memcpy(packet+len, termstr, 4);
-	len += 4;
+        const char* termstr = "\0\0\r\n";
+        memcpy(packet + len, termstr, 4);
+        len += 4;
 
-        c.send( packet, len, 0 );
+        c.send(packet, len, 0);
 
-    /* give other processes a chance */
+        /* give other processes a chance */
 
 #ifdef _WIN32
-    Sleep ( 1 ) ;
+        Sleep(1);
 #elif defined(sgi)
-    sginap ( 1 ) ;
+        sginap(1);
 #else
-    usleep ( 200 ) ;
+        usleep(200);
 #endif
-    printf(".");
-    fflush(stdout);
-  }
+        printf(".");
+        fflush(stdout);
+    }
 
-  return 0 ;
+    return 0;
 }
