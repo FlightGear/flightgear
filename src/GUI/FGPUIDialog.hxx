@@ -1,29 +1,32 @@
 // FGPUIDialog.hxx - XML-configured dialog box.
 
-#ifndef FG_PUI_DIALOG_HXX
-#define FG_PUI_DIALOG_HXX 1
+#pragma once
 
 #include "dialog.hxx"
 
 #include <plib/puAux.h>
 
-#include <simgear/props/props.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/condition.hxx>
+#include <simgear/props/props.hxx>
 
 #include <vector>
 
 
 // ugly temporary workaround for plib's lack of user defined class ids  FIXME
-#define FGCLASS_LIST          0x00000001
-#define FGCLASS_AIRPORTLIST   0x00000002
-#define FGCLASS_PROPERTYLIST  0x00000004
-#define FGCLASS_WAYPOINTLIST  0x00000008
-#define FGCLASS_LOGLIST       0x00000010
+#define FGCLASS_LIST 0x00000001
+#define FGCLASS_AIRPORTLIST 0x00000002
+#define FGCLASS_PROPERTYLIST 0x00000004
+#define FGCLASS_WAYPOINTLIST 0x00000008
+#define FGCLASS_LOGLIST 0x00000010
 
-class GUI_ID { public: GUI_ID(int id) : id(id) {} virtual ~GUI_ID() {} int id; };
-
-
+class GUI_ID
+{
+public:
+    GUI_ID(int id) : id(id) {}
+    virtual ~GUI_ID() {}
+    int id;
+};
 
 class NewGUI;
 class FGColor;
@@ -41,7 +44,6 @@ class puFont;
 class FGPUIDialog : public FGDialog
 {
 public:
-
     /**
      * Construct a new GUI widget configured by a property tree.
      *
@@ -51,13 +53,13 @@ public:
      *
      * @param props A property tree describing the dialog.
      */
-    FGPUIDialog (SGPropertyNode * props);
+    FGPUIDialog(SGPropertyNode* props);
 
 
     /**
      * Destructor.
      */
-    virtual ~FGPUIDialog ();
+    virtual ~FGPUIDialog();
 
 
     /**
@@ -89,18 +91,19 @@ public:
     /**
      * Update state.  Called on active dialogs before rendering.
      */
-    virtual void update ();
+    virtual void update();
 
     /**
      * Recompute the dialog's layout
      */
     void relayout();
-    
-    
-    void setNeedsLayout() {
-      _needsRelayout = true;
+
+
+    void setNeedsLayout()
+    {
+        _needsRelayout = true;
     }
-    virtual const char * getName();
+    virtual const char* getName();
     virtual void bringToFront();
 
     class ActiveWidget
@@ -108,8 +111,8 @@ public:
     public:
         virtual void update() = 0;
     };
-private:
 
+private:
     enum {
         BACKGROUND = 0x01,
         FOREGROUND = 0x02,
@@ -121,40 +124,40 @@ private:
     };
 
     // Show the dialog.
-    void display (SGPropertyNode * props);
+    void display(SGPropertyNode* props);
 
     // Build the dialog or a subobject of it.
-    puObject * makeObject (SGPropertyNode * props,
-                           int parentWidth, int parentHeight);
+    puObject* makeObject(SGPropertyNode* props,
+                         int parentWidth, int parentHeight);
 
     // Common configuration for all GUI objects.
-    void setupObject (puObject * object, SGPropertyNode * props);
+    void setupObject(puObject* object, SGPropertyNode* props);
 
     // Common configuration for all GUI group objects.
-    void setupGroup (puGroup * group, SGPropertyNode * props,
-                     int width, int height, bool makeFrame = false);
+    void setupGroup(puGroup* group, SGPropertyNode* props,
+                    int width, int height, bool makeFrame = false);
 
     // Set object colors: the "which" argument defines which color qualities
     // (PUCOL_LABEL, etc.) should pick up the <color> property.
-    void setColor(puObject * object, SGPropertyNode * props, int which = 0);
+    void setColor(puObject* object, SGPropertyNode* props, int which = 0);
 
     // return key code number for keystring
-    int getKeyCode(const char *keystring);
+    int getKeyCode(const char* keystring);
 
     /**
      * Apply layout sizes to a tree of puObjects
      */
-    void applySize(puObject *object);
+    void applySize(puObject* object);
 
     // The top-level PUI object.
-    puObject * _object;
+    puObject* _object;
 
     // The GUI subsystem.
-    NewGUI * _gui;
+    NewGUI* _gui;
 
     // The dialog font. Defaults to the global gui font, but can get
     // overridden by a top level font definition.
-    puFont * _font;
+    puFont* _font;
 
     // The source xml tree, so that we can pass data back, such as the
     // last position.
@@ -171,37 +174,36 @@ private:
     // with a GUI object, so we have to keep track of all the special
     // data we allocated and then free it manually when the dialog
     // closes.
-    std::vector<void *> _info;
+    std::vector<void*> _info;
     struct PropertyObject {
-        PropertyObject (const char * name,
-                        puObject * object,
-                        SGPropertyNode_ptr node);
+        PropertyObject(const char* name,
+                       puObject* object,
+                       SGPropertyNode_ptr node);
         std::string name;
-        puObject * object;
+        puObject* object;
         SGPropertyNode_ptr node;
     };
-    std::vector<PropertyObject *> _propertyObjects;
-    std::vector<PropertyObject *> _liveObjects;
-    
+    std::vector<PropertyObject*> _propertyObjects;
+    std::vector<PropertyObject*> _liveObjects;
+
     class ConditionalObject : public SGConditional
     {
     public:
-      ConditionalObject(const std::string& aName, puObject* aPu) :
-        _name(aName),
-        _pu(aPu)
-      { ; }
-    
-      void update(FGPUIDialog* aDlg);
-    
+        ConditionalObject(const std::string& aName, puObject* aPu) : _name(aName),
+                                                                     _pu(aPu)
+        {
+            ;
+        }
+
+        void update(FGPUIDialog* aDlg);
+
     private:
-      const std::string _name;
-      puObject* _pu;      
+        const std::string _name;
+        puObject* _pu;
     };
-    
+
     typedef SGSharedPtr<ConditionalObject> ConditionalObjectRef;
     std::vector<ConditionalObjectRef> _conditionalObjects;
-    
+
     std::vector<ActiveWidget*> _activeWidgets;
 };
-
-#endif // __DIALOG_HXX
