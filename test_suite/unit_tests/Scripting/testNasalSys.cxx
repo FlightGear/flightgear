@@ -126,10 +126,11 @@ void NasalSysTests::testCommands()
        addcommand('do-foo', g);
     )");
     CPPUNIT_ASSERT(ok);
+
     auto errors = nasalSys->getAndClearErrorList();
     CPPUNIT_ASSERT_EQUAL(1UL, errors.size());
 
-    // old command shoudl still be registered and work
+    // old command should still be registered and work
     ok = globals->get_commands()->execute("do-foo", args);
     CPPUNIT_ASSERT(ok);
     CPPUNIT_ASSERT_EQUAL(19, fgGetInt("/foo/test"));
@@ -144,6 +145,7 @@ void NasalSysTests::testCommands()
      unitTest.assert(!ok);
   )");
     CPPUNIT_ASSERT(ok);
+
     errors = nasalSys->getAndClearErrorList();
     CPPUNIT_ASSERT_EQUAL(0UL, errors.size());
 
