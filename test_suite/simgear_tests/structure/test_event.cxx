@@ -18,9 +18,10 @@
  */
 
 
-#include "test_event.hxx"
-
 #include <algorithm>
+#include <memory>
+
+#include "test_event.hxx"
 
 using namespace std;
 
@@ -51,13 +52,18 @@ public:
             _rescheduleTimes.pop_front();
 
             // TimerObj does this, eugh
-            global_eventManager->removeTask(_name);
-            start(t);
+            if (global_eventManager) {
+                global_eventManager->removeTask(_name);
+                start(t);
+            }
         }
     }
 
     void start(double interval)
     {
+        if (!global_eventManager)
+            return;
+
         global_eventManager->addTask(_name, this, &FakeNasalTimer::invoke,
                                      interval, interval /* delay */, false);
 
@@ -83,7 +89,6 @@ void SimgearEventTests::setUp()
     _eventManager->setRealtimeProperty(_realTimeProp);
 }
 
-
 // Clean up after each test.
 void SimgearEventTests::tearDown()
 {
@@ -107,7 +112,7 @@ void SimgearEventTests::runForTestTime(double totalTime, double updateHz, double
 
 void SimgearEventTests::testTaskRescheduleDuringRun()
 {
-    auto t1 = new FakeNasalTimer("timer_aaa");
+    auto t1 = std::make_unique<FakeNasalTimer>("timer_aaa");
     t1->_rescheduleTimes.resize(10);
     fill(t1->_rescheduleTimes.begin(), t1->_rescheduleTimes.end(), 0.5);
     t1->_rescheduleTimes.push_back(30.0); // large final value
@@ -119,13 +124,11 @@ void SimgearEventTests::testTaskRescheduleDuringRun()
     CPPUNIT_ASSERT_EQUAL(11, t1->_invokeCount);
 }
 
-
 void SimgearEventTests::testTaskRescheduleDuringRun2()
 {
-    auto t1 = new FakeNasalTimer("timer_bbb");
+    auto t1 = std::make_unique<FakeNasalTimer>("timer_bbb");
     const std::initializer_list<double> times = {
-        0.02, 0.05, 0.02, 0.1, 0.02, 0.125, 0.05, 0.02
-    };
+        0.02, 0.05, 0.02, 0.1, 0.02, 0.125, 0.05, 0.02};
     t1->_rescheduleTimes = times;
     t1->_rescheduleTimes.push_back(30.0); // large final value
 
