@@ -1,5 +1,5 @@
-// swift_connection.cxx 
-// 
+// swift_connection.cxx
+//
 // Copyright (C) 2019 - swift Project Community / Contributors (http://swift-project.org/)
 // Adapted to Flightgear by Lars Toenning <dev@ltoenning.de>
 //
@@ -43,18 +43,21 @@ inline std::string fgswiftbusServiceName()
 
 bool SwiftConnection::startServer(const SGPropertyNode* arg, SGPropertyNode* root)
 {
-    SwiftConnection::plug     = new FGSwiftBus::CPlugin();
-    serverRunning                  = true;
+    SwiftConnection::plug = std::make_unique<FGSwiftBus::CPlugin>();
+
+    serverRunning = true;
     fgSetBool("/sim/swift/serverRunning", true);
+
     return true;
 }
 
 bool SwiftConnection::stopServer(const SGPropertyNode* arg, SGPropertyNode* root)
 {
-    delete SwiftConnection::plug;
-    SwiftConnection::plug = nullptr;
     fgSetBool("/sim/swift/serverRunning", false);
-	serverRunning = false;
+    serverRunning = false;
+
+    SwiftConnection::plug.release();
+
     return true;
 }
 
@@ -63,39 +66,42 @@ SwiftConnection::SwiftConnection()
     init();
 }
 
-
 SwiftConnection::~SwiftConnection()
 {
     shutdown();
+
+    if (serverRunning) {
+        SwiftConnection::plug.release();
+    }
 }
 
 void SwiftConnection::init()
 {
-	if (!initialized) {
+    if (!initialized) {
         globals->get_commands()->addCommand("swiftStart", this, &SwiftConnection::startServer);
         globals->get_commands()->addCommand("swiftStop", this, &SwiftConnection::stopServer);
+
         fgSetBool("/sim/swift/available", true);
         initialized = true;
-	}
-
+    }
 }
 
 void SwiftConnection::update(double delta_time_sec)
 {
-	if (serverRunning) {
+    if (serverRunning) {
         SwiftConnection::plug->fastLoop();
-	}
+    }
 }
 
 void SwiftConnection::shutdown()
 {
-	if (initialized) {
-        globals->get_commands()->removeCommand("swiftStart");
-        globals->get_commands()->removeCommand("swiftStop");
+    if (initialized) {
         fgSetBool("/sim/swift/available", false);
         initialized = false;
-	}
 
+        globals->get_commands()->removeCommand("swiftStart");
+        globals->get_commands()->removeCommand("swiftStop");
+    }
 }
 
 void SwiftConnection::reinit()
