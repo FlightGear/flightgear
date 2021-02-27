@@ -85,7 +85,13 @@ private:
 
     SGPropertyNode_ptr m_RecorderNode;
     SGPropertyNode_ptr m_ConfigNode;
+    
     SGPropertyNode_ptr m_ReplayMultiplayer;
+    SGPropertyNode_ptr m_ReplayExtraProperties;
+    SGPropertyNode_ptr m_ReplayMainView;
+    SGPropertyNode_ptr m_ReplayMainWindowPosition;
+    SGPropertyNode_ptr m_ReplayMainWindowSize;
+    
     SGPropertyNode_ptr m_RecordContinuous;
     SGPropertyNode_ptr m_RecordExtraProperties;
     

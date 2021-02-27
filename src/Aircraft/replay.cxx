@@ -739,7 +739,7 @@ static SGPropertyNode_ptr saveSetup(
                 || fgGetBool("/sim/replay/record-main-window", false)
                 || fgGetBool("/sim/replay/record-main-view", false)
                 ) {
-            SG_LOG(SG_SYSTEMS, SG_ALERT, "Adding data[]=extra-properties."
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "Adding data[]=extra-properties."
                     << " record-extra-properties=" << fgGetBool("/sim/replay/record-extra-properties", false)
                     << " record-main-window=" << fgGetBool("/sim/replay/record-main-window", false)
                     << " record-main-view=" << fgGetBool("/sim/replay/record-main-view", false)
@@ -851,6 +851,15 @@ struct FGFrameInfo
     bool    has_multiplayer = false;
     bool    has_extra_properties = false;
 };
+
+std::ostream& operator << (std::ostream& out, const FGFrameInfo& frame_info)
+{
+    return out << "{"
+            << " offset=" << frame_info.offset
+            << " has_multiplayer=" << frame_info.has_multiplayer
+            << " has_extra_properties=" << frame_info.has_extra_properties
+            << "}";
+}
 
 void
 FGReplay::update( double dt )
@@ -1093,8 +1102,10 @@ FGReplay::update( double dt )
                     rename(path_temp.c_str(), path.c_str());
                 }
                 else {
-                    std::string message = "Failed to update recovery file: " + path.str();
-                    popupTip(message.c_str(), 3 /*delay*/);
+                    std::string message = "Failed to update recovery snapshot file '" + path.str() + "';"
+                            + " See File / Flight Recorder Control / 'Maintain recovery snapshot'."
+                            ;
+                    popupTip(message.c_str(), 10 /*delay*/);
                 }
             }
         }
@@ -1257,69 +1268,44 @@ FGReplay::replay( double time ) {
         int xsize = xsize0;
         int ysize = ysize0;
         
-        double  t_begin = m_continuous_in_time_last;
-        if (m_continuous_in_extra_properties) {
-            // Continuous recording has property changes.
+        double  multiplayer_recent = 3;
+        
+        // We replay all frames from just after the previously-replayed frame,
+        // in order to replay extra properties and multiplayer aircraft
+        // correctly.
+        //
+        double  t_begin = m_continuous_in_frame_time_last;
+        
+        if (time < m_continuous_in_time_last) {
+            // We have gone backwards, e.g. user has clicked on the back
+            // buttons in the Replay dialogue.
             //
-            if (time < m_continuous_in_time_last) {
-                // We have gone backwards; need to replay all property changes
-                // from t=0.
+            
+            if (m_continuous_in_multiplayer) {
+                // Continuous recording has multiplayer data, so replay recent
+                // ones.
+                //
+                t_begin = time - multiplayer_recent;
+            }
+            
+            if (m_continuous_in_extra_properties) {
+                // Continuous recording has property changes. we need to replay
+                // all property changes from the beginning.
+                //
                 t_begin = -1;
             }
-        }
-        
-        double  multiplayer_recent = 3;
-        if (m_continuous_in_multiplayer) {
-            double  t = std::max(0.0, time - multiplayer_recent);
-            t_begin = std::min(t_begin, t);
-        }
-        
-        // Replay property changes for all t in t_prop_begin < t < time, and multiplayer
-        // changes for most recent multiplayer_recent seconds.
-        //
-        for (auto p = m_continuous_in_time_to_frameinfo.upper_bound(t_begin);
-                p != m_continuous_in_time_to_frameinfo.end();
-                ++p)
-        {
-            if (p->first >= time) break;
-            SG_LOG(SG_SYSTEMS, SG_DEBUG, "Replaying extra property changes."
+            
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "Have gone backwards."
                     << " m_continuous_in_time_last=" << m_continuous_in_time_last
                     << " time=" << time
                     << " t_begin=" << t_begin
-                    << " p->first=" << p->first
-                    << " p->second.offset=" << p->second.offset
+                    << " m_continuous_in_extra_properties=" << m_continuous_in_extra_properties
                     );
-            
-            // Replaying a frame is expensive because we read frame data
-            // from disc each time. So we only replay this frame if it has
-            // extra_properties, or if it has multiplayer packets and we are
-            // within <multiplayer_recent> seconds of current time.
-            //
-            bool    replay_this_frame = p->second.has_extra_properties;
-            if (!replay_this_frame) {
-                if (p->first > time - multiplayer_recent) {
-                    if (p->second.has_multiplayer) {
-                        replay_this_frame = true;
-                    }
-                }
-            }
-            if (replay_this_frame) {
-                replay(
-                        p->first,
-                        p->second.offset,
-                        0 /*offset_old*/,
-                        false /*replay_signals*/,
-                        p->first > time - multiplayer_recent /*replay_multiplayer*/,
-                        true /*replay_extra_properties*/,
-                        &xpos,
-                        &ypos,
-                        &xsize,
-                        &ysize
-                        );
-            }
         }
         
-        // Replay from uncompressed recording file.
+        // Prepare to replay signals from uncompressed recording file. We want
+        // to find a pair of frames that straddle the requested <time> so that
+        // we can interpolate.
         //
         auto p = m_continuous_in_time_to_frameinfo.lower_bound(time);
         bool ret = false;
@@ -1340,7 +1326,7 @@ FGReplay::replay( double time ) {
                 offset = p->second.offset;
             }
             else {
-                // Interpolate between items that straddle <time>.
+                // Interpolate between pair of items that straddle <time>.
                 auto prev = p;
                 --prev;
                 offset_prev = prev->second.offset;
@@ -1351,6 +1337,56 @@ FGReplay::replay( double time ) {
             // Exact match.
             offset = p->second.offset;
         }
+        
+        // Before interpolating signals, we replay all property changes from
+        // all frame times t satisfying t_prop_begin < t < time. We also replay
+        // all recent multiplayer packets in this range, i.e. for which t >
+        // time - multiplayer_recent.
+        //
+        for (auto p_before = m_continuous_in_time_to_frameinfo.upper_bound(t_begin);
+                p_before != m_continuous_in_time_to_frameinfo.end();
+                ++p_before) {
+            if (p_before->first >= p->first) {
+                break;
+            }
+            // Replaying a frame is expensive because we read frame data
+            // from disc each time. So we only replay this frame if it has
+            // extra_properties, or if it has multiplayer packets and we are
+            // within <multiplayer_recent> seconds of current time.
+            //
+            bool    replay_this_frame = p_before->second.has_extra_properties;
+            if (p_before->second.has_multiplayer && p_before->first > time - multiplayer_recent) {
+                replay_this_frame = true;
+            }
+            
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "Looking at extra property changes."
+                    << " replay_this_frame=" << replay_this_frame
+                    << " m_continuous_in_time_last=" << m_continuous_in_time_last
+                    << " m_continuous_in_frame_time_last=" << m_continuous_in_frame_time_last
+                    << " time=" << time
+                    << " t_begin=" << t_begin
+                    << " p_before->first=" << p_before->first
+                    << " p_before->second=" << p_before->second
+                    );
+
+            if (replay_this_frame) {
+                replay(
+                        p_before->first,
+                        p_before->second.offset,
+                        0 /*offset_old*/,
+                        false /*replay_signals*/,
+                        p_before->first > time - multiplayer_recent /*replay_multiplayer*/,
+                        true /*replay_extra_properties*/,
+                        &xpos,
+                        &ypos,
+                        &xsize,
+                        &ysize
+                        );
+            }
+        }
+        
+        /* Now replay signals, interpolating between frames atoffset_prev and
+        offset. */
         replay(
                 time,
                 offset,
@@ -1392,6 +1428,7 @@ FGReplay::replay( double time ) {
         }
         
         m_continuous_in_time_last = time;
+        m_continuous_in_frame_time_last = p->first;
         
         return ret;
     }
@@ -1543,7 +1580,6 @@ static std::unique_ptr<FGReplayData> ReadFGReplayData(
             ret->multiplayer_messages.clear();
             uint32_t pos = 0;
             for(;;) {
-                SG_LOG(SG_SYSTEMS, SG_DEBUG, "length=" << length << " pos=" << pos);
                 assert(pos <= length);
                 if (pos == length) {
                     break;
@@ -1551,6 +1587,12 @@ static std::unique_ptr<FGReplayData> ReadFGReplayData(
                 std::shared_ptr<std::vector<char>>  v(new std::vector<char>);
                 ret->multiplayer_messages.push_back(v);
                 pos += VectorRead<uint16_t>(in, *ret->multiplayer_messages.back(), length - pos);
+                SG_LOG(SG_SYSTEMS, SG_BULK, "replaying multiplayer data"
+                        << " ret->sim_time=" << ret->sim_time
+                        << " length=" << length
+                        << " pos=" << pos
+                        << " callsign=" << ((T_MsgHdr*) &v->front())->Callsign
+                        );
             }
         }
         else if (load_extra_properties && !strcmp(data_type, "extra-properties")) {
@@ -1586,12 +1628,6 @@ void FGReplay::replay(
         int* ysize
         )
 {
-    SG_LOG(SG_SYSTEMS, SG_BULK,
-            "FGReplay::replay():"
-            << " time=" << time
-            << " offset=" << offset
-            << " offset_old=" << offset_old
-            );
     std::unique_ptr<FGReplayData> replay_data = ReadFGReplayData(
             m_continuous_in,
             offset,
@@ -1600,6 +1636,7 @@ void FGReplay::replay(
             replay_multiplayer,
             replay_extra_properties
             );
+    assert(replay_data.get());
     std::unique_ptr<FGReplayData> replay_data_old;
     if (offset_old) {
         replay_data_old = ReadFGReplayData(
@@ -1611,6 +1648,16 @@ void FGReplay::replay(
                 replay_extra_properties
                 );
     }
+    if (replay_extra_properties) SG_LOG(SG_SYSTEMS, SG_BULK,
+            "FGReplay::replay():"
+            << " time=" << time
+            << " offset=" << offset
+            << " offset_old=" << offset_old
+            << " replay_data->raw_data.size()=" << replay_data->raw_data.size()
+            << " replay_data->multiplayer_messages.size()=" << replay_data->multiplayer_messages.size()
+            << " replay_data->extra_properties.size()=" << replay_data->extra_properties.size()
+            << " replay_data->replay_extra_property_changes.size()=" << replay_data->replay_extra_property_changes.size()
+            );
     m_pRecorder->replay(time, replay_data.get(), replay_data_old.get(), xpos, ypos, xsize, ysize);
 }
 
@@ -1918,10 +1965,12 @@ void FGReplay::indexContinuousRecording(const void* data, size_t numbytes)
                 else if (!strcmp(data->getStringValue(), "multiplayer")) {
                     frameinfo.has_multiplayer = true;
                     ++m_num_frames_multiplayer;
+                    m_continuous_in_multiplayer = true;
                 }
                 else if (!strcmp(data->getStringValue(), "extra-properties")) {
                     frameinfo.has_extra_properties = true;
                     ++m_num_frames_extra_properties;
+                    m_continuous_in_extra_properties = true;
                 }
             }
         }
@@ -2021,6 +2070,7 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMet
         clear();
         fillRecycler();
         m_continuous_in_time_last = -1;
+        m_continuous_in_frame_time_last = -1;
         m_continuous_in_time_to_frameinfo.clear();
         m_num_frames_extra_properties = 0;
         m_num_frames_multiplayer = 0;
@@ -2241,6 +2291,17 @@ FGReplay::listTapes(bool SameAircraftFilter, const SGPath& tapeDirectory)
     return true;
 }
 
+std::string  FGReplay::makeTapePath(const std::string& tape_name)
+{
+    std::string path = tape_name;
+    if (simgear::strutils::ends_with(path, ".fgtape")) {
+        return path;
+    }
+    SGPath path2(fgGetString("/sim/replay/tape-directory", ""));
+    path2.append(path + ".fgtape");
+    return path2.str();
+}
+
 /** Load a flight recorder tape from disk. User/script command. */
 bool
 FGReplay::loadTape(const SGPropertyNode* ConfigData)
@@ -2262,19 +2323,9 @@ FGReplay::loadTape(const SGPropertyNode* ConfigData)
     else
     {
         SGPropertyNode* MetaMeta = fgGetNode("/sim/gui/dialogs/flightrecorder/preview", true);
-        SGPath tapePath;
-        if (simgear::strutils::ends_with(tape, ".fgtape"))
-        {
-            tapePath = tape;
-        }
-        else
-        {
-            tapePath = tapeDirectory;
-            tapePath.append(tape);
-            tapePath.concat(".fgtape");
-        }
-        SG_LOG(SG_SYSTEMS, MY_SG_DEBUG, "Checking flight recorder file " << tapePath << ", preview: " << Preview);
-        return loadTape(tapePath, Preview, *MetaMeta);
+        std::string path = makeTapePath(tape);
+        SG_LOG(SG_SYSTEMS, MY_SG_DEBUG, "Checking flight recorder file " << path << ", preview: " << Preview);
+        return loadTape(path, Preview, *MetaMeta);
     }
 }
 

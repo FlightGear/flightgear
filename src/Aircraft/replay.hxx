@@ -145,6 +145,10 @@ public:
     //
     static int loadContinuousHeader(const std::string& path, std::istream* in, SGPropertyNode* properties);
 
+    // Prepends /sim/replay/tape-directory and/or appends .fgtape etc.
+    //
+    static std::string  makeTapePath(const std::string& tape_name);
+    
 private:
     void clear();
     FGReplayData* record(double time);
@@ -255,6 +259,7 @@ private:
     std::map<double, FGFrameInfo>   m_continuous_in_time_to_frameinfo;
     SGPropertyNode_ptr              m_continuous_in_config;
     double                          m_continuous_in_time_last;
+    double                          m_continuous_in_frame_time_last;
     
     std::ifstream                   m_continuous_indexing_in;
     std::streampos                  m_continuous_indexing_pos;
