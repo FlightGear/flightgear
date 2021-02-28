@@ -1675,6 +1675,8 @@ fgOptLoadTape(const char* arg)
         http->init();
         SG_LOG(SG_GENERAL, SG_ALERT, "Replaying url " << url << " using local path: " << path);
         filerequest.reset(new simgear::HTTP::FileRequest(url, path, true /*append*/));
+        filerequest->setAcceptEncoding(""); // "" means request any supported compression.
+        
         long max_download_speed = fgGetLong("/sim/replay/download-max-bytes-per-sec");
         if (max_download_speed != 0) {
             // Can be useful to limite download speed for testing background
@@ -1696,6 +1698,7 @@ fgOptLoadTape(const char* arg)
         // timeout.
         //
         time_t t0 = time(NULL);
+        SG_LOG(SG_GENERAL, SG_ALERT, "Starting download from: " << url);
         for(;;) {
             // Run http client's update() to download any pending data.
             http->update(0);
