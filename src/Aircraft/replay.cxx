@@ -1961,6 +1961,13 @@ void FGReplay::indexContinuousRecording(const void* data, size_t numbytes)
     // Reset any EOF because there might be new data.
     m_continuous_indexing_in.clear();
     
+    struct data_stats_t
+    {
+        size_t  num_frames = 0;
+        size_t  bytes = 0;
+    };
+    std::map<std::string, data_stats_t> stats;
+    
     for(;;)
     {
         SG_LOG(SG_SYSTEMS, SG_BULK, "reading frame."
@@ -1990,7 +1997,13 @@ void FGReplay::indexContinuousRecording(const void* data, size_t numbytes)
                     );
             // Move forward <length> bytes.
             m_continuous_indexing_in.seekg(length, std::ios_base::cur);
+            if (!m_continuous_indexing_in) {
+                // Dont add bogus info to <stats>.
+                break;
+            }
             if (length) {
+                stats[data->getStringValue()].num_frames += 1;
+                stats[data->getStringValue()].bytes += length;
                 if (!strcmp(data->getStringValue(), "signals")) {
                     frameinfo.has_signals = true;
                 }
@@ -2028,6 +2041,9 @@ void FGReplay::indexContinuousRecording(const void* data, size_t numbytes)
         m_continuous_indexing_pos = m_continuous_indexing_in.tellg();
         std::lock_guard<std::mutex> lock(m_continuous_in_time_to_frameinfo_lock);
         m_continuous_in_time_to_frameinfo[sim_time] = frameinfo;
+        if (m_continuous_in_time_to_frameinfo.size() == 1) {
+            fgSetDouble("/sim/replay/start-time", sim_time);
+        }
     }
     time_t t = time(NULL) - t0;
     auto new_bytes = m_continuous_indexing_pos - original_pos;
@@ -2040,7 +2056,7 @@ void FGReplay::indexContinuousRecording(const void* data, size_t numbytes)
                 << " new_bytes=" << new_bytes
                 );
     }
-    SG_LOG(SG_SYSTEMS, SG_DEBUG, "Indexed uncompressed recording."
+    SG_LOG(SG_SYSTEMS, SG_DEBUG, "Continuous recording indexing complete."
             << " time taken=" << t << "s."
             << " num_new_frames=" << num_new_frames
             << " m_continuous_indexing_pos=" << m_continuous_indexing_pos
@@ -2048,15 +2064,24 @@ void FGReplay::indexContinuousRecording(const void* data, size_t numbytes)
             << " m_num_frames_multiplayer=" << m_num_frames_multiplayer
             << " m_num_frames_extra_properties=" << m_num_frames_extra_properties
             );
-    // Probably don't need this lock because we're only reading
-    // m_continuous_in_time_to_frameinfo, and nothing else can be writing it.
-    //
+    for (auto stat: stats) {
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "data type " << stat.first << ":"
+                << " num_frames=" << stat.second.num_frames
+                << " bytes=" << stat.second.bytes
+                );
+    }
+    
     std::lock_guard<std::mutex> lock(m_continuous_in_time_to_frameinfo_lock);
     fgSetInt("/sim/replay/continuous-stats-num-frames", m_continuous_in_time_to_frameinfo.size());
     fgSetInt("/sim/replay/continuous-stats-num-frames-extra-properties", m_num_frames_extra_properties);
     fgSetInt("/sim/replay/continuous-stats-num-frames-multiplayer", m_num_frames_multiplayer);
+    if (!m_continuous_in_time_to_frameinfo.empty()) {
+        fgSetDouble("/sim/replay/end-time", m_continuous_in_time_to_frameinfo.rbegin()->first);
+    }
     if (!numbytes) {
-        SG_LOG(SG_SYSTEMS, SG_ALERT, "Continuous recording: indexing finished");
+        SG_LOG(SG_SYSTEMS, SG_ALERT, "Continuous recording: indexing finished"
+                << " m_continuous_in_time_to_frameinfo.size()=" << m_continuous_in_time_to_frameinfo.size()
+                );
         m_continuous_indexing_in.close();
     }
 }
