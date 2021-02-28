@@ -251,6 +251,8 @@ private:
     
     void valueChanged(SGPropertyNode * node);
     
+    bool    m_continuoue_out_signals;
+    
     // Things for replaying from uncompressed fgtape file.
     std::ifstream                   m_continuous_in;
     bool                            m_continuous_in_multiplayer;

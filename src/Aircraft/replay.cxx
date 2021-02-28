@@ -727,8 +727,10 @@ static SGPropertyNode_ptr saveSetup(
         copyProperties(extra->getNode("user-data"), meta->getNode("user-data", 0, true));
     }
 
-    // We always record signals.
-    config->addChild("data")->setStringValue("signals");
+    if (tape_type != FGTapeType_CONTINUOUS
+            || fgGetBool("/sim/replay/record-signals", true)) {
+        config->addChild("data")->setStringValue("signals");
+    }
     
     if (tape_type == FGTapeType_CONTINUOUS) {
         if (fgGetBool("/sim/replay/record-multiplayer", false)) {
@@ -803,6 +805,36 @@ FGReplay::continuousWriteFrame(FGReplayData* r, std::ostream& out, SGPropertyNod
             << " out.tellp()=" << out.tellp()
             << " r->sim_time=" << r->sim_time
             );
+    // Don't write frame if no data to write.
+    bool r_has_data = false;
+    for (auto data: config->getChildren("data")) {
+        const char* data_type = data->getStringValue();
+        if (!strcmp(data_type, "signals")) {
+            r_has_data = true;
+            break;
+        }
+        else if (!strcmp(data_type, "multiplayer")) {
+            if (!r->multiplayer_messages.empty()) {
+                r_has_data = true;
+                break;
+            }
+        }
+        else if (!strcmp(data_type, "extra-properties")) {
+            if (!r->extra_properties.empty()) {
+                r_has_data = true;
+                break;
+            }
+        }
+        else {
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "unrecognised data_type=" << data_type);
+            assert(0);
+        }
+    }
+    if (!r_has_data) {
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Not writing frame because no data to write");
+        return true;
+    }
+    
     out.write(reinterpret_cast<char*>(&r->sim_time), sizeof(r->sim_time));
 
     for (auto data: config->getChildren("data")) {
@@ -1564,7 +1596,7 @@ static std::unique_ptr<FGReplayData> ReadFGReplayData(
     std::unique_ptr<FGReplayData>   ret(new FGReplayData);
 
     in.read(reinterpret_cast<char*>(&ret->sim_time), sizeof(ret->sim_time));
-
+    ret->raw_data.resize(0);
     for (auto data: config->getChildren("data")) {
         const char* data_type = data->getStringValue();
         SG_LOG(SG_SYSTEMS, SG_DEBUG, "in.tellg()=" << in.tellg() << " data_type=" << data_type);
