@@ -249,6 +249,11 @@ FGAIBase::removeModel()
     }
 }
 
+void FGAIBase::setScenarioPath(const std::string& scenarioPath)
+{
+    _scenarioPath = scenarioPath;
+}
+
 void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
 {
     if (!scFileNode)
@@ -330,6 +335,10 @@ void FGAIBase::update(double dt) {
             if (fxpath != "")
             {
                 simgear::ErrorReportContext ec("ai-model", _name);
+                if (!_scenarioPath.empty()) {
+                    ec.add("scenario-path", _scenarioPath);
+                }
+
                 props->setStringValue("sim/sound/path", fxpath.c_str());
 
                 // Remove any existing sound FX (e.g. from another model)
@@ -628,6 +637,10 @@ bool FGAIBase::init(ModelSearchOrder searchOrder)
     _modeldata = new FGAIModelData(props);
     _modeldata->addErrorContext("ai", _name);
     _modeldata->captureErrorContext("scenario-path");
+
+    if (_otype == otMultiplayer) {
+        _modeldata->addErrorContext("multiplayer", getCallSign());
+    }
 
     vector<string> model_list = resolveModelPath(searchOrder);
     _model= SGModelLib::loadPagedModel(model_list, props, _modeldata);

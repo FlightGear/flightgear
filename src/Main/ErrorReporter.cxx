@@ -68,7 +68,9 @@ enum class Aggregation {
     Scenario,
     InputDevice,
     FGData,
-    Unknown ///< error coudln't be attributed more specifcially
+    MultiPlayer,
+    Unknown,    ///< error coudln't be attributed more specifcially
+    OutOfMemory ///< seperate category to give it a custom message
 };
 
 // these should correspond to simgear::ErrorCode enum
@@ -83,9 +85,9 @@ string_list static_errorIds = {
     "error-audio-fx-load",
     "error-xml-load-command",
     "error-aircraft-systems",
-    "error-input-device-config"
+    "error-input-device-config",
     "error-ai-traffic-schedule",
-};
+    "error-terrasync"};
 
 string_list static_errorTypeIds = {
     "error-type-unknown",
@@ -93,7 +95,9 @@ string_list static_errorTypeIds = {
     "error-type-out-of-memory",
     "error-type-bad-header",
     "error-type-bad-data",
-    "error-type-misconfigured"};
+    "error-type-misconfigured",
+    "error-type-io",
+    "error-type-network"};
 
 
 string_list static_categoryIds = {
@@ -105,7 +109,9 @@ string_list static_categoryIds = {
     "error-category-scenario",
     "error-category-input-device",
     "error-category-fgdata",
-    "error-category-unknown"};
+    "error-category-multiplayer",
+    "error-category-unknown",
+    "error-category-out-of-memory"};
 
 class RecentLogCallback : public simgear::LogCallback
 {
@@ -164,6 +170,7 @@ public:
     SGPropertyNode_ptr _enabledNode;
     SGPropertyNode_ptr _displayNode;
     SGPropertyNode_ptr _activeErrorNode;
+    SGPropertyNode_ptr _mpReportNode;
 
     using ErrorContext = std::map<std::string, std::string>;
     /**
@@ -328,6 +335,13 @@ public:
 auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorReporter::ErrorReporterPrivate::ErrorOcurrence& oc)
     -> AggregateErrors::iterator
 {
+    // all OOM errors go to a dedicated category. This is so we don't blame
+    // out of memory on the aircraft/scenery/etc, when it's not the underlying
+    // cause.
+    if (oc.type == simgear::LoadFailure::OutOfMemory) {
+        return getAggregate(Aggregation::OutOfMemory, {});
+    }
+
     if (oc.hasContextKey("primary-aircraft")) {
         const auto fullId = fgGetString("/sim/aircraft-id");
         if (fullId != fgGetString("/sim/aircraft")) {
@@ -335,6 +349,16 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
         }
 
         return getAggregate(Aggregation::HangarAircraft, fullId);
+    }
+
+    if (oc.hasContextKey("multiplayer")) {
+        return getAggregate(Aggregation::MultiPlayer, {});
+    }
+
+    // all TerraSync coded errors go there: this is errors for the
+    // actual download process (eg, failed to write to disk)
+    if (oc.code == simgear::ErrorCode::TerraSync) {
+        return getAggregate(Aggregation::TerraSync, {});
     }
 
     if (oc.hasContextKey("terrain-stg")) {
@@ -550,6 +574,7 @@ void ErrorReporter::bind()
 
     d->_displayNode = n->getNode("display", true);
     d->_activeErrorNode = n->getNode("active", true);
+    d->_mpReportNode = n->getNode("mp-report-enabled", true);
 }
 
 void ErrorReporter::unbind()
@@ -594,6 +619,7 @@ void ErrorReporter::init()
 void ErrorReporter::update(double dt)
 {
     bool showDialog = false;
+    bool havePendingReports = false;
 
     // beginning of locked section
     {
@@ -623,6 +649,13 @@ void ErrorReporter::update(double dt)
 
         // check if an error is current active
         for (auto& report : d->_aggregated) {
+            if (report.type == Aggregation::MultiPlayer) {
+                if (!d->_mpReportNode->getBoolValue()) {
+                    // mark it as shown, to supress it
+                    report.haveShownToUser = true;
+                }
+            }
+
             if (report.haveShownToUser) {
                 // unless we ever re-show?
                 continue;
@@ -635,9 +668,14 @@ void ErrorReporter::update(double dt)
 
                 // if we show one report, don't consider any others for now
                 break;
+            } else {
+                havePendingReports = true;
             }
         } // of active aggregates iteration
 
+        if (!havePendingReports) {
+            d->_reportsDirty = false;
+        }
     } // end of locked section
 
     // do not call into another subsystem with our lock held,

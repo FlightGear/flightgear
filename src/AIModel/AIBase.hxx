@@ -147,6 +147,9 @@ public:
     double _getCartPosZ() const;
 
     osg::PagedLOD* getSceneBranch() const;
+
+    void setScenarioPath(const std::string& scenarioPath);
+
 protected:
     double _elevation_m;
 
@@ -167,6 +170,7 @@ protected:
     std::string _submodel;
     std::string _name;
     std::string _parent;
+    std::string _scenarioPath;
 
     /**
      * Tied-properties helper, record nodes which are tied for easy un-tie-ing
