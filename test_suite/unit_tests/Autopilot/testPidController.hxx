@@ -1,6 +1,4 @@
 /*
- * Copyright (C) 2018 Edward d'Auvergne
- *
  * This file is part of the program FlightGear.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,10 +15,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "testDigitalFilter.hxx"
-#include "testPidController.hxx"
+
+#pragma once
 
 
-// Set up the unit tests.
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(DigitalFilterTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(PidControllerTests, "Unit tests");
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
+
+#include <simgear/props/props.hxx>
+
+
+// The system tests.
+struct PidControllerTests : public CppUnit::TestFixture
+{
+    // Set up function for each test.
+    void setUp();
+
+    // Clean up after each test.
+    void tearDown();
+
+    // The tests.
+    void test0();
+    void test1();
+    
+    private:
+    
+    // Set up the test suite.
+    CPPUNIT_TEST_SUITE(PidControllerTests);
+    CPPUNIT_TEST(test);
+    CPPUNIT_TEST_SUITE_END();
+
+    SGPropertyNode_ptr configFromString(const std::string& s);
+    void test();
+};
