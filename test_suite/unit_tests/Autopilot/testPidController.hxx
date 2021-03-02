@@ -42,9 +42,10 @@ struct PidControllerTests : public CppUnit::TestFixture
     
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(PidControllerTests);
-    CPPUNIT_TEST(test);
+    CPPUNIT_TEST(test0);
+    CPPUNIT_TEST(test1);
     CPPUNIT_TEST_SUITE_END();
 
     SGPropertyNode_ptr configFromString(const std::string& s);
-    void test();
+    void test(bool startup_zeros);
 };

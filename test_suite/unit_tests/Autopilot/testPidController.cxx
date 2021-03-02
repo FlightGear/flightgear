@@ -38,18 +38,29 @@ SGPropertyNode_ptr PidControllerTests::configFromString(const std::string& s)
     return config;
 }
 
-void PidControllerTests::test()
+void PidControllerTests::test0()
+{
+    test(false /*startup_current*/);
+}
+
+void PidControllerTests::test1()
+{
+    test(true /*startup_current*/);
+}
+
+void PidControllerTests::test(bool startup_current)
 {
     sg_srandom(999);
 
     // Define vertical-hold pid-controller (based on Harrier-GR3).
     //
-    std::string config_text = 
+    std::string config_text0 = 
         R"(<?xml version="1.0" encoding="UTF-8"?>
         <PropertyList>
           <pid-controller>
             <name>Vertical Speed Hold</name>
             <debug>false</debug>
+            <startup-current></startup-current>
             <enable>true</enable>
             <input>
               <prop>/velocities/vertical-speed-fps</prop>
@@ -80,6 +91,13 @@ void PidControllerTests::test()
         </PropertyList>
         )";
     
+    // Set the <startup-current> element.
+    std::string from = "<startup-current></startup-current>";
+    std::string config_text = config_text0;
+    config_text.replace(config_text.find(from), from.size(),
+            (startup_current) ? "<startup-current>true</startup-current>" : "<startup-current>false</startup-current>"
+            );
+    assert(config_text != config_text0);
     std::cout << "config_text is:\n" << config_text << "\n";
     
     SGPropertyNode_ptr config = configFromString(config_text);
@@ -90,13 +108,14 @@ void PidControllerTests::test()
     ap->bind();
     ap->init();
 
-    assert(pidControllerInputs.size() == pidControllerOutputs.size());
+    const std::vector<PidControllerOutput>& outputs = (startup_current) ? pidControllerOutputs1 : pidControllerOutputs0;
+    assert(pidControllerInputs.size() == outputs.size());
     
     fgSetDouble("/controls/flight/elevator", 0);
     
     for (unsigned i=0; i<pidControllerInputs.size(); ++i) {
         const PidControllerInput& input = pidControllerInputs[i];
-        const PidControllerOutput& output = pidControllerOutputs[i];
+        const PidControllerOutput& output = outputs[i];
         fgSetDouble("/velocities/vertical-speed-fps", input.vspeed_fps);
         fgSetDouble("/autopilot/settings/vertical-speed-fpm", input.reference / 0.01667);
         ap->update(0.00833333 /*dt*/);

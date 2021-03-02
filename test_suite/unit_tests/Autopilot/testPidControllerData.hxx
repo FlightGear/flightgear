@@ -14,11 +14,17 @@ struct PidControllerOutput
 };
 
 // Define sequence of input values. These are the values actually used with
-// Harrier-GR3 when startup_zeros=false, but we use the same inputs for
-// startup_zeros=true also.
+// Harrier-GR3 when startup_current=true, but we use the same inputs for
+// startup_current=false also.
 //
 extern std::vector<PidControllerInput> pidControllerInputs;
 
-// Expected output.
+// Expected output when startup_current is false (the default old behaviour).
 //
-extern std::vector<PidControllerOutput> pidControllerOutputs;
+// Note the large transient at the start which messes up the initial behaviour.
+//
+extern std::vector<PidControllerOutput> pidControllerOutputs0;
+
+// Expected output when startup_current is true (the new improved behaviour).
+//
+extern std::vector<PidControllerOutput> pidControllerOutputs1;
