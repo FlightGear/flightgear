@@ -34,6 +34,7 @@ class NasalSysTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testStructEquality);
     CPPUNIT_TEST(testCommands);
     CPPUNIT_TEST(testAirportGhost);
+    CPPUNIT_TEST(testCompileLarge);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -47,6 +48,7 @@ public:
     void testStructEquality();
     void testCommands();
     void testAirportGhost();
+    void testCompileLarge();
 };
 
 #endif  // _FG_NASALSYS_UNIT_TESTS_HXX

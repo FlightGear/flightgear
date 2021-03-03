@@ -168,3 +168,38 @@ void NasalSysTests::testAirportGhost()
     CPPUNIT_ASSERT(ok);
 
 }
+
+// https://sourceforge.net/p/flightgear/codetickets/2246/
+
+void NasalSysTests::testCompileLarge()
+{
+    auto nasalSys = globals->get_subsystem<FGNasalSys>();
+    nasalSys->getAndClearErrorList();
+
+    
+    string code = "var foo = 0;\n";
+    for (int i=0; i<14; ++i) {
+        code = code + code;
+    }
+    
+    nasalSys->parseAndRun(code);
+    
+//    bool ok = FGTestApi::executeNasal(R"(
+//var try_compile = func(code) {
+//    call(compile, [code], nil,nil,var err=[]);
+//    return size(err);
+//}
+//
+//var expression = "var foo = 0;\n";
+//var code = "";
+//
+//for(var i=0;i<=10000;i+=1) {
+//    code ~= expression;
+//    if (try_compile(code) == 1) {
+//        print("Error compiling, LOC count is:", i+1);
+//        break;
+//    }
+//}
+//    )");
+//    CPPUNIT_ASSERT(ok);
+}
