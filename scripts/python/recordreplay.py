@@ -159,6 +159,7 @@ def make_recording(
     We check that the recording file is newly created.
     '''
     t = time.time()
+    fg.fg['/sim/replay/record-signals'] = True  # Just in case they are disabled by user.
     if continuous:
         assert not fg.fg['/sim/replay/record-continuous']
         fg.fg['/sim/replay/record-continuous'] = 1
