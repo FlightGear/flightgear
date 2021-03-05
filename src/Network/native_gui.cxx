@@ -31,6 +31,10 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/timing/sg_time.hxx>
 
+#if FG_HAVE_DDS
+#include <simgear/io/sg_dds.hxx>
+#endif
+
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
@@ -46,7 +50,6 @@
 #else
 #  include <netinet/in.h>	// htonl() ntohl()
 #endif
-
 
 // #define FG_USE_NETWORK_BYTE_ORDER
 #if defined( FG_USE_NETWORK_BYTE_ORDER )
@@ -91,37 +94,8 @@ static void htonf (float &x)
 }
 #endif
 
-
-FGNativeGUI::FGNativeGUI() {
-}
-
-FGNativeGUI::~FGNativeGUI() {
-}
-
-
-// open hailing frequencies
-bool FGNativeGUI::open() {
-    if ( is_enabled() ) {
-	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
-		<< "is already in use, ignoring" );
-	return false;
-    }
-
-    SGIOChannel *io = get_io_channel();
-
-    if ( ! io->open( get_direction() ) ) {
-	SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
-	return false;
-    }
-
-    set_enabled( true );
-
-    fgSetDouble("/position/sea-level-radius-ft", SG_EQUATORIAL_RADIUS_FT);
-    return true;
-}
-
-
-void FGProps2NetGUI( FGNetGUI *net ) {
+template<>
+void FGProps2GUI<FGNetGUI>( FGNetGUI *net ) {
     static SGPropertyNode *nav_freq
 	= fgGetNode("/instrumentation/nav/frequencies/selected-mhz", true);
     static SGPropertyNode *nav_target_radial
@@ -248,8 +222,8 @@ void FGProps2NetGUI( FGNetGUI *net ) {
 #endif
 }
 
-
-void FGNetGUI2Props( FGNetGUI *net ) {
+template<>
+void FGGUI2Props<FGNetGUI>( FGNetGUI *net ) {
     unsigned int i;
 
 #if defined( FG_USE_NETWORK_BYTE_ORDER )
@@ -331,36 +305,240 @@ void FGNetGUI2Props( FGNetGUI *net ) {
     }
 }
 
+#if FG_HAVE_DDS
+template<>
+void FGProps2GUI<FG_DDS_GUI>( FG_DDS_GUI *dds ) {
+    static SGPropertyNode *nav_freq
+        = fgGetNode("/instrumentation/nav/frequencies/selected-mhz", true);
+    static SGPropertyNode *nav_target_radial
+        = fgGetNode("/instrumentation/nav/radials/target-radial-deg", true);
+    static SGPropertyNode *nav_inrange
+        = fgGetNode("/instrumentation/nav/in-range", true);
+    static SGPropertyNode *nav_loc
+        = fgGetNode("/instrumentation/nav/nav-loc", true);
+    static SGPropertyNode *nav_gs_dist_signed
+        = fgGetNode("/instrumentation/nav/gs-distance", true);
+    static SGPropertyNode *nav_loc_dist
+        = fgGetNode("/instrumentation/nav/nav-distance", true);
+    static SGPropertyNode *nav_reciprocal_radial
+        = fgGetNode("/instrumentation/nav/radials/reciprocal-radial-deg", true);
+    static SGPropertyNode *nav_gs_deflection
+        = fgGetNode("/instrumentation/nav/gs-needle-deflection", true);
+    unsigned int i;
+
+    static FlightProperties* fdm_state = new FlightProperties;
+
+    // Version sanity checking
+    dds->version = FG_DDS_GUI_VERSION;
+
+    // Aero parameters
+    dds->longitude = fdm_state->get_Longitude();
+    dds->latitude = fdm_state->get_Latitude();
+    dds->altitude = fdm_state->get_Altitude() * SG_FEET_TO_METER;
+    dds->phi = fdm_state->get_Phi();
+    dds->theta = fdm_state->get_Theta();
+    dds->psi = fdm_state->get_Psi();
+
+    // Velocities
+    dds->vcas = fdm_state->get_V_calibrated_kts();
+    dds->climb_rate = fdm_state->get_Climb_Rate();
+
+    // Consumables
+    dds->num_tanks = FGNetGUI::FG_MAX_TANKS;
+    for ( i = 0; i < dds->num_tanks; ++i ) {
+        SGPropertyNode *node = fgGetNode("/consumables/fuel/tank", i, true);
+        dds->fuel_quantity[i] = node->getDoubleValue("level-gal_us");
+    }
+
+    // Environment
+    dds->cur_time = globals->get_time_params()->get_cur_time();
+    dds->warp = globals->get_warp();
+    dds->ground_elev = fdm_state->get_Runway_altitude_m();
+
+    // Approach
+    dds->tuned_freq = nav_freq->getDoubleValue();
+    dds->nav_radial = nav_target_radial->getDoubleValue();
+    dds->in_range = nav_inrange->getBoolValue();
+
+    if ( nav_loc->getBoolValue() ) {
+        // is an ILS
+        dds->dist_nm
+            = nav_gs_dist_signed->getDoubleValue()
+              * SG_METER_TO_NM;
+    } else {
+        // is a VOR
+        dds->dist_nm = nav_loc_dist->getDoubleValue()
+            * SG_METER_TO_NM;
+    }
+
+    dds->course_deviation_deg
+        = nav_reciprocal_radial->getDoubleValue()
+        - nav_target_radial->getDoubleValue();
+
+    if ( dds->course_deviation_deg < -1000.0
+         || dds->course_deviation_deg > 1000.0 )
+    {
+        // Sanity check ...
+        dds->course_deviation_deg = 0.0;
+    }
+    while ( dds->course_deviation_deg >  180.0 ) {
+        dds->course_deviation_deg -= 360.0;
+    }
+    while ( dds->course_deviation_deg >  180.0 ) {
+        dds->course_deviation_deg -= 360.0;
+    }
+    while ( dds->course_deviation_deg < -180.0 ) {
+        dds->course_deviation_deg += 360.0;
+    }
+    if ( fabs(dds->course_deviation_deg) > 90.0 )
+        dds->course_deviation_deg
+            = ( dds->course_deviation_deg<0.0
+                ? -dds->course_deviation_deg - 180.0
+                : -dds->course_deviation_deg + 180.0 );
+
+    if ( nav_loc->getBoolValue() ) {
+        // is an ILS
+        dds->gs_deviation_deg
+            = nav_gs_deflection->getDoubleValue()
+            / 5.0;
+    } else {
+        // is an ILS
+        dds->gs_deviation_deg = -9999.0;
+    }
+}
+
+template<>
+void FGGUI2Props<FG_DDS_GUI>( FG_DDS_GUI *dds ) {
+    unsigned int i;
+
+    if ( dds->version == FG_DDS_GUI_VERSION ) {
+        FlightProperties fdm_state;
+
+        // cout << "pos = " << dds->longitude << " " << dds->latitude << endl;
+        // cout << "sea level rad = " << fdm_state->get_Sea_level_radius()
+        //      << endl;
+
+        fdm_state.set_Latitude(dds->latitude);
+        fdm_state.set_Longitude(dds->longitude);
+        fdm_state.set_Altitude(dds->altitude * SG_METER_TO_FEET);
+
+        fdm_state.set_Euler_Angles( dds->phi,
+                                          dds->theta,
+                                          dds->psi );
+
+        fdm_state.set_V_calibrated_kts( dds->vcas );
+        fdm_state.set_Climb_Rate( dds->climb_rate );
+
+        for (i = 0; i < dds->num_tanks; ++i ) {
+            SGPropertyNode * node
+                = fgGetNode("/consumables/fuel/tank", i, true);
+            node->setDoubleValue("level-gal_us", dds->fuel_quantity[i] );
+        }
+
+        if ( dds->cur_time ) {
+            fgSetLong("/sim/time/cur-time-override", dds->cur_time);
+        }
+
+        globals->set_warp( dds->warp );
+
+        // Approach
+        fgSetDouble( "/instrumentation/nav[0]/frequencies/selected-mhz",
+                     dds->tuned_freq );
+        fgSetBool( "/instrumentation/nav[0]/in-range", dds->in_range > 0);
+        fgSetDouble( "/instrumentation/dme/indicated-distance-nm", dds->dist_nm );
+        fgSetDouble( "/instrumentation/nav[0]/heading-needle-deflection",
+                     dds->course_deviation_deg );
+        fgSetDouble( "/instrumentation/nav[0]/gs-needle-deflection",
+                     dds->gs_deviation_deg );
+    } else {
+        SG_LOG( SG_IO, SG_ALERT,
+                "Error: version mismatch in FGNetNativeGUI2Props()" );
+        SG_LOG( SG_IO, SG_ALERT,
+                "\tread " << dds->version << " need " << FG_DDS_GUI_VERSION );
+        SG_LOG( SG_IO, SG_ALERT,
+                "\tNeed to upgrade net_fdm.hxx and recompile." );
+    }
+}
+#endif
+
+// open hailing frequencies
+bool FGNativeGUI::open() {
+    if ( is_enabled() ) {
+        SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel "
+                << "is already in use, ignoring" );
+        return false;
+    }
+
+    SGIOChannel *io = get_io_channel();
+
+#if FG_HAVE_DDS
+    if ( io->get_type() == sgDDSType ) {
+        SG_DDS *dds = static_cast<SG_DDS*>(io);
+        dds->setup("FG_DDS_GUI" , &FG_DDS_GUI_desc, sizeof (FG_DDS_GUI));
+    }
+#endif
+
+    if ( ! io->open( get_direction() ) ) {
+        SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
+        return false;
+    }
+
+    set_enabled( true );
+
+    fgSetDouble("/position/sea-level-radius-ft", SG_EQUATORIAL_RADIUS_FT);
+    return true;
+}
 
 // process work for this port
 bool FGNativeGUI::process() {
     SGIOChannel *io = get_io_channel();
-    int length = sizeof(buf);
+    int length;
+    char *buf;
+
+    if ( io->get_type() == sgDDSType ) {
+        buf = reinterpret_cast<char*>(&gui.dds);
+        length = sizeof(FG_DDS_GUI);
+    } else {
+        buf = reinterpret_cast<char*>(&gui.net);
+        length = sizeof(FGNetGUI);
+    }
 
     if ( get_direction() == SG_IO_OUT ) {
-	// cout << "size of fdm_state = " << length << endl;
-	FGProps2NetGUI( &buf );
-	if ( ! io->write( (char *)(& buf), length ) ) {
-	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
-	    return false;
-	}
+        // cout << "size of fdm_state = " << length << endl;
+        if ( io->get_type() == sgDDSType ) {
+            FGProps2GUI( &gui.dds );
+        } else {
+            FGProps2GUI( &gui.net );
+        }
+
+        if ( ! io->write( buf, length ) ) {
+            SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
+            return false;
+        }
     } else if ( get_direction() == SG_IO_IN ) {
-	if ( io->get_type() == sgFileType ) {
-	    if ( io->read( (char *)(& buf), length ) == length ) {
-		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		FGNetGUI2Props( &buf );
-	    }
-	} else {
-	    while ( io->read( (char *)(& buf), length ) == length ) {
-		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		FGNetGUI2Props( &buf );
-	    }
-	}
+        if ( io->get_type() == sgFileType ) {
+            if ( io->read( buf, length ) == length ) {
+                SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
+                if ( io->get_type() == sgDDSType ) {
+                    FGGUI2Props( &gui.dds );
+                } else {
+                    FGGUI2Props( &gui.net );
+                }
+            }
+        } else {
+            while ( io->read( buf, length ) == length ) {
+                SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
+                if ( io->get_type() == sgDDSType ) {
+                    FGGUI2Props( &gui.dds );
+                } else {
+                    FGGUI2Props( &gui.net );
+                }
+            }
+        }
     }
 
     return true;
 }
-
 
 // close the channel
 bool FGNativeGUI::close() {
@@ -369,7 +547,7 @@ bool FGNativeGUI::close() {
     set_enabled( false );
 
     if ( ! io->close() ) {
-	return false;
+        return false;
     }
 
     return true;

@@ -1,0 +1,8 @@
+
+Converting the OMG-IDL compatible interface definition files to C compatible
+header and code files can be done using the package provided by CycloneDDS,
+or any other OMG-IDL compatible IDL to C converter.
+
+java -classpath "/usr/lib/cmake/CycloneDDS/idlc/idlc-jar-with-dependencies.jar"\
+                org.eclipse.cyclonedds.compilers.Idlc dds_<type>.idl
+

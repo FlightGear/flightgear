@@ -405,7 +405,7 @@ void FGExternalPipe::update_binary( double dt ) {
 
     // Send control positions to remote fdm
     length = sizeof(ctrls);
-    FGProps2NetCtrls( &ctrls, true, false );
+    FGProps2Ctrls<FGNetCtrls>( &ctrls, true, false );
     char *ptr = buf;
     *((int *)ptr) = iterations;
     // cout << "iterations = " << iterations << endl;
@@ -426,7 +426,7 @@ void FGExternalPipe::update_binary( double dt ) {
                 << fifo_name_2 << " expected 1 item, but got " << result );
     } else {
         // cout << "  read successful." << endl;
-        FGNetFDM2Props( &fdm, false );
+        FGFDM2Props<FGNetFDM>( &fdm, false );
     }
 #endif
 }

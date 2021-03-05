@@ -29,6 +29,10 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/io/lowlevel.hxx> // endian tests
 
+#if FG_HAVE_DDS
+#include <simgear/io/sg_dds.hxx>
+#endif
+
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>	// ground elevation
 
@@ -42,35 +46,6 @@
 #else
 #  include <netinet/in.h>	// htonl() ntohl()
 #endif
-
-
-FGNativeCtrls::FGNativeCtrls() {
-}
-
-FGNativeCtrls::~FGNativeCtrls() {
-}
-
-
-// open hailing frequencies
-bool FGNativeCtrls::open() {
-    if ( is_enabled() ) {
-	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
-		<< "is already in use, ignoring" );
-	return false;
-    }
-
-    SGIOChannel *io = get_io_channel();
-
-    if ( ! io->open( get_direction() ) ) {
-	SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
-	return false;
-    }
-
-    set_enabled( true );
-
-    return true;
-}
-
 
 // The function htond is defined this way due to the way some
 // processors and OSes treat floating point values.  Some will raise
@@ -99,8 +74,9 @@ static void htond (double &x)
 
 
 // Populate the FGNetCtrls structure from the property tree.
-void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
-                       bool net_byte_order )
+template<>
+void FGProps2Ctrls<FGNetCtrls>( FGNetCtrls *net, bool honor_freezes,
+                                bool net_byte_order )
 {
     int i;
     SGPropertyNode *node;
@@ -287,8 +263,9 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
 
 
 // Update the property tree from the FGNetCtrls structure.
-void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
-                       bool net_byte_order )
+template<>
+void FGCtrls2Props<FGNetCtrls>( FGNetCtrls *net, bool honor_freezes,
+                                bool net_byte_order )
 {
     int i;
 
@@ -462,37 +439,332 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     }
 }
 
+#if FG_HAVE_DDS
+// Populate the FG_DDS_Ctrls structure from the property tree.
+template<>
+void FGProps2Ctrls<FG_DDS_Ctrls>( FG_DDS_Ctrls *dds, bool honor_freezes, bool net_byte_order )
+{
+    int i;
+    SGPropertyNode *node;
+    SGPropertyNode *fuelpump;
+    SGPropertyNode *tempnode;
 
-// process work for this port
-bool FGNativeCtrls::process() {
-    SGIOChannel *io = get_io_channel();
-    int length = sizeof(FGNetCtrls);
+    // fill in values
+    node  = fgGetNode("/controls/flight", true);
+    dds->version = FG_DDS_CTRLS_VERSION;
+    dds->aileron = node->getDoubleValue( "aileron" );
+    dds->elevator = node->getDoubleValue( "elevator" );
+    dds->rudder = node->getDoubleValue( "rudder" );
+    dds->aileron_trim = node->getDoubleValue( "aileron-trim" );
+    dds->elevator_trim = node->getDoubleValue( "elevator-trim" );
+    dds->rudder_trim = node->getDoubleValue( "rudder-trim" );
+    dds->flaps = node->getDoubleValue( "flaps" );
+    dds->speedbrake = node->getDoubleValue( "speedbrake" );
+    dds->spoilers = node->getDoubleValue( "spoilers" );
+    dds->flaps_power
+        = fgGetDouble( "/systems/electrical/outputs/flaps", 1.0 ) >= 1.0;
+    dds->flap_motor_ok = node->getBoolValue( "flaps-serviceable" );
 
-    if ( get_direction() == SG_IO_OUT ) {
+    dds->num_engines = FGNetCtrls::FG_MAX_ENGINES;
+    for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
+        // Controls
+        node = fgGetNode("/controls/engines/engine", i );
+        fuelpump = fgGetNode("/systems/electrical/outputs/fuel-pump", i );
 
-	FGProps2NetCtrls( &net_ctrls, true, true );
+        tempnode = node->getChild("starter");
+        if ( tempnode != NULL ) {
+            dds->starter_power[i] = ( tempnode->getDoubleValue() >= 1.0 );
+        }
+        tempnode = node->getChild("master-bat");
+        if ( tempnode != NULL ) {
+            dds->master_bat[i] = tempnode->getBoolValue();
+        }
+        tempnode = node->getChild("master-alt");
+        if ( tempnode != NULL ) {
+            dds->master_alt[i] = tempnode->getBoolValue();
+        }
 
-	if ( ! io->write( (char *)(& net_ctrls), length ) ) {
-	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
-	    return false;
-	}
-    } else if ( get_direction() == SG_IO_IN ) {
-	if ( io->get_type() == sgFileType ) {
-	    if ( io->read( (char *)(& net_ctrls), length ) == length ) {
-		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		FGNetCtrls2Props( &net_ctrls, true, true );
-	    }
-	} else {
-	    while ( io->read( (char *)(& net_ctrls), length ) == length ) {
-		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		FGNetCtrls2Props( &net_ctrls, true, true );
-	    }
-	}
+        dds->throttle[i] = node->getDoubleValue( "throttle", 0.0 );
+        dds->mixture[i] = node->getDoubleValue( "mixture", 0.0 );
+        dds->prop_advance[i] = node->getDoubleValue( "propeller-pitch", 0.0 );
+        dds->condition[i] = node->getDoubleValue( "condition", 0.0 );
+        dds->magnetos[i] = node->getIntValue( "magnetos", 0 );
+        if ( i == 0 ) {
+          // cout << "Magnetos -> " << node->getIntValue( "magnetos", 0 );
+        }
+        if ( i == 0 ) {
+          // cout << "Starter -> " << node->getIntValue( "starter", false )
+          //      << endl;
+        }
+
+        if ( fuelpump != NULL ) {
+            dds->fuel_pump_power[i] = ( fuelpump->getDoubleValue() >= 1.0 );
+        } else {
+            dds->fuel_pump_power[i] = 0;
+        }
+
+        // Faults
+        SGPropertyNode *faults = node->getChild( "faults", 0, true );
+        dds->engine_ok[i] = faults->getBoolValue( "serviceable", true );
+        dds->mag_left_ok[i]
+          = faults->getBoolValue( "left-magneto-serviceable", true );
+        dds->mag_right_ok[i]
+          = faults->getBoolValue( "right-magneto-serviceable", true);
+        dds->spark_plugs_ok[i]
+          = faults->getBoolValue( "spark-plugs-serviceable", true );
+        dds->oil_press_status[i]
+          = faults->getIntValue( "oil-pressure-status", 0 );
+        dds->fuel_pump_ok[i]
+          = faults->getBoolValue( "fuel-pump-serviceable", true );
     }
+    dds->num_tanks = FGNetCtrls::FG_MAX_TANKS;
+    for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
+        node = fgGetNode("/controls/fuel/tank", i);
+        if ( node->getChild("fuel_selector") != 0 ) {
+            dds->fuel_selector[i]
+                = node->getChild("fuel_selector")->getBoolValue();
+        } else {
+            dds->fuel_selector[i] = false;
+        }
+    }
+    node = fgGetNode("/controls/gear", true);
+    dds->brake_left = node->getChild("brake-left")->getDoubleValue();
+    dds->brake_right = node->getChild("brake-right")->getDoubleValue();
+    dds->copilot_brake_left
+        = node->getChild("copilot-brake-left")->getDoubleValue();
+    dds->copilot_brake_right
+        = node->getChild("copilot-brake-right")->getDoubleValue();
+    dds->brake_parking = node->getChild("brake-parking")->getDoubleValue();
+
+    dds->gear_handle = fgGetBool( "/controls/gear/gear-down" );
+
+    dds->master_avionics = fgGetBool("/controls/switches/master-avionics");
+
+    dds->wind_speed_kt = fgGetDouble("/environment/wind-speed-kt");
+    dds->wind_dir_deg = fgGetDouble("/environment/wind-from-heading-deg");
+    dds->turbulence_norm =
+        fgGetDouble("/environment/turbulence/magnitude-norm");
+
+    dds->temp_c = fgGetDouble("/environment/temperature-degc");
+    dds->press_inhg = fgGetDouble("/environment/pressure-sea-level-inhg");
+
+    dds->hground = fgGetDouble("/position/ground-elev-m");
+    dds->magvar = fgGetDouble("/environment/magnetic-variation-deg");
+
+    dds->icing = fgGetBool("/hazards/icing/wing");
+
+    dds->speedup = fgGetInt("/sim/speed-up");
+    dds->freeze = 0;
+    if ( honor_freezes ) {
+        if ( fgGetBool("/sim/freeze/master") ) {
+            dds->freeze |= 0x01;
+        }
+        if ( fgGetBool("/sim/freeze/position") ) {
+            dds->freeze |= 0x02;
+        }
+        if ( fgGetBool("/sim/freeze/fuel") ) {
+            dds->freeze |= 0x04;
+        }
+    }
+}
+
+// Update the property tree from the FG_DDS_Ctrls structure.
+template<>
+void FGCtrls2Props<FG_DDS_Ctrls>( FG_DDS_Ctrls *dds, bool honor_freezes, bool net_byte_order )
+{
+    int i;
+
+    SGPropertyNode * node;
+
+    if ( dds->version != FG_DDS_CTRLS_VERSION ) {
+        SG_LOG( SG_IO, SG_ALERT,
+                "Version mismatch with raw controls packet format." );
+        SG_LOG( SG_IO, SG_ALERT,
+                "FlightGear needs version = " << FG_DDS_CTRLS_VERSION
+                << " but is receiving version = "  << dds->version );
+    }
+    node = fgGetNode("/controls/flight", true);
+    node->setDoubleValue( "aileron", dds->aileron );
+    node->setDoubleValue( "elevator", dds->elevator );
+    node->setDoubleValue( "rudder", dds->rudder );
+    node->setDoubleValue( "aileron-trim", dds->aileron_trim );
+    node->setDoubleValue( "elevator-trim", dds->elevator_trim );
+    node->setDoubleValue( "rudder-trim", dds->rudder_trim );
+    node->setDoubleValue( "flaps", dds->flaps );
+    node->setDoubleValue( "speedbrake", dds->speedbrake );  //JWW
+    // or
+    node->setDoubleValue( "spoilers", dds->spoilers );  //JWW
+//    cout << "NET->Spoilers: " << dds->spoilers << endl;
+    fgSetBool( "/systems/electrical/outputs/flaps", dds->flaps_power > 0 );
+    node->setBoolValue( "flaps-serviceable", dds->flap_motor_ok > 0 );
+
+    for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
+        // Controls
+        node = fgGetNode("/controls/engines/engine", i);
+        node->getChild( "throttle" )->setDoubleValue( dds->throttle[i] );
+        node->getChild( "mixture" )->setDoubleValue( dds->mixture[i] );
+        node->getChild( "propeller-pitch" )
+            ->setDoubleValue( dds->prop_advance[i] );
+        node->getChild( "condition" )
+            ->setDoubleValue( dds->condition[i] );
+        node->getChild( "magnetos" )->setDoubleValue( dds->magnetos[i] );
+        node->getChild( "starter" )->setDoubleValue( dds->starter_power[i] );
+        node->getChild( "feed_tank" )->setIntValue( dds->feed_tank_to[i] );
+        node->getChild( "reverser" )->setBoolValue( dds->reverse[i] > 0 );
+        // Faults
+        SGPropertyNode *faults = node->getNode( "faults", true );
+        faults->setBoolValue( "serviceable", dds->engine_ok[i] > 0 );
+        faults->setBoolValue( "left-magneto-serviceable",
+                              dds->mag_left_ok[i] > 0 );
+        faults->setBoolValue( "right-magneto-serviceable",
+                              dds->mag_right_ok[i] > 0);
+        faults->setBoolValue( "spark-plugs-serviceable",
+                              dds->spark_plugs_ok[i] > 0);
+        faults->setIntValue( "oil-pressure-status", dds->oil_press_status[i] );
+        faults->setBoolValue( "fuel-pump-serviceable", dds->fuel_pump_ok[i] > 0);
+    }
+
+    fgSetBool( "/systems/electrical/outputs/fuel-pump",
+               dds->fuel_pump_power[0] > 0);
+
+    for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
+        node = fgGetNode( "/controls/fuel/tank", i );
+        node->getChild( "fuel_selector" )
+            ->setBoolValue( dds->fuel_selector[i] > 0 );
+//        node->getChild( "to_tank" )->xfer_tank( i, dds->xfer_to[i] );
+    }
+    node = fgGetNode( "/controls/gear" );
+    if ( node != NULL ) {
+        node->getChild( "brake-left" )->setDoubleValue( dds->brake_left );
+        node->getChild( "brake-right" )->setDoubleValue( dds->brake_right );
+        node->getChild( "copilot-brake-left" )
+            ->setDoubleValue( dds->copilot_brake_left );
+        node->getChild( "copilot-brake-right" )
+            ->setDoubleValue( dds->copilot_brake_right );
+        node->getChild( "brake-parking" )->setDoubleValue( dds->brake_parking );
+    }
+
+    node = fgGetNode( "/controls/gear", true );
+    node->setBoolValue( "gear-down", dds->gear_handle > 0 );
+//    node->setDoubleValue( "brake-parking", dds->brake_parking );
+//    node->setDoubleValue( dds->brake_left );
+//    node->setDoubleValue( dds->brake_right );
+
+    node = fgGetNode( "/controls/switches", true );
+    node->setBoolValue( "master-bat", dds->master_bat[0] != 0 );
+    node->setBoolValue( "master-alt", dds->master_alt[0] != 0 );
+    node->setBoolValue( "master-avionics", dds->master_avionics > 0 );
+
+    node = fgGetNode( "/environment", true );
+    node->setDoubleValue( "wind-speed-kt", dds->wind_speed_kt );
+    node->setDoubleValue( "wind-from-heading-deg", dds->wind_dir_deg );
+    node->setDoubleValue( "turbulence/magnitude-norm", dds->turbulence_norm );
+    node->setDoubleValue( "magnetic-variation-deg", dds->magvar );
+
+    node->setDoubleValue( "/environment/temperature-degc",
+                          dds->temp_c );
+    node->setDoubleValue( "/environment/pressure-sea-level-inhg",
+                          dds->press_inhg );
+
+    // ground elevation ???
+
+    fgSetDouble("/hazards/icing/wing", dds->icing);
+
+    node = fgGetNode( "/radios", true );
+    node->setDoubleValue( "comm/frequencies/selected-mhz[0]", dds->comm_1 );
+    node->setDoubleValue( "nav/frequencies/selected-mhz[0]", dds->nav_1 );
+    node->setDoubleValue( "nav[1]/frequencies/selected-mhz[0]", dds->nav_2 );
+
+    fgSetDouble( "/sim/speed-up", dds->speedup );
+
+    if ( honor_freezes ) {
+        node = fgGetNode( "/sim/freeze", true );
+        node->setBoolValue( "master", (dds->freeze & 0x01) > 0 );
+        node->setBoolValue( "position", (dds->freeze & 0x02) > 0 );
+        node->setBoolValue( "fuel", (dds->freeze & 0x04) > 0 );
+    }
+}
+#endif
+
+// open hailing frequencies
+bool FGNativeCtrls::open() {
+    if ( is_enabled() ) {
+        SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel "
+                << "is already in use, ignoring" );
+        return false;
+    }
+
+    SGIOChannel *io = get_io_channel();
+
+#if FG_HAVE_DDS
+    if ( io->get_type() == sgDDSType ) {
+        SG_DDS *dds = static_cast<SG_DDS*>(io);
+        dds->setup("FG_DDS_Ctrls" , &FG_DDS_Ctrls_desc, sizeof (FG_DDS_Ctrls));
+    }
+#endif
+
+    if ( ! io->open( get_direction() ) ) {
+        SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
+        return false;
+    }
+
+    set_enabled( true );
 
     return true;
 }
 
+// process work for this port
+bool FGNativeCtrls::process() {
+    SGIOChannel *io = get_io_channel();
+    int length;
+    char *buf;
+
+    if ( io->get_type() == sgDDSType ) {
+        buf = reinterpret_cast<char*>(&ctrls.dds);
+        length = sizeof(FG_DDS_Ctrls);
+    } else {
+        buf = reinterpret_cast<char*>(&ctrls.net);
+        length = sizeof(FGNetCtrls);
+    }
+
+    if ( get_direction() == SG_IO_OUT )
+    {
+        if ( io->get_type() == sgDDSType ) {
+            FGProps2Ctrls( &ctrls.dds, true, true );
+        } else {
+            FGProps2Ctrls( &ctrls.net, true, true );
+        }
+
+        if ( ! io->write( buf, length ) ) {
+            SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
+            return false;
+        }
+    }
+    else if ( get_direction() == SG_IO_IN )
+    {
+        if ( io->get_type() == sgFileType ) {
+            if ( io->read( buf, length ) == length ) {
+                SG_LOG( SG_IO, SG_INFO, "Success reading data." );
+                if ( io->get_type() == sgDDSType ) {
+                    FGCtrls2Props( &ctrls.dds, true, true );
+                } else {
+                    FGCtrls2Props( &ctrls.net, true, true );
+                }
+            }
+        } else {
+            while ( io->read( buf, length ) == length ) {
+                SG_LOG( SG_IO, SG_INFO, "Success reading data." );
+                if ( io->get_type() == sgDDSType ) {
+                    FGCtrls2Props( &ctrls.dds, true, true );
+                } else {
+                    FGCtrls2Props( &ctrls.net, true, true );
+                }
+            }
+        }
+    }
+
+    return true;
+}
 
 // close the channel
 bool FGNativeCtrls::close() {
@@ -501,8 +773,9 @@ bool FGNativeCtrls::close() {
     set_enabled( false );
 
     if ( ! io->close() ) {
-	return false;
+        return false;
     }
 
     return true;
 }
+

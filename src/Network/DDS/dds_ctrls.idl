@@ -1,0 +1,113 @@
+// format dfescription: https://www.omg.org/spec/IDL/4.2/PDF
+
+// Adapted from net_ctrls.hxx
+module FG
+{
+
+// defining it this way also generates accompanying #defines in the header file.
+
+const short DDS_CTRLS_VERSION = 1;
+
+const short DDS_ENGINES = 4;
+const short DDS_WHEELS = 16;
+const short DDS_TANKS = 8;
+
+struct DDS_Ctrls
+{
+    short id;			// DDS id
+    short version;		// packet version
+
+    // Aero controls
+    // net_ctrl.hxx defines doubles but flouts do have enough precission
+    float aileron;		// -1 ... 1
+    float elevator;		// -1 ... 1
+    float rudder;		// -1 ... 1
+    float aileron_trim;		// -1 ... 1
+    float elevator_trim;	// -1 ... 1
+    float rudder_trim;		// -1 ... 1
+    float flaps;		//  0 ... 1
+    float spoilers;
+    float speedbrake;
+
+    // Aero control faults
+    boolean flaps_power;	// true = power available
+    boolean flap_motor_ok;
+
+    // Engine controls
+    unsigned short num_engines;	// number of valid engines
+    boolean master_bat[DDS_ENGINES];
+    boolean master_alt[DDS_ENGINES];
+    unsigned long magnetos[DDS_ENGINES];
+    unsigned long starter_power[DDS_ENGINES];	// true = starter power
+    float throttle[DDS_ENGINES];		//  0 ... 1
+    float mixture[DDS_ENGINES];			//  0 ... 1
+    float condition[DDS_ENGINES];		//  0 ... 1
+    unsigned long fuel_pump_power[DDS_ENGINES];	// true = on
+    float prop_advance[DDS_ENGINES];		//  0 ... 1
+    unsigned short feed_tank_to[4];
+    boolean reverse[4];
+
+
+    // Engine faults
+    boolean engine_ok[DDS_ENGINES];
+    boolean mag_left_ok[DDS_ENGINES];
+    boolean mag_right_ok[DDS_ENGINES];
+    boolean spark_plugs_ok[DDS_ENGINES];	// false = fouled plugs
+    unsigned short oil_press_status[DDS_ENGINES];// 0 = normal, 1 = low, 2 = full fail
+    boolean fuel_pump_ok[DDS_ENGINES];
+
+    // Fuel management
+    unsigned short num_tanks;			// number of valid tanks
+    unsigned short fuel_selector[DDS_TANKS];	// false = off, true = on
+//  unsigned short xfer_pump[5];		// specifies transfer from array
+						// value tank to tank specified
+						// by int value
+    boolean cross_feed;				// false = off, true = on
+
+    // Brake controls
+    float brake_left;
+    float brake_right;
+    float copilot_brake_left;
+    float copilot_brake_right;
+    float brake_parking;
+
+    // Landing Gear
+    boolean gear_handle;	// true=gear handle down; false= gear handle up
+
+    // Switches
+    boolean master_avionics;
+
+    // nav and Comm
+    float comm_1;
+    float comm_2;
+    float nav_1;
+    float nav_2;
+
+    // wind and turbulance
+    float wind_speed_kt;
+    float wind_dir_deg;
+    float turbulence_norm;
+
+    // temp and pressure
+    float temp_c;
+    float press_inhg;
+
+    // other information about environment
+    float hground;			// ground elevation (meters)
+    float magvar;			// local magnetic variation in degs.
+
+    // hazards
+    boolean icing;			// icing status could me much
+					// more complex but I'm
+					// starting simple here.
+
+    // simulation control
+    unsigned long speedup;		// integer speedup multiplier
+    unsigned short freeze;		// 0=normal
+					// 0x01=master
+					// 0x02=position
+					// 0x04=fuel
+};
+#pragma keylist DDS_Ctrls id
+
+}; // module FG

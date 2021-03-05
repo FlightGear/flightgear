@@ -63,6 +63,9 @@
 #include <Network/rul.hxx>
 #include <Network/generic.hxx>
 
+#if FG_HAVE_DDS
+#include <simgear/io/sg_dds.hxx>
+#endif
 #if FG_HAVE_HLA
 #include <Network/HLA/hla.hxx>
 #endif
@@ -326,6 +329,11 @@ FGIO::parse_port_config( const string_list& tokens, bool& o_ok )
 
         io->set_io_channel( new SGSocket( hostname, port, style ) );
     }
+#if FG_HAVE_DDS
+    else if ( medium == "dds")  {
+        io->set_io_channel( new SG_DDS() );
+    }
+#endif
     else
     {
         SG_LOG( SG_IO, SG_ALERT, "Unknown transport medium \"" << medium << "\" for \"" << protocol << "\"");

@@ -30,6 +30,10 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/timing/sg_time.hxx>
 
+#if FG_HAVE_DDS
+#include <simgear/io/sg_dds.hxx>
+#endif
+
 #include <FDM/flightProperties.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -45,7 +49,6 @@
 #else
 #  include <netinet/in.h>	// htonl() ntohl()
 #endif
-
 
 // The function htond is defined this way due to the way some
 // processors and OSes treat floating point values.  Some will raise
@@ -88,41 +91,8 @@ static void htonf (float &x)
     }
 }
 
-
-FGNativeFDM::FGNativeFDM() {
-}
-
-FGNativeFDM::~FGNativeFDM() {
-}
-
-
-// open hailing frequencies
-bool FGNativeFDM::open() {
-    if ( is_enabled() ) {
-	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
-		<< "is already in use, ignoring" );
-	return false;
-    }
-
-    SGIOChannel *io = get_io_channel();
-
-    if ( ! io->open( get_direction() ) ) {
-	SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
-	return false;
-    }
-
-    set_enabled( true );
-
-    // Is this really needed here ????
-    fgSetDouble("/position/sea-level-radius-ft", SG_EQUATORIAL_RADIUS_FT);
-
-    
-
-    return true;
-}
-
-
-void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
+template<>
+void FGProps2FDM<FGNetFDM>( FGNetFDM *net, bool net_byte_order ) {
     unsigned int i;
 
     FlightProperties fdm_state;
@@ -310,8 +280,8 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     }
 }
 
-
-void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
+template<>
+void FGFDM2Props<FGNetFDM>( FGNetFDM *net, bool net_byte_order ) {
     unsigned int i;
     FlightProperties fdm_state;
     
@@ -520,41 +490,322 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
     }
 }
 
+#if FG_HAVE_DDS
+template<>
+void FGProps2FDM<FG_DDS_FDM>( FG_DDS_FDM *dds, bool net_byte_order ) {
+    unsigned int i;
 
-// process work for this port
-bool FGNativeFDM::process() {
-    SGIOChannel *io = get_io_channel();
-    int length = sizeof(buf);
+    FlightProperties fdm_state;
 
-    if ( get_direction() == SG_IO_OUT ) {
+    // Version sanity checking
+    dds->version = FG_DDS_FDM_VERSION;
 
-	FGProps2NetFDM( &buf );
-	if ( ! io->write( (char *)(& buf), length ) ) {
-	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
-	    return false;
-	}
-    } else if ( get_direction() == SG_IO_IN ) {
-	if ( io->get_type() == sgFileType ) {
-	    if ( io->read( (char *)(& buf), length ) == length ) {
-		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		FGNetFDM2Props( &buf );
-	    }
-	} else {
-            int result;
-            result = io->read( (char *)(& buf), length );
-	    while ( result == length ) {
-                if ( result == length ) {
-                    SG_LOG( SG_IO, SG_DEBUG, "  Success reading data." );
-                    FGNetFDM2Props( &buf );
-                }
-                result = io->read( (char *)(& buf), length );
-	    }
-	}
+    // Aero parameters
+    dds->longitude = fdm_state.get_Longitude();
+    dds->latitude = fdm_state.get_Latitude();
+    dds->altitude = fdm_state.get_Altitude() * SG_FEET_TO_METER;
+    dds->agl = fdm_state.get_Altitude_AGL() * SG_FEET_TO_METER;
+    dds->phi = fdm_state.get_Phi();
+    dds->theta = fdm_state.get_Theta();
+    dds->psi = fdm_state.get_Psi();
+    dds->alpha = fdm_state.get_Alpha();
+    dds->beta = fdm_state.get_Beta();
+    dds->phidot = fdm_state.get_Phi_dot_degps() * SG_DEGREES_TO_RADIANS;
+    dds->thetadot = fdm_state.get_Theta_dot_degps() * SG_DEGREES_TO_RADIANS;
+    dds->psidot = fdm_state.get_Psi_dot_degps() * SG_DEGREES_TO_RADIANS;
+
+    dds->vcas = fdm_state.get_V_calibrated_kts();
+    dds->climb_rate = fdm_state.get_Climb_Rate();
+
+    dds->v_north = fdm_state.get_V_north();
+    dds->v_east = fdm_state.get_V_east();
+    dds->v_down = fdm_state.get_V_down();
+    dds->v_body_u = fdm_state.get_uBody();
+    dds->v_body_v = fdm_state.get_vBody();
+    dds->v_body_w = fdm_state.get_wBody();
+
+    dds->A_X_pilot = fdm_state.get_A_X_pilot();
+    dds->A_Y_pilot = fdm_state.get_A_Y_pilot();
+    dds->A_Z_pilot = fdm_state.get_A_Z_pilot();
+
+    dds->stall_warning = fgGetDouble("/sim/alarms/stall-warning", 0.0);
+    dds->slip_deg
+      = fgGetDouble("/instrumentation/slip-skid-ball/indicated-slip-skid");
+
+    // Engine parameters
+    dds->num_engines = FGNetFDM::FG_MAX_ENGINES;
+    for ( i = 0; i < dds->num_engines; ++i ) {
+        SGPropertyNode *node = fgGetNode("engines/engine", i, true);
+        if ( node->getBoolValue( "running" ) ) {
+            dds->eng_state[i] = 2;
+        } else if ( node->getBoolValue( "cranking" ) ) {
+            dds->eng_state[i] = 1;
+        } else {
+            dds->eng_state[i] = 0;
+        }
+        dds->rpm[i] = node->getDoubleValue( "rpm" );
+        dds->fuel_flow[i] = node->getDoubleValue( "fuel-flow-gph" );
+        dds->fuel_px[i] = node->getDoubleValue( "fuel-px-psi" );
+        dds->egt[i] = node->getDoubleValue( "egt-degf" );
+        // cout << "egt = " << aero->EGT << endl;
+        dds->cht[i] = node->getDoubleValue( "cht-degf" );
+        dds->mp_osi[i] = node->getDoubleValue( "mp-osi" );
+        dds->tit[i] = node->getDoubleValue( "tit" );
+        dds->oil_temp[i] = node->getDoubleValue( "oil-temperature-degf" );
+        dds->oil_px[i] = node->getDoubleValue( "oil-pressure-psi" );
     }
+
+    // Consumables
+    dds->num_tanks = FGNetFDM::FG_MAX_TANKS;
+    for ( i = 0; i < dds->num_tanks; ++i ) {
+        SGPropertyNode *node = fgGetNode("/consumables/fuel/tank", i, true);
+        dds->fuel_quantity[i] = node->getDoubleValue("level-gal_us");
+        dds->tank_selected[i] = node->getBoolValue("selected");
+        dds->capacity_m3[i] = node->getDoubleValue("capacity-m3");
+        dds->unusable_m3[i] = node->getDoubleValue("unusable-m3");
+        dds->density_kgpm3[i] = node->getDoubleValue("density-kgpm3");
+        dds->level_m3[i] = node->getDoubleValue("level-m3");
+    }
+
+    // Gear and flaps
+    dds->num_wheels = FGNetFDM::FG_MAX_WHEELS;
+    for (i = 0; i < dds->num_wheels; ++i ) {
+        SGPropertyNode *node = fgGetNode("/gear/gear", i, true);
+        dds->wow[i] = node->getIntValue("wow");
+        dds->gear_pos[i] = node->getDoubleValue("position-norm");
+        dds->gear_steer[i] = node->getDoubleValue("steering-norm");
+        dds->gear_compression[i] = node->getDoubleValue("compression-norm");
+    }
+
+    // the following really aren't used in this context
+    dds->cur_time = globals->get_time_params()->get_cur_time();
+    dds->warp = globals->get_warp();
+    dds->visibility = fgGetDouble("/environment/visibility-m");
+
+    // Control surface positions
+    SGPropertyNode *node = fgGetNode("/surface-positions", true);
+    dds->elevator = node->getDoubleValue( "elevator-pos-norm" );
+    dds->elevator_trim_tab
+        = node->getDoubleValue( "elevator-trim-tab-pos-norm" );
+    // FIXME: CLO 10/28/04 - This really should be separated out into 2 values
+    dds->left_flap = node->getDoubleValue( "flap-pos-norm" );
+    dds->right_flap = node->getDoubleValue( "flap-pos-norm" );
+    dds->left_aileron = node->getDoubleValue( "left-aileron-pos-norm" );
+    dds->right_aileron = node->getDoubleValue( "right-aileron-pos-norm" );
+    dds->rudder = node->getDoubleValue( "rudder-pos-norm" );
+    dds->nose_wheel = node->getDoubleValue( "nose-wheel-pos-norm" );
+    dds->speedbrake = node->getDoubleValue( "speedbrake-pos-norm" );
+    dds->spoilers = node->getDoubleValue( "spoilers-pos-norm" );
+}
+
+template<>
+void FGFDM2Props<FG_DDS_FDM>( FG_DDS_FDM *dds, bool net_byte_order ) {
+    unsigned int i;
+    FlightProperties fdm_state;
+
+    if ( dds->version == FG_DDS_FDM_VERSION ) {
+        // cout << "pos = " << dds->longitude << " " << dds->latitude << endl;
+        // cout << "sea level rad = " << fdm_state.get_Sea_level_radius()
+        //      << endl;
+
+        fdm_state.set_Latitude(dds->latitude);
+        fdm_state.set_Longitude(dds->longitude);
+        fdm_state.set_Altitude(dds->altitude * SG_METER_TO_FEET);
+
+        if ( dds->agl > -9000 ) {
+            fdm_state.set_Altitude_AGL( dds->agl * SG_METER_TO_FEET );
+        } else {
+            double agl_m = dds->altitude
+              - fdm_state.get_Runway_altitude_m();
+            fdm_state.set_Altitude_AGL( agl_m * SG_METER_TO_FEET );
+        }
+        fdm_state.set_Euler_Angles( dds->phi,
+                                          dds->theta,
+                                          dds->psi );
+        fdm_state.set_Alpha( dds->alpha );
+        fdm_state.set_Beta( dds->beta );
+        fdm_state.set_Euler_Rates( dds->phidot,
+                                         dds->thetadot,
+                                         dds->psidot );
+        fdm_state.set_V_calibrated_kts( dds->vcas );
+        fdm_state.set_Climb_Rate( dds->climb_rate );
+        fdm_state.set_Velocities_Local( dds->v_north,
+                                              dds->v_east,
+                                              dds->v_down );
+        fdm_state.set_Velocities_Body( dds->v_body_u,
+                                                  dds->v_body_v,
+                                                  dds->v_body_w );
+
+        fdm_state.set_Accels_Pilot_Body( dds->A_X_pilot,
+                                               dds->A_Y_pilot,
+                                               dds->A_Z_pilot );
+
+        fgSetDouble( "/sim/alarms/stall-warning", dds->stall_warning );
+        fgSetDouble( "/instrumentation/slip-skid-ball/indicated-slip-skid",
+                     dds->slip_deg );
+        fgSetBool( "/instrumentation/slip-skid-ball/override", true );
+
+        for ( i = 0; i < dds->num_engines; ++i ) {
+            SGPropertyNode *node = fgGetNode( "engines/engine", i, true );
+
+            // node->setBoolValue("running", t->isRunning());
+            // node->setBoolValue("cranking", t->isCranking());
+            // cout << dds->eng_state[i] << endl;
+            if ( dds->eng_state[i] == 0 ) {
+                node->setBoolValue( "cranking", false );
+                node->setBoolValue( "running", false );
+            } else if ( dds->eng_state[i] == 1 ) {
+                node->setBoolValue( "cranking", true );
+                node->setBoolValue( "running", false );
+            } else if ( dds->eng_state[i] == 2 ) {
+                node->setBoolValue( "cranking", false );
+                node->setBoolValue( "running", true );
+            }
+
+            node->setDoubleValue( "rpm", dds->rpm[i] );
+            node->setDoubleValue( "fuel-flow-gph", dds->fuel_flow[i] );
+            node->setDoubleValue( "fuel-px-psi", dds->fuel_px[i] );
+            node->setDoubleValue( "egt-degf", dds->egt[i] );
+            node->setDoubleValue( "cht-degf", dds->cht[i] );
+            node->setDoubleValue( "mp-osi", dds->mp_osi[i] );
+            node->setDoubleValue( "tit", dds->tit[i] );
+            node->setDoubleValue( "oil-temperature-degf", dds->oil_temp[i] );
+            node->setDoubleValue( "oil-pressure-psi", dds->oil_px[i] );
+        }
+
+        for (i = 0; i < dds->num_tanks; ++i ) {
+            SGPropertyNode * node
+                = fgGetNode("/consumables/fuel/tank", i, true);
+            node->setDoubleValue("level-gal_us", dds->fuel_quantity[i]);
+            node->setBoolValue("selected", dds->tank_selected[i] > 0);
+            node->setDoubleValue("capacity-m3", dds->capacity_m3[i]);
+            node->setDoubleValue("unusable-m3", dds->unusable_m3[i]);
+            node->setDoubleValue("density-kgpm3", dds->density_kgpm3[i]);
+            node->setDoubleValue("level-m3", dds->level_m3[i]);
+        }
+
+        for (i = 0; i < dds->num_wheels; ++i ) {
+            SGPropertyNode * node = fgGetNode("/gear/gear", i, true);
+            node->setDoubleValue("wow", dds->wow[i] );
+            node->setDoubleValue("position-norm", dds->gear_pos[i] );
+            node->setDoubleValue("steering-norm", dds->gear_steer[i] );
+            node->setDoubleValue("compression-norm", dds->gear_compression[i] );
+        }
+
+        /* these are ignored for now  ... */
+        /*
+        if ( dds->cur_time ) {
+            fgSetLong("/sim/time/cur-time-override", dds->cur_time);
+        }
+
+        globals->set_warp( dds->warp );
+        last_warp = dds->warp;
+        */
+        SGPropertyNode *node = fgGetNode("/surface-positions", true);
+        node->setDoubleValue("elevator-pos-norm", dds->elevator);
+        node->setDoubleValue("elevator-trim-tab-pos-norm",
+                             dds->elevator_trim_tab);
+        // FIXME: CLO 10/28/04 - This really should be separated out
+        // into 2 values
+        node->setDoubleValue("flap-pos-norm", dds->left_flap);
+        node->setDoubleValue("flap-pos-norm", dds->right_flap);
+        node->setDoubleValue("left-aileron-pos-norm", dds->left_aileron);
+        node->setDoubleValue("right-aileron-pos-norm", dds->right_aileron);
+        node->setDoubleValue("rudder-pos-norm", dds->rudder);
+        node->setDoubleValue("nose-wheel-pos-norm", dds->nose_wheel);
+        node->setDoubleValue("speedbrake-pos-norm", dds->speedbrake);
+        node->setDoubleValue("spoilers-pos-norm", dds->spoilers);
+    } else {
+        SG_LOG( SG_IO, SG_ALERT,
+                "Error: version mismatch in FGNetFDM2Props()" );
+        SG_LOG( SG_IO, SG_ALERT,
+                "\tread " << dds->version << " need " << FG_DDS_FDM_VERSION );
+        SG_LOG( SG_IO, SG_ALERT,
+                "\tNeeds to upgrade DDS/dds_fdm.hxx and recompile." );
+    }
+}
+#endif
+
+// open hailing frequencies
+bool FGNativeFDM::open() {
+    if ( is_enabled() ) {
+        SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel "
+                << "is already in use, ignoring" );
+        return false;
+    }
+
+    SGIOChannel *io = get_io_channel();
+
+#if FG_HAVE_DDS
+    if ( io->get_type() == sgDDSType ) {
+        SG_DDS *dds = static_cast<SG_DDS*>(io);
+        dds->setup("FG_DDS_FDM" , &FG_DDS_FDM_desc, sizeof (FG_DDS_FDM));
+    }
+#endif
+
+    if ( ! io->open( get_direction() ) ) {
+        SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
+        return false;
+    }
+
+    set_enabled( true );
+
+    // Is this really needed here ????
+    fgSetDouble("/position/sea-level-radius-ft", SG_EQUATORIAL_RADIUS_FT);
 
     return true;
 }
 
+// process work for this port
+bool FGNativeFDM::process() {
+    SGIOChannel *io = get_io_channel();
+    int length;
+    char *buf;
+
+    if ( io->get_type() == sgDDSType ) {
+        buf = reinterpret_cast<char*>(&fdm.dds);
+        length = sizeof(FG_DDS_FDM);
+    } else {
+        buf = reinterpret_cast<char*>(&fdm.net);
+        length = sizeof(FGNetFDM);
+    }
+
+    if ( get_direction() == SG_IO_OUT ) {
+
+        if ( io->get_type() == sgDDSType ) {
+            FGProps2FDM( &fdm.dds );
+        } else {
+            FGProps2FDM( &fdm.net );
+        }
+
+        if ( ! io->write( buf, length ) ) {
+            SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
+            return false;
+        }
+    } else if ( get_direction() == SG_IO_IN ) {
+        if ( io->get_type() == sgFileType ) {
+            if ( io->read( buf, length ) == length ) {
+                SG_LOG( SG_IO, SG_INFO, "Success reading data." );
+                if ( io->get_type() == sgDDSType ) {
+                    FGFDM2Props( &fdm.dds );
+                } else {
+                    FGFDM2Props( &fdm.net );
+                }
+            }
+        } else {
+            while ( io->read( buf, length ) == length ) {
+                SG_LOG( SG_IO, SG_INFO, "  Success reading data." );
+                if ( io->get_type() == sgDDSType ) {
+                    FGFDM2Props( &fdm.dds );
+                } else {
+                    FGFDM2Props( &fdm.net );
+                }
+            }
+        }
+    }
+
+    return true;
+}
 
 // close the channel
 bool FGNativeFDM::close() {
@@ -563,7 +814,7 @@ bool FGNativeFDM::close() {
     set_enabled( false );
 
     if ( ! io->close() ) {
-	return false;
+        return false;
     }
 
     return true;

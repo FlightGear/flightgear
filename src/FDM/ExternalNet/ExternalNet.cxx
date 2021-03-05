@@ -221,7 +221,7 @@ void FGExternalNet::update(double dt)
 
     // Send control positions to remote fdm
     length = sizeof(ctrls);
-    FGProps2NetCtrls(&ctrls, true, true);
+    FGProps2Ctrls<FGNetCtrls>(&ctrls, true, true);
     if (data_client.send((char*)(&ctrls), length, 0) != length) {
         SG_LOG(SG_IO, SG_DEBUG, "Error writing data.");
     } else {
@@ -232,7 +232,7 @@ void FGExternalNet::update(double dt)
     length = sizeof(fdm);
     while ((result = data_server.recv((char*)(&fdm), length, 0)) >= 0) {
         SG_LOG(SG_IO, SG_DEBUG, "Success reading data.");
-        FGNetFDM2Props(&fdm);
+        FGFDM2Props<FGNetFDM>(&fdm);
     }
 }
 

@@ -67,6 +67,10 @@ endif()
    	
 flightgear_component(Network "${SOURCES}" "${HEADERS}")
 
+if (CycloneDDS_FOUND)
+  add_subdirectory(DDS)
+endif()
+
 if(RTI_FOUND)
   add_subdirectory(HLA)
 endif()

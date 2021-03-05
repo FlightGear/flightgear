@@ -40,7 +40,9 @@
 
 // Ensure FG_HAVE_xxx always have a value
 #define FG_HAVE_HLA (@FG_HAVE_HLA@ + 0)
+#define FG_HAVE_DDS (@FG_HAVE_DDS@ + 0)
 #define FG_HAVE_GPERFTOOLS (@FG_HAVE_GPERFTOOLS@ + 0)
+
 
 #cmakedefine SYSTEM_SQLITE
 

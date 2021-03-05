@@ -31,16 +31,25 @@
 
 #include "protocol.hxx"
 #include "net_ctrls.hxx"
+#if FG_HAVE_DDS
+#include "DDS/dds_ctrls.h"
+#else
+using FG_DDS_Ctrls = int;
+#endif
 
 using std::string;
 
 class FGNativeCtrls : public FGProtocol {
 
-    FGNetCtrls net_ctrls;
+    union {
+        FG_DDS_Ctrls dds;
+        FGNetCtrls net;
+    } ctrls;
+
 public:
 
-    FGNativeCtrls();
-    ~FGNativeCtrls();
+    FGNativeCtrls() = default;
+    ~FGNativeCtrls() = default;
 
     // open hailing frequencies
     bool open();
@@ -55,14 +64,13 @@ public:
 
 // Helper functions which may be useful outside this class
 
-// Populate the FGNetCtrls structure from the property tree.
-void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
-                       bool net_byte_order );
+// Populate the FGNetCtrls/FG_DDS_Ctrls structure from the property tree.
+template<typename T>
+void FGProps2Ctrls( T *net, bool honor_freezes, bool net_byte_order ) {};
 
-// Update the property tree from the FGNetCtrls structure.
-void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
-                       bool net_byte_order );
-
+// Update the property tree from the FGNetCtrls/FG_DDS_Ctrls structure.
+template<typename T>
+void FGCtrls2Props( T *net, bool honor_freezes, bool net_byte_order ) {};
 
 #endif // _FG_NATIVE_CTRLS_HXX
 

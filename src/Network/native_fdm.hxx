@@ -31,16 +31,24 @@
 
 #include "protocol.hxx"
 #include "net_fdm.hxx"
+#if FG_HAVE_DDS
+#include "DDS/dds_fdm.h"
+#else
+using FG_DDS_FDM = int;
+#endif
 
 
 class FGNativeFDM : public FGProtocol {
 
-    FGNetFDM buf;
+    union {
+        FG_DDS_FDM dds;
+        FGNetFDM net;
+    } fdm;
     
 public:
 
-    FGNativeFDM();
-    ~FGNativeFDM();
+    FGNativeFDM() = default;
+    ~FGNativeFDM() = default;
 
     // open hailing frequencies
     bool open();
@@ -55,12 +63,13 @@ public:
 
 // Helper functions which may be useful outside this class
 
-// Populate the FGNetFDM structure from the property tree.
-void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order = true );
+// Populate the FGNetFDM/FG_DDS_FDM structure from the property tree.
+template<typename T>
+void FGProps2FDM( T *net, bool net_byte_order = true ) {};
 
-// Update the property tree from the FGNetFDM structure.
-void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order = true );
-
+// Update the property tree from the FGNetFDM/FG_DDS_FDM structure.
+template<typename T>
+void FGFDM2Props( T *net, bool net_byte_order = true ) {};
 
 #endif // _FG_NATIVE_FDM_HXX
 

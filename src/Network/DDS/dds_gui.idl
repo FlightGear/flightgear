@@ -1,0 +1,55 @@
+// format dfescription: https://www.omg.org/spec/IDL/4.2/PDF
+
+// Taken from net_gui.hxx
+
+module FG
+{
+
+// defining it this way also generates accompanying #defines in the header file.
+
+const short DDS_GUI_VERSION = 1;
+
+// same as defined in net_ctrls.hxx
+// this is different from net_gui.hxx
+const short DDS_TANKS = 8;
+
+struct DDS_GUI
+{
+    short id;
+    short version;
+
+    // Positions
+    double longitude;	// geodetic (radians)
+    double latitude;	// geodetic (radians)
+
+    float altitude;	// above sea level (meters)
+    float agl;		// above ground level (meters)
+    float phi;		// roll (radians)
+    float theta;	// pitch (radians)
+    float psi;		// yaw or true heading (radians)
+
+    // Velocities
+    float vcas;
+    float climb_rate;	// feet per second
+
+    // Consumables
+    unsigned short num_tanks;	// Max number of fuel tanks
+    float fuel_quantity[DDS_TANKS];
+
+    // Environment
+    unsigned long long cur_time;// current unix time
+    unsigned long long warp;		// offset in seconds to unix time
+    float ground_elev;		// ground elev (meters)
+
+    // Approach
+    float tuned_freq;		// currently tuned frequency
+    float nav_radial;		// target nav radial
+    boolean in_range;		// tuned navaid is in range?
+    float dist_nm;		// distance to tuned navaid in nautical miles
+    float course_deviation_deg;	// degrees off target course
+    float gs_deviation_deg;	// degrees off target glide slope
+};
+#pragma keylist DDS_GUI version
+
+}; // module FG
+

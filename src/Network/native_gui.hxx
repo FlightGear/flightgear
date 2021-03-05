@@ -29,15 +29,23 @@
 
 #include "protocol.hxx"
 #include "net_gui.hxx"
+#if FG_HAVE_DDS
+#include "DDS/dds_gui.h"
+#else
+using FG_DDS_GUI = int;
+#endif
 
 class FGNativeGUI : public FGProtocol {
 
-    FGNetGUI buf;
+    union {
+        FG_DDS_GUI dds;
+        FGNetGUI net;
+    } gui;
     
 public:
 
-    FGNativeGUI();
-    ~FGNativeGUI();
+    FGNativeGUI() = default;
+    ~FGNativeGUI() = default;
 
     // open hailing frequencies
     bool open();
@@ -52,11 +60,13 @@ public:
 
 // Helper functions which may be useful outside this class
 
-// Populate the FGNetGUI structure from the property tree.
-void FGProps2NetGUI( FGNetGUI *net );
+// Populate the FGNetGUI/FG_DDS_GUI structure from the property tree.
+template<typename T>
+void FGProps2GUI( T *net ) {};
 
-// Update the property tree from the FGNetGUI structure.
-void FGNetGUI2Props( FGNetGUI *net );
+// Update the property tree from the FGNetGUI/FG_DDS_GUI structure.
+template<typename T>
+void FGGUI2Props( T *net ) {};
 
 
 #endif // _FG_NATIVE_GUI_HXX

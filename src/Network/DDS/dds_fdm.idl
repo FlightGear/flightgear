@@ -1,0 +1,106 @@
+// format dfescription: https://www.omg.org/spec/IDL/4.2/PDF
+
+// Adapted from net_fdm.hxx
+module FG
+{
+
+// defining it this way also generates accompanying #defines in the header file.
+
+const short DDS_FDM_VERSION = 1;
+
+// same as defined in net_ctrls.hxx
+// this is different from net_fdm.hxx
+const short DDS_ENGINES = 4;
+const short DDS_WHEELS = 16;
+const short DDS_TANKS = 8;
+
+struct DDS_FDM
+{
+    short id;		// DDS id
+    short version;	// packet version
+
+    // Positions
+    double longitude;	// geodetic (radians)
+    double latitude;	// geodetic (radians)
+    double altitude;	// above sea level (meters)
+    float agl;		// above ground level (meters)
+    float phi;		// roll (radians)
+    float theta;	// pitch (radians)
+    float psi;		// yaw or true heading (radians)
+    float alpha;	// angle of attack (radians)
+    float beta;		// side slip angle (radians)
+
+    // Velocities
+    float phidot;	// roll rate (radians/sec)
+    float thetadot;	// pitch rate (radians/sec)
+    float psidot;	// yaw rate (radians/sec)
+    float vcas;		// calibrated airspeed
+    float climb_rate;	// feet per second
+    float v_north;	// north velocity in local/body frame, fps
+    float v_east;	// east velocity in local/body frame, fps
+    float v_down;	// down/vertical velocity in local/body frame, fps
+    float v_body_u;	// ECEF velocity in body frame
+    float v_body_v;	// ECEF velocity in body frame
+    float v_body_w;	// ECEF velocity in body frame
+
+    // Accelerations
+    float A_X_pilot;	// X accel in body frame ft/sec^2
+    float A_Y_pilot;	// Y accel in body frame ft/sec^2
+    float A_Z_pilot;	// Z accel in body frame ft/sec^2
+
+    // Stall
+    float stall_warning;// 0.0 - 1.0 indicating the amount of stall
+    float slip_deg;	// slip ball deflection
+
+    // Pressure
+ 
+    // Engine status
+    unsigned short num_engines;		// Number of valid engines
+    unsigned short eng_state[DDS_ENGINES];// Engine state (off, cranking, running)
+    float rpm[DDS_ENGINES];		// Engine RPM rev/min
+    float fuel_flow[DDS_ENGINES];	// Fuel flow gallons/hr
+    float fuel_px[DDS_ENGINES];		// Fuel pressure psi
+    float egt[DDS_ENGINES];		// Exhuast gas temp deg F
+    float cht[DDS_ENGINES];		// Cylinder head temp deg F
+    float mp_osi[DDS_ENGINES];		// Manifold pressure
+    float tit[DDS_ENGINES];		// Turbine Inlet Temperature
+    float oil_temp[DDS_ENGINES];	// Oil temp deg F
+    float oil_px[DDS_ENGINES];		// Oil pressure psi
+
+    // Consumables
+    unsigned short num_tanks;		// Max number of fuel tanks
+    float fuel_quantity[DDS_TANKS];	// used by GPSsmooth and possibly others
+    boolean tank_selected[DDS_TANKS]; // selected, capacity, usable, density and level required for multiple-pc setups to work
+    float capacity_m3[DDS_TANKS];
+    float unusable_m3[DDS_TANKS];
+    float density_kgpm3[DDS_TANKS];
+    float level_m3[DDS_TANKS];
+
+
+    // Gear status
+    unsigned short num_wheels;
+    unsigned short wow[DDS_WHEELS];
+    float gear_pos[DDS_WHEELS];
+    float gear_steer[DDS_WHEELS];
+    float gear_compression[DDS_WHEELS];
+
+    // Environment
+    unsigned long long cur_time;// current unix time, 64-bit
+    unsigned long long warp;	// offset in seconds to unix time
+    float visibility;		// visibility in meters (for env. effects)
+
+    // Control surface positions (normalized values)
+    float elevator;
+    float elevator_trim_tab;
+    float left_flap;
+    float right_flap;
+    float left_aileron;
+    float right_aileron;
+    float rudder;
+    float nose_wheel;
+    float speedbrake;
+    float spoilers;
+};
+#pragma keylist DDS_FDM id
+
+}; // module FG
