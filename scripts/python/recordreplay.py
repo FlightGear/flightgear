@@ -41,6 +41,7 @@ Args:
 
 import os
 import signal
+import subprocess
 import sys
 import time
 
@@ -68,7 +69,7 @@ class Fg:
         env:
             Environment to set. If DISPLAY is not in <env> we add 'DISPLAY=:0'.
         '''
-        self.pid = None
+        self.child = None
         self.aircraft = aircraft
         args += f' --aircraft={aircraft}'
         
@@ -89,10 +90,7 @@ class Fg:
             environ['DISPLAY'] = ':0'
             
         # Run flightgear in new process, telling it to open telnet server.
-        self.pid = os.fork()
-        if self.pid==0:
-            log(f'calling os.exec(): {" ".join(args2)}')
-            os.execve(args2[0], args2, environ)
+        self.child = subprocess.Popen(args2)
         
         # Connect to flightgear's telnet server.
         timeout = 15
@@ -138,17 +136,13 @@ class Fg:
         return ret
     
     def close(self):
-        assert self.pid
-        sig = signal.SIGTERM
-        log(f'Sending sig={sig} to pid={self.pid}')
-        os.kill(self.pid, sig)
-        log(f'Waiting for pid={self.pid}')
-        r = os.waitpid(self.pid, 0)
-        log(f'waitpid => {r}')
-        self.pid = None
+        assert self.child
+        self.child.terminate()
+        self.child.wait()
+        self.child = None
 
     def __del__(self):
-        if self.pid:
+        if self.child:
             log('*** Fg.__del__() calling self.close()')
             self.close()
 
