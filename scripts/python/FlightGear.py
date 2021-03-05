@@ -131,6 +131,10 @@ class FlightGear:
 
     def __setitem__(self, key, value):
         """Set a FlightGear property value."""
+        if value is True:
+            # Flightgear props doesn't treat string 'True' as true - see
+            # SGPropertyNode::setStringValue().
+            value = 'true'
         self.telnet.set( key, value )
 
     def quit(self):
