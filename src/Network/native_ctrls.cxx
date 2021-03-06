@@ -30,7 +30,7 @@
 #include <simgear/io/lowlevel.hxx> // endian tests
 
 #if FG_HAVE_DDS
-#include <simgear/io/sg_dds.hxx>
+#include <simgear/io/SGDataDistributionService.hxx>
 #endif
 
 #include <Main/fg_props.hxx>

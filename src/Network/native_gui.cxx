@@ -32,7 +32,7 @@
 #include <simgear/timing/sg_time.hxx>
 
 #if FG_HAVE_DDS
-#include <simgear/io/sg_dds.hxx>
+#include <simgear/io/SGDataDistributionService.hxx>
 #endif
 
 #include <Main/fg_props.hxx>
