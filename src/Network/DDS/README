@@ -6,3 +6,7 @@ or any other OMG-IDL compatible IDL to C converter.
 java -classpath "/usr/lib/cmake/CycloneDDS/idlc/idlc-jar-with-dependencies.jar"\
                 org.eclipse.cyclonedds.compilers.Idlc dds_<type>.idl
 
+The .idl files as well as the genereated dds_ctrls, dds_fdm and dds_gui header
+and souce files in this dirctory are in the Public Domain, and come with no
+warranty.
+
