@@ -1,5 +1,9 @@
 # Flightgear recordings
 
+[TOC]
+
+## Overview
+
 Recording files generally have a `.fgtape` suffix.
 
 As of 2020-12-22, there are three kinds of recordings:
@@ -14,7 +18,7 @@ Continuous recordings are uncompressed and written directly to a file while Flig
 
 Recovery recordings are essentially single-frame Continuous recordings. When enabled, Flightgear creates them periodically to allow recovery of a session if Flightgear crashes.
 
-## Properties
+## Properties that control recording
 
 * `/sim/replay/tape-directory` - where to save recordings.
 * `/sim/replay/record-multiplayer` - if true, we include multiplayer information in Normal and Continuous recordings.
@@ -26,6 +30,7 @@ Recovery recordings are essentially single-frame Continuous recordings. When ena
     * `/sim/replay/buffer/low-res-sample-dt` - sample period for low resolution.
 * Continuous recordings:
     * `/sim/replay/record-continuous` - if true, do continuous record to file.
+    * `/sim/replay/record-signals` - if true (the default), include signals for user aircraft - these are the core values used to replay the user aircraft.
     * `/sim/replay/record-extra-properties` - if true, we include selected properties in recordings.
 * Recovery recordings:
     * `/sim/replay/record-recovery-period` - if non-zero, we update recovery recording in specified interval.
@@ -43,9 +48,11 @@ Despite their names these files are both involved with record and replay. `src/A
 
 `src/Aircraft/replay.cxx` is complicated and does various things. It maintains 3 in-memory buffers containing recording information at different temporal resolutions so that Flightgear can store any session in memory. For example only the most recent 60s is recorded at full frame rate.
 
-## File format
+## File formats
 
 ### Normal recordings
+
+Normal recordings are written as a compressed gzip stream using `simgear::gzContainerWriter`.
 
 * Header:
 
@@ -65,9 +72,9 @@ Despite their names these files are both involved with record and replay. `src/A
     
     * Signals information as described in the header's `Config` property tree, represented as a 64-bit length followed by binary data.
 
-All data after the header is in a single gzipped stream.
-
 ### Continuous recordings
+
+Continuous recordings do not use compression, in order to simplify random access when replaying.
 
 * Header:
 
@@ -103,14 +110,12 @@ All data after the header is in a single gzipped stream.
         
             Removal of a property is encoded as `<0:16><length:16><path>`.
 
-Continuous recordings do not use compression, in order to simplify random access when replaying.
-
 
 ## Replay of Continuous recordings
 
-When a Continuous recording is loaded, `FGReplay::loadTape()` first steps through the entire file, building up a mapping in memory from frame times to offsets within the file, so that we can support the user jumping forwards and backwards in the recording.
+When a Continuous recording is loaded, `FGReplay::loadTape()` first steps through the entire file, building up an index in memory that maps from frame times to a struct containing the offset of the frame in the file plus information on whether the frame has multiplayer and/or extra-properties information. This allows us to support the user jumping forwards and backwards in the recording.
 
-If the recording contains extra properties, we also build a cache of the locations of frames that have a non-empty extra-properties item, again to support jumping around in time.
+If we are replaying from a URL, indexing takes place in the background (by requesting callbacks from the download's `simgear::HTTP::FileRequest`) and replay starts immediately. Thus we avoid having to wait until the entire recording has been downloaded before starting replay.
 
 
 ## Multiplayer
@@ -121,9 +126,9 @@ If the user replays part of their history while we are saving to a Continuous re
 
 ### Replaying
 
-When replaying a recording that contains multiplayer information, only recorded multiplayer information is displayed to the user.
+When replaying a recording that contains multiplayer information, the recorded multiplayer information is displayed to the user, and any live multiplayer information is ignored.
 
-Chat messages are included in multiplayer recordings. When replaying, we attempt to hide recorded chat messages and only show live chat messages, but this is a little flakey, especially when jumping around in history.
+As of 2021-03-06 the code attempts to hide recorded chat messages and let through live chat messages when replaying. Unfortunately this doesn't work because it assumes that chat messages are sent as `CHAT_MSG_ID` packets, but actually they are sent as part of generic `POS_DATA_ID` packets (where they set the `/sim/multiplay/chat` property).
 
 
 ### Details
