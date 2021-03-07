@@ -190,7 +190,7 @@ void FGGroundNetXMLLoader::startNode(const XMLAttributes &atts)
   }
 
   SGGeod pos(SGGeod::fromDeg(processPosition(lon), processPosition(lat)));
-  FGTaxiNodeRef node(new FGTaxiNode(index, pos, onRunway, holdPointType));
+  FGTaxiNodeRef node(new FGTaxiNode(FGPositioned::TAXI_NODE, index, pos, onRunway, holdPointType));
   _indexMap[index] = node;
   _unreferencedNodes.insert(node);
 }

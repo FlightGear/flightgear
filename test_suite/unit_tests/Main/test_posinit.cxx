@@ -927,3 +927,58 @@ void PosInitTests::testRepositionAtInvalid()
     auto runway = apt->getRunwayByIdent("36");
     checkPosition(runway->threshold());
 }
+
+void PosInitTests::testMPRunwayStart()
+{
+    {
+       Options* opts = Options::sharedInstance();
+       opts->setShouldLoadDefaultConfig(false);
+
+        // set dummy value to pretend MP is active
+        fgSetString("/sim/multiplay/txhost", "lalalal");
+        
+       const char* args[] = {"dummypath", "--airport=EDDF", "--runway=07L"};
+       opts->init(3, (char**) args, SGPath());
+       opts->processOptions();
+        
+   }
+    
+    initPosition();
+
+    CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
+    CPPUNIT_ASSERT(fgGetBool("/sim/presets/runway-requested"));
+    CPPUNIT_ASSERT(fgGetBool("/sim/presets/avoided-mp-runway"));
+    
+    auto apt = FGAirport::getByIdent("EDDF");
+    FGGroundNetwork* groundNet = apt->groundNetwork();
+
+    auto rwy = apt->getRunwayByIdent("07L");
+    FGTaxiNodeRef taxiNode = groundNet->findNearestNodeOffRunway(rwy->threshold(), rwy, 50.0);
+    checkPosition(taxiNode->geod());
+}
+
+void PosInitTests::testMPRunwayStartNoGroundnet()
+{
+    {
+       Options* opts = Options::sharedInstance();
+       opts->setShouldLoadDefaultConfig(false);
+
+        // set dummy value to pretend MP is active
+        fgSetString("/sim/multiplay/txhost", "lalalal");
+        
+       const char* args[] = {"dummypath", "--airport=EDDS", "--runway=07"};
+       opts->init(3, (char**) args, SGPath());
+       opts->processOptions();
+    }
+    
+    initPosition();
+
+    CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
+    CPPUNIT_ASSERT(fgGetBool("/sim/presets/runway-requested"));
+    CPPUNIT_ASSERT(!fgGetBool("/sim/presets/avoided-mp-runway"));
+    
+    auto apt = FGAirport::getByIdent("EDDS");
+    auto rwy = apt->getRunwayByIdent("07");
+    checkPosition(rwy->threshold());
+}
+

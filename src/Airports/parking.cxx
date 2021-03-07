@@ -22,9 +22,7 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <simgear/compiler.h>
 
@@ -42,15 +40,11 @@ FGParking::FGParking(int index,
                      const std::string& name,
                      const std::string& aType,
                      const std::string& codes) :
-  FGTaxiNode(index, pos, false, 0, name),
+  FGTaxiNode(FGPositioned::PARKING, index, pos, false, 0, name),
   heading(aHeading),
   radius(aRadius),
   type(aType),
   airlineCodes(codes)
-{
-}
-
-FGParking::~FGParking()
 {
 }
 
