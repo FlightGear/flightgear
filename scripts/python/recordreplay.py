@@ -211,7 +211,7 @@ def test_record_replay(
         length,
         ):
     if not fgfs_load:
-        fgfs_load = fgfs
+        fgfs_load = fgfs_save
     log(f'=== save: {fgfs_save}')
     log(f'=== load: {fgfs_load}')
     log(f'=== --multiplayer {multiplayer} --continuous {continuous} --extra-properties {extra_properties} --main-view {main_view}')
