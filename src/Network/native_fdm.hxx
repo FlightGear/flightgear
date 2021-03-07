@@ -34,7 +34,7 @@
 #if FG_HAVE_DDS
 #include "DDS/dds_fdm.h"
 #else
-using FG_DDS_FDM = int;
+using FG_DDS_FDM = FGNetFDM;
 #endif
 
 
@@ -65,11 +65,11 @@ public:
 
 // Populate the FGNetFDM/FG_DDS_FDM structure from the property tree.
 template<typename T>
-void FGProps2FDM( T *net, bool net_byte_order = true ) {};
+void FGProps2FDM( T *net, bool net_byte_order = true );
 
 // Update the property tree from the FGNetFDM/FG_DDS_FDM structure.
 template<typename T>
-void FGFDM2Props( T *net, bool net_byte_order = true ) {};
+void FGFDM2Props( T *net, bool net_byte_order = true );
 
 #endif // _FG_NATIVE_FDM_HXX
 

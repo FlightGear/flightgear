@@ -32,7 +32,7 @@
 #if FG_HAVE_DDS
 #include "DDS/dds_gui.h"
 #else
-using FG_DDS_GUI = int;
+using FG_DDS_GUI = FGNetGUI;
 #endif
 
 class FGNativeGUI : public FGProtocol {
@@ -62,11 +62,11 @@ public:
 
 // Populate the FGNetGUI/FG_DDS_GUI structure from the property tree.
 template<typename T>
-void FGProps2GUI( T *net ) {};
+void FGProps2GUI( T *net );
 
 // Update the property tree from the FGNetGUI/FG_DDS_GUI structure.
 template<typename T>
-void FGGUI2Props( T *net ) {};
+void FGGUI2Props( T *net );
 
 
 #endif // _FG_NATIVE_GUI_HXX

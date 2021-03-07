@@ -34,7 +34,7 @@
 #if FG_HAVE_DDS
 #include "DDS/dds_ctrls.h"
 #else
-using FG_DDS_Ctrls = int;
+using FG_DDS_Ctrls = FGNetCtrls;
 #endif
 
 using std::string;
@@ -66,11 +66,11 @@ public:
 
 // Populate the FGNetCtrls/FG_DDS_Ctrls structure from the property tree.
 template<typename T>
-void FGProps2Ctrls( T *net, bool honor_freezes, bool net_byte_order ) {};
+void FGProps2Ctrls( T *net, bool honor_freezes, bool net_byte_order );
 
 // Update the property tree from the FGNetCtrls/FG_DDS_Ctrls structure.
 template<typename T>
-void FGCtrls2Props( T *net, bool honor_freezes, bool net_byte_order ) {};
+void FGCtrls2Props( T *net, bool honor_freezes, bool net_byte_order );
 
 #endif // _FG_NATIVE_CTRLS_HXX
 
