@@ -623,11 +623,7 @@ bool runLauncherDialog()
     globals->packageRoot()->setLocale(globals->get_locale()->getPreferredLanguage());
 
     // startup the HTTP system now since packages needs it
-    FGHTTPClient* http = globals->add_new_subsystem<FGHTTPClient>();
-
-    // we guard against re-init in the global phase; bind and postinit
-    // will happen as normal
-    http->init();
+    FGHTTPClient::getOrCreate();
 
     QPointer<NaturalEarthDataLoaderThread> naturalEarthLoader = new NaturalEarthDataLoaderThread;
     naturalEarthLoader->start();

@@ -42,6 +42,9 @@ public:
     // Subsystem identification.
     static const char* staticSubsystemClassId() { return "http"; }
 
+
+    static FGHTTPClient* getOrCreate();
+
     void makeRequest(const simgear::HTTP::Request_ptr& req);
 
     simgear::HTTP::Client* client() { return _http.get(); }

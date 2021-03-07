@@ -86,6 +86,19 @@ FGHTTPClient::~FGHTTPClient()
 {
 }
 
+FGHTTPClient* FGHTTPClient::getOrCreate()
+{
+    auto ext = globals->get_subsystem<FGHTTPClient>();
+    if (ext) {
+        return ext;
+    }
+
+    ext = globals->add_new_subsystem<FGHTTPClient>();
+    ext->init();
+    return ext;
+}
+
+
 void FGHTTPClient::init()
 {
     // launcher may need to setup HTTP access abnormally early, so

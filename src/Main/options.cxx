@@ -1623,7 +1623,7 @@ fgOptLoadTape(const char* arg)
 
         virtual ~ DelayedTapeLoader() {}
 
-        virtual void valueChanged(SGPropertyNode * node)
+        void valueChanged(SGPropertyNode* node) override
         {
             if (!fgGetBool("/sim/signals/fdm-initialized")) {
                 return;
@@ -1651,17 +1651,17 @@ fgOptLoadTape(const char* arg)
     
     SGPropertyNode_ptr properties(new SGPropertyNode);
     simgear::HTTP::FileRequestRef filerequest;
-    
+    SGTimeStamp timeout;
+
     std::string path = urlToLocalPath(arg);
-    if (path == "") {
+    if (path.empty()) {
         // <arg> is a local file.
         //
         // Load the recording's header if it is a Continuous recording.
         //
         path = FGReplay::makeTapePath(arg);
         (void) FGReplay::loadContinuousHeader(path.c_str(), nullptr /*in*/, properties);
-    }
-    else {
+    } else {
         // <arg> is a URL. Start download.
         //
         // Load the recording's header if it is a Continuous recording.
@@ -1671,9 +1671,8 @@ fgOptLoadTape(const char* arg)
         // directly in order to download at least the header.
         //
         const char* url = arg;
-        FGHTTPClient* http = globals->add_new_subsystem<FGHTTPClient>();
-        http->init();
-        SG_LOG(SG_GENERAL, SG_ALERT, "Replaying url " << url << " using local path: " << path);
+        FGHTTPClient* http = FGHTTPClient::getOrCreate();
+        SG_LOG(SG_GENERAL, SG_MANDATORY_INFO, "Replaying url " << url << " using local path: " << path);
         filerequest.reset(new simgear::HTTP::FileRequest(url, path, true /*append*/));
         filerequest->setAcceptEncoding(""); // "" means request any supported compression.
         
@@ -1682,9 +1681,8 @@ fgOptLoadTape(const char* arg)
             // Can be useful to limite download speed for testing background
             // download.
             //
-            SG_LOG(SG_GENERAL, SG_ALERT, "Limiting download speed"
-                    << " /sim/replay/download-max-bytes-per-sec=" << max_download_speed
-                    );
+            SG_LOG(SG_GENERAL, SG_MANDATORY_INFO, "Limiting download speed"
+                                                      << " /sim/replay/download-max-bytes-per-sec=" << max_download_speed);
             filerequest->setMaxBytesPerSec(max_download_speed);
         }
         http->client()->makeRequest(filerequest);
@@ -1697,8 +1695,7 @@ fgOptLoadTape(const char* arg)
         // portion of the recording to be downloaded. We give up after a fixed
         // timeout.
         //
-        time_t t0 = time(NULL);
-        SG_LOG(SG_GENERAL, SG_ALERT, "Starting download from: " << url);
+        timeout.stamp();
         for(;;) {
             // Run http client's update() to download any pending data.
             http->update(0);
@@ -1720,14 +1717,14 @@ fgOptLoadTape(const char* arg)
             }
             
             // If we get here, need to download some more.
-            if (time(NULL) - t0 > 30) {
+            if (timeout.elapsedMSec() > (30 * 1000)) {
                 SG_LOG(SG_GENERAL, SG_POPUP, "Timeout while reading downloaded recording from " << url << ". local path=" << path);
                 return FG_OPTIONS_EXIT;
             }
             SGTimeStamp::sleepForMSec(1000);
         }
     }
-        
+
     // Set aircraft from recording header if we loaded it above; this has to
     // happen now, before the FDM is initialised. Also set the airport; we
     // don't actually have to do this because the replay doesn't need terrain
@@ -1735,7 +1732,7 @@ fgOptLoadTape(const char* arg)
     //
     std::string aircraft = properties->getStringValue("meta/aircraft-type");
     std::string airport = properties->getStringValue("meta/closest-airport-id");
-    SG_LOG(SG_GENERAL, SG_ALERT, "From recording header: aircraft=" << aircraft << " airport=" << airport);
+    SG_LOG(SG_GENERAL, SG_MANDATORY_INFO, "From recording header: aircraft=" << aircraft << " airport=" << airport);
     // Override aircraft and airport settings to match what is in the
     // recording.
     //
@@ -2847,16 +2844,16 @@ OptionResult Options::processOptions()
         globals->append_fg_scenery(root);
     }
 
-    if (g_load_tape_aircraft != "") {
+    if (!g_load_tape_aircraft.empty()) {
         // This might not be necessary, because we always end up calling
         // Options::initAircraft() later on, which also knows to use
         // g_load_tape_aircraft if it is not "".
         //
-        SG_LOG(SG_GENERAL, SG_ALERT, "overriding aircraft from " << fgGetString("/sim/aircraft") << " to " << g_load_tape_aircraft);
+        SG_LOG(SG_GENERAL, SG_MANDATORY_INFO, "overriding aircraft from " << fgGetString("/sim/aircraft") << " to " << g_load_tape_aircraft);
         fgSetString("/sim/aircraft", g_load_tape_aircraft);
     }
-    if (g_load_tape_airport != "") {
-        SG_LOG(SG_GENERAL, SG_ALERT, "overriding airport from " << fgGetString("/sim/presets/airport-id") << " to " << g_load_tape_airport);
+    if (!g_load_tape_airport.empty()) {
+        SG_LOG(SG_GENERAL, SG_MANDATORY_INFO, "overriding airport from " << fgGetString("/sim/presets/airport-id") << " to " << g_load_tape_airport);
         fgOptAirport(g_load_tape_airport.c_str());
     }
 
