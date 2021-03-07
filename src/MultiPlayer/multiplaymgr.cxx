@@ -1919,10 +1919,9 @@ int FGMultiplayMgr::GetMsg(MsgBuf& msgBuf, simgear::IPAddress& SenderAddress)
                 memcpy(&msgBuf.Msg, &replayMessage->front(), length);
                 // Don't return recorded chat messages.
                 if (msgBuf.Header.MsgId != CHAT_MSG_ID) {
-                    SG_LOG(SG_NETWORK, SG_INFO,
-                            "replaying message length=" << replayMessage->size()
-                            << ". num remaining messages=" << mReplayMessageQueue.size()
-                            );
+                    SG_LOG(SG_NETWORK, SG_BULK,
+                           "replaying message length=" << replayMessage->size()
+                                                       << ". num remaining messages=" << mReplayMessageQueue.size());
                     return length;
                 }
             }
