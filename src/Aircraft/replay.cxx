@@ -467,6 +467,13 @@ printTimeStr(char* pStrBuffer,double _Time, bool ShowDecimal=true)
         sprintf(&pStrBuffer[len],".%u",d);
 }
 
+static void setTimeStr(const char* property_path, double t, bool show_decimal=false)
+{
+    char buffer[30];
+    printTimeStr(buffer, t, show_decimal);
+    fgSetString(property_path, buffer);
+}
+
 void
 FGReplay::guiMessage(const char* message)
 {
@@ -528,8 +535,6 @@ FGReplay::start(bool NewTape)
     double StartTime = get_start_time();
     double EndTime = get_end_time();
     was_finished_already = false;
-    fgSetDouble("/sim/replay/start-time", StartTime);
-    fgSetDouble("/sim/replay/end-time",   EndTime);
     char StrBuffer[30];
     printTimeStr(StrBuffer,StartTime,false);
     fgSetString("/sim/replay/start-time-str", StrBuffer);
@@ -985,8 +990,6 @@ FGReplay::update( double dt )
                 // initialize start time
                 double startTime = get_start_time();
                 double endTime = get_end_time();
-                fgSetDouble( "/sim/replay/start-time", startTime );
-                fgSetDouble( "/sim/replay/end-time", endTime );
                 double duration = 0;
                 if (replay_duration_act->getBoolValue())
                     duration = fgGetDouble("/sim/replay/duration");
@@ -1696,9 +1699,10 @@ void FGReplay::replay(
 double
 FGReplay::get_start_time()
 {
+    double ret;
     std::lock_guard<std::mutex> lock(m_continuous_in_time_to_frameinfo_lock);
     if (!m_continuous_in_time_to_frameinfo.empty()) {
-        double ret = m_continuous_in_time_to_frameinfo.begin()->first;
+        ret = m_continuous_in_time_to_frameinfo.begin()->first;
         SG_LOG(SG_SYSTEMS, SG_DEBUG,
                 "ret=" << ret
                 << " m_continuous_in_time_to_frameinfo is "
@@ -1706,22 +1710,27 @@ FGReplay::get_start_time()
                 << ".."
                 << m_continuous_in_time_to_frameinfo.rbegin()->first
                 );
+        // We don't set /sim/replay/end-time here - it is updated when indexing
+        // in the background.
         return ret;
     }
     
     if ( ! long_term.empty() )
     {
-        return long_term.front()->sim_time;
+        ret = long_term.front()->sim_time;
     } else if ( ! medium_term.empty() )
     {
-        return medium_term.front()->sim_time;
+        ret = medium_term.front()->sim_time;
     } else if ( ! short_term.empty() )
     {
-        return short_term.front()->sim_time;
+        ret = short_term.front()->sim_time;
     } else
     {
-        return 0.0;
+        ret = 0.0;
     }
+    fgSetDouble("/sim/replay/start-time", ret);
+    setTimeStr("/sim/replay/start-time-str", ret);
+    return ret;
 }
 
 double
@@ -1737,16 +1746,14 @@ FGReplay::get_end_time()
                 << ".."
                 << m_continuous_in_time_to_frameinfo.rbegin()->first
                 );
+        // We don't set /sim/replay/end-time here - it is updated when indexing
+        // in the background.
         return ret;
     }
-    
-    if ( ! short_term.empty() )
-    {
-        return short_term.back()->sim_time;
-    } else
-    {
-        return 0.0;
-    } 
+    double ret = short_term.empty() ? 0 : short_term.back()->sim_time;
+    fgSetDouble("/sim/replay/end-time", ret);
+    setTimeStr("/sim/replay/end-time-str", ret);
+    return ret;
 }
 
 /** Load raw replay data from a separate container */
@@ -2041,9 +2048,6 @@ void FGReplay::indexContinuousRecording(const void* data, size_t numbytes)
         m_continuous_indexing_pos = m_continuous_indexing_in.tellg();
         std::lock_guard<std::mutex> lock(m_continuous_in_time_to_frameinfo_lock);
         m_continuous_in_time_to_frameinfo[sim_time] = frameinfo;
-        if (m_continuous_in_time_to_frameinfo.size() == 1) {
-            fgSetDouble("/sim/replay/start-time", sim_time);
-        }
     }
     time_t t = time(NULL) - t0;
     auto new_bytes = m_continuous_indexing_pos - original_pos;
@@ -2076,7 +2080,13 @@ void FGReplay::indexContinuousRecording(const void* data, size_t numbytes)
     fgSetInt("/sim/replay/continuous-stats-num-frames-extra-properties", m_num_frames_extra_properties);
     fgSetInt("/sim/replay/continuous-stats-num-frames-multiplayer", m_num_frames_multiplayer);
     if (!m_continuous_in_time_to_frameinfo.empty()) {
-        fgSetDouble("/sim/replay/end-time", m_continuous_in_time_to_frameinfo.rbegin()->first);
+        double t_begin = m_continuous_in_time_to_frameinfo.begin()->first;
+        double t_end = m_continuous_in_time_to_frameinfo.rbegin()->first;
+        fgSetDouble("/sim/replay/start-time", t_begin);
+        fgSetDouble("/sim/replay/end-time", t_end);
+        setTimeStr("/sim/replay/start-time-str", t_begin);
+        setTimeStr("/sim/replay/end-time-str", t_end);
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Have set /sim/replay/end-time to " << fgGetDouble("/sim/replay/end-time"));
     }
     if (!numbytes) {
         SG_LOG(SG_SYSTEMS, SG_ALERT, "Continuous recording: indexing finished"
