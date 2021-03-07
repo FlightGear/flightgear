@@ -25,10 +25,6 @@
 #ifndef _PARKING_HXX_
 #define _PARKING_HXX_
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
 #include <simgear/compiler.h>
 #include <simgear/sg_inlines.h>
 
@@ -56,7 +52,7 @@ public:
             double heading, double radius,
             const std::string& name, const std::string& type,
             const std::string& codes);
-  virtual ~FGParking();
+    virtual ~FGParking() = default;
   
   double getHeading  () const { return heading;     };
   double getRadius   () const { return radius;      };

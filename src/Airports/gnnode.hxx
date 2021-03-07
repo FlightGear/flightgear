@@ -26,14 +26,14 @@ class FGTaxiNode : public FGPositioned
 protected:
     const int m_index;
 
-  bool isOnRunway;
-  int  holdType;
+  const bool isOnRunway;
+  const int  holdType;
   bool m_isPushback;
 
 public:    
-  FGTaxiNode(int index, const SGGeod& pos, bool aOnRunway, int aHoldType,
+  FGTaxiNode(FGPositioned::Type ty, int index, const SGGeod& pos, bool aOnRunway, int aHoldType,
              const std::string& ident = {});
-  virtual ~FGTaxiNode();
+    virtual ~FGTaxiNode() = default;
   
   void setElevation(double val);
 

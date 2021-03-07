@@ -72,6 +72,10 @@ class PosInitTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testRepositionAtOccupied);
     CPPUNIT_TEST(testRepositionAtInvalid);
     
+    // MP tests
+    CPPUNIT_TEST(testMPRunwayStart);
+    CPPUNIT_TEST(testMPRunwayStartNoGroundnet);
+    
     CPPUNIT_TEST_SUITE_END();
 
     void simulateStartReposition();
@@ -119,6 +123,9 @@ public:
     void testRepositionAtInvalid();
     void testAirportRunwayRepositionAirport();
 
+    // MP tests
+    void testMPRunwayStart();
+    void testMPRunwayStartNoGroundnet();
 private:
     // Helper functions for tests.  Return void as they use CPPUNIT_ASSERT
     void checkAlt(float value);

@@ -14,20 +14,16 @@ using namespace flightgear;
  * FGTaxiNode
  *************************************************************************/
 
-FGTaxiNode::FGTaxiNode(int index, const SGGeod& pos,
+FGTaxiNode::FGTaxiNode(FGPositioned::Type ty, int index, const SGGeod& pos,
                        bool aOnRunway, int aHoldType,
                        const std::string& ident) :
-  FGPositioned(TRANSIENT_ID, FGPositioned::PARKING, ident, pos),
+  FGPositioned(TRANSIENT_ID, ty, ident, pos),
   m_index(index),
   isOnRunway(aOnRunway),
   holdType(aHoldType),
   m_isPushback(false)
 {
 
-}
-
-FGTaxiNode::~FGTaxiNode()
-{
 }
 
 void FGTaxiNode::setElevation(double val)
