@@ -64,7 +64,7 @@
 #include <Network/generic.hxx>
 
 #if FG_HAVE_DDS
-#include <simgear/io/sg_dds.hxx>
+#include <simgear/io/SGDataDistributionService.hxx>
 #endif
 #if FG_HAVE_HLA
 #include <Network/HLA/hla.hxx>
