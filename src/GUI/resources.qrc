@@ -157,6 +157,7 @@
         <file>qml/ScrollToBottomHint.qml</file>
         <file>qml/GettingStartedTipLayer.qml</file>
         <file>qml/GettingStartedTipDisplay.qml</file>
+        <file>qml/CatalogRefreshFailedNotification.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">assets/preview-close.png</file>

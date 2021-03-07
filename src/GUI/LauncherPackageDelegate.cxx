@@ -43,11 +43,25 @@ LauncherPackageDelegate::~LauncherPackageDelegate()
 
 void LauncherPackageDelegate::catalogRefreshed(simgear::pkg::CatalogRef aCatalog, simgear::pkg::Delegate::StatusCode aReason)
 {
+    auto nc = LauncherNotificationsController::instance();
+
+    if (aCatalog) {
+        // if catalog download / write to disk failed, show a notification
+        if ((aReason == Delegate::FAIL_EXTRACT) ||
+            (aReason == Delegate::FAIL_DOWNLOAD) ||
+            (aReason == Delegate::FAIL_FILESYSTEM) ||
+            (aReason == Delegate::FAIL_VALIDATION)) {
+            QJSValue args = nc->jsEngine()->newObject();
+            args.setProperty("catalogUri", QString::fromStdString(aCatalog->url()));
+            nc->postNotification("catalog-refresh-failed",
+                                 QUrl{"qrc:///qml/CatalogRefreshFailedNotification.qml"},
+                                 args);
+        }
+    }
+
     if ((aReason != Delegate::STATUS_REFRESHED) || !aCatalog) {
         return;
     }
-
-    auto nc = LauncherNotificationsController::instance();
 
     if (aCatalog->migratedFrom() != simgear::pkg::CatalogRef{}) {
         QJSValue args = nc->jsEngine()->newObject();
