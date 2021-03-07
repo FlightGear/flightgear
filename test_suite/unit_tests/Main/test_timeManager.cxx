@@ -96,6 +96,12 @@ void TimeManagerTests::testFreezeUnfreeze()
     // first run: values are zero
     timeManager->computeTimeDeltas(simDt, realDt);
 
+    // test hack: force dtRemainder to zero so we aren't affected by the
+    // system -> stread clock offset in our test assertions. Without this,
+    // depending on exaclty when thetest suite is run, we would get different
+    // results
+    timeManager->_dtRemainder = 0.0;
+
     SGTimeStamp n;
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, simDt, 1.0e-6);
