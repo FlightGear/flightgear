@@ -108,10 +108,6 @@ else()
     install(TARGETS fgfs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-if (CycloneDDS_FOUND)
-    target_link_libraries(fgfs CycloneDDS::ddsc)
-endif(CycloneDDS_FOUND)
-
 if (TARGET sentry::sentry)
     target_link_libraries(fgfs sentry::sentry)
 endif()
