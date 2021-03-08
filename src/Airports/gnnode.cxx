@@ -40,13 +40,17 @@ double FGTaxiNode::getElevationFt()
     FGScenery* local_scenery = globals->get_scenery();
     center2.setElevationM(SG_MAX_ELEVATION_M);
     double elevationEnd = -100;
-    if (local_scenery->get_elevation_m( center2, elevationEnd, NULL ))
-    {
-      SGGeod newPos = pos;
-      newPos.setElevationM(elevationEnd);
-      // this will call modifyPosition to update mPosition
-      modifyPosition(newPos);
-    }
+    if(local_scenery) {
+      if (local_scenery->get_elevation_m( center2, elevationEnd, NULL ))
+      {
+        SGGeod newPos = pos;
+        newPos.setElevationM(elevationEnd);
+        // this will call modifyPosition to update mPosition
+        modifyPosition(newPos);
+      }
+    } else {
+      SG_LOG( SG_TERRAIN, SG_ALERT, "Terrain not inited" ); 
+    }   
   }
 
   return pos.getElevationFt();
