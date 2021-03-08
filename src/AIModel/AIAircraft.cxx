@@ -508,6 +508,7 @@ bool FGAIAircraft::loadNextLeg(double distance) {
     int leg;
     if ((leg = fp->getLeg())  == 9) {
         if (!trafficRef->next()) {
+            //FIXME I'm on leg 9 and don't even reach parking.
             return false;
         }
         setCallSign(trafficRef->getCallSign());
