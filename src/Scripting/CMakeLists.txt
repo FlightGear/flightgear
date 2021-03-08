@@ -1,7 +1,6 @@
 include(FlightGearComponent)
 
 set(SOURCES
-  NasalSys.cxx
   nasal-props.cxx
   NasalAddons.cxx
   NasalAircraft.cxx
@@ -47,5 +46,8 @@ else()
   endif()
 endif()
 
-flightgear_component(Scripting "${SOURCES}" "${HEADERS}")
+# NasalSys.cxx is passed as TEST_SOURCES since we need to compile it
+# seperately whrn building the test_suite
+
+flightgear_component(Scripting "${SOURCES}" "${HEADERS}"  NasalSys.cxx)
 

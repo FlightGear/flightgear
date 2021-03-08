@@ -111,18 +111,19 @@ setup_fgfs_embedded_resources()
 # Sort the sources and headers for MSVC.
 setup_msvc_grouping()
 
+# most object files come from fgfsObjects target: this property
+# contains all the sources which need to be compiled seperately
+# for the test-suite, becuase they depend on BUILDING_TESTSUTIE define
+# we setup below via target_compile_definitions
 
-
-# All sources and headers to be built into the test suite.
-get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
-get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
+get_property(TEST_SOURCES GLOBAL PROPERTY FG_TEST_SOURCES)
 
 # Set up the separate executable for running the test suite.
 add_executable(fgfs_test_suite
-    ${FG_SOURCES}
-    ${FG_HEADERS}
+    ${TEST_SOURCES}
     ${TESTSUITE_SOURCES}
     ${TESTSUITE_HEADERS}
+    $<TARGET_OBJECTS:fgfsObjects>
 )
 
 add_dependencies(fgfs_test_suite buildId)

@@ -153,11 +153,7 @@ public:
     simgear::BufferedLogCallback* log() const
     { return _log.get(); }
 
-#if defined(BUILDING_TESTSUITE)
-    /// test-suite only API: retrieve all Nasal runtime errors which
-    /// occurred since we last called this
     string_list getAndClearErrorList();
-#endif
 
 private:
     void initLogLevelConstants();

@@ -29,7 +29,6 @@ set(SOURCES
     subsystemFactory.cxx
     util.cxx
     XLIFFParser.cxx
-    sentryIntegration.cxx
     ErrorReporter.cxx
     ${MS_RESOURCE_FILE}
 )
@@ -51,13 +50,13 @@ set(HEADERS
     subsystemFactory.hxx
     util.hxx
     XLIFFParser.hxx
-    sentryIntegration.hxx
     ErrorReporter.hxx
+    sentryIntegration.hxx
 )
 
-flightgear_component(Main "${SOURCES}" "${HEADERS}")
+flightgear_component(Main "${SOURCES}" "${HEADERS}" sentryIntegration.cxx)
 
-# The main() function.
+# the main() function
 set(MAIN_SOURCE
     bootstrap.cxx
 )
@@ -68,11 +67,9 @@ setup_fgfs_embedded_resources()
 # Sort the sources and headers for MSVC.
 setup_msvc_grouping()
 
+# souerces which are different for fgfs vs the test-suite
+get_property(TEST_SOURCES GLOBAL PROPERTY FG_TEST_SOURCES)
 
-
-# # All sources and headers to be built into fgfs.
-# get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
-# get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
 
 # important we pass WIN32 here so the console is optional. Other
 # platforms ignore this option. If a console is needed we allocate
@@ -82,6 +79,7 @@ add_executable(fgfs
     WIN32
     MACOSX_BUNDLE
     ${MAIN_SOURCE}
+    ${TEST_SOURCES}
     $<TARGET_OBJECTS:fgfsObjects>
 )
 

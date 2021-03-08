@@ -317,11 +317,9 @@ class FGAirport : public FGPositioned
 
     static void clearAirportsCache();
 
-
-#if defined(BUILDING_TESTSUITE)
-    // helper to allow testing without needing a full Airports heirarchy
+    // helper to allow testing without needing a full Airports hierarchy
+    // only for use by the test-suite, not available outside of it.
     void testSuiteInjectGroundnetXML(const SGPath& path);
-#endif
 private:
     static flightgear::AirportCache airportCache;
 

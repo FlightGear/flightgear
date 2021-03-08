@@ -23,6 +23,13 @@ macro(flightgear_component name sources)
         target_sources(fgfsObjects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/${h})
     endforeach()
 
+    # third argument is TEST_SOURCES
+    foreach(t ${ARGV3})
+        set_property(GLOBAL
+            APPEND PROPERTY FG_TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${t}")
+        set(fc "${fh}#${CMAKE_CURRENT_SOURCE_DIR}/${t}")
+    endforeach()
+
     set_property(GLOBAL APPEND PROPERTY FG_GROUPS_C "${fc}@")
     set_property(GLOBAL APPEND PROPERTY FG_GROUPS_H "${fh}@")
 

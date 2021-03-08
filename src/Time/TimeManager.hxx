@@ -58,9 +58,8 @@ public:
     double getSimSpeedUpFactor() const;
 private:
     // test class is a friend so we can fake elapsed system time
-#if defined(BUILDING_TESTSUITE)
     friend class TimeManagerTests;
-#endif
+
     /**
      * Ensure a consistent update-rate using a combination of
      * sleep()-ing and busy-waiting.  

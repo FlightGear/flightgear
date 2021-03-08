@@ -989,17 +989,6 @@ void FGAirport::sortBySize(FGPositionedList& airportList)
     }
 }
 
-#if defined(BUILDING_TESTSUITE)
-
-void FGAirport::testSuiteInjectGroundnetXML(const SGPath& path)
-{
-    _groundNetwork.reset(new FGGroundNetwork(const_cast<FGAirport*>(this)));
-    XMLLoader::loadFromPath(_groundNetwork.get(), path);
-    _groundNetwork->init();
-}
-
-#endif
-
 FGAirportDynamicsRef FGAirport::getDynamics() const
 {
     return flightgear::AirportDynamicsManager::find(const_cast<FGAirport*>(this));

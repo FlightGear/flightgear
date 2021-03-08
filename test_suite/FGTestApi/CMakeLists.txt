@@ -7,6 +7,7 @@ set(TESTSUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/TestPilot.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/NasalUnitTesting_TestSuite.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/TestDataLogger.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/testApis.cxx
     PARENT_SCOPE
 )
 
