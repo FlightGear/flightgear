@@ -107,6 +107,33 @@ bool logPositionToKML(const std::string& testName)
     return true;
 }
     
+bool logLinestringsToKML(const std::string& testName)
+{
+    // clear any previous state
+    if (global_loggingToKML) {
+        global_kmlStream.close();
+        global_lineStringOpen = false;
+    }
+    
+    SGPath p = SGPath::desktop() / (testName + ".kml");
+    global_kmlStream.open(p);
+    if (!global_kmlStream.is_open()) {
+        SG_LOG(SG_GENERAL, SG_WARN, "unable to open:" << p);
+        return false;
+    }
+    
+    // pre-amble
+    global_kmlStream << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        "<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n"
+        "<Document>\n";
+    // need more precision for doubles when specifying lat/lon, see
+    // https://xkcd.com/2170/  :)
+    global_kmlStream.precision(12);
+    
+    global_loggingToKML = false;
+    return true;
+}
+
 void initStandardNasal(bool withCanvas)
 {
     fgInitAllowedPaths();
@@ -250,6 +277,16 @@ void setPosition(const SGGeod& g)
     globals->get_props()->setDoubleValue("position/longitude-deg", g.getLongitudeDeg());
     globals->get_props()->setDoubleValue("position/altitude-ft", g.getElevationFt());
 }
+
+const SGGeod getPosition()
+{
+    return SGGeod::fromDegFt(    
+    globals->get_props()->getDoubleValue("position/latitude-deg"),
+    globals->get_props()->getDoubleValue("position/longitude-deg"),
+    globals->get_props()->getDoubleValue("position/altitude-ft"));
+}
+    
+
     
 void setPositionAndStabilise(const SGGeod& g)
 {

@@ -23,6 +23,8 @@ namespace setUp {
 void initTestGlobals(const std::string& testName);
 
 bool logPositionToKML(const std::string& testName);
+/**Don't log aircraft positions*/
+bool logLinestringsToKML(const std::string& testName);
     
 void initStandardNasal(bool withCanvas = false);
 
@@ -39,7 +41,8 @@ void populateFPWithNasal(flightgear::FlightPlanRef f,
 }  // End of namespace setUp.
 
 // helpers during tests
-    
+
+const SGGeod getPosition();    
 void setPosition(const SGGeod& g);
 void setPositionAndStabilise(const SGGeod& g);
     
