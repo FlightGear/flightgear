@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <osg/Drawable>
-#include <QUrl>
 
 #include <osgViewer/GraphicsWindow>
 
@@ -29,6 +28,7 @@ namespace osgViewer {
 class Viewer;
 }
 
+class QUrl;
 class QQuickDrawablePrivate;
 
 class QQuickDrawable : public osg::Drawable
@@ -44,9 +44,10 @@ public:
 
   void setup(osgViewer::GraphicsWindow* gw, osgViewer::Viewer* viewer);
 
-  void setSource(QUrl url);
+    void setSourcePath(const std::string& path);
+  void setSource(const QUrl& url);
 
-  void reload(QUrl url);
+  void reload(const QUrl& url);
 
   void resize(int width, int height);
 

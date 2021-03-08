@@ -726,8 +726,7 @@ FGRenderer::setupView( void )
             if (!rootQMLPath.empty()) {
                 _quickDrawable = new QQuickDrawable;
                 _quickDrawable->setup(graphicsWindow, viewer);
-
-                _quickDrawable->setSource(QUrl::fromLocalFile(QString::fromStdString(rootQMLPath)));
+                _quickDrawable->setSourcePath(rootQMLPath);
 
                 osg::Geode* qqGeode = new osg::Geode;
                 qqGeode->addDrawable(_quickDrawable);

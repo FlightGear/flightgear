@@ -298,7 +298,6 @@ endif (USE_DBUS)
 ##############################################################################
 ## Qt5 setup setup
 if (ENABLE_QT)
-    set(CMAKE_AUTOMOC ON)
 
     find_package(Qt5 5.9 COMPONENTS Widgets Gui Network Qml Quick Svg)
     if (Qt5Widgets_FOUND)
@@ -311,6 +310,8 @@ if (ENABLE_QT)
             get_filename_component(FG_QT_BIN_DIR ${_qt5_qmake_path} DIRECTORY)
             get_filename_component(FG_QT_ROOT_DIR ${FG_QT_BIN_DIR} DIRECTORY)
         endif()
+
+        set(CMAKE_AUTOMOC OFF)
 
         message(STATUS "Qt GUI enabled, found Qt at: ${FG_QT_ROOT_DIR}")
     else()
@@ -471,6 +472,24 @@ include( GenerateBuildInfo )
 include_directories(${PROJECT_BINARY_DIR}/src/Include)
 include_directories(${PROJECT_BINARY_DIR}/src) # for version.h
 include_directories(${PROJECT_SOURCE_DIR}/src)
+
+
+#######################################################################
+
+include(SetupFGFSIncludes)
+include(SetupFGFSLibraries)
+
+# create an object library target to hold all our sources
+# subdirectories will append sources to this target, and we'll
+# link it into our real executable targets
+
+add_library(fgfsObjects OBJECT)
+# Set up the include search paths for the object library
+setup_fgfs_libraries(fgfsObjects)
+setup_fgfs_includes(fgfsObjects)
+
+########################################################################
+
 
 add_subdirectory(3rdparty)
 add_subdirectory(utils)

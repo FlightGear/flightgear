@@ -573,13 +573,18 @@ void QQuickDrawable::drawImplementation(osg::RenderInfo& renderInfo) const
     d->quickWindow->resetOpenGLState();
 }
 
-void QQuickDrawable::reload(QUrl url)
+void QQuickDrawable::reload(const QUrl& url)
 {
     d->qmlEngine->clearComponentCache();
     setSource(url);
 }
 
-void QQuickDrawable::setSource(QUrl url)
+void QQuickDrawable::setSourcePath(const std::string& path)
+{
+    setSource(QUrl::fromLocalFile(QString::fromStdString(path)));
+}
+
+void QQuickDrawable::setSource(const QUrl& url)
 {
     if (d->rootItem)
         delete d->rootItem;

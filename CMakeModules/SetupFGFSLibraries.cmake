@@ -1,9 +1,4 @@
 function(setup_fgfs_libraries target)
-    get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
-    #message(STATUS "fg libs ${FG_LIBS}")
-    #message(STATUS "OSG libs ${OPENSCENEGRAPH_LIBRARIES}")
-    #message(STATUS "SG libs ${SIMGEAR_LIBRARIES}")
-
     if(RTI_FOUND)
         set(HLA_LIBRARIES ${RTI_LDFLAGS})
     else()
@@ -54,9 +49,10 @@ function(setup_fgfs_libraries target)
 
     target_link_libraries(${target} PLIBFont)
 
-    if (TARGET fglauncher)
+    # FIXME : rewrite options.cxx / SetupRootDialog.hxx not
+    # to require this dependency
+    if (HAVE_QT)
         target_link_libraries(${target} Qt5::Core Qt5::Widgets fglauncher fgqmlui)
-        set_property(TARGET ${target} PROPERTY AUTOMOC ON)
     endif()
 
     if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
@@ -65,5 +61,9 @@ function(setup_fgfs_libraries target)
 
     if(${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
         target_link_libraries(${target} execinfo)
+    endif()
+
+    if (TARGET sentry::sentry)
+        target_link_libraries(${target} sentry::sentry)
     endif()
 endfunction()

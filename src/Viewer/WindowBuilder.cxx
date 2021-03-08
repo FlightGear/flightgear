@@ -30,11 +30,6 @@
     #include <osgViewer/api/Cocoa/GraphicsWindowCocoa>
 #endif
 
-#if defined(HAVE_QT)
-    #include "GraphicsWindowQt5.hxx"
-#endif
-
-
 using namespace std;
 using namespace osg;
 
@@ -62,9 +57,6 @@ void WindowBuilder::initWindowBuilder(bool stencil)
 
 WindowBuilder::WindowBuilder(bool stencil) : defaultCounter(0)
 {
-#if defined (HAVE_QT)
-    usingQtGraphicsWindow = fgGetBool("/sim/rendering/graphics-window-qt", false);
-#endif
     makeDefaultTraits(stencil);
 }
 
@@ -107,58 +99,32 @@ void WindowBuilder::makeDefaultTraits(bool stencil)
     traits->vsync = fgGetBool("/sim/rendering/vsync-enable", traits->vsync);
     
     const bool wantFullscreen = fgGetBool("/sim/startup/fullscreen");
-    if (usingQtGraphicsWindow) {
-#if defined(HAVE_QT)
-        // fullscreen is handled by Qt natively
-        // we will check and set fullscreen mode when building
-        // the window instance
-        auto data = new GraphicsWindowQt5::WindowData;
-        data->createFullscreen = wantFullscreen;
-        data->isPrimaryWindow = true;
-
-#if OSG_VERSION_GREATER_THAN(3, 5, 9)
-        traits->windowingSystemPreference = "FlightGearQt5";
-#endif
-        traits->inheritedWindowData = data;
-        traits->windowDecoration = true;
-        traits->supportsResize = true;
-        traits->width = fgGetInt("/sim/startup/xsize");
-        traits->height = fgGetInt("/sim/startup/ysize");
-        
-        // these are marker values to tell GraphicsWindowQt5 to use default x/y
-        traits->x = std::numeric_limits<int>::max();
-        traits->y = std::numeric_limits<int>::max();
-#else
-        SG_LOG(SG_VIEW,SG_ALERT,"requested Qt GraphicsWindow in non-Qt build");
-#endif
+    unsigned screenwidth = 0;
+    unsigned screenheight = 0;
+    // this is a deprecated method, should be screen-aware.
+    wsi->getScreenResolution(*traits, screenwidth, screenheight);
+    
+    // handle fullscreen manually
+    traits->windowDecoration = !wantFullscreen;
+    if (!traits->windowDecoration) {
+        // fullscreen
+        traits->supportsResize = false;
+        traits->width = screenwidth;
+        traits->height = screenheight;
+        SG_LOG(SG_VIEW,SG_DEBUG,"Using full screen size for window: " << screenwidth << " x " << screenheight);
     } else {
-        unsigned screenwidth = 0;
-        unsigned screenheight = 0;
-        // this is a deprecated method, should be screen-aware.
-        wsi->getScreenResolution(*traits, screenwidth, screenheight);
-        
-        // handle fullscreen manually
-        traits->windowDecoration = !wantFullscreen;
-        if (!traits->windowDecoration) {
-            // fullscreen
-            traits->supportsResize = false;
-            traits->width = screenwidth;
-            traits->height = screenheight;
-            SG_LOG(SG_VIEW,SG_DEBUG,"Using full screen size for window: " << screenwidth << " x " << screenheight);
-        } else {
-            // window
-            int w = fgGetInt("/sim/startup/xsize");
-            int h = fgGetInt("/sim/startup/ysize");
-            traits->supportsResize = true;
-            traits->width = w;
-            traits->height = h;
-            if ((w>0)&&(h>0))
-            {
-                traits->x = ((unsigned)w>screenwidth) ? 0 : (screenwidth-w)/3;
-                traits->y = ((unsigned)h>screenheight) ? 0 : (screenheight-h)/3;
-            }
-            SG_LOG(SG_VIEW,SG_DEBUG,"Using initial window size: " << w << " x " << h);
+        // window
+        int w = fgGetInt("/sim/startup/xsize");
+        int h = fgGetInt("/sim/startup/ysize");
+        traits->supportsResize = true;
+        traits->width = w;
+        traits->height = h;
+        if ((w>0)&&(h>0))
+        {
+            traits->x = ((unsigned)w>screenwidth) ? 0 : (screenwidth-w)/3;
+            traits->y = ((unsigned)h>screenheight) ? 0 : (screenheight-h)/3;
         }
+        SG_LOG(SG_VIEW,SG_DEBUG,"Using initial window size: " << w << " x " << h);
     }
 }
     
@@ -212,61 +178,35 @@ void WindowBuilder::setFullscreenTraits(const SGPropertyNode* winNode, GraphicsC
     bool overrideRedirect = orrNode && orrNode->getBoolValue();
     traits->overrideRedirect = overrideRedirect;
 
-#if defined(HAVE_QT)
-    if (usingQtGraphicsWindow) {
-        auto data = new GraphicsWindowQt5::WindowData;
-        data->createFullscreen = true;
-        traits->inheritedWindowData = data;
-        traits->windowDecoration = winNode->getBoolValue("decoration");
-    } else
-#endif
-    // this codepath is mandatory on non-Qt builds
-    {
-        traits->windowDecoration = false;
-        
-        unsigned int width = 0;
-        unsigned int height = 0;
-        auto wsi = osg::GraphicsContext::getWindowingSystemInterface();
-        wsi->getScreenResolution(*traits, width, height);
-        traits->width = width;
-        traits->height = height;
-        traits->supportsResize = false;
-        traits->x = 0;
-        traits->y = 0;
-    }
+    traits->windowDecoration = false;
+    
+    unsigned int width = 0;
+    unsigned int height = 0;
+    auto wsi = osg::GraphicsContext::getWindowingSystemInterface();
+    wsi->getScreenResolution(*traits, width, height);
+    traits->width = width;
+    traits->height = height;
+    traits->supportsResize = false;
+    traits->x = 0;
+    traits->y = 0;
 }
 
 bool WindowBuilder::setWindowedTraits(const SGPropertyNode* winNode, GraphicsContext::Traits* traits)
 {
     bool customTraits = false;
-#if defined(HAVE_QT)
-    if (usingQtGraphicsWindow) {
-        if (winNode->hasValue("fullscreen")) {
-            auto data = new GraphicsWindowQt5::WindowData;
-            data->createFullscreen = false;
-            traits->inheritedWindowData = data;
-            customTraits = true;
-        }
-        customTraits |= setFromProperty(traits->windowDecoration, winNode, "decoration");
-        customTraits |= setFromProperty(traits->width, winNode, "width");
-        customTraits |= setFromProperty(traits->height, winNode, "height");
-    } else
-#endif
+    int resizable = 0;
+    const SGPropertyNode* fullscreenNode = winNode->getNode("fullscreen");
+    if (fullscreenNode && !fullscreenNode->getBoolValue())
     {
-        int resizable = 0;
-        const SGPropertyNode* fullscreenNode = winNode->getNode("fullscreen");
-        if (fullscreenNode && !fullscreenNode->getBoolValue())
-        {
-            traits->windowDecoration = true;
-            resizable = 1;
-        }
-        resizable |= setFromProperty(traits->windowDecoration, winNode, "decoration");
-        resizable |= setFromProperty(traits->width, winNode, "width");
-        resizable |= setFromProperty(traits->height, winNode, "height");
-        if (resizable) {
-            traits->supportsResize = true;
-            customTraits = true;
-        }
+        traits->windowDecoration = true;
+        resizable = 1;
+    }
+    resizable |= setFromProperty(traits->windowDecoration, winNode, "decoration");
+    resizable |= setFromProperty(traits->width, winNode, "width");
+    resizable |= setFromProperty(traits->height, winNode, "height");
+    if (resizable) {
+        traits->supportsResize = true;
+        customTraits = true;
     }
     
     return customTraits;
@@ -275,18 +215,16 @@ bool WindowBuilder::setWindowedTraits(const SGPropertyNode* winNode, GraphicsCon
 void WindowBuilder::setMacPoseAsStandaloneApp(GraphicsContext::Traits* traits)
 {
 #if defined(SG_MAC)
-    if (!usingQtGraphicsWindow) {
-        // this logic is unecessary if using a Qt window, since everything
-        // plays together nicely
-        int flags = osgViewer::GraphicsWindowCocoa::WindowData::CheckForEvents;
-        
-        // avoid both QApplication and OSG::CocoaViewer doing single-application
-        // init (Apple menu, making front process, etc)
-        if (poseAsStandaloneApp) {
-            flags |= osgViewer::GraphicsWindowCocoa::WindowData::PoseAsStandaloneApp;
-        }
-        traits->inheritedWindowData = new osgViewer::GraphicsWindowCocoa::WindowData(flags);
+    // this logic is unecessary if using a Qt window, since everything
+    // plays together nicely
+    int flags = osgViewer::GraphicsWindowCocoa::WindowData::CheckForEvents;
+    
+    // avoid both QApplication and OSG::CocoaViewer doing single-application
+    // init (Apple menu, making front process, etc)
+    if (poseAsStandaloneApp) {
+        flags |= osgViewer::GraphicsWindowCocoa::WindowData::PoseAsStandaloneApp;
     }
+    traits->inheritedWindowData = new osgViewer::GraphicsWindowCocoa::WindowData(flags);
 #endif
 }
     
@@ -331,14 +269,6 @@ GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode)
     bool drawGUI = false;
     traitsSet |= setFromProperty(drawGUI, winNode, "gui");
     if (traitsSet) {
-#if defined (HAVE_QT)
-        if (usingQtGraphicsWindow) {
-            // this assumes the user only sets the 'gui' flag on one window, not ideal
-            auto data = static_cast<GraphicsWindowQt5::WindowData*>(traits->inheritedWindowData.get());
-            data->isPrimaryWindow = drawGUI;
-        }
-#endif
-        
         GraphicsContext* gc = GraphicsContext::createGraphicsContext(traits);
         if (gc) {
             GraphicsWindow* window = WindowSystemAdapter::getWSA()

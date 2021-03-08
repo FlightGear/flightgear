@@ -70,9 +70,9 @@ setup_msvc_grouping()
 
 
 
-# All sources and headers to be built into fgfs.
-get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
-get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
+# # All sources and headers to be built into fgfs.
+# get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
+# get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
 
 # important we pass WIN32 here so the console is optional. Other
 # platforms ignore this option. If a console is needed we allocate
@@ -82,8 +82,7 @@ add_executable(fgfs
     WIN32
     MACOSX_BUNDLE
     ${MAIN_SOURCE}
-    ${FG_SOURCES}
-    ${FG_HEADERS}
+    $<TARGET_OBJECTS:fgfsObjects>
 )
 
 add_dependencies(fgfs buildId)
@@ -108,16 +107,13 @@ else()
     install(TARGETS fgfs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-if (TARGET sentry::sentry)
-    target_link_libraries(fgfs sentry::sentry)
-endif()
-
 if(ENABLE_METAR)
     add_executable(metar metar_main.cxx)
     target_link_libraries(metar SimGearScene)
     install(TARGETS metar RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
+# ensure run/debug paths are set automatically in Visual Studio
 if (MSVC)
   file(TO_NATIVE_PATH "${FG_QT_BIN_DIR}" _qt5_bin_dir_native)
   file(TO_NATIVE_PATH "${FINAL_MSVC_3RDPARTY_DIR}/bin" _msvc_3rdparty_bin_dir)
@@ -125,9 +121,4 @@ if (MSVC)
 
   set_property(TARGET fgfs PROPERTY
   VS_GLOBAL_LocalDebuggerEnvironment "PATH=${_install_bin_dir};${_msvc_3rdparty_bin_dir};${_qt5_bin_dir_native}")
-endif()
-
-if (FG_QT_ROOT_DIR)
-    # for QtPlatformHeaders
-    target_include_directories(fgfs PRIVATE ${FG_QT_ROOT_DIR}/include)
 endif()

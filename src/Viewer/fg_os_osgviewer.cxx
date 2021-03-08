@@ -56,12 +56,6 @@
 #include "WindowSystemAdapter.hxx"
 #include <Main/sentryIntegration.hxx>
 
-#if defined(HAVE_QT)
-#include "GraphicsWindowQt5.hxx"
-#include <GUI/QtLauncher.hxx>
-#include <QCoreApplication>
-#endif
-
 #if defined(SG_MAC)
 #  include <GUI/CocoaHelpers.h>
 #endif
@@ -107,8 +101,6 @@ using namespace flightgear;
 using namespace osg;
 
 osg::ref_ptr<osgViewer::Viewer> viewer;
-
-bool global_usingGraphicsWindowQt = false;
 
 static void setStereoMode( const char * mode )
 {
@@ -421,17 +413,9 @@ void fgWarpMouse(int x, int y)
 
 void fgOSInit(int* argc, char** argv)
 {
-#if defined(HAVE_QT)
-    global_usingGraphicsWindowQt = fgGetBool("/sim/rendering/graphics-window-qt", false);
-    if (global_usingGraphicsWindowQt) {
-        SG_LOG(SG_GL, SG_INFO, "Using Qt implementation of GraphicsWindow");
-        flightgear::initQtWindowingSystem();
-    } else {
-        // stock OSG windows are not Hi-DPI aware
-        fgSetDouble("/sim/rendering/gui-pixel-ratio", 1.0);
-        SG_LOG(SG_GL, SG_INFO, "Using stock OSG implementation of GraphicsWindow");
-    }
-#endif
+    // stock OSG windows are not Hi-DPI aware
+    fgSetDouble("/sim/rendering/gui-pixel-ratio", 1.0);
+
 #if defined(SG_MAC)
     cocoaRegisterTerminateHandler();
 #endif
@@ -472,91 +456,77 @@ void fgOSFullScreen()
      * The other windows should use fixed setup from the camera.xml file anyway. */
     osgViewer::GraphicsWindow* window = windows[0];
 
-#if defined(HAVE_QT)
-    if (global_usingGraphicsWindowQt) {
-        const bool wasFullscreen = fgGetBool("/sim/startup/fullscreen");
-        auto qtWin = static_cast<flightgear::GraphicsWindowQt5*>(window);
-        qtWin->setFullscreen(!wasFullscreen);
-        fgSetBool("/sim/startup/fullscreen", !wasFullscreen);
-
-        // FIXME tell lies here for HiDPI sizing?
-        fgSetInt("/sim/startup/xsize", qtWin->getGLWindow()->width());
-        fgSetInt("/sim/startup/ysize", qtWin->getGLWindow()->height());
-    } else
-#endif
+    osg::GraphicsContext::WindowingSystemInterface    *wsi = osg::GraphicsContext::getWindowingSystemInterface();
+    if (wsi == NULL)
     {
-        osg::GraphicsContext::WindowingSystemInterface    *wsi = osg::GraphicsContext::getWindowingSystemInterface();
-        if (wsi == NULL)
-        {
-            SG_LOG(SG_VIEW, SG_ALERT, "ERROR: No WindowSystemInterface available. Cannot toggle window fullscreen.");
-            return;
-        }
+        SG_LOG(SG_VIEW, SG_ALERT, "ERROR: No WindowSystemInterface available. Cannot toggle window fullscreen.");
+        return;
+    }
 
-        static int previous_x = 0;
-        static int previous_y = 0;
-        static int previous_width = 800;
-        static int previous_height = 600;
+    static int previous_x = 0;
+    static int previous_y = 0;
+    static int previous_width = 800;
+    static int previous_height = 600;
 
-        unsigned int screenWidth;
-        unsigned int screenHeight;
-        wsi->getScreenResolution(*(window->getTraits()), screenWidth, screenHeight);
+    unsigned int screenWidth;
+    unsigned int screenHeight;
+    wsi->getScreenResolution(*(window->getTraits()), screenWidth, screenHeight);
 
-        int x;
-        int y;
-        int width;
-        int height;
-        window->getWindowRectangle(x, y, width, height);
+    int x;
+    int y;
+    int width;
+    int height;
+    window->getWindowRectangle(x, y, width, height);
 
-        /* Note: the simple "is window size == screen size" check to detect full screen state doesn't work with
-         * X screen servers in Xinerama mode, since the reported screen width (or height) exceeds the maximum width
-         * (or height) usable by a single window (Xserver automatically shrinks/moves the full screen window to fit a
-         * single display) - so we detect full screen mode using "WindowDecoration" state instead.
-         * "false" - even when a single window is display in fullscreen */
-        //bool isFullScreen = x == 0 && y == 0 && width == (int)screenWidth && height == (int)screenHeight;
-        bool isFullScreen = !window->getWindowDecoration();
+    /* Note: the simple "is window size == screen size" check to detect full screen state doesn't work with
+     * X screen servers in Xinerama mode, since the reported screen width (or height) exceeds the maximum width
+     * (or height) usable by a single window (Xserver automatically shrinks/moves the full screen window to fit a
+     * single display) - so we detect full screen mode using "WindowDecoration" state instead.
+     * "false" - even when a single window is display in fullscreen */
+    //bool isFullScreen = x == 0 && y == 0 && width == (int)screenWidth && height == (int)screenHeight;
+    bool isFullScreen = !window->getWindowDecoration();
 
-        SG_LOG(SG_VIEW, SG_DEBUG, "Toggling fullscreen. Previous window rectangle ("
-               << x << ", " << y << ") x (" << width << ", " << height << "), fullscreen: " << isFullScreen
-               << ", number of screens: " << wsi->getNumScreens());
-        if (isFullScreen)
-        {
-            // limit x,y coordinates and window size to screen area
-            if (previous_x + previous_width > (int)screenWidth)
-                previous_x = 0;
-            if (previous_y + previous_height > (int)screenHeight)
-                previous_y = 0;
+    SG_LOG(SG_VIEW, SG_DEBUG, "Toggling fullscreen. Previous window rectangle ("
+           << x << ", " << y << ") x (" << width << ", " << height << "), fullscreen: " << isFullScreen
+           << ", number of screens: " << wsi->getNumScreens());
+    if (isFullScreen)
+    {
+        // limit x,y coordinates and window size to screen area
+        if (previous_x + previous_width > (int)screenWidth)
+            previous_x = 0;
+        if (previous_y + previous_height > (int)screenHeight)
+            previous_y = 0;
 
-            // disable fullscreen mode, restore previous window size/coordinates
-            x = previous_x;
-            y = previous_y;
-            width = previous_width;
-            height = previous_height;
-        }
-        else
-        {
-            // remember previous setting
-            previous_x = x;
-            previous_y = y;
-            previous_width = width;
-            previous_height = height;
+        // disable fullscreen mode, restore previous window size/coordinates
+        x = previous_x;
+        y = previous_y;
+        width = previous_width;
+        height = previous_height;
+    }
+    else
+    {
+        // remember previous setting
+        previous_x = x;
+        previous_y = y;
+        previous_width = width;
+        previous_height = height;
 
-            // enable fullscreen mode, set new width/height
-            x = 0;
-            y = 0;
-            width = screenWidth;
-            height = screenHeight;
-        }
+        // enable fullscreen mode, set new width/height
+        x = 0;
+        y = 0;
+        width = screenWidth;
+        height = screenHeight;
+    }
 
-        // set xsize/ysize properties to adapt GUI planes
-        fgSetInt("/sim/startup/xsize", width);
-        fgSetInt("/sim/startup/ysize", height);
-        fgSetBool("/sim/startup/fullscreen", !isFullScreen);
+    // set xsize/ysize properties to adapt GUI planes
+    fgSetInt("/sim/startup/xsize", width);
+    fgSetInt("/sim/startup/ysize", height);
+    fgSetBool("/sim/startup/fullscreen", !isFullScreen);
 
-        // reconfigure window
-        window->setWindowDecoration(isFullScreen);
-        window->setWindowRectangle(x, y, width, height);
-        window->grabFocusIfPointerInWindow();
-    } // of stock GraphicsWindow verison (OSG has no native fullscreen mode)
+    // reconfigure window
+    window->setWindowDecoration(isFullScreen);
+    window->setWindowRectangle(x, y, width, height);
+    window->grabFocusIfPointerInWindow();
 }
 
 static void setMouseCursor(osgViewer::GraphicsWindow* gw, int cursor)

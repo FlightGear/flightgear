@@ -2,7 +2,7 @@ include(FlightGearComponent)
 
 set(COMMON
 	Airplane.cpp
-	Atmosphere.cpp
+	YASimAtmosphere.cpp
 	ControlMap.cpp
 	ElectricEngine.cpp
 	FGFDM.cpp
