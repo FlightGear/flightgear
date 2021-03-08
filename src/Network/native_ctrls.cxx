@@ -745,20 +745,17 @@ bool FGNativeCtrls::process() {
         if ( io->get_type() == sgFileType ) {
             if ( io->read( buf, length ) == length ) {
                 SG_LOG( SG_IO, SG_INFO, "Success reading data." );
-                if ( io->get_type() == sgDDSType ) {
-                    FGCtrls2Props( &ctrls.dds, true, true );
-                } else {
-                    FGCtrls2Props( &ctrls.net, true, true );
-                }
+                FGCtrls2Props( &ctrls.net, true, true );
+            }
+        } else if ( io->get_type() == sgDDSType ) {
+            while ( io->read( buf, length ) == length ) {
+                SG_LOG( SG_IO, SG_INFO, "Success reading data." );
+                FGCtrls2Props( &ctrls.dds, true, true );
             }
         } else {
             while ( io->read( buf, length ) == length ) {
                 SG_LOG( SG_IO, SG_INFO, "Success reading data." );
-                if ( io->get_type() == sgDDSType ) {
-                    FGCtrls2Props( &ctrls.dds, true, true );
-                } else {
-                    FGCtrls2Props( &ctrls.net, true, true );
-                }
+                FGCtrls2Props( &ctrls.net, true, true );
             }
         }
     }

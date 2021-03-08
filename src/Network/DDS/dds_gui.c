@@ -11,13 +11,13 @@
 
 static const dds_key_descriptor_t FG_DDS_GUI_keys[1] =
 {
-  { "version", 2 }
+  { "id", 0 }
 };
 
 static const uint32_t FG_DDS_GUI_ops [] =
 {
-  DDS_OP_ADR | DDS_OP_TYPE_2BY | DDS_OP_FLAG_SGN, offsetof (FG_DDS_GUI, id),
-  DDS_OP_ADR | DDS_OP_TYPE_2BY | DDS_OP_FLAG_SGN | DDS_OP_FLAG_KEY, offsetof (FG_DDS_GUI, version),
+  DDS_OP_ADR | DDS_OP_TYPE_2BY | DDS_OP_FLAG_SGN | DDS_OP_FLAG_KEY, offsetof (FG_DDS_GUI, id),
+  DDS_OP_ADR | DDS_OP_TYPE_2BY | DDS_OP_FLAG_SGN, offsetof (FG_DDS_GUI, version),
   DDS_OP_ADR | DDS_OP_TYPE_8BY | DDS_OP_FLAG_FP, offsetof (FG_DDS_GUI, longitude),
   DDS_OP_ADR | DDS_OP_TYPE_8BY | DDS_OP_FLAG_FP, offsetof (FG_DDS_GUI, latitude),
   DDS_OP_ADR | DDS_OP_TYPE_4BY | DDS_OP_FLAG_FP, offsetof (FG_DDS_GUI, altitude),

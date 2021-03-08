@@ -482,7 +482,7 @@ void FGFDM2Props<FGNetFDM>( FGNetFDM *net, bool net_byte_order ) {
         node->setDoubleValue("spoilers-pos-norm", net->spoilers);
     } else {
 	SG_LOG( SG_IO, SG_ALERT,
-                "Error: version mismatch in FGNetFDM2Props()" );
+                "Error: version mismatch in Net FGFDM2Props()" );
 	SG_LOG( SG_IO, SG_ALERT,
 		"\tread " << net->version << " need " << FG_NET_FDM_VERSION );
 	SG_LOG( SG_IO, SG_ALERT,
@@ -717,7 +717,7 @@ void FGFDM2Props<FG_DDS_FDM>( FG_DDS_FDM *dds, bool net_byte_order ) {
         node->setDoubleValue("spoilers-pos-norm", dds->spoilers);
     } else {
         SG_LOG( SG_IO, SG_ALERT,
-                "Error: version mismatch in FGNetFDM2Props()" );
+                "Error: version mismatch in DDS FGFDM2Props()" );
         SG_LOG( SG_IO, SG_ALERT,
                 "\tread " << dds->version << " need " << FG_DDS_FDM_VERSION );
         SG_LOG( SG_IO, SG_ALERT,
@@ -786,20 +786,17 @@ bool FGNativeFDM::process() {
         if ( io->get_type() == sgFileType ) {
             if ( io->read( buf, length ) == length ) {
                 SG_LOG( SG_IO, SG_INFO, "Success reading data." );
-                if ( io->get_type() == sgDDSType ) {
-                    FGFDM2Props( &fdm.dds );
-                } else {
-                    FGFDM2Props( &fdm.net );
-                }
+                FGFDM2Props( &fdm.net );
+            }
+        } else if ( io->get_type() == sgDDSType ) {
+            while ( io->read( buf, length ) == length ) {
+                SG_LOG( SG_IO, SG_INFO, "  Success reading data." );
+                FGFDM2Props( &fdm.dds );
             }
         } else {
             while ( io->read( buf, length ) == length ) {
                 SG_LOG( SG_IO, SG_INFO, "  Success reading data." );
-                if ( io->get_type() == sgDDSType ) {
-                    FGFDM2Props( &fdm.dds );
-                } else {
-                    FGFDM2Props( &fdm.net );
-                }
+                FGFDM2Props( &fdm.net );
             }
         }
     }

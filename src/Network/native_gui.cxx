@@ -519,20 +519,17 @@ bool FGNativeGUI::process() {
         if ( io->get_type() == sgFileType ) {
             if ( io->read( buf, length ) == length ) {
                 SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-                if ( io->get_type() == sgDDSType ) {
-                    FGGUI2Props( &gui.dds );
-                } else {
-                    FGGUI2Props( &gui.net );
-                }
+                FGGUI2Props( &gui.net );
+            }
+        } if ( io->get_type() == sgDDSType ) {
+            while ( io->read( buf, length ) == length ) {
+                SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
+                FGGUI2Props( &gui.dds );
             }
         } else {
             while ( io->read( buf, length ) == length ) {
                 SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-                if ( io->get_type() == sgDDSType ) {
-                    FGGUI2Props( &gui.dds );
-                } else {
-                    FGGUI2Props( &gui.net );
-                }
+                FGGUI2Props( &gui.net );
             }
         }
     }

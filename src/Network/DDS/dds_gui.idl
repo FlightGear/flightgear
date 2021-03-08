@@ -49,7 +49,7 @@ struct DDS_GUI
     float course_deviation_deg;	// degrees off target course
     float gs_deviation_deg;	// degrees off target glide slope
 };
-#pragma keylist DDS_GUI version
+#pragma keylist DDS_GUI id
 
 }; // module FG
 
