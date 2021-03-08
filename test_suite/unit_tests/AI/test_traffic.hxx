@@ -42,6 +42,7 @@ class TrafficTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testPushforward);
     CPPUNIT_TEST(testPushforwardSpeedy);
     CPPUNIT_TEST(testPushforwardParkYBBN);
+    CPPUNIT_TEST(testPushforwardParkYBBNRepeat);
     CPPUNIT_TEST_SUITE_END();
 
 
@@ -60,6 +61,7 @@ public:
     void testPushforward();
     void testPushforwardSpeedy();
     void testPushforwardParkYBBN();
+    void testPushforwardParkYBBNRepeat();
 private:
     void dump(FGAIAircraft* aiAircraft);
 };
