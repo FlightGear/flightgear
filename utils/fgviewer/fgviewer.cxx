@@ -21,7 +21,6 @@
 #endif
 
 #include <osg/Version>
-#include <osg/ArgumentParser>
 #include <osgDB/ReadFile>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgGA/KeySwitchMatrixManipulator>
@@ -40,6 +39,7 @@
 #include <simgear/scene/model/ModelRegistry.hxx>
 #include <simgear/misc/ResourceManager.hxx>
 
+#include "ArgumentParser.hxx"
 #include "Renderer.hxx"
 #include "Viewer.hxx"
 
@@ -53,10 +53,7 @@ int
 main(int argc, char** argv)
 {
     /// Read arguments and environment variables.
-
-    // use an ArgumentParser object to manage the program arguments.
-    // FIXME implement a flightgear similar argument parser into simgear and use this one
-    osg::ArgumentParser arguments(&argc, argv);
+    ArgumentParser arguments(argc, argv);
 
     sglog().set_log_classes(SG_ALL);
     sglog().set_log_priority(SG_ALERT);

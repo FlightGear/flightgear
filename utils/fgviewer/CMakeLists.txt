@@ -1,4 +1,5 @@
 set(FGVIEWER_SOURCES
+  ArgumentParser.cxx
   fgviewer.cxx
   Drawable.cxx
   Renderer.cxx

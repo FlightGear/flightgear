@@ -19,7 +19,6 @@
 #ifndef _FGVIEWER_VIEWER_HXX
 #define _FGVIEWER_VIEWER_HXX
 
-#include <osg/ArgumentParser>
 #include <osgViewer/Viewer>
 
 #include <simgear/math/SGMath.hxx>
@@ -31,6 +30,7 @@
 #include "Frustum.hxx"
 #include "Renderer.hxx"
 #include "SlaveCamera.hxx"
+#include "ArgumentParser.hxx"
 
 #if FG_HAVE_HLA
 #include "HLAViewerFederate.hxx"    
@@ -40,7 +40,7 @@ namespace fgviewer  {
 
 class Viewer : public osgViewer::Viewer {
 public:
-    Viewer(osg::ArgumentParser& arguments);
+    Viewer(ArgumentParser& arguments);
     virtual ~Viewer();
 
     bool readCameraConfig(const SGPropertyNode& viewerNode);

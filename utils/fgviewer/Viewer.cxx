@@ -23,7 +23,6 @@
 #include "Viewer.hxx"
 
 #include <osg/Version>
-#include <osg/ArgumentParser>
 #include <osg/ProxyNode>
 #include <osg/PagedLOD>
 #include <osgDB/ReadFile>
@@ -34,13 +33,14 @@
 #endif
 
 #include "MEncoderCaptureOperation.hxx"
+#include "ArgumentParser.hxx"
 
 #include <cassert>
 
 namespace fgviewer  {
 
-Viewer::Viewer(osg::ArgumentParser& arguments) :
-    osgViewer::Viewer(arguments),
+Viewer::Viewer(ArgumentParser& arguments) :
+    osgViewer::Viewer(arguments.osg()),
     _sceneDataGroup(new osg::Group),
     _timeIncrement(SGTimeStamp::fromSec(0)),
     _simTime(SGTimeStamp::fromSec(0))
