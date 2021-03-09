@@ -493,6 +493,7 @@ include(SetupFGFSLibraries)
 # we use target_sources() later
 
 add_library(fgfsObjects OBJECT flightgear-version)
+add_dependencies(fgfsObjects buildId)
 
 
 ########################################################################
