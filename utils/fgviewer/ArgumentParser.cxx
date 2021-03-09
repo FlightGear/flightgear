@@ -43,8 +43,8 @@ ArgumentParser::ArgumentParser(int argc, char **argv) :
                 val = arg.substr(pos+1);
                 arg = arg.substr(0, pos);
             }
-            else if (++i<argc) {
-                val = argv[i];
+            else if ((i+1)<argc && argv[i+1][0] != '-') {
+                val = argv[++i];
             } else {
                 val = "";
             }
