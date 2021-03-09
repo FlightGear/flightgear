@@ -312,7 +312,7 @@ if (ENABLE_QT)
         endif()
 
         set(CMAKE_AUTOMOC OFF)
-
+        
         message(STATUS "Qt GUI enabled, found Qt at: ${FG_QT_ROOT_DIR}")
     else()
         message(STATUS "Qt GUI disabled, Qt/qmake not found in PATH/CMAKE_PREFIX_PATH")
@@ -378,6 +378,12 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG")
     set(CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g -DNDEBUG")
+
+    if(HAVE_QT)
+        # if Qt is built with reduce-relocations, applicatino code 
+        # needs to be compiled with -fPIC to match
+        set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    endif()
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" )
@@ -482,14 +488,14 @@ include(SetupFGFSLibraries)
 # create an object library target to hold all our sources
 # subdirectories will append sources to this target, and we'll
 # link it into our real executable targets
+# use of 'flightgear-version' text file here is a dummy; CMake 3.10
+# requries at least one direct source file for targets, even though
+# we use target_sources() later
 
-add_library(fgfsObjects OBJECT)
-# Set up the include search paths for the object library
-setup_fgfs_libraries(fgfsObjects)
-setup_fgfs_includes(fgfsObjects)
+add_library(fgfsObjects OBJECT flightgear-version)
+
 
 ########################################################################
-
 
 add_subdirectory(3rdparty)
 add_subdirectory(utils)
@@ -499,6 +505,11 @@ add_subdirectory(icons)
 add_subdirectory(man)
 add_subdirectory(package)
 add_subdirectory(scripts)
+
+# Set up the include search paths for the object library : has to be done
+# after targets are fully defined
+setup_fgfs_library_includes(fgfsObjects)
+setup_fgfs_includes(fgfsObjects)
 
 #----------------------------------------------------------------------------
 ### MSVC startup project - ensure you can just hit build & run in MSVC
