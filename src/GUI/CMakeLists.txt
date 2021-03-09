@@ -151,7 +151,15 @@ if (HAVE_QT)
     if (ENABLE_QQ_UI)
       set(QQUI_SOURCES 
         QQuickDrawable.cxx
-        QQuickDrawable.hxx)
+        QQuickDrawable.hxx
+        OSGQtAdaption.cxx
+        OSGQtAdaption.hxx
+        )
+
+        # we need an Objective-C++ file to bridge between OSG-Cocoa and the Qt OpenGL wrapper
+        if (APPLE)
+          list(APPEND QQUI_SOURCES OSGCocoaAdaption.mm)
+        endif()
     endif()
 
     add_library(fgqmlui 
@@ -218,7 +226,10 @@ if (HAVE_QT)
     
     if (ENABLE_QQ_UI)
       # this is a headers-only dependency, so we can include <private/qopenglcontext_p.h>
-      target_link_libraries(fgqmlui Qt5::GuiPrivate)
+      target_link_libraries(fgqmlui Qt5::GuiPrivate )
+
+	    # for QtPlatformHeaders
+	    target_include_directories(fgqmlui PRIVATE ${FG_QT_ROOT_DIR}/include)
     endif()
 
     if (TARGET fgfs_qm_files)

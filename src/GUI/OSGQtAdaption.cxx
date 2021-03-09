@@ -27,7 +27,7 @@
 #include <simgear/compiler.h>
 
 #if defined(SG_MAC)
-    // defined in CocoaUtils.mm
+    // defined in OSGCocoaAdaption.mm
 #elif defined(SG_WINDOWS)
 #  include <QtPlatformHeaders/QWGLNativeContext>
 #  include <osgViewer/api/Win32/GraphicsWindowWin32>

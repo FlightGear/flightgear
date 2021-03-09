@@ -96,7 +96,7 @@ bool SetupRootDialog::runDialog(PromptState prompt)
 }
 
 
-SetupRootDialog::RestoreResult SetupRootDialog::restoreUserSelectedRoot(SGPath& sgpath)
+flightgear::SetupRootResult SetupRootDialog::restoreUserSelectedRoot(SGPath& sgpath)
 {
     QSettings settings;
     QString path = settings.value(rootPathKey()).toString();
@@ -104,40 +104,40 @@ SetupRootDialog::RestoreResult SetupRootDialog::restoreUserSelectedRoot(SGPath& 
     if (ask || (path == QStringLiteral("!ask"))) {
         bool ok = runDialog(ManualChoiceRequested);
         if (!ok) {
-            return UserExit;
+            return flightgear::SetupRootResult::UserExit;
         }
 
         sgpath = globals->get_fg_root();
-        return UserSelected;
+        return flightgear::SetupRootResult::UserSelected;
     }
 
     if (path.isEmpty()) {
-        return UseDefault;
+        return flightgear::SetupRootResult::UseDefault;
     }
 
     if (validatePath(path) && validateVersion(path)) {
         sgpath = SGPath::fromUtf8(path.toStdString());
-        return RestoredOk;
+        return flightgear::SetupRootResult::RestoredOk;
     }
 
     // we have an existing path but it's invalid.
     // let's see if the default root is acceptable, in which case we will
     // switch to it. (This gives a more friendly upgrade experience).
     if (defaultRootAcceptable()) {
-        return UseDefault;
+        return flightgear::SetupRootResult::UseDefault;
     }
 
     // okay, we don't have an acceptable FG_DATA anywhere we can find, we
     // have to ask the user what they want to do.
     bool ok = runDialog(VersionCheckFailed);
     if (!ok) {
-        return UserExit;
+        return flightgear::SetupRootResult::UserExit;
     }
 
     // run dialog sets fg_root, so this
     // behaviour is safe and correct.
     sgpath = globals->get_fg_root();
-    return UserSelected;
+    return flightgear::SetupRootResult::UserSelected;
 }
 
 void SetupRootDialog::askRootOnNextLaunch()

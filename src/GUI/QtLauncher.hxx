@@ -59,4 +59,16 @@ namespace flightgear
   void restartTheApp();
 
   void launcherSetSceneryPaths();
-}
+
+    bool showSetupRootDialog(bool usingDefaultRoot);
+
+    enum class SetupRootResult {
+        RestoredOk,
+        UserExit,
+        UserSelected,
+        UseDefault
+    };
+
+    SetupRootResult restoreUserSelectedRoot(SGPath& path);
+} // of namespace flightgear
+

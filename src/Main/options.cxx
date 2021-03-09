@@ -63,7 +63,6 @@
 
 #if defined(HAVE_QT)
 #include <GUI/QtLauncher.hxx>
-#include <GUI/SetupRootDialog.hxx>
 #endif
 
 #include <AIModel/AIManager.hxx>
@@ -3157,10 +3156,10 @@ OptionResult Options::setupRoot(int argc, char** argv)
         SG_LOG(SG_GENERAL, SG_INFO, "set from FG_ROOT env var: fg_root = " << root );
     } else {
 #if defined(HAVE_QT)
-        auto restoreResult = SetupRootDialog::restoreUserSelectedRoot(root);
-        if (restoreResult == SetupRootDialog::UserExit) {
+        auto restoreResult = restoreUserSelectedRoot(root);
+        if (restoreResult == SetupRootResult::UserExit) {
             return FG_OPTIONS_EXIT;
-        } else if (restoreResult == SetupRootDialog::UseDefault) {
+        } else if (restoreResult == SetupRootResult::UseDefault) {
             root = SGPath{}; // clear any value, so we fall through in root.isNull() below
         }
 #endif
@@ -3189,7 +3188,7 @@ OptionResult Options::setupRoot(int argc, char** argv)
     // we still want to use the GUI in that case
     if (versionComp != 0) {
         flightgear::initApp(argc, argv);
-        bool ok = SetupRootDialog::runDialog(usingDefaultRoot);
+        bool ok = flightgear::showSetupRootDialog(usingDefaultRoot);
         if (!ok) {
             return FG_OPTIONS_EXIT;
         }

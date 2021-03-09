@@ -9,9 +9,4 @@ function(setup_fgfs_includes target)
     # only actually needed for httpd.cxx
     target_include_directories(${target} PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/mongoose)
 
-    if (FG_QT_ROOT_DIR)
-	    # for QtPlatformHeaders
-	    target_include_directories(${target} PRIVATE ${FG_QT_ROOT_DIR}/include)
-    endif()
-
 endfunction()

@@ -26,6 +26,8 @@
 
 #include <simgear/misc/sg_path.hxx>
 
+#include "QtLauncher.hxx"
+
 namespace Ui
 {
     class SetupRootDialog;
@@ -40,14 +42,7 @@ public:
 
     static bool runDialog(bool usingDefaultRoot);
 
-    enum RestoreResult {
-        RestoredOk,
-        UserExit,
-        UserSelected,
-        UseDefault
-    };
-
-    static RestoreResult restoreUserSelectedRoot(SGPath& path);
+    static flightgear::SetupRootResult restoreUserSelectedRoot(SGPath& path);
 
     static void askRootOnNextLaunch();
     

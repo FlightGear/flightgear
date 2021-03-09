@@ -30,11 +30,6 @@ set(HEADERS
 	GraphicsPresets.hxx
 	)
 
-if (Qt5Core_FOUND)
-    list(APPEND HEADERS OSGQtAdaption.hxx)
-    list(APPEND SOURCES OSGQtAdaption.cxx)
-endif()
-
 if (YES)
     list(APPEND HEADERS PUICamera.hxx)
     list(APPEND SOURCES PUICamera.cxx)

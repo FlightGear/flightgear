@@ -60,7 +60,7 @@
 #include <GUI/FGQmlPropertyNode.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Viewer/OSGQtAdaption.hxx>
+#include <GUI/OSGQtAdaption.hxx>
 #include <simgear/structure/commands.hxx>
 
 #if defined(HAVE_PUI)

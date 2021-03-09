@@ -49,10 +49,8 @@ function(setup_fgfs_libraries target)
 
     target_link_libraries(${target} PLIBFont)
 
-    # FIXME : rewrite options.cxx / SetupRootDialog.hxx not
-    # to require this dependency
     if (HAVE_QT)
-        target_link_libraries(${target} Qt5::Core Qt5::Widgets fglauncher fgqmlui)
+        target_link_libraries(${target} fglauncher fgqmlui)
     endif()
 
     if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
@@ -118,10 +116,6 @@ function (setup_fgfs_library_includes target)
     _apply_target_includes(${target} fgsqlite3)
     _apply_target_includes(${target} fgvoicesynth)
     _apply_target_includes(${target} fgembeddedresources)
-
-    if (HAVE_QT)
-        _apply_all_target_includes(${target} Qt5::Core Qt5::Widgets Qt5::Gui)
-    endif()
 
     if(ENABLE_IAX)
         _apply_target_includes(${target} iaxclient_lib)

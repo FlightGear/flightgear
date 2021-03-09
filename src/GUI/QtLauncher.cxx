@@ -78,6 +78,7 @@
 #include "PathListModel.hxx"
 #include "UnitsModel.hxx"
 #include "GettingStartedTip.hxx"
+#include "SetupRootDialog.hxx"
 
 #if defined(SG_MAC)
 #include <GUI/CocoaHelpers.h>
@@ -709,6 +710,16 @@ LockFileDialogResult showLockFileDialog()
     if (r == QMessageBox::Close)
         return LockFileQuit;
     return LockFileContinue;
+}
+
+bool showSetupRootDialog(bool usingDefaultRoot)
+{
+    return SetupRootDialog::runDialog(usingDefaultRoot);
+}
+
+SetupRootResult restoreUserSelectedRoot(SGPath& path)
+{
+    return SetupRootDialog::restoreUserSelectedRoot(path);
 }
 
 } // of namespace flightgear
