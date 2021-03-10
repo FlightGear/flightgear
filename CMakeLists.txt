@@ -495,6 +495,8 @@ include(SetupFGFSLibraries)
 add_library(fgfsObjects OBJECT flightgear-version)
 add_dependencies(fgfsObjects buildId)
 
+# remove once we use CMake 3.12, since then the dependency will be explicit
+add_dependencies(fgfsObjects fgembeddedresources)
 
 ########################################################################
 

@@ -34,7 +34,11 @@ add_custom_command(
 
 add_library(fgembeddedresources STATIC 
   ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
-  ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx)
+  ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
+  )
+
+# users of the library include this as <EmbeddedResources/FlightGear-resources.hxx>
+target_include_directories(fgembeddedresources INTERFACE ${CMAKE_BINARY_DIR}/src)
 
 target_link_libraries(fgembeddedresources SimGearCore)
 
