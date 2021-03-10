@@ -28,7 +28,6 @@
 #include "test_suite/FGTestApi/NavDataCache.hxx"
 #include "test_suite/FGTestApi/TestDataLogger.hxx"
 #include "test_suite/FGTestApi/testGlobals.hxx"
-#include "test_suite/FGTestApi/mock_scenery.hxx"
 
 #include <simgear/math/sg_geodesy.hxx>
 #include <AIModel/AIAircraft.hxx>
@@ -756,8 +755,12 @@ void TrafficTests::testPushforwardParkYBBNRepeat()
 
     time_t rawtime;
     struct tm * timeinfo;
+    // Time to depart
     char dep [11];
+    // Time to arrive
     char arr [11];
+    // Time to arrive back
+    char ret [11];
 
     time (&rawtime);
     rawtime = rawtime + 60;
@@ -768,6 +771,10 @@ void TrafficTests::testPushforwardParkYBBNRepeat()
     timeinfo = gmtime (&rawtime);
     strftime (arr,11,"%w/%H:%M:%S",timeinfo);
 
+    rawtime = rawtime + 3200;
+    timeinfo = gmtime (&rawtime);
+    strftime (ret,11,"%w/%H:%M:%S",timeinfo);
+
     const int radius = 8.0;
     const int cruiseAltFt = 32000;
     const int cruiseSpeedKnots = 80;
@@ -777,6 +784,9 @@ void TrafficTests::testPushforwardParkYBBNRepeat()
         "B737", "KLM", departureAirport->getId(), "G-BLA", "ID", false, "B737", "KLM", "N", flighttype, radius, 8);
     FGScheduledFlight* flight = new FGScheduledFlight("gaParkYSSY", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
     schedule->assign(flight);
+
+    FGScheduledFlight* returnFlight = new FGScheduledFlight("gaParkYSSY", "", arrivalAirport->getId(), departureAirport->getId(), 24, arr, ret, "WEEK", "HBR_BN_2");
+    schedule->assign(returnFlight);
 
     FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
      
