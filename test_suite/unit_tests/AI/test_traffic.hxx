@@ -35,17 +35,14 @@ class TrafficTests : public CppUnit::TestFixture
 {
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(TrafficTests);
-    CPPUNIT_TEST(testTrafficManager);
     CPPUNIT_TEST(testPushback);
-    CPPUNIT_TEST(testPushback2);
+    CPPUNIT_TEST(testPushbackCargo);
     CPPUNIT_TEST(testChangeRunway);
     CPPUNIT_TEST(testPushforward);
     CPPUNIT_TEST(testPushforwardSpeedy);
     CPPUNIT_TEST(testPushforwardParkYBBN);
     CPPUNIT_TEST(testPushforwardParkYBBNRepeat);
     CPPUNIT_TEST_SUITE_END();
-
-
 public:
     // Set up function for each test.
     void setUp();
@@ -53,15 +50,17 @@ public:
     // Clean up after each test.
     void tearDown();
 
-    // The tests.
-    void testTrafficManager();
+    // Pushback Tests
     void testPushback();
-    void testPushback2();
+    void testPushbackCargo();
     void testChangeRunway();
+    //GA Tests with forward push
     void testPushforward();
     void testPushforwardSpeedy();
     void testPushforwardParkYBBN();
     void testPushforwardParkYBBNRepeat();
 private:
     void dump(FGAIAircraft* aiAircraft);
+    std::string getTimeString(int timeOffset);
+    FGAIAircraft * flyAI(FGAIAircraft * aiAircraft, std::string fName);
 };
