@@ -196,6 +196,24 @@ public:
     //! Get ground elevation at aircraft current position
     double getGroundElevation() const;
 
+    //! Get x velocity in m/s
+    double getVelocityX() const;
+
+    //! Get y velocity in m/s
+    double getVelocityY() const;
+
+    //! Get z velocity in m/s
+    double getVelocityZ() const;
+
+    //! Get roll rate in rad/sec
+    double getRollRate() const;
+
+    //! Get pitch rate in rad/sec
+    double getPitchRate() const;
+
+    //! Get yaw rate in rad/sec
+    double getYawRate() const;
+
     //! Perform generic processing
     int process();
 
@@ -239,6 +257,13 @@ private:
     //SGPropertyNode_ptr numberEnginesNode;
     //SGPropertyNode_ptr engineN1PercentageNode;
     SGPropertyNode_ptr m_aircraftNameNode;
+    SGPropertyNode_ptr m_velocityXNode;
+    SGPropertyNode_ptr m_velocityYNode;
+    SGPropertyNode_ptr m_velocityZNode;
+    SGPropertyNode_ptr m_rollRateNode;
+    SGPropertyNode_ptr m_pichRateNode;
+    SGPropertyNode_ptr m_yawRateNode;
+
 
 };
 } // namespace FGSwiftBus

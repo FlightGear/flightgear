@@ -22,8 +22,9 @@
 #include <iostream>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/commands.hxx>
+#include <simgear/constants.h>
 
-#define FGSWIFTBUS_API_VERSION 2;
+#define FGSWIFTBUS_API_VERSION 3;
 
 namespace FGSwiftBus {
 
@@ -60,8 +61,14 @@ CService::CService()
     m_flapsDeployRatioNode      = fgGetNode("/surface-positions/flap-pos-norm", true);
     m_gearDeployRatioNode       = fgGetNode("/gear/gear/position-norm", true);
     m_speedBrakeDeployRatioNode = fgGetNode("/surface-positions/speedbrake-pos-norm", true);
-    m_aircraftNameNode        = fgGetNode("/sim/aircraft", true);
-    m_groundElevationNode     = fgGetNode("/position/ground-elev-m", true);
+    m_aircraftNameNode          = fgGetNode("/sim/aircraft", true);
+    m_groundElevationNode       = fgGetNode("/position/ground-elev-m", true);
+    m_velocityXNode             = fgGetNode("/velocities/speed-east-fps", true);
+    m_velocityYNode             = fgGetNode("/velocities/speed-down-fps", true);
+    m_velocityZNode             = fgGetNode("/velocities/speed-north-fps", true);
+    m_rollRateNode              = fgGetNode("/orientation/roll-rate-degps", true);
+    m_pichRateNode              = fgGetNode("/orientation/pitch-rate-degps", true);
+    m_yawRateNode               = fgGetNode("/orientation/yaw-rate-degps", true);
 
     SG_LOG(SG_NETWORK, SG_INFO, "FGSwiftBus Service initialized");
 }
@@ -316,6 +323,35 @@ std::string CService::getAircraftName() const
     return m_aircraftNameNode->getStringValue();
 }
 
+double CService::getVelocityX() const
+{
+    return m_velocityXNode->getDoubleValue() * SG_FEET_TO_METER;
+}
+
+double CService::getVelocityY() const
+{
+    return m_velocityYNode->getDoubleValue() * SG_FEET_TO_METER * -1; // + (up), - (down)
+}
+
+double CService::getVelocityZ() const
+{
+    return m_velocityZNode->getDoubleValue() * SG_FEET_TO_METER;
+}
+
+double CService::getRollRate() const
+{
+    return m_rollRateNode->getDoubleValue() * SG_DEGREES_TO_RADIANS;
+}
+double CService::getPitchRate() const
+{
+    return m_pichRateNode->getDoubleValue() * SG_DEGREES_TO_RADIANS;
+}
+
+double CService::getYawRate() const
+{
+    return m_yawRateNode->getDoubleValue() * SG_DEGREES_TO_RADIANS;
+}
+
 static const char* introspection_service = DBUS_INTROSPECT_1_0_XML_DOCTYPE_DECL_NODE;
 
 DBusHandlerResult CService::dbusMessageHandler(const CDBusMessage& message_)
@@ -359,6 +395,24 @@ DBusHandlerResult CService::dbusMessageHandler(const CDBusMessage& message_)
                 reply.appendArgument(roll);
                 reply.appendArgument(trueHeading);
                 reply.appendArgument(pressAlt);
+                sendDBusMessage(reply);
+            });
+        } else if (message.getMethodName() == "getOwnAircraftVelocityData") {
+            queueDBusCall([=]() {
+                double       velocityX         = getVelocityX();
+                double       velocityY         = getVelocityY();
+                double       velocityZ         = getVelocityZ();
+                double       pitchVelocity     = getPitchRate();
+                double       rollVelocity      = getRollRate();
+                double       yawVelocity       = getYawRate();
+                CDBusMessage reply       = CDBusMessage::createReply(sender, serial);
+                reply.beginArgumentWrite();
+                reply.appendArgument(velocityX);
+                reply.appendArgument(velocityY);
+                reply.appendArgument(velocityZ);
+                reply.appendArgument(pitchVelocity);
+                reply.appendArgument(rollVelocity);
+                reply.appendArgument(yawVelocity);
                 sendDBusMessage(reply);
             });
         } else if (message.getMethodName() == "getVersionNumber") {
