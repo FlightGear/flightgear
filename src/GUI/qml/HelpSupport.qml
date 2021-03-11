@@ -36,7 +36,7 @@ Item {
                 color: Style.baseTextColor
                 wrapMode: Text.WordWrap
 
-                readonly property var pdfManualLink: "href=\"" + _launcher.urlToDataPath("Docs/getstart.pdf") + "\""
+                readonly property var pdfManualLink: "href=\"http://flightgear.sourceforge.net/manual/next\""
                 readonly property var shortRefLink: "href=\"" +  _launcher.urlToDataPath("Docs/FGShortRef.html") +  "\""
 
                 text: qsTr("<p>FlightGear is open source software, developed entirely by volunteers. " +
@@ -46,7 +46,7 @@ Item {
                            "this is available from the 'Help' menu in the simulator. We recommend " +
                            "starting with the Cessna 172 to learn how to get airborne.</p>\n" +
                            "<p>Other good resources:<ul>" +
-                           "<li><a %2>the official manual (PDF)</a></li>\n" +
+                           "<li><a %2>the official manual</a></li>\n" +
                            "<li><a %3>key commands reference</a></li>\n" +
                            "<li><a %4>our wiki</a> (which includes FAQs)</li>\n" +
                            "</ul></p>"
