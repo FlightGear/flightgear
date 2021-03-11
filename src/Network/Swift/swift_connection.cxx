@@ -56,7 +56,7 @@ bool SwiftConnection::stopServer(const SGPropertyNode* arg, SGPropertyNode* root
     fgSetBool("/sim/swift/serverRunning", false);
     serverRunning = false;
 
-    SwiftConnection::plug.release();
+    SwiftConnection::plug.reset();
 
     return true;
 }
@@ -71,7 +71,7 @@ SwiftConnection::~SwiftConnection()
     shutdown();
 
     if (serverRunning) {
-        SwiftConnection::plug.release();
+        SwiftConnection::plug.reset();
     }
 }
 
