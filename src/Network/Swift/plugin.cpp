@@ -58,7 +58,7 @@ void CPlugin::startServer()
     m_traffic.reset(new CTraffic());
     m_dbusP2PServer.reset(new CDBusServer());
 
-    std::string ip = fgGetString("/sim/swift/adress", "127.0.0.1");
+    std::string ip = fgGetString("/sim/swift/address", "127.0.0.1");
     std::string port = fgGetString("/sim/swift/port", "45003");
     std::string listenAddress = "tcp:host=" + ip + ",port=" + port;
     if (!m_dbusP2PServer->listen(listenAddress)) {
