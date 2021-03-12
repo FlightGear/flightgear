@@ -36,6 +36,7 @@ class TrafficMgrTests : public CppUnit::TestFixture
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(TrafficMgrTests);
     CPPUNIT_TEST(testParse);
+    CPPUNIT_TEST(testTrafficManager);
     CPPUNIT_TEST_SUITE_END();
 
 
@@ -47,5 +48,6 @@ public:
     void tearDown();
 
     // The tests.
+    void testTrafficManager();
     void testParse();
 };

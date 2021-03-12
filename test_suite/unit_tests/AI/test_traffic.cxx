@@ -74,7 +74,6 @@ void TrafficTests::setUp()
     egph->testSuiteInjectGroundnetXML(SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "EGPH.groundnet.xml");
     FGAirportRef yssy = FGAirport::getByIdent("YSSY");
     yssy->testSuiteInjectGroundnetXML(SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "YSSY.groundnet.xml");
-
     FGAirportRef ybbn = FGAirport::getByIdent("YBBN");
     ybbn->testSuiteInjectGroundnetXML(SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "YBBN.groundnet.xml");
 
@@ -103,20 +102,10 @@ void TrafficTests::testPushback()
     fgSetString("/sim/presets/airport-id", "EGPH");
     fgSetInt("/environment/visibility-m", 1000);
 
-    time_t rawtime;
-    struct tm * timeinfo;
-    char dep [11];
-    char arr [11];
-
-    time (&rawtime);
-    rawtime = rawtime + 50;
-    timeinfo = gmtime (&rawtime);
-    strftime (dep,11,"%w/%H:%M:%S",timeinfo);
-
-    rawtime = rawtime + 320;
-    timeinfo = gmtime (&rawtime);
-    strftime (arr,11,"%w/%H:%M:%S",timeinfo);
-
+    // Time to depart
+    std::string dep = getTimeString(60);
+    // Time to arrive
+    std::string arr = getTimeString(320);
 
     FGAISchedule* schedule = new FGAISchedule(
         "B737", "KLM", "EGPH", "G-BLA", "ID", false, "B737", "KLM", "N", "gate", 24, 8);
@@ -163,15 +152,13 @@ void TrafficTests::testPushback()
     flightgear::SGGeodVec geods = flightgear::SGGeodVec();
     for (size_t i = 0; i < 6000 && aiAircraft->GetFlightPlan()->getLeg() < 8; i++)
     {
-        //this->dump(aiAircraft);
-        
         if(geods.empty()||SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
           geods.insert(geods.end(), aiAircraft->getGeodPos());
         }
 
         FGTestApi::runForTime(3.0);    
     }
-    FGTestApi::setUp::logPositionToKML("flight_EDPH_" + std::to_string(departureTime));    
+    FGTestApi::setUp::logLinestringsToKML("flight_EDPH_" + std::to_string(departureTime));    
     FGTestApi::writeGeodsToKML("Aircraft", geods);
     CPPUNIT_ASSERT_EQUAL( 5, aiAircraft->GetFlightPlan()->getLeg());
 }
@@ -184,19 +171,10 @@ void TrafficTests::testPushback2()
     fgSetString("/sim/presets/airport-id", "EGPH");
     fgSetInt("/environment/visibility-m", 1000);
 
-    time_t rawtime;
-    struct tm * timeinfo;
-    char dep [11];
-    char arr [11];
-
-    time (&rawtime);
-    rawtime = rawtime + 50;
-    timeinfo = gmtime (&rawtime);
-    strftime (dep,11,"%w/%H:%M:%S",timeinfo);
-
-    rawtime = rawtime + 320;
-    timeinfo = gmtime (&rawtime);
-    strftime (arr,11,"%w/%H:%M:%S",timeinfo);
+    // Time to depart
+    std::string dep = getTimeString(60);
+    // Time to arrive
+    std::string arr = getTimeString(320);
 
 
     FGAISchedule* schedule = new FGAISchedule(
@@ -244,111 +222,15 @@ void TrafficTests::testPushback2()
     flightgear::SGGeodVec geods = flightgear::SGGeodVec();
     for (size_t i = 0; i < 6000 && aiAircraft->GetFlightPlan()->getLeg() < 10; i++)
     {
-        // this->dump(aiAircraft);
-        
         if(geods.empty()||SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
           geods.insert(geods.end(), aiAircraft->getGeodPos());
         }
 
         FGTestApi::runForTime(3.0);    
     }
-    FGTestApi::setUp::logPositionToKML("flight_cargo_EDPH_" + std::to_string(departureTime));    
+    FGTestApi::setUp::logLinestringsToKML("flight_cargo_EDPH_" + std::to_string(departureTime));    
     FGTestApi::writeGeodsToKML("Aircraft", geods);
     CPPUNIT_ASSERT_EQUAL( 5, aiAircraft->GetFlightPlan()->getLeg());
-}
-
-void TrafficTests::testTrafficManager()
-{
-    FGAirportRef egeo = FGAirport::getByIdent("EGEO");
-
-    fgSetString("/sim/presets/airport-id", "EGEO");
-
-    std::cout << globals->get_fg_root() << "\r\n";
-    globals->set_fg_root(SGPath::fromUtf8(FG_TEST_SUITE_DATA));
-    std::cout << globals->get_fg_root() << "\r\n";
-
-    fgSetBool("/sim/traffic-manager/enabled", true);
-    fgSetBool("/sim/traffic-manager/active", false);
-    fgSetBool("/sim/ai/enabled", true);
-    fgSetBool("/environment/realwx/enabled", false);
-    fgSetBool("/environment/metar/valid", false);
-    fgSetBool("/sim/terrasync/ai-data-update-now", false);
-    
-    fgSetBool("/sim/traffic-manager/instantaneous-action", true);
-    fgSetBool("/sim/traffic-manager/heuristics", true);
-    fgSetBool("/sim/traffic-manager/dumpdata", false);
-
-    fgSetBool("/sim/signals/fdm-initialized", true);
-
-    FGTestApi::setPositionAndStabilise(egeo->geod());
-
-    auto tmgr = globals->add_new_subsystem<FGTrafficManager>();
-
-    tmgr->bind();
-    tmgr->init();
-
-    for( int i = 0; i < 30; i++) {
-        bool active = fgGetBool("/sim/traffic-manager/inited");
-        // std::cout << "Inited " << "\t" << i << "\t" << active << "\r\n";
-        FGTestApi::runForTime(5.0);
-        if(active) {
-            break;
-        }
-//        SGTimeStamp::sleepForMSec(300);
-    }
-
-    const SGPropertyNode *tm = fgGetNode("/sim/traffic-manager", true);
-
-    for (int i = 0; i < tm->nChildren(); i++) {
-        const SGPropertyNode *model = tm->getChild(i);
-        std::cout << "TM : " << model->getDisplayName() << "\t" << model->nChildren() << "\n";
-        for (int g = 0; g < model->nChildren(); g++) {
-            const SGPropertyNode *v;
-            v = model->getChild(g);
-            std::cout << "Node " << g << "\t" << v->getDisplayName() << "\n";
-        }
-    }
-
-    FGTestApi::runForTime(240.0);
-
-    FGScheduledFlightVecIterator fltBegin, fltEnd;
-    fltBegin = tmgr->getFirstFlight("HBR_BN_2");
-    fltEnd = tmgr->getLastFlight("HBR_BN_2");
-
-    if (fltBegin == fltEnd) {
-        CPPUNIT_FAIL("No Traffic found");
-    }
-
-    int counter = 0;
-    for (FGScheduledFlightVecIterator i = fltBegin; i != fltEnd; i++) {
-        cout << (*i)->getDepartureAirport()->getId() << "\t" << (*i)->getArrivalAirport()->getId() << "\t" << (*i)->getDepartureTime() << "\n";
-        counter++;
-        //sort(fltBegin, fltEnd, compareScheduledFlights);
-        //cerr << counter++ << endl;
-    }
-    const SGPropertyNode *ai = fgGetNode("/ai/models", false);
-
-    std::cout << "Num Children " << ai->nChildren() << "\n";
-
-    for (int i = 0; i < ai->nChildren(); i++) {
-        const SGPropertyNode *model;
-        model = ai->getChild(i);
-        std::cout << "Model : " << model->getDisplayName() << "\t" << model->nChildren() << "\n";
-        for (int g = 0; g < model->nChildren(); g++) {
-            const SGPropertyNode *v;
-            v = model->getChild(g);
-            std::cout << "Node " << g << "\t" << v->getDisplayName() << "\n";
-        }
-    }
-    const SGPropertyNode *modelCount = fgGetNode("/ai/models/count", false);
-    for (size_t i = 0; i < 20; i++)
-    {
-        FGTestApi::runForTime(1000.0);
-        // std::cout << "AI Count " << modelCount->getIntValue() << "\r\n";
-        if(modelCount->getIntValue()>0)
-          break;
-    }
-    CPPUNIT_ASSERT_EQUAL(25, counter);
 }
 
 void TrafficTests::testChangeRunway()
@@ -361,20 +243,10 @@ void TrafficTests::testChangeRunway()
     fgSetInt("/environment/metar/base-wind-speed-kt", 10);
     fgSetInt("/environment/metar/base-wind-dir-deg", 160);
 
-
-    time_t rawtime;
-    struct tm * timeinfo;
-    char dep [11];
-    char arr [11];
-
-    time (&rawtime);
-    rawtime = rawtime + 50;
-    timeinfo = gmtime (&rawtime);
-    strftime (dep,11,"%w/%H:%M:%S",timeinfo);
-
-    rawtime = rawtime + 320;
-    timeinfo = gmtime (&rawtime);
-    strftime (arr,11,"%w/%H:%M:%S",timeinfo);
+    // Time to depart
+    std::string dep = getTimeString(60);
+    // Time to arrive
+    std::string arr = getTimeString(320);
 
     const int radius = 24.0;
     const int cruiseAltFt = 32000;
@@ -429,7 +301,7 @@ void TrafficTests::testChangeRunway()
 
         FGTestApi::runForTime(3.0);    
     }
-    FGTestApi::setUp::logPositionToKML("flight_runway_EGPH_" + std::to_string(departureTime));    
+    FGTestApi::setUp::logLinestringsToKML("flight_runway_EGPH_" + std::to_string(departureTime));    
     FGTestApi::writeGeodsToKML("Aircraft", geods);
     CPPUNIT_ASSERT_EQUAL( 5, aiAircraft->GetFlightPlan()->getLeg());
 }
@@ -443,19 +315,10 @@ void TrafficTests::testPushforward()
     fgSetString("/sim/presets/airport-id", departureAirport->getId());
     fgSetInt("/environment/visibility-m", 1000);
 
-    time_t rawtime;
-    struct tm * timeinfo;
-    char dep [11];
-    char arr [11];
-
-    time (&rawtime);
-    rawtime = rawtime + 50;
-    timeinfo = gmtime (&rawtime);
-    strftime (dep,11,"%w/%H:%M:%S",timeinfo);
-
-    rawtime = rawtime + 320;
-    timeinfo = gmtime (&rawtime);
-    strftime (arr,11,"%w/%H:%M:%S",timeinfo);
+    // Time to depart
+    std::string dep = getTimeString(60);
+    // Time to arrive
+    std::string arr = getTimeString(320);
 
     const int radius = 8.0;
     const int cruiseAltFt = 32000;
@@ -510,7 +373,7 @@ void TrafficTests::testPushforward()
 
         FGTestApi::runForTime(3.0);    
     }
-    FGTestApi::setUp::logPositionToKML("flight_ga_YSSY_depart_" + std::to_string(departureTime));    
+    FGTestApi::setUp::logLinestringsToKML("flight_ga_YSSY_depart_" + std::to_string(departureTime));    
     FGTestApi::writeGeodsToKML("Aircraft", geods);
     CPPUNIT_ASSERT_EQUAL( 5, aiAircraft->GetFlightPlan()->getLeg());
 }
@@ -523,19 +386,10 @@ void TrafficTests::testPushforwardSpeedy()
     fgSetString("/sim/presets/airport-id", departureAirport->getId());
     fgSetInt("/environment/visibility-m", 1000);
 
-    time_t rawtime;
-    struct tm * timeinfo;
-    char dep [11];
-    char arr [11];
-
-    time (&rawtime);
-    rawtime = rawtime + 50;
-    timeinfo = gmtime (&rawtime);
-    strftime (dep,11,"%w/%H:%M:%S",timeinfo);
-
-    rawtime = rawtime + 320;
-    timeinfo = gmtime (&rawtime);
-    strftime (arr,11,"%w/%H:%M:%S",timeinfo);
+    // Time to depart
+    std::string dep = getTimeString(60);
+    // Time to arrive
+    std::string arr = getTimeString(320);
 
     const int radius = 8.0;
     const int cruiseAltFt = 32000;
@@ -590,7 +444,7 @@ void TrafficTests::testPushforwardSpeedy()
 
         FGTestApi::runForTime(3.0);    
     }
-    FGTestApi::setUp::logPositionToKML("flight_ga_YSSY_fast_depart_" + std::to_string(departureTime));    
+    FGTestApi::setUp::logLinestringsToKML("flight_ga_YSSY_fast_depart_" + std::to_string(departureTime));    
     FGTestApi::writeGeodsToKML("Aircraft", geods);
     CPPUNIT_ASSERT_EQUAL( 5, aiAircraft->GetFlightPlan()->getLeg());
 }
@@ -607,20 +461,10 @@ void TrafficTests::testPushforwardParkYBBN()
     fgSetBool("/environment/metar/valid", false);
     fgSetBool("/sim/terrasync/ai-data-update-now", false);
 
-
-    time_t rawtime;
-    struct tm * timeinfo;
-    char dep [11];
-    char arr [11];
-
-    time (&rawtime);
-    rawtime = rawtime + 60;
-    timeinfo = gmtime (&rawtime);
-    strftime (dep,11,"%w/%H:%M:%S",timeinfo);
-
-    rawtime = rawtime + 3200;
-    timeinfo = gmtime (&rawtime);
-    strftime (arr,11,"%w/%H:%M:%S",timeinfo);
+    // Time to depart
+    std::string dep = getTimeString(60);
+    // Time to arrive
+    std::string arr = getTimeString(3260);
 
     const int radius = 8.0;
     const int cruiseAltFt = 32000;
@@ -752,28 +596,12 @@ void TrafficTests::testPushforwardParkYBBNRepeat()
     fgSetBool("/environment/metar/valid", false);
     fgSetBool("/sim/terrasync/ai-data-update-now", false);
 
-
-    time_t rawtime;
-    struct tm * timeinfo;
     // Time to depart
-    char dep [11];
+    std::string dep = getTimeString(60);
     // Time to arrive
-    char arr [11];
+    std::string arr = getTimeString(3260);
     // Time to arrive back
-    char ret [11];
-
-    time (&rawtime);
-    rawtime = rawtime + 60;
-    timeinfo = gmtime (&rawtime);
-    strftime (dep,11,"%w/%H:%M:%S",timeinfo);
-
-    rawtime = rawtime + 3200;
-    timeinfo = gmtime (&rawtime);
-    strftime (arr,11,"%w/%H:%M:%S",timeinfo);
-
-    rawtime = rawtime + 3200;
-    timeinfo = gmtime (&rawtime);
-    strftime (ret,11,"%w/%H:%M:%S",timeinfo);
+    std::string ret = getTimeString(6460);
 
     const int radius = 8.0;
     const int cruiseAltFt = 32000;
@@ -815,7 +643,6 @@ void TrafficTests::testPushforwardParkYBBNRepeat()
                                                           cruiseSpeedKnots, flighttype,
                                                           aiAircraft->getAcType(),
                                                           aiAircraft->getCompany())); 
-
     CPPUNIT_ASSERT_EQUAL( fp->isValidPlan(), true);
     aiAircraft->FGAIBase::setFlightPlan(std::move(fp));    
     globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
@@ -910,6 +737,15 @@ void TrafficTests::dump(FGAIAircraft* aiAircraft) {
     std::cout << "Flightplan " << "\n";    
     FGAIFlightPlan* fp = aiAircraft->GetFlightPlan();
     if(fp->isValidPlan()) {
-        std::cout << fp->getNrOfWayPoints() << "\n";
+        std::cout << "Leg    : " << fp->getLeg() << "\n";
+        std::cout << "Length : " << fp->getNrOfWayPoints() << "\n";
     }
+}
+
+std::string TrafficTests::getTimeString(int timeOffset) {
+    char ret [11];
+    time_t rawtime = rawtime + 3200;
+    tm * timeinfo = gmtime (&rawtime);
+    strftime (ret,11,"%w/%H:%M:%S",timeinfo);
+    return ret;
 }

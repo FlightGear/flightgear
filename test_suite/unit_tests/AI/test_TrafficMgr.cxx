@@ -29,6 +29,7 @@
 #include "test_suite/FGTestApi/TestDataLogger.hxx"
 #include "test_suite/FGTestApi/testGlobals.hxx"
 
+#include <Airports/airport.hxx>
 #include <Traffic/TrafficMgr.hxx>
 
 #include <Main/fg_props.hxx>
@@ -54,7 +55,6 @@ void TrafficMgrTests::tearDown()
 {
     FGTestApi::tearDown::shutdownTestGlobals();
 }
-
 
 void TrafficMgrTests::testParse() {
     globals->add_new_subsystem<FGTrafficManager>();
@@ -82,4 +82,73 @@ void TrafficMgrTests::testParse() {
         cout << (*i)->getCallSign() << counter++ << endl;
     }
     CPPUNIT_ASSERT_EQUAL(2, counter);
+}
+
+void TrafficMgrTests::testTrafficManager()
+{
+    FGAirportRef egeo = FGAirport::getByIdent("EGEO");
+
+    fgSetString("/sim/presets/airport-id", "EGEO");
+
+    std::cout << globals->get_fg_root() << "\r\n";
+    globals->set_fg_root(SGPath::fromUtf8(FG_TEST_SUITE_DATA));
+    std::cout << globals->get_fg_root() << "\r\n";
+
+    fgSetBool("/sim/traffic-manager/enabled", true);
+    fgSetBool("/sim/traffic-manager/active", false);
+    fgSetBool("/sim/ai/enabled", true);
+    fgSetBool("/environment/realwx/enabled", false);
+    fgSetBool("/environment/metar/valid", false);
+    fgSetBool("/sim/terrasync/ai-data-update-now", false);
+    
+    fgSetBool("/sim/traffic-manager/instantaneous-action", true);
+    fgSetBool("/sim/traffic-manager/heuristics", true);
+    fgSetBool("/sim/traffic-manager/dumpdata", false);
+
+    fgSetBool("/sim/signals/fdm-initialized", true);
+
+    FGTestApi::setPositionAndStabilise(egeo->geod());
+
+    auto tmgr = globals->add_new_subsystem<FGTrafficManager>();
+
+    tmgr->bind();
+    tmgr->init();
+
+    for( int i = 0; i < 30; i++) {
+        bool active = fgGetBool("/sim/traffic-manager/inited");
+        // std::cout << "Inited " << "\t" << i << "\t" << active << "\r\n";
+        FGTestApi::runForTime(5.0);
+        if(active) {
+            break;
+        }
+    }
+
+    const SGPropertyNode *tm = fgGetNode("/sim/traffic-manager", true);
+
+    for (int i = 0; i < tm->nChildren(); i++) {
+        const SGPropertyNode *model = tm->getChild(i);
+        std::cout << "TM : " << model->getDisplayName() << "\t" << model->nChildren() << "\n";
+        for (int g = 0; g < model->nChildren(); g++) {
+            const SGPropertyNode *v;
+            v = model->getChild(g);
+            std::cout << "Node " << g << "\t" << v->getDisplayName() << "\n";
+        }
+    }
+
+    FGTestApi::runForTime(360.0);
+
+    FGScheduledFlightVecIterator fltBegin, fltEnd;
+    fltBegin = tmgr->getFirstFlight("HBR_BN_2");
+    fltEnd = tmgr->getLastFlight("HBR_BN_2");
+
+    if (fltBegin == fltEnd) {
+        CPPUNIT_FAIL("No Traffic found");
+    }
+
+    int counter = 0;
+    for (FGScheduledFlightVecIterator i = fltBegin; i != fltEnd; i++) {
+        cout << (*i)->getDepartureAirport()->getId() << "\t" << (*i)->getArrivalAirport()->getId() << "\t" << (*i)->getDepartureTime() << "\n";
+        counter++;
+    }
+   CPPUNIT_ASSERT_EQUAL(25, counter);
 }
