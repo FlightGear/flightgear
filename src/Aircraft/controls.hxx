@@ -253,6 +253,23 @@ private:
     SGPropertyNode_ptr auto_coordination_factor;
     simgear::TiedPropertyList _tiedProperties;
 
+// we need to node pointers as well, so we can manually
+// fire valueChanged for these
+    SGPropertyNode_ptr _aileronNode;
+    SGPropertyNode_ptr _elevatorNode;
+    SGPropertyNode_ptr _aileronTrimNode;
+    SGPropertyNode_ptr _elevatorTrimNode;
+    SGPropertyNode_ptr _rudderNode;
+    
+    simgear::PropertyList _engineThrottleNodes;
+    simgear::PropertyList _engineMixtureNodes;
+    simgear::PropertyList _engineStarterNodes;
+    simgear::PropertyList _engineCutoffNodes;
+    simgear::PropertyList _engineReverserNodes;
+    simgear::PropertyList _engineWaterInjectionNodes;
+    simgear::PropertyList _engineMagnetoNodes;
+    simgear::PropertyList _engineAugmentationNodes;
+
 public:
     FGControls();
     ~FGControls();
@@ -452,18 +469,38 @@ public:
         return autopilot_engage[ap];
     }
 
+    void set_elevator( double pos );
+    void set_aileron_trim( double pos );
+    void set_elevator_trim( double pos );
+    void set_aileron( double pos );
+    void set_rudder( double pos );
 
+    void set_throttle( int engine, double pos );
+    void set_cutoff( int engine, bool val );
+    void set_augmentation( int engine, bool val );
+    void set_reverser( int engine, bool val );
+    void set_water_injection( int engine, bool val );
+    void set_magnetos( int engine, int pos );
+    void set_starter( int engine, bool flag );
+    void set_mixture( int engine, double pos );
+
+private:
+    // IMPORTANT: do *not* make these setters public, or you will violate
+    // the listener-safety of them. If you need to make an accessor public,
+    // make these as 'inner', and make a public wrapper which correctly calls
+    // valueChanged (see, set_throttle, set_elevator etc for examples)
+    
     // Update functions
     // controls/flight/
-    void set_aileron( double pos );
+    void _inner_set_aileron( double pos );
     void move_aileron( double amt );
-    void set_aileron_trim( double pos );
+    void _inner_set_aileron_trim( double pos );
     void move_aileron_trim( double amt );
-    void set_elevator( double pos );
+    void _inner_set_elevator( double pos );
     void move_elevator( double amt );
-    void set_elevator_trim( double pos );
+    void _inner_set_elevator_trim( double pos );
     void move_elevator_trim( double amt );
-    void set_rudder( double pos );
+    void _inner_set_rudder( double pos );
     void move_rudder( double amt );
     void set_rudder_trim( double pos );
     void move_rudder_trim( double amt );
@@ -485,18 +522,18 @@ public:
     void set_throttle_idle( bool val );
 
     // controls/engines/engine[n]/
-    void set_throttle( int engine, double pos );
+    void _inner_set_throttle( int engine, double pos );
     void move_throttle( int engine, double amt );
-    void set_starter( int engine, bool flag );
+    void _inner_set_starter( int engine, bool flag );
     void set_fuel_pump( int engine, bool val );
     void set_fire_switch( int engine, bool val );
     void set_fire_bottle_discharge( int engine, bool val );
-    void set_cutoff( int engine, bool val );
-    void set_mixture( int engine, double pos );
+    void _inner_set_cutoff( int engine, bool val );
+    void _inner_set_mixture( int engine, double pos );
     void move_mixture( int engine, double amt );
     void set_prop_advance( int engine, double pos );
     void move_prop_advance( int engine, double amt );
-    void set_magnetos( int engine, int pos );
+    void _inner_set_magnetos( int engine, int pos );
     void move_magnetos( int engine, int amt );
     void set_feed_tank( int engine, int tank );
     void set_nitrous_injection( int engine, bool val );
@@ -504,9 +541,9 @@ public:
     void move_cowl_flaps_norm( int engine, double amt );
     void set_feather( int engine, bool val );
     void set_ignition( int engine, int val );
-    void set_augmentation( int engine, bool val );
-    void set_reverser( int engine, bool val );
-    void set_water_injection( int engine, bool val );
+    void _inner_set_augmentation( int engine, bool val );
+    void _inner_set_reverser( int engine, bool val );
+    void _inner_set_water_injection( int engine, bool val );
     void set_condition( int engine, double val );
 
     // controls/fuel
@@ -638,15 +675,10 @@ public:
 
     // controls/autoflight/autopilot[n]/
     void set_autopilot_engage( int ap, bool val );
-
-private:
-    inline void do_autocoordination() {
-        // check for autocoordination
-        if ( auto_coordination->getBoolValue() ) {
-            double factor = auto_coordination_factor->getDoubleValue();
-            if( factor > 0.0 ) set_rudder( aileron * factor );
-        }
-    }
+    
+    void do_autocoordination();
+    
+    void fireEngineValueChanged(int index, simgear::PropertyList& props);
 };
 
 #endif // _CONTROLS_HXX

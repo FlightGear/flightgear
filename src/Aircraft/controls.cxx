@@ -20,9 +20,9 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
+
+#include <algorithm>
 
 #include <Main/fg_props.hxx>
 #include <simgear/sg_inlines.h>
@@ -83,11 +83,11 @@ FGControls::FGControls() :
 
 void FGControls::reset_all()
 {
-    set_aileron( 0.0 );
-    set_aileron_trim( 0.0 );
-    set_elevator( 0.0 );
-    set_elevator_trim( 0.0 );
-    set_rudder( 0.0 );
+    _inner_set_aileron( 0.0 );
+    _inner_set_aileron_trim( 0.0 );
+    _inner_set_elevator( 0.0 );
+    _inner_set_elevator_trim( 0.0 );
+    _inner_set_rudder( 0.0 );
     set_rudder_trim( 0.0 );
     BLC = false;
     set_spoilers( 0.0 );
@@ -95,20 +95,20 @@ void FGControls::reset_all()
     set_wing_sweep( 0.0 );
     wing_fold = false;
     drag_chute = false;
-    set_throttle( ALL_ENGINES, 0.0 );
-    set_starter( ALL_ENGINES, false );
-    set_magnetos( ALL_ENGINES, 0 );
+    _inner_set_throttle( ALL_ENGINES, 0.0 );
+    _inner_set_starter( ALL_ENGINES, false );
+    _inner_set_magnetos( ALL_ENGINES, 0 );
     set_fuel_pump( ALL_ENGINES, false );
     set_fire_switch( ALL_ENGINES, false );
     set_fire_bottle_discharge( ALL_ENGINES, false );
-    set_cutoff( ALL_ENGINES, true );
+    _inner_set_cutoff( ALL_ENGINES, true );
     set_nitrous_injection( ALL_ENGINES, false );
     set_cowl_flaps_norm( ALL_ENGINES, 1.0 );
     set_feather( ALL_ENGINES, false );
     set_ignition( ALL_ENGINES, false );
-    set_augmentation( ALL_ENGINES, false );
-    set_reverser( ALL_ENGINES, false );
-    set_water_injection( ALL_ENGINES, false );
+    _inner_set_augmentation( ALL_ENGINES, false );
+    _inner_set_reverser( ALL_ENGINES, false );
+    _inner_set_water_injection( ALL_ENGINES, false );
     set_condition( ALL_ENGINES, 1.0 );
     throttle_idle = true;
     set_fuel_selector( ALL_TANKS, true );
@@ -150,7 +150,7 @@ void FGControls::reset_all()
   
     set_alternate_extension(ALL_WHEELS, false);
   
-    set_mixture(ALL_ENGINES, 1.0);
+    _inner_set_mixture(ALL_ENGINES, 1.0);
     set_prop_advance(ALL_ENGINES, 1.0);
     set_generator_breaker(ALL_ENGINES, false);
     set_bus_tie(ALL_ENGINES, false);
@@ -174,7 +174,8 @@ FGControls::init ()
 void
 FGControls::reinit()
 {
-  reset_all();
+    reset_all();
+    _tiedProperties.fireValueChanged();
 }
 
 static inline void _SetRoot( simgear::TiedPropertyList & tiedProperties, const char * root, int index = 0 )
@@ -191,414 +192,259 @@ FGControls::bind ()
     // flight controls
     _SetRoot( _tiedProperties, "/controls/flight" );
 
-    _tiedProperties.Tie( "aileron", this, &FGControls::get_aileron, &FGControls::set_aileron )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "aileron-trim", this, &FGControls::get_aileron_trim, &FGControls::set_aileron_trim )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "elevator", this, &FGControls::get_elevator, &FGControls::set_elevator )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "elevator-trim", this, &FGControls::get_elevator_trim, &FGControls::set_elevator_trim )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "rudder", this, &FGControls::get_rudder, &FGControls::set_rudder )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "rudder-trim", this, &FGControls::get_rudder_trim, &FGControls::set_rudder_trim )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "flaps", this, &FGControls::get_flaps, &FGControls::set_flaps )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "slats", this, &FGControls::get_slats, &FGControls::set_slats )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "BLC", this, &FGControls::get_BLC, &FGControls::set_BLC )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "spoilers", this, &FGControls::get_spoilers, &FGControls::set_spoilers )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "speedbrake", this, &FGControls::get_speedbrake, &FGControls::set_speedbrake )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "wing-sweep", this, &FGControls::get_wing_sweep, &FGControls::set_wing_sweep )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "wing-fold", this, &FGControls::get_wing_fold, &FGControls::set_wing_fold )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "drag-chute", this, &FGControls::get_drag_chute, &FGControls::set_drag_chute )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
+    _aileronNode = _tiedProperties.Tie( "aileron", this, &FGControls::get_aileron, &FGControls::_inner_set_aileron );
+    _aileronTrimNode = _tiedProperties.Tie( "aileron-trim", this, &FGControls::get_aileron_trim, &FGControls::_inner_set_aileron_trim );
+    _elevatorNode = _tiedProperties.Tie( "elevator", this, &FGControls::get_elevator, &FGControls::_inner_set_elevator );
+    _elevatorTrimNode = _tiedProperties.Tie( "elevator-trim", this, &FGControls::get_elevator_trim, &FGControls::_inner_set_elevator_trim );
+    _rudderNode = _tiedProperties.Tie( "rudder", this, &FGControls::get_rudder, &FGControls::_inner_set_rudder );
+        
+    _tiedProperties.Tie( "rudder-trim", this, &FGControls::get_rudder_trim, &FGControls::set_rudder_trim );
+    _tiedProperties.Tie( "flaps", this, &FGControls::get_flaps, &FGControls::set_flaps );
+    _tiedProperties.Tie( "slats", this, &FGControls::get_slats, &FGControls::set_slats );
+    _tiedProperties.Tie( "BLC", this, &FGControls::get_BLC, &FGControls::set_BLC );
+    _tiedProperties.Tie( "spoilers", this, &FGControls::get_spoilers, &FGControls::set_spoilers );
+    _tiedProperties.Tie( "speedbrake", this, &FGControls::get_speedbrake, &FGControls::set_speedbrake );
+    _tiedProperties.Tie( "wing-sweep", this, &FGControls::get_wing_sweep, &FGControls::set_wing_sweep );
+    _tiedProperties.Tie( "wing-fold", this, &FGControls::get_wing_fold, &FGControls::set_wing_fold );
+    _tiedProperties.Tie( "drag-chute", this, &FGControls::get_drag_chute, &FGControls::set_drag_chute );
+        
 
     // engines
     _tiedProperties.setRoot( fgGetNode("/controls/engines", true ) );
 
-    _tiedProperties.Tie( "throttle_idle", this, &FGControls::get_throttle_idle, &FGControls::set_throttle_idle )
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
+    _tiedProperties.Tie( "throttle_idle", this, &FGControls::get_throttle_idle, &FGControls::set_throttle_idle );
+        
 
     for (index = 0; index < MAX_ENGINES; index++) {
         _SetRoot(_tiedProperties, "/controls/engines/engine", index );
 
-        _tiedProperties.Tie( "throttle", this, index, &FGControls::get_throttle, &FGControls::set_throttle )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
+        _engineThrottleNodes.push_back(_tiedProperties.Tie( "throttle", this, index, &FGControls::get_throttle, &FGControls::_inner_set_throttle ));
+        _engineStarterNodes.push_back(_tiedProperties.Tie( "starter", this, index, &FGControls::get_starter, &FGControls::_inner_set_starter ));
+        _tiedProperties.Tie( "fuel-pump", this, index, &FGControls::get_fuel_pump, &FGControls::set_fuel_pump );
+        _tiedProperties.Tie( "fire-switch", this, index, &FGControls::get_fire_switch, &FGControls::set_fire_switch );
+        _tiedProperties.Tie( "fire-bottle-discharge", this, index, &FGControls::get_fire_bottle_discharge, &FGControls::set_fire_bottle_discharge );
+        _engineCutoffNodes.push_back(_tiedProperties.Tie( "cutoff", this, index, &FGControls::get_cutoff, &FGControls::_inner_set_cutoff ));
+        _engineMixtureNodes.push_back( _tiedProperties.Tie( "mixture", this, index, &FGControls::get_mixture, &FGControls::_inner_set_mixture ));
+        _tiedProperties.Tie( "propeller-pitch", this, index, &FGControls::get_prop_advance, &FGControls::set_prop_advance );
+        _engineMagnetoNodes.push_back(_tiedProperties.Tie( "magnetos", this, index, &FGControls::get_magnetos, &FGControls::_inner_set_magnetos ));
+            
+        _tiedProperties.Tie( "feed_tank", this, index, &FGControls::get_feed_tank, &FGControls::set_feed_tank );
+        _tiedProperties.Tie( "WEP", this, index, &FGControls::get_nitrous_injection, &FGControls::set_nitrous_injection );
+        _tiedProperties.Tie( "cowl-flaps-norm", this, index, &FGControls::get_cowl_flaps_norm, &FGControls::set_cowl_flaps_norm );
+        _tiedProperties.Tie( "propeller-feather", this, index, &FGControls::get_feather, &FGControls::set_feather );
+        _tiedProperties.Tie( "ignition", this, index, &FGControls::get_ignition, &FGControls::set_ignition );
 
-        _tiedProperties.Tie( "starter", this, index, &FGControls::get_starter, &FGControls::set_starter )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "fuel-pump", this, index, &FGControls::get_fuel_pump, &FGControls::set_fuel_pump )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "fire-switch", this, index, &FGControls::get_fire_switch, &FGControls::set_fire_switch )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "fire-bottle-discharge", this, index, &FGControls::get_fire_bottle_discharge, &FGControls::set_fire_bottle_discharge )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "cutoff", this, index, &FGControls::get_cutoff, &FGControls::set_cutoff )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "mixture", this, index, &FGControls::get_mixture, &FGControls::set_mixture )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "propeller-pitch", this, index, &FGControls::get_prop_advance, &FGControls::set_prop_advance )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "magnetos", this, index, &FGControls::get_magnetos, &FGControls::set_magnetos )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "feed_tank", this, index, &FGControls::get_feed_tank, &FGControls::set_feed_tank )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "WEP", this, index, &FGControls::get_nitrous_injection, &FGControls::set_nitrous_injection )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "cowl-flaps-norm", this, index, &FGControls::get_cowl_flaps_norm, &FGControls::set_cowl_flaps_norm )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "propeller-feather", this, index, &FGControls::get_feather, &FGControls::set_feather )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "ignition", this, index, &FGControls::get_ignition, &FGControls::set_ignition )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "augmentation", this, index, &FGControls::get_augmentation, &FGControls::set_augmentation )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "reverser", this, index, &FGControls::get_reverser, &FGControls::set_reverser )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "water-injection", this, index, &FGControls::get_water_injection, &FGControls::set_water_injection )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "condition", this, index, &FGControls::get_condition, &FGControls::set_condition )
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
+        _engineAugmentationNodes.push_back(_tiedProperties.Tie( "augmentation", this, index, &FGControls::get_augmentation, &FGControls::_inner_set_augmentation ));
+        _engineReverserNodes.push_back(_tiedProperties.Tie( "reverser", this, index, &FGControls::get_reverser, &FGControls::_inner_set_reverser ));
+        _engineWaterInjectionNodes.push_back(_tiedProperties.Tie( "water-injection", this, index, &FGControls::get_water_injection, &FGControls::_inner_set_water_injection ));
+        _tiedProperties.Tie( "condition", this, index, &FGControls::get_condition, &FGControls::set_condition );
+            
     }
 
     // fuel
     _SetRoot( _tiedProperties, "/controls/fuel" );
 
-    _tiedProperties.Tie( "dump-valve", this, &FGControls::get_dump_valve, &FGControls::set_dump_valve)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
+    _tiedProperties.Tie( "dump-valve", this, &FGControls::get_dump_valve, &FGControls::set_dump_valve);
+        
 
     for (index = 0; index < MAX_TANKS; index++) {
         _SetRoot( _tiedProperties, "/controls/fuel/tank", index );
 
-        _tiedProperties.Tie( "fuel_selector", this, index, &FGControls::get_fuel_selector, &FGControls::set_fuel_selector)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "to_engine", this, index, &FGControls::get_to_engine, &FGControls::set_to_engine)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "to_tank", this, index, &FGControls::get_to_tank, &FGControls::set_to_tank)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
+        _tiedProperties.Tie( "fuel_selector", this, index, &FGControls::get_fuel_selector, &FGControls::set_fuel_selector);
+        _tiedProperties.Tie( "to_engine", this, index, &FGControls::get_to_engine, &FGControls::set_to_engine);
+        _tiedProperties.Tie( "to_tank", this, index, &FGControls::get_to_tank, &FGControls::set_to_tank);
+            
 
         for (i = 0; i < MAX_BOOSTPUMPS; i++) {
             _tiedProperties.Tie( "boost-pump", i,
-                this, index * 2 + i, &FGControls::get_boost_pump, &FGControls::set_boost_pump)
-                ->setAttribute( SGPropertyNode::ARCHIVE, true );
+                                this, index * 2 + i, &FGControls::get_boost_pump, &FGControls::set_boost_pump);
+                
         }
     }
 
     // gear
     _SetRoot( _tiedProperties, "/controls/gear" );
 
-    _tiedProperties.Tie( "brake-left", this, &FGControls::get_brake_left, &FGControls::set_brake_left)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "brake-right", this, &FGControls::get_brake_right, &FGControls::set_brake_right)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "copilot-brake-left", this, &FGControls::get_copilot_brake_left, &FGControls::set_copilot_brake_left)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "copilot-brake-right", this, &FGControls::get_copilot_brake_right, &FGControls::set_copilot_brake_right)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "brake-parking", this, &FGControls::get_brake_parking, &FGControls::set_brake_parking)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "steering", this, &FGControls::get_steering, &FGControls::set_steering)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "nose-wheel-steering", this, &FGControls::get_nose_wheel_steering, &FGControls::set_nose_wheel_steering)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "gear-down", this, &FGControls::get_gear_down, &FGControls::set_gear_down)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "antiskid", this, &FGControls::get_antiskid, &FGControls::set_antiskid)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "tailhook", this, &FGControls::get_tailhook, &FGControls::set_tailhook)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "launchbar", this, &FGControls::get_launchbar, &FGControls::set_launchbar)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "catapult-launch-cmd", this, &FGControls::get_catapult_launch_cmd, &FGControls::set_catapult_launch_cmd)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "tailwheel-lock", this, &FGControls::get_tailwheel_lock, &FGControls::set_tailwheel_lock)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
+    _tiedProperties.Tie( "brake-left", this, &FGControls::get_brake_left, &FGControls::set_brake_left);
+    _tiedProperties.Tie( "brake-right", this, &FGControls::get_brake_right, &FGControls::set_brake_right);
+    _tiedProperties.Tie( "copilot-brake-left", this, &FGControls::get_copilot_brake_left, &FGControls::set_copilot_brake_left);
+    _tiedProperties.Tie( "copilot-brake-right", this, &FGControls::get_copilot_brake_right, &FGControls::set_copilot_brake_right);
+    _tiedProperties.Tie( "brake-parking", this, &FGControls::get_brake_parking, &FGControls::set_brake_parking);
+    _tiedProperties.Tie( "steering", this, &FGControls::get_steering, &FGControls::set_steering);
+    _tiedProperties.Tie( "nose-wheel-steering", this, &FGControls::get_nose_wheel_steering, &FGControls::set_nose_wheel_steering);
+    _tiedProperties.Tie( "gear-down", this, &FGControls::get_gear_down, &FGControls::set_gear_down);
+    _tiedProperties.Tie( "antiskid", this, &FGControls::get_antiskid, &FGControls::set_antiskid);
+    _tiedProperties.Tie( "tailhook", this, &FGControls::get_tailhook, &FGControls::set_tailhook);
+    _tiedProperties.Tie( "launchbar", this, &FGControls::get_launchbar, &FGControls::set_launchbar);
+    _tiedProperties.Tie( "catapult-launch-cmd", this, &FGControls::get_catapult_launch_cmd, &FGControls::set_catapult_launch_cmd);
+    _tiedProperties.Tie( "tailwheel-lock", this, &FGControls::get_tailwheel_lock, &FGControls::set_tailwheel_lock);
+        
 
     for (index = 0; index < MAX_WHEELS; index++) {
         _SetRoot( _tiedProperties, "/controls/gear/wheel", index );
-        _tiedProperties.Tie( "alternate-extension", this, index, &FGControls::get_alternate_extension, &FGControls::set_alternate_extension)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
+        _tiedProperties.Tie( "alternate-extension", this, index, &FGControls::get_alternate_extension, &FGControls::set_alternate_extension);
     }
 
     // anti-ice
     _SetRoot( _tiedProperties, "/controls/anti-ice" );
 
-    _tiedProperties.Tie( "wing-heat", this, &FGControls::get_wing_heat, &FGControls::set_wing_heat)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "pitot-heat", this, &FGControls::get_pitot_heat, &FGControls::set_pitot_heat)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "wiper", this, &FGControls::get_wiper, &FGControls::set_wiper)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "window-heat", this, &FGControls::get_window_heat, &FGControls::set_window_heat)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
+    _tiedProperties.Tie( "wing-heat", this, &FGControls::get_wing_heat, &FGControls::set_wing_heat);
+    _tiedProperties.Tie( "pitot-heat", this, &FGControls::get_pitot_heat, &FGControls::set_pitot_heat);
+    _tiedProperties.Tie( "wiper", this, &FGControls::get_wiper, &FGControls::set_wiper);
+    _tiedProperties.Tie( "window-heat", this, &FGControls::get_window_heat, &FGControls::set_window_heat);
+        
     for (index = 0; index < MAX_ENGINES; index++) {
         _SetRoot( _tiedProperties, "/controls/anti-ice/engine", index );
 
-        _tiedProperties.Tie( "carb-heat", this, index, &FGControls::get_carb_heat, &FGControls::set_carb_heat)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "inlet-heat", this, index, &FGControls::get_inlet_heat, &FGControls::set_inlet_heat)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
+        _tiedProperties.Tie( "carb-heat", this, index, &FGControls::get_carb_heat, &FGControls::set_carb_heat);
+        _tiedProperties.Tie( "inlet-heat", this, index, &FGControls::get_inlet_heat, &FGControls::set_inlet_heat);
+            
     }
 
     // hydraulics
     for (index = 0; index < MAX_HYD_SYSTEMS; index++) {
         _SetRoot( _tiedProperties, "/controls/hydraulic/system", index );
 
-        _tiedProperties.Tie( "engine-pump", this, index, &FGControls::get_engine_pump, &FGControls::set_engine_pump)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "electric-pump", this, index, &FGControls::get_electric_pump, &FGControls::set_electric_pump)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
+        _tiedProperties.Tie( "engine-pump", this, index, &FGControls::get_engine_pump, &FGControls::set_engine_pump);
+        _tiedProperties.Tie( "electric-pump", this, index, &FGControls::get_electric_pump, &FGControls::set_electric_pump);
     }  
 
     // electric
     _SetRoot( _tiedProperties, "/controls/electric" );
 
-    _tiedProperties.Tie( "battery-switch", this, &FGControls::get_battery_switch, &FGControls::set_battery_switch)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "external-power", this, &FGControls::get_external_power, &FGControls::set_external_power)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "APU-generator", this, &FGControls::get_APU_generator, &FGControls::set_APU_generator)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
+    _tiedProperties.Tie( "battery-switch", this, &FGControls::get_battery_switch, &FGControls::set_battery_switch);
+    _tiedProperties.Tie( "external-power", this, &FGControls::get_external_power, &FGControls::set_external_power);
+    _tiedProperties.Tie( "APU-generator", this, &FGControls::get_APU_generator, &FGControls::set_APU_generator);
+        
     for (index = 0; index < MAX_ENGINES; index++) {
         _SetRoot( _tiedProperties, "/controls/electric/engine", index );
 
-        _tiedProperties.Tie( "generator", this, index, &FGControls::get_generator_breaker, &FGControls::set_generator_breaker)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "bus-tie", this, index, &FGControls::get_bus_tie, &FGControls::set_bus_tie)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
+        _tiedProperties.Tie( "generator", this, index, &FGControls::get_generator_breaker, &FGControls::set_generator_breaker);
+        _tiedProperties.Tie( "bus-tie", this, index, &FGControls::get_bus_tie, &FGControls::set_bus_tie);
     }  
 
     // pneumatic
     _SetRoot( _tiedProperties, "/controls/pneumatic" );
 
-    _tiedProperties.Tie( "APU-bleed", this, &FGControls::get_APU_bleed, &FGControls::set_APU_bleed)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
+    _tiedProperties.Tie( "APU-bleed", this, &FGControls::get_APU_bleed, &FGControls::set_APU_bleed);
+        
     for (index = 0; index < MAX_ENGINES; index++) {
         _SetRoot( _tiedProperties, "/controls/pneumatic/engine", index );
-
-        _tiedProperties.Tie( "bleed", this, index, &FGControls::get_engine_bleed, &FGControls::set_engine_bleed)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
+        _tiedProperties.Tie( "bleed", this, index, &FGControls::get_engine_bleed, &FGControls::set_engine_bleed);
     }
 
     // pressurization
     _SetRoot( _tiedProperties, "/controls/pressurization" );
 
-    _tiedProperties.Tie( "mode", this, &FGControls::get_mode, &FGControls::set_mode)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "dump", this, &FGControls::get_dump, &FGControls::set_dump)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "outflow-valve", this, &FGControls::get_outflow_valve, &FGControls::set_outflow_valve)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
+    _tiedProperties.Tie( "mode", this, &FGControls::get_mode, &FGControls::set_mode);
+    _tiedProperties.Tie( "dump", this, &FGControls::get_dump, &FGControls::set_dump);
+    _tiedProperties.Tie( "outflow-valve", this, &FGControls::get_outflow_valve, &FGControls::set_outflow_valve);
+        
     for (index = 0; index < MAX_PACKS; index++) {
         _SetRoot( _tiedProperties, "/controls/pressurization/pack", index );
 
-        _tiedProperties.Tie( "pack-on", this, index, &FGControls::get_pack_on, &FGControls::set_pack_on)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
+        _tiedProperties.Tie( "pack-on", this, index, &FGControls::get_pack_on, &FGControls::set_pack_on);
     }
 
     // lights
     _SetRoot( _tiedProperties, "/controls/lighting" );
 
-    _tiedProperties.Tie( "landing-lights", this, &FGControls::get_landing_lights, &FGControls::set_landing_lights)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "turn-off-lights", this, &FGControls::get_turn_off_lights, &FGControls::set_turn_off_lights)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "taxi-light", this, &FGControls::get_taxi_light, &FGControls::set_taxi_light)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "logo-lights", this, &FGControls::get_logo_lights, &FGControls::set_logo_lights)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "nav-lights", this, &FGControls::get_nav_lights, &FGControls::set_nav_lights)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "beacon", this, &FGControls::get_beacon, &FGControls::set_beacon)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "strobe", this, &FGControls::get_strobe, &FGControls::set_strobe)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "panel-norm", this, &FGControls::get_panel_norm, &FGControls::set_panel_norm)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "instruments-norm", this, &FGControls::get_instruments_norm, &FGControls::set_instruments_norm)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "dome-norm", this, &FGControls::get_dome_norm, &FGControls::set_dome_norm)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
+    _tiedProperties.Tie( "landing-lights", this, &FGControls::get_landing_lights, &FGControls::set_landing_lights);
+    _tiedProperties.Tie( "turn-off-lights", this, &FGControls::get_turn_off_lights, &FGControls::set_turn_off_lights);
+    _tiedProperties.Tie( "taxi-light", this, &FGControls::get_taxi_light, &FGControls::set_taxi_light);
+    _tiedProperties.Tie( "logo-lights", this, &FGControls::get_logo_lights, &FGControls::set_logo_lights);
+    _tiedProperties.Tie( "nav-lights", this, &FGControls::get_nav_lights, &FGControls::set_nav_lights);
+    _tiedProperties.Tie( "beacon", this, &FGControls::get_beacon, &FGControls::set_beacon);
+    _tiedProperties.Tie( "strobe", this, &FGControls::get_strobe, &FGControls::set_strobe);
+    _tiedProperties.Tie( "panel-norm", this, &FGControls::get_panel_norm, &FGControls::set_panel_norm);
+    _tiedProperties.Tie( "instruments-norm", this, &FGControls::get_instruments_norm, &FGControls::set_instruments_norm);
+    _tiedProperties.Tie( "dome-norm", this, &FGControls::get_dome_norm, &FGControls::set_dome_norm);
 
     // armament
     _SetRoot( _tiedProperties, "/controls/armament" );
 
-    _tiedProperties.Tie( "master-arm", this, &FGControls::get_master_arm, &FGControls::set_master_arm)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "station-select", this, &FGControls::get_station_select, &FGControls::set_station_select)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "release-all", this, &FGControls::get_release_ALL, &FGControls::set_release_ALL)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
+    _tiedProperties.Tie( "master-arm", this, &FGControls::get_master_arm, &FGControls::set_master_arm);
+    _tiedProperties.Tie( "station-select", this, &FGControls::get_station_select, &FGControls::set_station_select);
+    _tiedProperties.Tie( "release-all", this, &FGControls::get_release_ALL, &FGControls::set_release_ALL);
+        
 
     for (index = 0; index < MAX_STATIONS; index++) {
         _SetRoot( _tiedProperties, "/controls/armament/station", index );
 
-        _tiedProperties.Tie( "stick-size", this, index, &FGControls::get_stick_size, &FGControls::set_stick_size)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "release-stick", this, index, &FGControls::get_release_stick, &FGControls::set_release_stick)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "release-all", this, index, &FGControls::get_release_all, &FGControls::set_release_all)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "jettison-all", this, index, &FGControls::get_jettison_all, &FGControls::set_jettison_all)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
+        _tiedProperties.Tie( "stick-size", this, index, &FGControls::get_stick_size, &FGControls::set_stick_size);
+        _tiedProperties.Tie( "release-stick", this, index, &FGControls::get_release_stick, &FGControls::set_release_stick);
+        _tiedProperties.Tie( "release-all", this, index, &FGControls::get_release_all, &FGControls::set_release_all);
+        _tiedProperties.Tie( "jettison-all", this, index, &FGControls::get_jettison_all, &FGControls::set_jettison_all);
     }
 
     // seat
     _SetRoot( _tiedProperties, "/controls/seat" );
 
-    _tiedProperties.Tie( "vertical-adjust", this, &FGControls::get_vertical_adjust, &FGControls::set_vertical_adjust)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "fore-aft-adjust", this, &FGControls::get_fore_aft_adjust, &FGControls::set_fore_aft_adjust)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "cmd_selector_valve", this, &FGControls::get_cmd_selector_valve, &FGControls::set_cmd_selector_valve)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
+    _tiedProperties.Tie( "vertical-adjust", this, &FGControls::get_vertical_adjust, &FGControls::set_vertical_adjust);
+    _tiedProperties.Tie( "fore-aft-adjust", this, &FGControls::get_fore_aft_adjust, &FGControls::set_fore_aft_adjust);
+    _tiedProperties.Tie( "cmd_selector_valve", this, &FGControls::get_cmd_selector_valve, &FGControls::set_cmd_selector_valve);
+        
 
     for (index = 0; index < MAX_EJECTION_SEATS; index++) {
         _SetRoot( _tiedProperties, "/controls/seat/eject", index );
 
-        _tiedProperties.Tie( "initiate", this, index, &FGControls::get_ejection_seat, &FGControls::set_ejection_seat)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-        _tiedProperties.Tie( "status", this, index, &FGControls::get_eseat_status, &FGControls::set_eseat_status)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
+        _tiedProperties.Tie( "initiate", this, index, &FGControls::get_ejection_seat, &FGControls::set_ejection_seat);
+        _tiedProperties.Tie( "status", this, index, &FGControls::get_eseat_status, &FGControls::set_eseat_status);
+            
     }
 
     // APU
     _SetRoot( _tiedProperties, "/controls/APU" );
 
-    _tiedProperties.Tie( "off-start-run", this, &FGControls::get_off_start_run, &FGControls::set_off_start_run)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "fire-switch", this, &FGControls::get_APU_fire_switch, &FGControls::set_APU_fire_switch)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
+    _tiedProperties.Tie( "off-start-run", this, &FGControls::get_off_start_run, &FGControls::set_off_start_run);
+    _tiedProperties.Tie( "fire-switch", this, &FGControls::get_APU_fire_switch, &FGControls::set_APU_fire_switch);
+        
 
     // autoflight
     for (index = 0; index < MAX_AUTOPILOTS; index++) {
 
         _SetRoot( _tiedProperties, "/controls/autoflight/autopilot", index );
-
-        _tiedProperties.Tie( "engage", this, index, &FGControls::get_autopilot_engage, &FGControls::set_autopilot_engage)
-            ->setAttribute( SGPropertyNode::ARCHIVE, true );
+        _tiedProperties.Tie( "engage", this, index, &FGControls::get_autopilot_engage, &FGControls::set_autopilot_engage);
     }
 
     _SetRoot( _tiedProperties, "/controls/autoflight/" );
 
-    _tiedProperties.Tie( "autothrottle-arm", this, &FGControls::get_autothrottle_arm, &FGControls::set_autothrottle_arm)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
+    _tiedProperties.Tie( "autothrottle-arm", this, &FGControls::get_autothrottle_arm, &FGControls::set_autothrottle_arm);
+    _tiedProperties.Tie( "autothrottle-engage", this, &FGControls::get_autothrottle_engage, &FGControls::set_autothrottle_engage);
+    _tiedProperties.Tie( "heading-select", this, &FGControls::get_heading_select, &FGControls::set_heading_select);
+    _tiedProperties.Tie( "altitude-select", this, &FGControls::get_altitude_select, &FGControls::set_altitude_select);
+    _tiedProperties.Tie( "bank-angle-select", this, &FGControls::get_bank_angle_select, &FGControls::set_bank_angle_select);
+    _tiedProperties.Tie( "vertical-speed-select", this, &FGControls::get_vertical_speed_select, &FGControls::set_vertical_speed_select);
+    _tiedProperties.Tie( "speed-select", this, &FGControls::get_speed_select, &FGControls::set_speed_select);
+    _tiedProperties.Tie( "mach-select", this, &FGControls::get_mach_select, &FGControls::set_mach_select);
+    _tiedProperties.Tie( "vertical-mode", this, &FGControls::get_vertical_mode, &FGControls::set_vertical_mode);
+    _tiedProperties.Tie( "lateral-mode", this, &FGControls::get_lateral_mode, &FGControls::set_lateral_mode);
+        
+    _tiedProperties.setAttribute(SGPropertyNode::ARCHIVE, true);
 
-    _tiedProperties.Tie( "autothrottle-engage", this, &FGControls::get_autothrottle_engage, &FGControls::set_autothrottle_engage)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "heading-select", this, &FGControls::get_heading_select, &FGControls::set_heading_select)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "altitude-select", this, &FGControls::get_altitude_select, &FGControls::set_altitude_select)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "bank-angle-select", this, &FGControls::get_bank_angle_select, &FGControls::set_bank_angle_select)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "vertical-speed-select", this, &FGControls::get_vertical_speed_select, &FGControls::set_vertical_speed_select)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "speed-select", this, &FGControls::get_speed_select, &FGControls::set_speed_select)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "mach-select", this, &FGControls::get_mach_select, &FGControls::set_mach_select)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "vertical-mode", this, &FGControls::get_vertical_mode, &FGControls::set_vertical_mode)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
-
-    _tiedProperties.Tie( "lateral-mode", this, &FGControls::get_lateral_mode, &FGControls::set_lateral_mode)
-        ->setAttribute( SGPropertyNode::ARCHIVE, true );
+    // mark all the properties as listener-safe
+    // we can do this becuase we made all the accessors private
+    _tiedProperties.setAttribute(SGPropertyNode::LISTENER_SAFE, true);
 }
 
 void FGControls::unbind ()
 {
     _tiedProperties.Untie();
-} 
-
+    
+    _aileronNode.clear();
+    _elevatorNode.clear();
+    _aileronTrimNode.clear();
+    _elevatorTrimNode.clear();
+    _rudderNode.clear();
+    _engineThrottleNodes.clear();
+    _engineReverserNodes.clear();
+    _engineMixtureNodes.clear();
+    _engineCutoffNodes.clear();
+    _engineStarterNodes.clear();
+    _engineWaterInjectionNodes.clear();
+    _engineAugmentationNodes.clear();
+    _engineMagnetoNodes.clear();
+}
 
 void
 FGControls::update (double dt)
@@ -616,6 +462,13 @@ FGControls::update (double dt)
 void
 FGControls::set_aileron (double pos)
 {
+    _inner_set_aileron(pos);
+    _aileronNode->fireValueChanged();
+}
+
+void
+FGControls::_inner_set_aileron (double pos)
+{
     aileron = pos;
     SG_CLAMP_RANGE<double>( aileron, -1.0, 1.0 );
     do_autocoordination();
@@ -629,8 +482,14 @@ FGControls::move_aileron (double amt)
     do_autocoordination();
 }
 
+void FGControls::set_aileron_trim(double pos)
+{
+    _inner_set_aileron_trim(pos);
+    _aileronTrimNode->fireValueChanged();
+}
+
 void
-FGControls::set_aileron_trim( double pos )
+FGControls::_inner_set_aileron_trim( double pos )
 {
     aileron_trim = pos;
     SG_CLAMP_RANGE<double>( aileron_trim, -1.0, 1.0 );
@@ -643,8 +502,14 @@ FGControls::move_aileron_trim( double amt )
     SG_CLAMP_RANGE<double>( aileron_trim, -1.0, 1.0 );
 }
 
+void FGControls::set_elevator(double pos)
+{
+    _inner_set_elevator(pos);
+    _elevatorNode->fireValueChanged();
+}
+
 void
-FGControls::set_elevator( double pos )
+FGControls::_inner_set_elevator( double pos )
 {
     elevator = pos;
     SG_CLAMP_RANGE<double>( elevator, -1.0, 1.0 );
@@ -657,8 +522,14 @@ FGControls::move_elevator( double amt )
     SG_CLAMP_RANGE<double>( elevator, -1.0, 1.0 );
 }
 
+void FGControls::set_elevator_trim(double pos)
+{
+    _inner_set_elevator_trim(pos);
+    _elevatorTrimNode->fireValueChanged();
+}
+
 void
-FGControls::set_elevator_trim( double pos )
+FGControls::_inner_set_elevator_trim( double pos )
 {
     elevator_trim = pos;
     SG_CLAMP_RANGE<double>( elevator_trim, -1.0, 1.0 );
@@ -671,8 +542,14 @@ FGControls::move_elevator_trim( double amt )
     SG_CLAMP_RANGE<double>( elevator_trim, -1.0, 1.0 );
 }
 
+void FGControls::set_rudder(double pos)
+{
+    _inner_set_rudder(pos);
+    _rudderNode->fireValueChanged();
+}
+
 void
-FGControls::set_rudder( double pos )
+FGControls::_inner_set_rudder( double pos )
 {
     rudder = pos;
     SG_CLAMP_RANGE<double>( rudder, -1.0, 1.0 );
@@ -796,6 +673,13 @@ FGControls::set_throttle_idle( bool val )
 void
 FGControls::set_throttle( int engine, double pos )
 {
+    _inner_set_throttle(engine, pos);
+    fireEngineValueChanged(engine, _engineThrottleNodes);
+}
+
+void
+FGControls::_inner_set_throttle( int engine, double pos )
+{
     if ( engine == ALL_ENGINES ) {
         for ( int i = 0; i < MAX_ENGINES; i++ ) {
             throttle[i] = pos;
@@ -825,8 +709,14 @@ FGControls::move_throttle( int engine, double amt )
     }
 }
 
+void FGControls::set_starter( int engine, bool flag )
+{
+    _inner_set_starter(engine, flag);
+    fireEngineValueChanged(engine, _engineStarterNodes);
+}
+
 void
-FGControls::set_starter( int engine, bool flag )
+FGControls::_inner_set_starter( int engine, bool flag )
 {
     if ( engine == ALL_ENGINES ) {
         for ( int i = 0; i < MAX_ENGINES; i++ ) {
@@ -884,6 +774,13 @@ FGControls::set_fire_bottle_discharge( int engine, bool val )
 void
 FGControls::set_cutoff( int engine, bool val )
 {
+    _inner_set_cutoff(engine, val);
+    fireEngineValueChanged(engine, _engineCutoffNodes);
+}
+
+void
+FGControls::_inner_set_cutoff( int engine, bool val )
+{
     if ( engine == ALL_ENGINES ) {
         for ( int i = 0; i < MAX_ENGINES; i++ ) {
             cutoff[i] = val;
@@ -912,9 +809,15 @@ FGControls::set_feed_tank( int engine, int tank )
     //   feed_tank[engine] = engine;
 }
 
-
 void
 FGControls::set_mixture( int engine, double pos )
+{
+    _inner_set_mixture(engine, pos);
+    fireEngineValueChanged(engine, _engineMixtureNodes);
+}
+
+void
+FGControls::_inner_set_mixture( int engine, double pos )
 {
     if ( engine == ALL_ENGINES ) {
         for ( int i = 0; i < MAX_ENGINES; i++ ) {
@@ -979,6 +882,14 @@ FGControls::move_prop_advance( int engine, double amt )
 
 void
 FGControls::set_magnetos( int engine, int pos )
+{
+    _inner_set_magnetos(engine, pos);
+    fireEngineValueChanged(engine, _engineMagnetoNodes);
+}
+
+
+void
+FGControls::_inner_set_magnetos( int engine, int pos )
 {
     if ( engine == ALL_ENGINES ) {
         for ( int i = 0; i < MAX_ENGINES; i++ ) {
@@ -1089,6 +1000,13 @@ FGControls::set_ignition( int engine, int pos )
 void
 FGControls::set_augmentation( int engine, bool val )
 {
+    _inner_set_augmentation(engine, val);
+    fireEngineValueChanged(engine, _engineAugmentationNodes);
+}
+
+void
+FGControls::_inner_set_augmentation( int engine, bool val )
+{
     if ( engine == ALL_ENGINES ) {
         for ( int i = 0; i < MAX_ENGINES; i++ ) {
             augmentation[i] = val;
@@ -1103,6 +1021,13 @@ FGControls::set_augmentation( int engine, bool val )
 void
 FGControls::set_reverser( int engine, bool val )
 {
+    _inner_set_reverser(engine, val);
+    fireEngineValueChanged(engine, _engineReverserNodes);
+}
+
+void
+FGControls::_inner_set_reverser( int engine, bool val )
+{
     if ( engine == ALL_ENGINES ) {
         for ( int i = 0; i < MAX_ENGINES; i++ ) {
             reverser[i] = val;
@@ -1116,6 +1041,13 @@ FGControls::set_reverser( int engine, bool val )
 
 void
 FGControls::set_water_injection( int engine, bool val )
+{
+    _inner_set_water_injection(engine, val);
+    fireEngineValueChanged(engine, _engineWaterInjectionNodes);
+}
+
+void
+FGControls::_inner_set_water_injection( int engine, bool val )
 {
     if ( engine == ALL_ENGINES ) {
         for ( int i = 0; i < MAX_ENGINES; i++ ) {
@@ -1879,6 +1811,26 @@ FGControls::set_autopilot_engage( int ap, bool val )
         if ( (ap >= 0) && (ap < MAX_AUTOPILOTS) ) {
             autopilot_engage[ap] = val;
         }
+    }
+}
+
+void FGControls::do_autocoordination()
+{
+    // check for autocoordination
+    if ( auto_coordination->getBoolValue() ) {
+        double factor = auto_coordination_factor->getDoubleValue();
+        if( factor > 0.0 ) set_rudder( aileron * factor );
+    }
+}
+
+void FGControls::fireEngineValueChanged(int index, simgear::PropertyList& props)
+{
+    if (index == ALL_ENGINES) {
+        std::for_each(props.begin(), props.end(), [](const SGPropertyNode_ptr &p) {
+            p->fireValueChanged();
+        });
+    } else {
+        props.at(index)->fireValueChanged();
     }
 }
 
