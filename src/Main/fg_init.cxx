@@ -60,6 +60,7 @@
 #include <simgear/embedded_resources/EmbeddedResourceManager.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <simgear/scene/material/Effect.hxx>
 #include <simgear/scene/material/matlib.hxx>
@@ -1238,6 +1239,10 @@ void fgStartReposition()
   globals->get_subsystem("systems")->reinit();
   globals->get_subsystem("instrumentation")->reinit();
   globals->get_subsystem("xml-autopilot")->reinit();
+
+  // need to update the timezone
+  SGTime *t = globals->get_time_params();
+  t->updateLocal(globals->get_aircraft_position(), globals->get_fg_root() / "Timezone");
     
   // setup state to end re-init
   fgSetBool("/sim/signals/reinit", false);
