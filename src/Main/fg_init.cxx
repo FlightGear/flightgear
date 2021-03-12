@@ -1241,9 +1241,11 @@ void fgStartReposition()
   globals->get_subsystem("xml-autopilot")->reinit();
 
   // need to update the timezone
-  SGTime *t = globals->get_time_params();
-  t->updateLocal(globals->get_aircraft_position(), globals->get_fg_root() / "Timezone");
-    
+  auto timeManager = globals->get_subsystem<TimeManager>();
+  if (timeManager) {
+      timeManager->reposition();
+  }
+
   // setup state to end re-init
   fgSetBool("/sim/signals/reinit", false);
   if ( !freeze ) {

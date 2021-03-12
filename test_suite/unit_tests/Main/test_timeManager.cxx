@@ -143,7 +143,7 @@ void TimeManagerTests::testTimeZones()
 
     timeManager->update(0.0);
 
-    CPPUNIT_ASSERT_EQUAL((time_t) 18000, globals->get_time_params()->get_local_offset());
+    CPPUNIT_ASSERT_EQUAL((time_t)19800, globals->get_time_params()->get_local_offset());
 
     auto gmt = globals->get_time_params()->getGmt();
     CPPUNIT_ASSERT_EQUAL(79, gmt->tm_year);
@@ -152,6 +152,21 @@ void TimeManagerTests::testTimeZones()
 
 
     // relocate to somewhere, check the time values update
+
+    auto eddf = FGAirport::getByIdent("EDDF");
+    FGTestApi::setPositionAndStabilise(eddf->geod());
+    timeManager->reposition();
+    timeManager->update(0.0);
+
+    CPPUNIT_ASSERT_EQUAL((time_t)3600, globals->get_time_params()->get_local_offset());
+
+
+    auto zbaa = FGAirport::getByIdent("ZBAA");
+    FGTestApi::setPositionAndStabilise(zbaa->geod());
+    timeManager->reposition();
+    timeManager->update(0.0);
+
+    CPPUNIT_ASSERT_EQUAL((time_t)28800, globals->get_time_params()->get_local_offset());
 }
 
 void TimeManagerTests::testSpecifyTimeOffset()

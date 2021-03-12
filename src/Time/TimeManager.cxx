@@ -404,6 +404,12 @@ void TimeManager::throttleUpdateRate()
     _frameWait->setDoubleValue(frameWaitStart.elapsedMSec());
 }
 
+void TimeManager::reposition()
+{
+    // force a zone check, next update()
+    _lastTimeZoneCheckPosition = SGVec3d::zeros();
+}
+
 // periodic time updater wrapper
 void TimeManager::updateLocalTime() 
 {

@@ -43,6 +43,8 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    void reposition();
+
     // Subsystem identification.
     static const char* staticSubsystemClassId() { return "time"; }
 
