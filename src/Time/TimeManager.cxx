@@ -24,10 +24,10 @@
 
 #include "TimeManager.hxx"
 
-#include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/timing/lowleveltime.h>
 #include <simgear/structure/commands.hxx>
+#include <simgear/timing/sg_time.hxx>
 #include <simgear/math/SGMath.hxx>
 
 #include <Main/fg_props.hxx>
@@ -433,6 +433,8 @@ void TimeManager::updateLocalTimeString()
     if (strcmp(s, buf) != 0) {
         _localTimeStringNode->setStringValue(buf);
     }
+
+    fgSetString("/sim/time/local-timezone", _impl->get_description());
 }
 
 void TimeManager::initTimeOffset()
