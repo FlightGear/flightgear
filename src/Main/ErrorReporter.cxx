@@ -38,6 +38,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/locale.hxx>
+#include <Main/sentryIntegration.hxx>
 #include <Scripting/NasalClipboard.hxx> // clipboard access
 
 using std::string;
@@ -69,8 +70,9 @@ enum class Aggregation {
     InputDevice,
     FGData,
     MultiPlayer,
-    Unknown,    ///< error coudln't be attributed more specifcially
-    OutOfMemory ///< seperate category to give it a custom message
+    Unknown,     ///< error coudln't be attributed more specifcially
+    OutOfMemory, ///< seperate category to give it a custom message
+    Traffic
 };
 
 // these should correspond to simgear::ErrorCode enum
@@ -111,7 +113,8 @@ string_list static_categoryIds = {
     "error-category-fgdata",
     "error-category-multiplayer",
     "error-category-unknown",
-    "error-category-out-of-memory"};
+    "error-category-out-of-memory",
+    "error-category-traffic"};
 
 class RecentLogCallback : public simgear::LogCallback
 {
@@ -234,6 +237,7 @@ public:
 
     void collectError(simgear::LoadFailure type, simgear::ErrorCode code, const std::string& details, const sg_location& location)
     {
+        SG_LOG(SG_GENERAL, SG_WARN, "Error:" << static_errorTypeIds.at(static_cast<int>(type)) << " from " << static_errorIds.at(static_cast<int>(code)) << "::" << details << "\n\t" << location.asString());
         ErrorOcurrence occurrence{code, type, details, location, time(nullptr)};
 
         // snapshot the top of the context stacks into our occurence data
@@ -322,6 +326,8 @@ public:
         });
         assert(it != _aggregated.end());
         _activeReportIndex = std::distance(_aggregated.begin(), it);
+
+        flightgear::sentryReportUserError(static_categoryIds.at(catId), detailsTextStream.str());
     }
 
     void writeReportToStream(const AggregateReport& report, std::ostream& os) const;
@@ -353,6 +359,16 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
 
     if (oc.hasContextKey("multiplayer")) {
         return getAggregate(Aggregation::MultiPlayer, {});
+    }
+
+    // traffic cases: need to handle errors in the traffic files (schedule, rwyuse)
+    // but also errors loading aircraft models associated with traffic
+    if (oc.code == simgear::ErrorCode::AITrafficSchedule) {
+        return getAggregate(Aggregation::Traffic, {});
+    }
+
+    if (oc.hasContextKey("traffic-aircraft-callsign")) {
+        return getAggregate(Aggregation::Traffic, {});
     }
 
     // all TerraSync coded errors go there: this is errors for the

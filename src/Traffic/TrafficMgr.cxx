@@ -53,6 +53,7 @@
 #include <algorithm>
 
 #include <simgear/compiler.h>
+#include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/sg_dir.hxx>
@@ -322,7 +323,7 @@ private:
 
         if (!FGAISchedule::validModelPath(mdl)) {
             missingModels.insert(mdl);
-            SG_LOG(SG_AI, SG_DEV_WARN, "TrafficMgr: Missing model path:" << mdl);
+            simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::AITrafficSchedule, "Missing traffic model path:" + mdl, _currentFile);
             requiredAircraft = homePort = "";
             return;
         }
@@ -384,13 +385,15 @@ private:
             SG_LOG(SG_AI, SG_DEBUG, "parsing traffic in:" << p);
             simgear::PathList trafficFiles = d2.children(simgear::Dir::TYPE_FILE, ".xml");
             for (const auto& xml : trafficFiles) {
+                _currentFile = xml;
                 try {
                     readXML(xml, *this);
                     if (_cancelThread) {
                         return;
                     }
                 } catch (sg_exception& e) {
-                    SG_LOG(SG_AI, SG_WARN, "XML error parsing traffic file:" << xml << "\n\t" << e.getFormattedMessage());
+                    simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::AITrafficSchedule,
+                                           "XML errors parsinng traffic:" + e.getFormattedMessage(), xml);
                 }
             }
         } // of sub-directories iteration
@@ -403,21 +406,22 @@ private:
   bool _isFinished;
   bool _cancelThread;
   simgear::PathList _trafficDirPaths;
+  SGPath _currentFile;
 
-// parser state
+  // parser state
 
-    string_list elementValueStack;
-    // record model paths which are missing, to avoid duplicate
-    // warnings when parsing traffic schedules.
-    std::set<std::string> missingModels;
+  string_list elementValueStack;
+  // record model paths which are missing, to avoid duplicate
+  // warnings when parsing traffic schedules.
+  std::set<std::string> missingModels;
 
-    std::string mdl, livery, registration, callsign, fltrules,
-    port, timeString, departurePort, departureTime, arrivalPort, arrivalTime,
-    repeat, acType, airline, m_class, flighttype, requiredAircraft, homePort;
-    int cruiseAlt;
-    int score, acCounter;
-    double radius, offset;
-    bool heavy;
+  std::string mdl, livery, registration, callsign, fltrules,
+      port, timeString, departurePort, departureTime, arrivalPort, arrivalTime,
+      repeat, acType, airline, m_class, flighttype, requiredAircraft, homePort;
+  int cruiseAlt;
+  int score, acCounter;
+  double radius, offset;
+  bool heavy;
 
 };
 
@@ -826,26 +830,21 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
                  offset         = atof(tokens[7].c_str());;
 
                  if (!FGAISchedule::validModelPath(model)) {
-                     SG_LOG(SG_AI, SG_WARN, "TrafficMgr: Missing model path:" <<
-                            model << " from " << infileName);
+                     simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::AITrafficSchedule, "Missing traffic model path:" + model, infileName);
                  } else {
-
-                 SG_LOG(SG_AI, SG_INFO, "Adding Aircraft" << model << " " << livery << " " << homePort << " "
-                                                                << registration << " " << flightReq << " " << isHeavy
-                                                                << " " << acType << " " << airline << " " << m_class
-                                                                << " " << FlightType << " " << radius << " " << offset);
-                 scheduledAircraft.push_back(new FGAISchedule(model,
-                                                              livery,
-                                                              homePort,
-                                                              registration,
-                                                              flightReq,
-                                                              isHeavy,
-                                                              acType,
-                                                              airline,
-                                                              m_class,
-                                                              FlightType,
-                                                              radius,
-                                                              offset));
+                     SG_LOG(SG_AI, SG_DEBUG, "Adding Aircraft" << model << " " << livery << " " << homePort << " " << registration << " " << flightReq << " " << isHeavy << " " << acType << " " << airline << " " << m_class << " " << FlightType << " " << radius << " " << offset);
+                     scheduledAircraft.push_back(new FGAISchedule(model,
+                                                                  livery,
+                                                                  homePort,
+                                                                  registration,
+                                                                  flightReq,
+                                                                  isHeavy,
+                                                                  acType,
+                                                                  airline,
+                                                                  m_class,
+                                                                  FlightType,
+                                                                  radius,
+                                                                  offset));
                  } // of valid model path
              }
              if (tokens[0] == string("FLIGHT")) {
