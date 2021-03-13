@@ -38,12 +38,13 @@
 #include <algorithm>
 
 #include <simgear/compiler.h>
-#include <simgear/sg_inlines.h>
+#include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/sg_inlines.h>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/xml/easyxml.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/xml/easyxml.hxx>
 
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/AIManager.hxx>
@@ -380,18 +381,21 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
                                             speedKnots, flightType, acType,
                                             airline));
   if (fp->isValidPlan()) {
-        aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
-        globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
-        if (aiAircraft->_getProps()) {
-            SGPropertyNode *nodeForAircraft = aiAircraft->_getProps();
-            if (dep) {
-                nodeForAircraft->getChild("departure-airport-id", 0, true)->setStringValue(dep->getId());
-                nodeForAircraft->getChild("departure-time-sec", 0, true)->setIntValue(deptime);
-            }
-            if (arr) {
-                nodeForAircraft->getChild("arrival-airport-id", 0, true)->setStringValue(arr->getId());
-		// arrival time not known here
-            }
+      // set this here so it's available inside attach, which calls AIBase::init
+      simgear::ErrorReportContext ec{"traffic-aircraft-callsign", flight->getCallSign()};
+
+      aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
+      globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
+      if (aiAircraft->_getProps()) {
+          SGPropertyNode* nodeForAircraft = aiAircraft->_getProps();
+          if (dep) {
+              nodeForAircraft->getChild("departure-airport-id", 0, true)->setStringValue(dep->getId());
+              nodeForAircraft->getChild("departure-time-sec", 0, true)->setIntValue(deptime);
+          }
+          if (arr) {
+              nodeForAircraft->getChild("arrival-airport-id", 0, true)->setStringValue(arr->getId());
+              // arrival time not known here
+          }
         }
         return true;
   } else {

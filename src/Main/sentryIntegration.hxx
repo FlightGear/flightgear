@@ -43,6 +43,7 @@ void sentryReportException(const std::string& msg, const std::string& location =
 
 void sentryReportFatalError(const std::string& msg, const std::string& more = {});
 
+void sentryReportUserError(const std::string& aggregate, const std::string& details);
 /**
  * @brief helper to allow per-thread supression of 
  * error reports based on XML parse/include errors. 

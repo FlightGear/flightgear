@@ -638,6 +638,9 @@ bool FGAIBase::init(ModelSearchOrder searchOrder)
     _modeldata->addErrorContext("ai", _name);
     _modeldata->captureErrorContext("scenario-path");
 
+    // set by FGAISchedule::createAIAircraft
+    _modeldata->captureErrorContext("traffic-aircraft-callsign");
+
     if (_otype == otMultiplayer) {
         _modeldata->addErrorContext("multiplayer", getCallSign());
     }
