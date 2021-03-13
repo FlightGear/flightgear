@@ -53,9 +53,10 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/scene/tgdb/GroundLightManager.hxx>
 
-#include <osg/Texture>
 #include <osg/BufferObject>
+#include <osg/Texture>
 #include <osg/Version>
+#include <osgText/Font>
 
 #include <Viewer/fgviewer.hxx>
 #include "main.hxx"
@@ -305,6 +306,11 @@ int main ( int argc, char **argv )
         // when fg_terminate runs, which causes crashes.
         osg::Texture::getTextureObjectManager(0);
         osg::GLBufferObjectManager::getGLBufferObjectManager(0);
+
+        // ensure this is called early (and hence deleted) late,
+        // otherwise fgExitCleanup crahses: see
+        // Sentry FLIGHTEAR-M68
+        osgText::Font::getDefaultFont();
 #endif
         std::set_terminate(fg_terminate);
         atexit(fgExitCleanup);
