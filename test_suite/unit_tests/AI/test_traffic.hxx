@@ -36,7 +36,7 @@ class TrafficTests : public CppUnit::TestFixture
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(TrafficTests);
     CPPUNIT_TEST(testPushback);
-    CPPUNIT_TEST(testPushback2);
+    CPPUNIT_TEST(testPushbackCargo);
     CPPUNIT_TEST(testChangeRunway);
     CPPUNIT_TEST(testPushforward);
     CPPUNIT_TEST(testPushforwardSpeedy);
@@ -50,10 +50,11 @@ public:
     // Clean up after each test.
     void tearDown();
 
-    // The tests.
+    // Pushback Tests
     void testPushback();
-    void testPushback2();
+    void testPushbackCargo();
     void testChangeRunway();
+    //GA Tests with forward push
     void testPushforward();
     void testPushforwardSpeedy();
     void testPushforwardParkYBBN();
