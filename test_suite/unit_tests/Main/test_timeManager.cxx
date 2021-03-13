@@ -21,6 +21,7 @@
 #include "test_timeManager.hxx"
 
 #include "test_suite/FGTestApi/NavDataCache.hxx"
+#include "test_suite/FGTestApi/TestPilot.hxx"
 #include "test_suite/FGTestApi/testGlobals.hxx"
 
 #include <simgear/io/iostreams/sgstream.hxx>
@@ -167,6 +168,49 @@ void TimeManagerTests::testTimeZones()
     timeManager->update(0.0);
 
     CPPUNIT_ASSERT_EQUAL((time_t)28800, globals->get_time_params()->get_local_offset());
+}
+
+void TimeManagerTests::testETCTimeZones()
+{
+    auto phto = fgFindAirportID("PHTO");
+    FGTestApi::setPositionAndStabilise(phto->geod());
+    auto timeManager = new TimeManager;
+
+    timeManager->bind();
+    timeManager->init();
+    timeManager->postinit();
+
+    // fake Unix time by setting this; it will then
+    // set the 'current unix time' passed to SGTime
+    const auto testDate = 314611200L;
+    fgSetInt("/sim/time/cur-time-override", testDate);
+
+    globals->add_subsystem("time", timeManager);
+
+    FGTestApi::setPositionAndStabilise(phto->geod());
+    timeManager->reposition();
+    timeManager->update(0.0);
+
+    SGPropertyNode_ptr tzNameNode = fgGetNode("/sim/time/local-timezone", true);
+
+    CPPUNIT_ASSERT_EQUAL((time_t)-36000, globals->get_time_params()->get_local_offset());
+    CPPUNIT_ASSERT_EQUAL("Pacific/Honolulu"s, string{tzNameNode->getStringValue()});
+
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->setSpeedKts(1000);
+    pilot->setCourseTrue(320.0);
+
+    bool ok = FGTestApi::runForTimeWithCheck(600.0, [tzNameNode]() {
+        const string tz = tzNameNode->getStringValue();
+        return tz == "Etc/GMT+10"s;
+    });
+    CPPUNIT_ASSERT(ok);
+
+    ok = FGTestApi::runForTimeWithCheck(600.0, [tzNameNode]() {
+        const string tz = tzNameNode->getStringValue();
+        return tz == "Pacific/Honolulu"s;
+    });
+    CPPUNIT_ASSERT(ok);
 }
 
 void TimeManagerTests::testSpecifyTimeOffset()

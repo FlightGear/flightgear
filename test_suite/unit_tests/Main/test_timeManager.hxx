@@ -33,6 +33,7 @@ class TimeManagerTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testTimeZones);
     CPPUNIT_TEST(testFreezeUnfreeze);
     CPPUNIT_TEST(testSpecifyTimeOffset);
+    CPPUNIT_TEST(testETCTimeZones);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -47,4 +48,5 @@ public:
     void testTimeZones();
     void testFreezeUnfreeze();
     void testSpecifyTimeOffset();
+    void testETCTimeZones();
 };
