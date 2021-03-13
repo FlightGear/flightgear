@@ -29,7 +29,6 @@
 #include "test_suite/FGTestApi/TestDataLogger.hxx"
 #include "test_suite/FGTestApi/testGlobals.hxx"
 
-#include <simgear/math/sg_geodesy.hxx>
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/AIManager.hxx>
@@ -38,8 +37,9 @@
 #include <Airports/airportdynamicsmanager.hxx>
 #include <Airports/groundnetwork.hxx>
 #include <Scenery/scenery.hxx>
-#include <Traffic/TrafficMgr.hxx>
 #include <Time/TimeManager.hxx>
+#include <Traffic/TrafficMgr.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 
 #include <ATC/atc_mgr.hxx>
 
@@ -51,21 +51,22 @@
 // Set up function for each test.
 void TrafficTests::setUp()
 {
-
     FGTestApi::setUp::initTestGlobals("Traffic");
     FGTestApi::setUp::initNavDataCache();
 
-/*
+    /*
     globals->add_new_subsystem<FGMockScenery>(SGSubsystemMgr::DISPLAY);
     globals->get_scenery()->init();
     globals->get_scenery()->bind();
 */
 
-    auto props = globals->get_props();
-    props->setBoolValue("sim/ai/enabled", true);
-    props->setBoolValue("sim/traffic-manager/enabled", true);
-    props->setBoolValue("sim/signals/fdm-initialized", false);
-    props->setDoubleValue("/environment/visibility-m", 10000000.0);
+    fgSetBool("sim/ai/enabled", true);
+    fgSetBool("sim/traffic-manager/enabled", true);
+    fgSetBool("sim/signals/fdm-initialized", false);
+    fgSetInt("/environment/visibility-m", 1000);
+    fgSetBool("/environment/realwx/enabled", false);
+    fgSetBool("/environment/metar/valid", false);
+    fgSetBool("/sim/terrasync/ai-data-update-now", false);
 
 
     // ensure EDDF has a valid ground net for parking testing
@@ -97,7 +98,7 @@ void TrafficTests::tearDown()
 void TrafficTests::testPushback()
 {
     FGAirportRef egph = FGAirport::getByIdent("EGPH");
-    
+
     FGAirportRef egpf = FGAirport::getByIdent("EGPF");
     fgSetString("/sim/presets/airport-id", "EGPH");
     fgSetInt("/environment/visibility-m", 1000);
@@ -113,9 +114,9 @@ void TrafficTests::testPushback()
     schedule->assign(flight);
 
     FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
-     
+
     const SGGeod position = egph->geod();
-    ParkingAssignment parking = egph->getDynamics()->getParkingByName("north-cargo208");                                       
+    ParkingAssignment parking = egph->getDynamics()->getParkingByName("north-cargo208");
     FGTestApi::setPositionAndStabilise(egph->getDynamics()->getParkingByName("ga206").parking()->geod());
 
     aiAircraft->setPerformance("jet_transport", "");
@@ -133,7 +134,7 @@ void TrafficTests::testPushback()
     const double crs = SGGeodesy::courseDeg(egph->geod(), egpf->geod()); // direct course
     time_t departureTime;
     time(&departureTime); // now
-    departureTime = departureTime - 50; 
+    departureTime = departureTime - 50;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -143,33 +144,31 @@ void TrafficTests::testPushback()
                                                           position.getLongitudeDeg(),
                                                           cruiseSpeedKnots, "gate",
                                                           aiAircraft->getAcType(),
-                                                          aiAircraft->getCompany())); 
-                                                          
+                                                          aiAircraft->getCompany()));
+
     if (fp->isValidPlan()) {
         aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
         globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
     }
     flightgear::SGGeodVec geods = flightgear::SGGeodVec();
-    for (size_t i = 0; i < 6000 && aiAircraft->GetFlightPlan()->getLeg() < 8; i++)
-    {
-        if(geods.empty()||SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
-          geods.insert(geods.end(), aiAircraft->getGeodPos());
+    for (size_t i = 0; i < 6000 && aiAircraft->GetFlightPlan()->getLeg() < 8; i++) {
+        if (geods.empty() || SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
+            geods.insert(geods.end(), aiAircraft->getGeodPos());
         }
 
-        FGTestApi::runForTime(3.0);    
+        FGTestApi::runForTime(3.0);
     }
-    FGTestApi::setUp::logLinestringsToKML("flight_EDPH_" + std::to_string(departureTime));    
+    FGTestApi::setUp::logLinestringsToKML("flight_EDPH_" + std::to_string(departureTime));
     FGTestApi::writeGeodsToKML("Aircraft", geods);
-    CPPUNIT_ASSERT_EQUAL( 5, aiAircraft->GetFlightPlan()->getLeg());
+    CPPUNIT_ASSERT_EQUAL(5, aiAircraft->GetFlightPlan()->getLeg());
 }
 
 void TrafficTests::testPushback2()
 {
     FGAirportRef egph = FGAirport::getByIdent("EGPH");
-    
+
     FGAirportRef egpf = FGAirport::getByIdent("EGPF");
     fgSetString("/sim/presets/airport-id", "EGPH");
-    fgSetInt("/environment/visibility-m", 1000);
 
     // Time to depart
     std::string dep = getTimeString(60);
@@ -183,9 +182,9 @@ void TrafficTests::testPushback2()
     schedule->assign(flight);
 
     FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
-     
+
     const SGGeod position = egph->geod();
-    ParkingAssignment parking = egph->getDynamics()->getParkingByName("north-cargo208");                                       
+    ParkingAssignment parking = egph->getDynamics()->getParkingByName("north-cargo208");
     FGTestApi::setPositionAndStabilise(egph->getDynamics()->getParkingByName("ga206").parking()->geod());
 
     aiAircraft->setPerformance("jet_transport", "");
@@ -203,7 +202,7 @@ void TrafficTests::testPushback2()
     const double crs = SGGeodesy::courseDeg(egph->geod(), egpf->geod()); // direct course
     time_t departureTime;
     time(&departureTime); // now
-    departureTime = departureTime - 50; 
+    departureTime = departureTime - 50;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -213,30 +212,29 @@ void TrafficTests::testPushback2()
                                                           position.getLongitudeDeg(),
                                                           cruiseSpeedKnots, "cargo",
                                                           aiAircraft->getAcType(),
-                                                          aiAircraft->getCompany())); 
-                                                          
+                                                          aiAircraft->getCompany()));
+
     if (fp->isValidPlan()) {
         aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
         globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
     }
     flightgear::SGGeodVec geods = flightgear::SGGeodVec();
-    for (size_t i = 0; i < 6000 && aiAircraft->GetFlightPlan()->getLeg() < 10; i++)
-    {
-        if(geods.empty()||SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
-          geods.insert(geods.end(), aiAircraft->getGeodPos());
+    for (size_t i = 0; i < 6000 && aiAircraft->GetFlightPlan()->getLeg() < 10; i++) {
+        if (geods.empty() || SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
+            geods.insert(geods.end(), aiAircraft->getGeodPos());
         }
 
-        FGTestApi::runForTime(3.0);    
+        FGTestApi::runForTime(3.0);
     }
-    FGTestApi::setUp::logLinestringsToKML("flight_cargo_EDPH_" + std::to_string(departureTime));    
+    FGTestApi::setUp::logLinestringsToKML("flight_cargo_EDPH_" + std::to_string(departureTime));
     FGTestApi::writeGeodsToKML("Aircraft", geods);
-    CPPUNIT_ASSERT_EQUAL( 5, aiAircraft->GetFlightPlan()->getLeg());
+    CPPUNIT_ASSERT_EQUAL(5, aiAircraft->GetFlightPlan()->getLeg());
 }
 
 void TrafficTests::testChangeRunway()
 {
     FGAirportRef departureAirport = FGAirport::getByIdent("EGPH");
-    
+
     FGAirportRef arrivalAirport = FGAirport::getByIdent("EGPF");
     fgSetString("/sim/presets/airport-id", departureAirport->getId());
     fgSetInt("/environment/visibility-m", 1000);
@@ -259,7 +257,7 @@ void TrafficTests::testChangeRunway()
     schedule->assign(flight);
 
     FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
-     
+
     const SGGeod position = departureAirport->geod();
     FGTestApi::setPositionAndStabilise(position);
 
@@ -274,7 +272,7 @@ void TrafficTests::testChangeRunway()
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime;
     time(&departureTime); // now
-    departureTime = departureTime - 50; 
+    departureTime = departureTime - 50;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -284,36 +282,34 @@ void TrafficTests::testChangeRunway()
                                                           position.getLongitudeDeg(),
                                                           cruiseSpeedKnots, flighttype,
                                                           aiAircraft->getAcType(),
-                                                          aiAircraft->getCompany())); 
+                                                          aiAircraft->getCompany()));
 
-    CPPUNIT_ASSERT_EQUAL( fp->isValidPlan(), true);
-    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));  
+    CPPUNIT_ASSERT_EQUAL(fp->isValidPlan(), true);
+    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
 
     globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
 
-    auto prefs =     departureAirport->getDynamics();
+    auto prefs = departureAirport->getDynamics();
     flightgear::SGGeodVec geods = flightgear::SGGeodVec();
-    for (size_t i = 0; i < 6000; i++)
-    {
-        if(geods.empty()||SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
-          geods.insert(geods.end(), aiAircraft->getGeodPos());
+    for (size_t i = 0; i < 6000; i++) {
+        if (geods.empty() || SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
+            geods.insert(geods.end(), aiAircraft->getGeodPos());
         }
 
-        FGTestApi::runForTime(3.0);    
+        FGTestApi::runForTime(3.0);
     }
-    FGTestApi::setUp::logLinestringsToKML("flight_runway_EGPH_" + std::to_string(departureTime));    
+    FGTestApi::setUp::logLinestringsToKML("flight_runway_EGPH_" + std::to_string(departureTime));
     FGTestApi::writeGeodsToKML("Aircraft", geods);
-    CPPUNIT_ASSERT_EQUAL( 5, aiAircraft->GetFlightPlan()->getLeg());
+    CPPUNIT_ASSERT_EQUAL(5, aiAircraft->GetFlightPlan()->getLeg());
 }
 
 
 void TrafficTests::testPushforward()
 {
     FGAirportRef departureAirport = FGAirport::getByIdent("YSSY");
-    
+
     FGAirportRef arrivalAirport = FGAirport::getByIdent("YBBN");
     fgSetString("/sim/presets/airport-id", departureAirport->getId());
-    fgSetInt("/environment/visibility-m", 1000);
 
     // Time to depart
     std::string dep = getTimeString(60);
@@ -331,7 +327,7 @@ void TrafficTests::testPushforward()
     schedule->assign(flight);
 
     FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
-     
+
     const SGGeod position = departureAirport->geod();
     FGTestApi::setPositionAndStabilise(position);
 
@@ -346,7 +342,7 @@ void TrafficTests::testPushforward()
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime;
     time(&departureTime); // now
-    departureTime = departureTime - 50; 
+    departureTime = departureTime - 50;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -356,35 +352,33 @@ void TrafficTests::testPushforward()
                                                           position.getLongitudeDeg(),
                                                           cruiseSpeedKnots, flighttype,
                                                           aiAircraft->getAcType(),
-                                                          aiAircraft->getCompany())); 
+                                                          aiAircraft->getCompany()));
 
-    CPPUNIT_ASSERT_EQUAL( fp->isValidPlan(), true);
-    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));    
+    CPPUNIT_ASSERT_EQUAL(fp->isValidPlan(), true);
+    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
     globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
 
     flightgear::SGGeodVec geods = flightgear::SGGeodVec();
-    for (size_t i = 0; i < 6000 && aiAircraft->GetFlightPlan()->getLeg() < 3; i++)
-    {
+    for (size_t i = 0; i < 6000 && aiAircraft->GetFlightPlan()->getLeg() < 3; i++) {
         //this->dump(aiAircraft);
-        
-        if(geods.empty()||SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
-          geods.insert(geods.end(), aiAircraft->getGeodPos());
+
+        if (geods.empty() || SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
+            geods.insert(geods.end(), aiAircraft->getGeodPos());
         }
 
-        FGTestApi::runForTime(3.0);    
+        FGTestApi::runForTime(3.0);
     }
-    FGTestApi::setUp::logLinestringsToKML("flight_ga_YSSY_depart_" + std::to_string(departureTime));    
+    FGTestApi::setUp::logLinestringsToKML("flight_ga_YSSY_depart_" + std::to_string(departureTime));
     FGTestApi::writeGeodsToKML("Aircraft", geods);
-    CPPUNIT_ASSERT_EQUAL( 5, aiAircraft->GetFlightPlan()->getLeg());
+    CPPUNIT_ASSERT_EQUAL(5, aiAircraft->GetFlightPlan()->getLeg());
 }
 
 void TrafficTests::testPushforwardSpeedy()
 {
     FGAirportRef departureAirport = FGAirport::getByIdent("YSSY");
-    
+
     FGAirportRef arrivalAirport = FGAirport::getByIdent("YBBN");
     fgSetString("/sim/presets/airport-id", departureAirport->getId());
-    fgSetInt("/environment/visibility-m", 1000);
 
     // Time to depart
     std::string dep = getTimeString(60);
@@ -402,7 +396,7 @@ void TrafficTests::testPushforwardSpeedy()
     schedule->assign(flight);
 
     FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
-     
+
     const SGGeod position = departureAirport->geod();
     FGTestApi::setPositionAndStabilise(position);
 
@@ -417,7 +411,7 @@ void TrafficTests::testPushforwardSpeedy()
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime;
     time(&departureTime); // now
-    departureTime = departureTime - 50; 
+    departureTime = departureTime - 50;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -427,39 +421,34 @@ void TrafficTests::testPushforwardSpeedy()
                                                           position.getLongitudeDeg(),
                                                           cruiseSpeedKnots, flighttype,
                                                           aiAircraft->getAcType(),
-                                                          aiAircraft->getCompany())); 
+                                                          aiAircraft->getCompany()));
 
-    CPPUNIT_ASSERT_EQUAL( fp->isValidPlan(), true);
-    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));    
+    CPPUNIT_ASSERT_EQUAL(fp->isValidPlan(), true);
+    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
     globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
 
     flightgear::SGGeodVec geods = flightgear::SGGeodVec();
-    for (size_t i = 0; i < 6000 && aiAircraft->GetFlightPlan()->getLeg() < 3; i++)
-    {
+    for (size_t i = 0; i < 6000 && aiAircraft->GetFlightPlan()->getLeg() < 3; i++) {
         //this->dump(aiAircraft);
-        
-        if(geods.empty()||SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
-          geods.insert(geods.end(), aiAircraft->getGeodPos());
+
+        if (geods.empty() || SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 1) {
+            geods.insert(geods.end(), aiAircraft->getGeodPos());
         }
 
-        FGTestApi::runForTime(3.0);    
+        FGTestApi::runForTime(3.0);
     }
-    FGTestApi::setUp::logLinestringsToKML("flight_ga_YSSY_fast_depart_" + std::to_string(departureTime));    
+    FGTestApi::setUp::logLinestringsToKML("flight_ga_YSSY_fast_depart_" + std::to_string(departureTime));
     FGTestApi::writeGeodsToKML("Aircraft", geods);
-    CPPUNIT_ASSERT_EQUAL( 5, aiAircraft->GetFlightPlan()->getLeg());
+    CPPUNIT_ASSERT_EQUAL(5, aiAircraft->GetFlightPlan()->getLeg());
 }
 
 void TrafficTests::testPushforwardParkYBBN()
 {
     FGAirportRef departureAirport = FGAirport::getByIdent("YBBN");
-    
+
     FGAirportRef arrivalAirport = FGAirport::getByIdent("YSSY");
-    
+
     fgSetString("/sim/presets/airport-id", arrivalAirport->getId());
-    fgSetInt("/environment/visibility-m", 1000);
-    fgSetBool("/environment/realwx/enabled", false);
-    fgSetBool("/environment/metar/valid", false);
-    fgSetBool("/sim/terrasync/ai-data-update-now", false);
 
     // Time to depart
     std::string dep = getTimeString(60);
@@ -477,7 +466,7 @@ void TrafficTests::testPushforwardParkYBBN()
     schedule->assign(flight);
 
     FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
-     
+
     const SGGeod position = departureAirport->geod();
     FGTestApi::setPositionAndStabilise(position);
 
@@ -492,7 +481,7 @@ void TrafficTests::testPushforwardParkYBBN()
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime;
     time(&departureTime); // now
-    departureTime = departureTime - 50; 
+    departureTime = departureTime - 50;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -502,99 +491,40 @@ void TrafficTests::testPushforwardParkYBBN()
                                                           position.getLongitudeDeg(),
                                                           cruiseSpeedKnots, flighttype,
                                                           aiAircraft->getAcType(),
-                                                          aiAircraft->getCompany())); 
+                                                          aiAircraft->getCompany()));
 
-    CPPUNIT_ASSERT_EQUAL( fp->isValidPlan(), true);
-    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));    
+    CPPUNIT_ASSERT_EQUAL(fp->isValidPlan(), true);
+    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
     globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
 
-    FGTestApi::setUp::logLinestringsToKML("flight_ga_YSSY_park_" + std::to_string(departureTime));    
-    flightgear::SGGeodVec geods = flightgear::SGGeodVec();
-    char buffer [50];
-    int lastLeg = -1;
-    double lastHeading = 0;
-    int lastDistanceToAirport = 100000000;
-    for (size_t i = 0; i < 12000000 
-                       && !aiAircraft->getDie() 
-                       && aiAircraft->GetFlightPlan()->getLeg() < 10; i++)
-    {
-        if(!aiAircraft->getDie()) {
-            // collect position
-            if(geods.empty() ||           
-            SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 0.1) {
-              geods.insert(geods.end(), aiAircraft->getGeodPos());
-              lastHeading = aiAircraft->_getHeading();
-            }
-            if(geods.empty()||
-            (aiAircraft->getSpeed() > 0 && 
-            SGGeodesy::distanceM(aiAircraft->getGeodPos(), FGTestApi::getPosition()) > 50) &&
-            // stop following to the end
-            aiAircraft->GetFlightPlan()->getLeg() < 8
-            ) {
-            // std::cout << "Reposition to " << aiAircraft->getGeodPos() << "\t" << aiAircraft->isValid() << "\t" << aiAircraft->getDie() << "\n";
-              FGTestApi::setPositionAndStabilise(aiAircraft->getGeodPos());
-            }
-        }
-        // in cruise 
-        if(aiAircraft->GetFlightPlan()->getLeg() == 9) {
-            int currentDistance = 
-              SGGeodesy::distanceM(aiAircraft->getGeodPos(), arrivalAirport->getTowerLocation());
-            if( currentDistance < lastDistanceToAirport ) {
-                this->dump(aiAircraft);
-            }
-            if( currentDistance >= lastDistanceToAirport ) {
-                this->dump(aiAircraft);
-            }
-            // CPPUNIT_ASSERT_LESS(lastDistanceToAirport, currentDistance);
-            lastDistanceToAirport = currentDistance;
-        }
-        if (aiAircraft->GetFlightPlan()->getLeg() > lastLeg)
-        {
-            sprintf(buffer, "AI Leg %d", lastLeg);
-            FGTestApi::writeGeodsToKML(buffer, geods);
-            lastLeg = aiAircraft->GetFlightPlan()->getLeg();
-            SGGeod last = geods.back();
-            geods.clear();
-            geods.insert(geods.end(), last);
-        }
-        CPPUNIT_ASSERT_LESSEQUAL(10, aiAircraft->GetFlightPlan()->getLeg());
-        FGTestApi::runForTime(0.5);    
-    }
-    lastLeg = aiAircraft->GetFlightPlan()->getLeg();
-    sprintf(buffer, "AI Leg %d", lastLeg);
+    aiAircraft = flyAI(aiAircraft, "flight_ga_YSSY_YBBN_park_" + std::to_string(departureTime));
+
     int shortestDistance = 10000;
     const FGParkingList& parkings(arrivalAirport->groundNetwork()->allParkings());
     FGParkingList::const_iterator it;
     FGParking* nearestParking = 0;
     for (it = parkings.begin(); it != parkings.end(); ++it) {
-        int currentDistance = !nearestParking?9999:
-            SGGeodesy::distanceM(nearestParking->geod(), (*it)->geod());
-        if(currentDistance < shortestDistance) {
+        int currentDistance = !nearestParking ? 9999 : SGGeodesy::distanceM(nearestParking->geod(), (*it)->geod());
+        if (currentDistance < shortestDistance) {
             nearestParking = (*it);
             shortestDistance = currentDistance;
-            std::cout << (*it)->name() << "\t" << (*it)->getHeading() 
-                    << "\t" << shortestDistance << "\t" << (*it)->geod() << "\n";
+            std::cout << (*it)->name() << "\t" << (*it)->getHeading()
+                      << "\t" << shortestDistance << "\t" << (*it)->geod() << "\n";
         }
     }
 
-    FGTestApi::writeGeodsToKML(buffer, geods);
-    CPPUNIT_ASSERT_EQUAL( true, aiAircraft->getDie());
-    CPPUNIT_ASSERT_EQUAL( 0, shortestDistance);
-    CPPUNIT_ASSERT_EQUAL( nearestParking->getHeading(), lastHeading);
-    geods.clear();
+    CPPUNIT_ASSERT_EQUAL(true, aiAircraft->getDie());
+    CPPUNIT_ASSERT_EQUAL(0, shortestDistance);
+    // CPPUNIT_ASSERT_EQUAL(nearestParking->getHeading(), lastHeading);
 }
 
 void TrafficTests::testPushforwardParkYBBNRepeat()
 {
     FGAirportRef departureAirport = FGAirport::getByIdent("YBBN");
-    
+
     FGAirportRef arrivalAirport = FGAirport::getByIdent("YSSY");
-    
+
     fgSetString("/sim/presets/airport-id", arrivalAirport->getId());
-    fgSetInt("/environment/visibility-m", 1000);
-    fgSetBool("/environment/realwx/enabled", false);
-    fgSetBool("/environment/metar/valid", false);
-    fgSetBool("/sim/terrasync/ai-data-update-now", false);
 
     // Time to depart
     std::string dep = getTimeString(60);
@@ -617,7 +547,7 @@ void TrafficTests::testPushforwardParkYBBNRepeat()
     schedule->assign(returnFlight);
 
     FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
-     
+
     const SGGeod position = departureAirport->geod();
     FGTestApi::setPositionAndStabilise(position);
 
@@ -632,7 +562,7 @@ void TrafficTests::testPushforwardParkYBBNRepeat()
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime;
     time(&departureTime); // now
-    departureTime = departureTime - 50; 
+    departureTime = departureTime - 50;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -642,53 +572,60 @@ void TrafficTests::testPushforwardParkYBBNRepeat()
                                                           position.getLongitudeDeg(),
                                                           cruiseSpeedKnots, flighttype,
                                                           aiAircraft->getAcType(),
-                                                          aiAircraft->getCompany())); 
-    CPPUNIT_ASSERT_EQUAL( fp->isValidPlan(), true);
-    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));    
+                                                          aiAircraft->getCompany()));
+    CPPUNIT_ASSERT_EQUAL(fp->isValidPlan(), true);
+    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
     globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
 
-    FGTestApi::setUp::logLinestringsToKML("flight_ga_YSSY_park_" + std::to_string(departureTime));    
+    aiAircraft = flyAI(aiAircraft, "flight_ga_YSSY_YBBN_park_repeat" + std::to_string(departureTime));
+
+    int shortestDistance = 10000;
+    const FGParkingList& parkings(arrivalAirport->groundNetwork()->allParkings());
+    FGParkingList::const_iterator it;
+    FGParking* nearestParking = 0;
+    for (it = parkings.begin(); it != parkings.end(); ++it) {
+        int currentDistance = !nearestParking ? 9999 : SGGeodesy::distanceM(nearestParking->geod(), (*it)->geod());
+        if (currentDistance < shortestDistance) {
+            nearestParking = (*it);
+            shortestDistance = currentDistance;
+            std::cout << (*it)->name() << "\t" << (*it)->getHeading()
+                      << "\t" << shortestDistance << "\t" << (*it)->geod() << "\n";
+        }
+    }
+
+    CPPUNIT_ASSERT_EQUAL(true, aiAircraft->getDie());
+    CPPUNIT_ASSERT_EQUAL(0, shortestDistance);
+    // CPPUNIT_ASSERT_EQUAL(nearestParking->getHeading(), lastHeading);
+}
+
+FGAIAircraft * TrafficTests::flyAI(FGAIAircraft * aiAircraft, std::string fName) {
+    FGTestApi::setUp::logLinestringsToKML(fName);
     flightgear::SGGeodVec geods = flightgear::SGGeodVec();
-    char buffer [50];
+    char buffer[50];
     int lastLeg = -1;
     double lastHeading = 0;
-    int lastDistanceToAirport = 100000000;
-    for (size_t i = 0; i < 12000000 
-                       && !aiAircraft->getDie() 
-                       && aiAircraft->GetFlightPlan()->getLeg() < 10; i++)
-    {
-        if(!aiAircraft->getDie()) {
+    for (size_t i = 0; i < 12000000 && !aiAircraft->getDie() && aiAircraft->GetFlightPlan()->getLeg() < 10; i++) {
+        if (!aiAircraft->getDie()) {
             // collect position
-            if(geods.empty() ||           
-            SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 0.1) {
-              geods.insert(geods.end(), aiAircraft->getGeodPos());
-              lastHeading = aiAircraft->_getHeading();
+            if (geods.empty() ||
+                SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 0.1) {
+                geods.insert(geods.end(), aiAircraft->getGeodPos());
+                lastHeading = aiAircraft->_getHeading();
             }
-            if(geods.empty()||
-            (aiAircraft->getSpeed() > 0 && 
-            SGGeodesy::distanceM(aiAircraft->getGeodPos(), FGTestApi::getPosition()) > 50) &&
-            // stop following to the end
-            aiAircraft->GetFlightPlan()->getLeg() < 8
-            ) {
-            // std::cout << "Reposition to " << aiAircraft->getGeodPos() << "\t" << aiAircraft->isValid() << "\t" << aiAircraft->getDie() << "\n";
-              FGTestApi::setPositionAndStabilise(aiAircraft->getGeodPos());
+            if (geods.empty() ||
+                (aiAircraft->getSpeed() > 0 &&
+                 SGGeodesy::distanceM(aiAircraft->getGeodPos(), FGTestApi::getPosition()) > 50) &&
+                    // stop following to the end
+                    aiAircraft->GetFlightPlan()->getLeg() < 8) {
+                // std::cout << "Reposition to " << aiAircraft->getGeodPos() << "\t" << aiAircraft->isValid() << "\t" << aiAircraft->getDie() << "\n";
+                FGTestApi::setPositionAndStabilise(aiAircraft->getGeodPos());
             }
         }
-        // in cruise 
-        if(aiAircraft->GetFlightPlan()->getLeg() == 9) {
-            int currentDistance = 
-              SGGeodesy::distanceM(aiAircraft->getGeodPos(), arrivalAirport->getTowerLocation());
-            if( currentDistance < lastDistanceToAirport ) {
-                this->dump(aiAircraft);
-            }
-            if( currentDistance >= lastDistanceToAirport ) {
-                this->dump(aiAircraft);
-            }
-            // CPPUNIT_ASSERT_LESS(lastDistanceToAirport, currentDistance);
-            lastDistanceToAirport = currentDistance;
+        // in cruise
+        if (aiAircraft->GetFlightPlan()->getLeg() == 9) {
+            this->dump(aiAircraft);
         }
-        if (aiAircraft->GetFlightPlan()->getLeg() > lastLeg)
-        {
+        if (aiAircraft->GetFlightPlan()->getLeg() > lastLeg) {
             sprintf(buffer, "AI Leg %d", lastLeg);
             FGTestApi::writeGeodsToKML(buffer, geods);
             lastLeg = aiAircraft->GetFlightPlan()->getLeg();
@@ -697,55 +634,43 @@ void TrafficTests::testPushforwardParkYBBNRepeat()
             geods.insert(geods.end(), last);
         }
         CPPUNIT_ASSERT_LESSEQUAL(10, aiAircraft->GetFlightPlan()->getLeg());
-        FGTestApi::runForTime(0.5);    
+        FGTestApi::runForTime(0.5);
     }
     lastLeg = aiAircraft->GetFlightPlan()->getLeg();
     sprintf(buffer, "AI Leg %d", lastLeg);
-    int shortestDistance = 10000;
-    const FGParkingList& parkings(arrivalAirport->groundNetwork()->allParkings());
-    FGParkingList::const_iterator it;
-    FGParking* nearestParking = 0;
-    for (it = parkings.begin(); it != parkings.end(); ++it) {
-        int currentDistance = !nearestParking?9999:
-            SGGeodesy::distanceM(nearestParking->geod(), (*it)->geod());
-        if(currentDistance < shortestDistance) {
-            nearestParking = (*it);
-            shortestDistance = currentDistance;
-            std::cout << (*it)->name() << "\t" << (*it)->getHeading() 
-                    << "\t" << shortestDistance << "\t" << (*it)->geod() << "\n";
-        }
-    }
-
     FGTestApi::writeGeodsToKML(buffer, geods);
-    CPPUNIT_ASSERT_EQUAL( true, aiAircraft->getDie());
-    CPPUNIT_ASSERT_EQUAL( 0, shortestDistance);
-    CPPUNIT_ASSERT_EQUAL( nearestParking->getHeading(), lastHeading);
     geods.clear();
+    return aiAircraft;
 }
 
-void TrafficTests::dump(FGAIAircraft* aiAircraft) {
+void TrafficTests::dump(FGAIAircraft* aiAircraft)
+{
     std::cout << "********************\n";
     std::cout << "Geod " << aiAircraft->getGeodPos() << "\t Speed : " << aiAircraft->getSpeed() << "\n";
     std::cout << "Heading " << aiAircraft->getTrueHeadingDeg() << "\t VSpeed : " << aiAircraft->getVerticalSpeedFPM() << "\n";
     FGAIWaypoint* currentWP = aiAircraft->GetFlightPlan()->getCurrentWaypoint();
-    if(currentWP) {
-      std::cout << "WP       " << currentWP->getName() << "\t" << aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getPos() << "\r\n";
-      std::cout << "Distance " << SGGeodesy::distanceM(aiAircraft->getGeodPos(), currentWP->getPos()) << "\n";
+    if (currentWP) {
+        std::cout << "WP       " << currentWP->getName() << "\t" << aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getPos() << "\r\n";
+        std::cout << "Distance " << SGGeodesy::distanceM(aiAircraft->getGeodPos(), currentWP->getPos()) << "\n";
     } else {
         std::cout << "No Current WP\n";
     }
-    std::cout << "Flightplan " << "\n";    
+    std::cout << "Flightplan "
+              << "\n";
     FGAIFlightPlan* fp = aiAircraft->GetFlightPlan();
-    if(fp->isValidPlan()) {
+    if (fp->isValidPlan()) {
         std::cout << "Leg    : " << fp->getLeg() << "\n";
         std::cout << "Length : " << fp->getNrOfWayPoints() << "\n";
     }
 }
 
-std::string TrafficTests::getTimeString(int timeOffset) {
-    char ret [11];
-    time_t rawtime = rawtime + 3200;
-    tm * timeinfo = gmtime (&rawtime);
-    strftime (ret,11,"%w/%H:%M:%S",timeinfo);
+std::string TrafficTests::getTimeString(int timeOffset)
+{
+    char ret[11];
+    time_t rawtime;
+    time (&rawtime);
+    rawtime = rawtime + timeOffset;
+    tm* timeinfo = gmtime(&rawtime);
+    strftime(ret, 11, "%w/%H:%M:%S", timeinfo);
     return ret;
 }

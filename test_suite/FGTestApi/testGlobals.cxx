@@ -444,7 +444,7 @@ void shutdownTestGlobals()
     delete globals;
     globals = nullptr;
     
-    if (global_loggingToKML) {
+    if (global_kmlStream) {
         if (global_lineStringOpen) {
             endCurrentLineString();
         }

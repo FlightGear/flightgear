@@ -61,4 +61,5 @@ public:
 private:
     void dump(FGAIAircraft* aiAircraft);
     std::string getTimeString(int timeOffset);
+    FGAIAircraft * flyAI(FGAIAircraft * aiAircraft, std::string fName);
 };
