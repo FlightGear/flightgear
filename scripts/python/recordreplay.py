@@ -26,6 +26,11 @@ Args:
         A second fgfs executable. If specified we run all tests twice, first
         using <fgfs-old> to create the recording and <fgfs> to replay it,
         second the other way round.
+    --test-motion
+        Checks that speed of aircraft on replay is not affected by frame rate.
+
+        We deliberately change frame rate while recording UFO moving at
+        constant speed.
     
     BOOLS is comma-sparated list of 0 or 1, with 1 activating the particular
     feature. So for example '--continuous 0' tests normal recording/replay',
@@ -77,20 +82,23 @@ class Fg:
         args += f' --telnet={port}'
         args2 = args.split()
         
+        environ = os.environ.copy()
         if isinstance(env, str):
-            env2 = dict()
             for nv in env.split():
                 n, v = nv.split('=', 1)
-                env2[n] = v
-            env = env2
-        environ = os.environ.copy()
-        if env:
-            environ.update(env)
+                environ[n] = v
         if 'DISPLAY' not in environ:
             environ['DISPLAY'] = ':0'
             
         # Run flightgear in new process, telling it to open telnet server.
-        self.child = subprocess.Popen(args2)
+        #
+        # We run not in a shell, otherwise self.child.terminate() doesn't
+        # work - it would kill the shell but leave fgfs running (there are
+        # workarounds for this, such as prefixing the command with 'exec').
+        #
+        log(f'Command is: {args}')
+        log(f'Running: {args2}')
+        self.child = subprocess.Popen(args2, env=environ)
         
         # Connect to flightgear's telnet server.
         timeout = 15
@@ -278,11 +286,80 @@ def test_record_replay(
     log('Test passed')
 
 
+def test_motion(fgfs):
+
+    aircraft = 'ufo'    
+    fg = Fg( aircraft, f'{fgfs} --aircraft={aircraft}')
+    path = f'{fg.aircraft}-continuous.fgtape'
+    
+    if 0:
+        items = fg.fg.ls( '/sim')
+        log( '/sim is:')
+        for item in items:
+            log( f'    {item}')
+        fg.close()
+        return
+    
+    fg.waitfor('/sim/fdm-initialized', 1, timeout=45)
+    
+    # Run UFO with constant speed, varying the framerate so we check whether
+    # recorded speeds are affected.
+    #
+    fg.fg['/controls/engines/engine[0]/throttle'] = 0.1
+    fg.fg['/sim/frame-rate-throttle-hz'] = 5
+    
+    # Delay to let frame rate settle.
+    time.sleep(10)
+    
+    # Start recording.
+    fg.fg['/sim/replay/record-continuous'] = 1
+    time.sleep(5)
+    
+    # Change frame rate.
+    fg.fg['/sim/frame-rate-throttle-hz'] = 2
+    time.sleep(5)
+    
+    # Restore original frame rate.
+    fg.fg['/sim/frame-rate-throttle-hz'] = 5
+    time.sleep(5)
+    
+    # Stop recording.
+    fg.fg['/sim/replay/record-continuous'] = 0
+    
+    fg.close()
+    
+    path2 = os.readlink( path)
+    g_cleanup.append(lambda: os.remove(path2))
+    
+    fg = Fg( aircraft, f'{fgfs} --load-tape={path} --prop:/sim/replay/log-raw-speed=true')
+    fg.waitfor('/sim/fdm-initialized', 1, timeout=45)
+    fg.fg['/sim/frame-rate-throttle-hz'] = 10
+    fg.waitfor('/sim/replay/replay-state', 1)
+    fg.waitfor('/sim/replay/replay-state-eof', 1)
+    
+    items0 = fg.fg.ls( '/sim/replay/log-raw-speed-values')
+    items = []
+    for item in items0:
+        if item.name == 'value':
+            items.append(item)
+    num_errors = 0
+    for item in items[:-1]: # Ignore last  item because replay at end interpolates.
+        speed = float(item.value)
+        prefix = ' '
+        if abs(speed - 200) > 0.5:
+            num_errors += 1
+            prefix = '*'
+        log( f'    {prefix} speed={speed} details: {item}')
+    fg.close()
+    assert num_errors == 0, 'Replay showed uneven speed.'
+
+
 if __name__ == '__main__':
 
     fgfs = f'./build-walk/fgfs.exe-run.sh'
     fgfs_old = None
     
+    do_test = 'all'
     continuous_s = [0, 1]
     extra_properties_s = [0, 1]
     main_view_s = [0, 1]
@@ -319,60 +396,67 @@ if __name__ == '__main__':
         elif arg == '--f-old':
             fgfs_old = next(args)
             fgfs_reverse = [0, 1]
+        elif arg == '--test-motion':
+            do_test = 'motion'
         else:
             raise Exception(f'Unrecognised arg: {arg!r}')
     
-    try:
-        if fgfs_old:
-            for fgfs1, fgfs2 in [(fgfs, fgfs_old), (fgfs_old, fgfs)]:
-                for multiplayer in 0, 1:
-                    test_record_replay(
-                            fgfs1,
-                            fgfs2,
-                            multiplayer,
-                            continuous=0,
-                            extra_properties=0,
-                            main_view=0,
-                            length=10,
-                            )
-        else:
-            its_max = len(multiplayer_s) * len(continuous_s) * len(extra_properties_s) * len(main_view_s) * len(fgfs_reverse_s)
-            it = 0
-            for multiplayer in multiplayer_s:
-                for continuous in continuous_s:
-                    for extra_properties in extra_properties_s:
-                        for main_view in main_view_s:
-                            for fgfs_reverse in fgfs_reverse_s:
-                                if fgfs_reverse:
-                                    fgfs_save = fgfs_old
-                                    fgfs_load = fgfs
-                                else:
-                                    fgfs_save = fgfs
-                                    fgfs_load = fgfs_old
+    if do_test == 'motion':
+        test_motion( fgfs)
+    elif do_test == 'all':
+        try:
+            if fgfs_old:
+                for fgfs1, fgfs2 in [(fgfs, fgfs_old), (fgfs_old, fgfs)]:
+                    for multiplayer in 0, 1:
+                        test_record_replay(
+                                fgfs1,
+                                fgfs2,
+                                multiplayer,
+                                continuous=0,
+                                extra_properties=0,
+                                main_view=0,
+                                length=10,
+                                )
+            else:
+                its_max = len(multiplayer_s) * len(continuous_s) * len(extra_properties_s) * len(main_view_s) * len(fgfs_reverse_s)
+                it = 0
+                for multiplayer in multiplayer_s:
+                    for continuous in continuous_s:
+                        for extra_properties in extra_properties_s:
+                            for main_view in main_view_s:
+                                for fgfs_reverse in fgfs_reverse_s:
+                                    if fgfs_reverse:
+                                        fgfs_save = fgfs_old
+                                        fgfs_load = fgfs
+                                    else:
+                                        fgfs_save = fgfs
+                                        fgfs_load = fgfs_old
 
-                                ok = True
-                                if it_min is not None:
-                                    if it < it_min:
-                                        ok = False
-                                if it_max is not None:
-                                    if it >= it_max:
-                                        ok = False
-                                log('')
-                                log(f'===')
-                                log(f'=== {it}/{its_max}')
-                                if ok:
-                                    test_record_replay(
-                                        fgfs_save,
-                                        fgfs_load,
-                                        multiplayer=multiplayer,
-                                        continuous=continuous,
-                                        extra_properties=extra_properties,
-                                        main_view=main_view,
-                                        length=10
-                                        )
-                                it += 1
-    finally:
-        pass
+                                    ok = True
+                                    if it_min is not None:
+                                        if it < it_min:
+                                            ok = False
+                                    if it_max is not None:
+                                        if it >= it_max:
+                                            ok = False
+                                    log('')
+                                    log(f'===')
+                                    log(f'=== {it}/{its_max}')
+                                    if ok:
+                                        test_record_replay(
+                                            fgfs_save,
+                                            fgfs_load,
+                                            multiplayer=multiplayer,
+                                            continuous=continuous,
+                                            extra_properties=extra_properties,
+                                            main_view=main_view,
+                                            length=10
+                                            )
+                                    it += 1
+        finally:
+            pass
+    else:
+        assert 0, f'do_test={do_test}'
     
     # If everything passed, cleanup. Otherwise leave recordings in place, as
     # they can be useful for debugging.

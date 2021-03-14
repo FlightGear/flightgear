@@ -95,6 +95,8 @@ private:
     SGPropertyNode_ptr m_RecordContinuous;
     SGPropertyNode_ptr m_RecordExtraProperties;
     
+    SGPropertyNode_ptr m_LogRawSpeed;
+    
     // This contains copy of all properties that we are recording, so that we
     // can send only differences.
     //

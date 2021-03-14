@@ -223,6 +223,7 @@ private:
 
     SGPropertyNode_ptr disable_replay;
     SGPropertyNode_ptr replay_master;
+    SGPropertyNode_ptr replay_master_eof;
     SGPropertyNode_ptr replay_time;
     SGPropertyNode_ptr replay_time_str;
     SGPropertyNode_ptr replay_looped;

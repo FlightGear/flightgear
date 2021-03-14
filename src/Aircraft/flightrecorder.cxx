@@ -230,6 +230,7 @@ FGFlightRecorder::FGFlightRecorder(const char* pConfigName) :
     m_ReplayMainWindowSize      (fgGetNode("/sim/replay/replay-main-window-size", true)),
     m_RecordContinuous          (fgGetNode("/sim/replay/record-continuous", true)),
     m_RecordExtraProperties     (fgGetNode("/sim/replay/record-extra-properties", true)),
+    m_LogRawSpeed               (fgGetNode("/sim/replay/log-raw-speed", true)),
     m_TotalRecordSize(0),
     m_ConfigName(pConfigName),
     m_usingDefaultConfig(false),
@@ -775,6 +776,7 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer,
             const double* pDoubles = (const double*) &pBuffer[Offset];
             const double* pLastDoubles = (const double*) &pLastBuffer[Offset];
             unsigned int SignalCount = m_CaptureDouble.size();
+            
             for (unsigned int i=0; i<SignalCount; i++)
             {
                 double v = pDoubles[i];
@@ -785,6 +787,38 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer,
                 }
                 m_CaptureDouble[i].Signal->setDoubleValue(v);
             }
+            
+            if (m_LogRawSpeed->getBoolValue()) {
+                // Log raw speed values to
+                // /sim/replay/log-raw-speed-values/value[]. This is used by
+                // scripts/python/recordreplay.py --test-motion.
+                //
+                SGGeod pos_geod = SGGeod::fromDegFt(
+                        fgGetDouble("/position/longitude-deg"),
+                        fgGetDouble("/position/latitude-deg"),
+                        fgGetDouble("/position/altitude-ft")
+                        );
+                SGVec3d pos = SGVec3d::fromGeod(pos_geod);
+                static SGVec3d pos_prev;
+                static double simtime_prev = -1;
+                double dt = SimTime - simtime_prev;
+                if (simtime_prev != -1 && dt > 0) {
+                    double distance = length(pos - pos_prev);
+                    double speed = dt ? distance / dt : -1;
+                    SG_LOG(SG_GENERAL, SG_DEBUG, "User aircraft:"
+                            << " pLastBuffer=" << ((void*) pLastBuffer)
+                            << " SimTime=" << SimTime
+                            << " dt=" << dt
+                            << " distance=" << distance
+                            << " speed=" << speed
+                            );
+                    SGPropertyNode* n = fgGetNode("/sim/replay/log-raw-speed-values", true /*create*/);
+                    n->addChild("value")->setDoubleValue(speed);
+                }
+                pos_prev = pos;
+                simtime_prev = SimTime;
+            }
+            
             Offset += SignalCount * sizeof(double);
         }
 

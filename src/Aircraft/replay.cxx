@@ -356,6 +356,7 @@ FGReplay::init()
 {
     disable_replay       = fgGetNode("/sim/replay/disable",      true);
     replay_master        = fgGetNode("/sim/replay/replay-state", true);
+    replay_master_eof    = fgGetNode("/sim/replay/replay-state-eof", true);
     replay_time          = fgGetNode("/sim/replay/time",         true);
     replay_time_str      = fgGetNode("/sim/replay/time-str",     true);
     replay_looped        = fgGetNode("/sim/replay/looped",       true);
@@ -552,6 +553,7 @@ FGReplay::start(bool NewTape)
     if (0 == replay_master->getIntValue())
     {
         replay_master->setIntValue(1);
+        replay_master_eof->setIntValue(0);
         if (NewTape)
         {
             // start replay at initial time, when loading a new tape
@@ -1010,6 +1012,7 @@ FGReplay::update( double dt )
             {
                 if (!was_finished_already)
                 {
+                    replay_master_eof->setIntValue(1);
                     guiMessage("End of tape. 'Esc' to return.");
                     was_finished_already = true;
                 }
