@@ -38,6 +38,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/locale.hxx>
+#include <Main/options.hxx>
 #include <Main/sentryIntegration.hxx>
 #include <Scripting/NasalClipboard.hxx> // clipboard access
 
@@ -351,7 +352,7 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
     if (oc.hasContextKey("primary-aircraft")) {
         const auto fullId = fgGetString("/sim/aircraft-id");
         if (fullId != fgGetString("/sim/aircraft")) {
-            return getAggregate(Aggregation::MainAircraft);
+            return getAggregate(Aggregation::MainAircraft, fullId);
         }
 
         return getAggregate(Aggregation::HangarAircraft, fullId);
@@ -478,6 +479,12 @@ void ErrorReporter::ErrorReporterPrivate::writeReportToStream(const AggregateRep
         writeLogToStream(err, os);
         os << std::endl; // trailing blank line
     }
+
+    os << "Command line / launcher / fgfsrc options" << endl;
+    for (auto o : Options::sharedInstance()->extractOptions()) {
+        os << "\t" << o << "\n";
+    }
+    os << endl;
 }
 
 bool ErrorReporter::ErrorReporterPrivate::dismissReportCommand(const SGPropertyNode* args, SGPropertyNode*)
@@ -699,6 +706,14 @@ void ErrorReporter::update(double dt)
     if (showDialog) {
         auto gui = globals->get_subsystem<NewGUI>();
         gui->showDialog("error-report");
+
+        // this needs a bit more thought, disabling for the now
+#if 0
+        // pause the sim when showing the popup
+        SGPropertyNode_ptr pauseArgs(new SGPropertyNode);
+        pauseArgs->setBoolValue("force-pause", true);
+        globals->get_commands()->execute("do_pause", pauseArgs);
+#endif
     }
 }
 
