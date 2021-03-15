@@ -739,7 +739,7 @@ bool FGNativeFDM::open() {
 #if FG_HAVE_DDS
     if ( io->get_type() == sgDDSType ) {
         SG_DDS *dds = static_cast<SG_DDS*>(io);
-        dds->setup("FG_DDS_FDM" , &FG_DDS_FDM_desc, sizeof (FG_DDS_FDM));
+        dds->setup(&FG_DDS_FDM_desc, sizeof (FG_DDS_FDM));
     }
 #endif
 

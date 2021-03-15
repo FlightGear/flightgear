@@ -699,7 +699,7 @@ bool FGNativeCtrls::open() {
 #if FG_HAVE_DDS
     if ( io->get_type() == sgDDSType ) {
         SG_DDS *dds = static_cast<SG_DDS*>(io);
-        dds->setup("FG_DDS_Ctrls" , &FG_DDS_Ctrls_desc, sizeof (FG_DDS_Ctrls));
+        dds->setup(&FG_DDS_Ctrls_desc, sizeof (FG_DDS_Ctrls));
     }
 #endif
 
