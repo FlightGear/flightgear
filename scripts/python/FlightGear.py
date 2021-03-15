@@ -27,6 +27,10 @@ class FGTelnet(Telnet):
         else:
             self._putcmd('ls %s' % dir )
         return self._getresp()
+    
+    def ls2(self, dir_):
+        self._putcmd(f'ls2 {dir_}')
+        return self._getresp()
 
     def dump(self):
         """Dump current state as XML."""
@@ -66,12 +70,21 @@ class FGTelnet(Telnet):
         Telnet.write(self, cmd.encode('utf-8'))
         return
 
-    # Internal: get a response from FlightGear
     def _getresp(self):
         (_i,_match,resp) = Telnet.expect(self, self.prompt, self.timeout)
         # Remove the terminating prompt.
         # Everything preceding it is the response.
         return resp.decode('utf-8').split('\n')[:-1]
+
+class LsItem:
+    def __init__(self, num_children, name, index, type_, value):
+        self.num_children = num_children
+        self.name = name
+        self.index = index
+        self.type_ = type_
+        self.value = value
+    def __str__(self):
+        return f'num_children={self.num_children} name={self.name}[{self.index}] type={self.type_}: {self.value!r}'
 
 class FlightGear:
     """FlightGear interface class.
@@ -136,6 +149,24 @@ class FlightGear:
             # SGPropertyNode::setStringValue().
             value = 'true'
         self.telnet.set( key, value )
+    
+    def ls(self, dir_):
+        '''
+        Returns list of LsItem's.
+        '''
+        lines = self.telnet.ls2(dir_)
+        ret = []
+        for line in lines:
+            if line.endswith('\r'):
+                line = line[:-1]
+            #print(f'line={line!r}')
+            num_children, name, index, type_, value = line.split(' ', 4)
+            index = int(index)
+            num_children = int(num_children)
+            item = LsItem(num_children, name, index, type_, value)
+            #print(f'item={item}')
+            ret.append( item)
+        return ret
 
     def quit(self):
         """Close the telnet connection to FlightGear."""

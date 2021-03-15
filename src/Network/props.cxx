@@ -354,7 +354,9 @@ FGProps::PropsChannel::foundTerminator()
                         line += "/";
                     } else {
                         if (mode == PROMPT) {
-                            string value = child->getStringValue();
+                            std::string value = child->getStringValue();
+                            value = simgear::strutils::replace(value, "\n", "\\n");
+                            value = simgear::strutils::replace(value, "'", "\\'");
                             line += " =\t'" + value + "'\t(";
                             line += getValueTypeString( child );
                             line += ")";
@@ -363,6 +365,21 @@ FGProps::PropsChannel::foundTerminator()
 
                     line += getTerminator();
                     push( line.c_str() );
+                }
+            } else if (command == "ls2") {
+                SGPropertyNode* dir = globals->get_props()->getNode(tokens[1]);
+                if (dir) {
+                    for (int i = 0; i < dir->nChildren(); i++) {
+                        SGPropertyNode* child = dir->getChild(i);
+                        string line = std::to_string(child->nChildren())
+                                + " " + child->getNameString()
+                                + " " + std::to_string(child->getIndex())
+                                + " " + getValueTypeString(child)
+                                + " " + simgear::strutils::replace(child->getStringValue(), "\n", "\\n")
+                                + getTerminator()
+                                ;
+                        push( line.c_str() );
+                    }
                 }
             } else if ( command == "dump" ) {
                 stringstream buf;
@@ -647,6 +664,7 @@ dump               dump current state (in xml)\r\n\
 get <var>          show the value of a parameter\r\n\
 help               show this help message\r\n\
 ls [<dir>]         list directory\r\n\
+ls2 [<dir>]        list directory (machine-readable format: num_children name index type value)\r\n\
 prompt             switch to interactive mode (default)\r\n\
 pwd                display your current path\r\n\
 quit               terminate connection\r\n\
