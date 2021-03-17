@@ -60,6 +60,15 @@ SettingControl {
                        "page (for example, airport or altitude) will be ignored.");
         }
 
+        SettingDescription {
+            id: aircraftArgsText
+            enabled: root.enabled
+            visible: tokenizer.haveAircraftArgs
+            width: parent.width
+            text: qsTr("<b>Note:</b> you have entered arguments relating to the selected aircraft. " +
+                       "To prevent problems caused by conflicting settings, the aircraft page will be ignored.");
+        }
+
         PlainTextEditBox
         {
             id: edit
@@ -86,6 +95,12 @@ SettingControl {
         target: _location
         property: "skipFromArgs"
         value: tokenizer.havePositionalArgs
+    }
+
+    Binding {
+        target: _launcher
+        property: "skipAircraftFromArgs"
+        value: tokenizer.haveAircraftArgs
     }
 
     ArgumentTokenizer {

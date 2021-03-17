@@ -155,9 +155,12 @@ Item {
             }
 
             ClickableText {
-                text: _launcher.selectedAircraftInfo.name === "" ?
-                          qsTr("No aircraft selected") : _launcher.selectedAircraftInfo.name
-                enabled: _launcher.selectedAircraftInfo.name !== ""
+                text: {
+                    if (_launcher.skipAircraftFromArgs) return qsTr("<i>set from user arguments (in Settings)</i>");
+                    if (_launcher.selectedAircraftInfo.name === "") return  qsTr("No aircraft selected"); 
+                    return _launcher.selectedAircraftInfo.name;
+                    }
+                enabled: _launcher.selectedAircraftInfo.name !== "" && !_launcher.skipAircraftFromArgs
                 font.pixelSize: Style.headingFontPixelSize
 
                 onClicked: root.showSelectedAircraft();
@@ -166,7 +169,7 @@ Item {
             HistoryPopup {
                 id: aircraftHistoryPopup
                 model: _launcher.aircraftHistory
-                enabled: !_launcher.aircraftHistory.isEmpty
+                enabled: !_launcher.aircraftHistory.isEmpty && !_launcher.skipAircraftFromArgs
                 onSelected: {
                     _launcher.selectedAircraft = _launcher.aircraftHistory.uriAt(index)
                 }
@@ -187,12 +190,14 @@ Item {
             // empty space in next row (thumbnail, long aircraft description)
             Item {
                 width: 1; height: 1
+                visible: aircraftDetailsRow.visible
             }
 
             Item {
                 id: aircraftDetailsRow
                 width: summaryGrid.middleColumnWidth
                 height: Math.max(thumbnail.height, aircraftDescriptionText.height)
+                visible: !_launcher.skipAircraftFromArgs
 
                 ThumbnailImage {
                     id: thumbnail
@@ -219,6 +224,7 @@ Item {
 
             Item {
                 width: 1; height: 1
+                visible: aircraftDetailsRow.visible
             }
 
             // aircraft state row, if enabled
@@ -229,7 +235,7 @@ Item {
 
             Column {
                 id: stateSelectionGroup
-                visible: _launcher.selectedAircraftInfo.hasStates
+                visible: _launcher.selectedAircraftInfo.hasStates && !_launcher.skipAircraftFromArgs
                 width: summaryGrid.middleColumnWidth
                 spacing: Style.margin
 

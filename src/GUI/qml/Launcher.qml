@@ -64,6 +64,11 @@ Item {
         onSkipFromArgsChanged: startupPagesModel.setProperty(2, "buttonDisabled", _location.skipFromArgs)
     }
 
+    Connections {
+        target: _launcher
+        onSkipAircraftFromArgsChanged: startupPagesModel.setProperty(1, "buttonDisabled", _launcher.skipAircraftFromArgs)
+    }
+
     state: "loader"
     states: [
         State {

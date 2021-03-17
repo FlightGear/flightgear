@@ -287,6 +287,9 @@ void LauncherController::saveSettings()
 
 void LauncherController::collectAircraftArgs()
 {
+    if (m_skipAircraftFromArgs)
+        return;
+
     // aircraft
     if (!m_selectedAircraft.isEmpty()) {
         if (m_selectedAircraft.isLocalFile()) {

@@ -27,6 +27,7 @@ class LauncherArgumentTokenizer : public QObject
     Q_PROPERTY(bool valid READ isValid NOTIFY argStringChanged)
     Q_PROPERTY(bool havePositionalArgs READ havePositionalArgs NOTIFY argStringChanged)
     Q_PROPERTY(bool haveUnsupportedArgs READ haveUnsupportedArgs NOTIFY argStringChanged)
+    Q_PROPERTY(bool haveAircraftArgs READ haveAircraftArgs NOTIFY argStringChanged)
 
 public:
     LauncherArgumentTokenizer();
@@ -43,6 +44,7 @@ public:
 
     bool haveUnsupportedArgs() const;
     bool havePositionalArgs() const;
+    bool haveAircraftArgs() const;
 public slots:
     void setArgString(QString argString);
 
