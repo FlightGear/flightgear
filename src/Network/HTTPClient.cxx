@@ -223,6 +223,21 @@ static naRef f_catalog_search(pkg::Catalog& cat, const nasal::CallContext& ctx)
     return ctx.to_nasal(result);
 }
 
+static naRef f_catalog_packages(pkg::Catalog& cat, const nasal::CallContext& ctx)
+{
+    // TODO: support package types
+    pkg::PackageList result = cat.packages();
+    return ctx.to_nasal(result);
+}
+
+
+static naRef f_catalog_installedPackages(pkg::Catalog& cat, naContext c)
+{
+    // TODO: support package types
+    pkg::PackageList result = cat.installedPackages();
+    return nasal::to_nasal(c, result);
+}
+
 static naRef f_package_variants(pkg::Package& pack, naContext c)
 {
     nasal::Hash h(c);
@@ -250,11 +265,11 @@ void FGHTTPClient::postinit()
   .member("id", &pkg::Catalog::id)
   .member("url", &pkg::Catalog::url)
   .member("description", &pkg::Catalog::description)
-  .method("packages", &pkg::Catalog::packages)
+  .method("packages", &f_catalog_packages)
   .method("packageById", &pkg::Catalog::getPackageById)
   .method("refresh", &pkg::Catalog::refresh)
   .method("needingUpdate", &pkg::Catalog::packagesNeedingUpdate)
-  .member("installed", &pkg::Catalog::installedPackages)
+  .member("installed", &f_catalog_installedPackages)
   .method("search", &f_catalog_search)
   .member("enabled", &pkg::Catalog::isEnabled);
 
