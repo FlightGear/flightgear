@@ -139,8 +139,9 @@ Rectangle {
                        + "(This is version %1)").arg(_launcher.versionString);
 
         case FG.CatalogListModel.InvalidData:
-            return qsTr("The requested hangar seems to be invalid (damaged or incomplete). "
-                        + "Please contact the hangar authors, or try again later");
+            return qsTr("The requested URL doesn't contain valid hangar data. "
+                        + "Check you entered a valid hangar URL. If it's correct, "
+                        + "please contact the hangar authors, or try again later." );
 
         default:
             return qsTr("Unknown error: " + _addOns.catalogs.statusOfAddingCatalog);

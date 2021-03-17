@@ -325,7 +325,9 @@ CatalogListModel::CatalogStatus CatalogListModel::translateStatusForCatalog(Cata
     case Delegate::FAIL_NOT_FOUND:      return NotFoundOnServer;
     case Delegate::FAIL_VERSION:        return IncompatibleVersion;
     case Delegate::FAIL_HTTP_FORBIDDEN: return HTTPForbidden;
-    case Delegate::FAIL_VALIDATION:     return InvalidData;
+    case Delegate::FAIL_VALIDATION:
+    case Delegate::FAIL_EXTRACT:
+        return InvalidData;
     default:
         return UnknownError;
     }
