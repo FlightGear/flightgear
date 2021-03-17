@@ -17,6 +17,8 @@ Item {
         }
     }
 
+    GettingStartedScope.controller: tips.controller
+
     NavaidDiagram {
         id: diagram
         anchors.fill: parent
@@ -25,6 +27,13 @@ Item {
         offsetBearing: _location.offsetRadial
         offsetDistance: _location.offsetDistance
         heading: _location.heading
+
+        GettingStartedTip {
+            tipId: "locationNavDiagram"
+            anchors.centerIn: parent
+            arrow: GettingStartedTip.NoArrow
+            text: qsTr("Drag here to move the map. Mouse-wheel zooms in and out.")
+        }
     }
 
     Rectangle {
@@ -158,4 +167,11 @@ Item {
             }
         } // main layout column
     } // main panel rectangle
+
+
+    GettingStartedTipLayer {
+        id: tips
+        anchors.fill: parent
+        scopeId: "locationNavDetails"
+    }
 }

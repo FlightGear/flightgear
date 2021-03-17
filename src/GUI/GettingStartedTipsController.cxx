@@ -43,6 +43,7 @@ static std::initializer_list<TipGeometryByArrowLocation> static_tipGeometries = 
     {GettingStartedTip::Arrow::LeftCenter, QRectF{0.0, 0.0, tipBoxWidth, dummyHeight}, Qt::AlignVCenter},
     {GettingStartedTip::Arrow::RightCenter, QRectF{-(tipBoxWidth + TipBackgroundBox::arrowHeight()), 0.0, tipBoxWidth, dummyHeight}, Qt::AlignVCenter},
     {GettingStartedTip::Arrow::LeftTop, QRectF{0.0, topHeightOffset, tipBoxWidth, dummyHeight}, Qt::AlignTop},
+    {GettingStartedTip::Arrow::NoArrow, QRectF{-halfBoxWidth, 0.0, tipBoxWidth, dummyHeight}, Qt::AlignVCenter},
 
 };
 
@@ -338,13 +339,15 @@ QRectF GettingStartedTipsController::tipGeometry() const
     }
 
     QRectF g = it->geometry;
-    if ((arrow == GettingStartedTip::Arrow::LeftCenter) || (arrow == GettingStartedTip::Arrow::RightCenter)
-            || (arrow == GettingStartedTip::Arrow::LeftTop)) {
+    if ((arrow == GettingStartedTip::Arrow::LeftCenter) 
+            || (arrow == GettingStartedTip::Arrow::RightCenter)
+            || (arrow == GettingStartedTip::Arrow::LeftTop)
+            || (arrow == GettingStartedTip::Arrow::NoArrow))
+    {
         g.setHeight(_activeTipHeight);
     } else {
         g.setHeight(_activeTipHeight + TipBackgroundBox::arrowHeight());
     }
-
 
     switch (it->verticalAlignment) {
     case Qt::AlignBottom:

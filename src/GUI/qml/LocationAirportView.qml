@@ -12,6 +12,8 @@ Item {
         onGuidChanged: _location.setBaseLocation(this)
     }
 
+    GettingStartedScope.controller: tips.controller
+
     readonly property bool isHeliport: airportData.type === Positioned.Heliport
     readonly property bool haveParking: airportData.airportHasParkings
 
@@ -37,6 +39,13 @@ Item {
 
         approachExtensionEnabled: _location.onFinal
         approachExtension: _location.offsetDistance
+
+        GettingStartedTip {
+            tipId: "locationDiagram"
+            anchors.centerIn: parent
+            arrow: GettingStartedTip.NoArrow
+            text: qsTr("Click here to select a runway or parking position, and drag to pan. Mouse-wheel zooms in and out.")
+        }
     }
 
     // not very declarative, try to remove this over time
@@ -383,4 +392,10 @@ Item {
 
         } // main layout column
     } // main panel rectangle
+
+    GettingStartedTipLayer {
+        id: tips
+        anchors.fill: parent
+        scopeId: "locationAirportDetails"
+    }
 }

@@ -97,6 +97,15 @@ QPainterPath pathFromArrowAndGeometry(GettingStartedTip::Arrow arrow, const QRec
         pp.closeSubpath();
         break;
 
+    case GettingStartedTip::Arrow::NoArrow:
+        pp.moveTo(0.0, g.top());
+        pp.lineTo(g.right(), g.top());
+        pp.lineTo(g.right(), g.bottom());
+        pp.lineTo(0.0, g.bottom());
+        pp.closeSubpath();
+        break;
+
+
     default:
         qWarning() << Q_FUNC_INFO << "unhandled:" << arrow;
         break;
