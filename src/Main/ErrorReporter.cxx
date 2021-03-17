@@ -34,6 +34,7 @@
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/structure/commands.hxx>
 
+#include <GUI/MessageBox.hxx>
 #include <GUI/new_gui.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -684,6 +685,10 @@ void ErrorReporter::update(double dt)
             d->_reportsDirty = false;
         }
     } // end of locked section
+
+    if (showDialog && flightgear::isHeadlessMode()) {
+        showDialog = false;
+    }
 
     // do not call into another subsystem with our lock held,
     // as this can trigger deadlocks
