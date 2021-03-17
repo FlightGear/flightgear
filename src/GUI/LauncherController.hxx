@@ -96,6 +96,8 @@ class LauncherController : public QObject
     Q_PROPERTY(int launchCount READ launchCount CONSTANT);
     Q_PROPERTY(int versionLaunchCount READ versionLaunchCount CONSTANT);
 
+    // property to indicate if we're disabling the aircraft selection because the user entered it manuall
+    Q_PROPERTY(bool skipAircraftFromArgs MEMBER m_skipAircraftFromArgs NOTIFY skipAircraftFromArgsChanged)
 public:
     explicit LauncherController(QObject *parent, QWindow* win);
 
@@ -244,6 +246,7 @@ signals:
     void installedAircraftCountChanged(int installedAircraftCount);
 
     void didResetGettingStartedTips();
+    void skipAircraftFromArgsChanged();
 public slots:
     void setSelectedAircraft(QUrl selectedAircraft);
 
@@ -330,6 +333,7 @@ private:
     int m_launchCount = 0;
     int m_versionLaunchCount = 0;
     bool m_flyRequested = false;
+    bool m_skipAircraftFromArgs = false;
 };
 
 #endif // LAUNCHERCONTROLLER_HXX

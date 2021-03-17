@@ -170,3 +170,10 @@ bool LauncherArgumentTokenizer::havePositionalArgs() const
 {
     return haveArgsIn(positionalArgs);
 }
+
+const std::set<std::string> aircraftArgs({"state", "aircraft", "aircraft-dir", "vehicle"});
+
+bool LauncherArgumentTokenizer::haveAircraftArgs() const
+{
+    return haveArgsIn(aircraftArgs);
+}
