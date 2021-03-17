@@ -43,7 +43,7 @@ inline std::string fgswiftbusServiceName()
 
 bool SwiftConnection::startServer(const SGPropertyNode* arg, SGPropertyNode* root)
 {
-    SwiftConnection::plug = std::make_unique<FGSwiftBus::CPlugin>();
+    SwiftConnection::plug.reset(new FGSwiftBus::CPlugin{});
 
     serverRunning = true;
     fgSetBool("/sim/swift/serverRunning", true);
