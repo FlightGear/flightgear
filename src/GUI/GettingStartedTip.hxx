@@ -35,6 +35,7 @@ public:
         TopRight,
         TopLeft,
         LeftTop, // on the left side, at the top
+        NoArrow
     };
 
     Q_ENUM(Arrow)
