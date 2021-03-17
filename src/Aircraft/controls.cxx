@@ -545,7 +545,9 @@ FGControls::move_elevator_trim( double amt )
 void FGControls::set_rudder(double pos)
 {
     _inner_set_rudder(pos);
-    _rudderNode->fireValueChanged();
+    if (_rudderNode) {
+        _rudderNode->fireValueChanged();
+    }
 }
 
 void
