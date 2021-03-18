@@ -105,8 +105,8 @@ private:
     SGPropertyNode_ptr _maxFrameRate;
     SGPropertyNode_ptr _localTimeStringNode;
 
-    bool _lastClockFreeze;
-    bool _adjustWarpOnUnfreeze;
+    bool _lastClockFreeze = false;
+    bool _adjustWarpOnUnfreeze = false;
 
     // frame-rate / worst-case latency / update-rate counters
     SGPropertyNode_ptr _frameRate;
