@@ -343,7 +343,7 @@ bool Transponder::getReplyAnnunciator() const
 
 bool Transponder::isPowerSwitchOn() const
 {
-    return (_knob_node->getIntValue() > KNOB_STANDBY);
+    return (_knob_node->getIntValue() >= KNOB_STANDBY);
 }
 
 
