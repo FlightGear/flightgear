@@ -17,19 +17,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test_commRadio.hxx"
-#include "test_dme.hxx"
-#include "test_gps.hxx"
-#include "test_hold_controller.hxx"
-#include "test_navRadio.hxx"
-#include "test_rnav_procedures.hxx"
-#include "test_transponder.hxx"
 
-// Set up the unit tests.
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(NavRadioTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(GPSTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(HoldControllerTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(RNAVProcedureTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(DMEReceiverTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommRadioTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TransponderTests, "Unit tests");
+#pragma once
+
+
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
+
+#include <simgear/structure/subsystem_mgr.hxx>
+
+class Transponder;
+class SGGeod;
+
+// The flight plan unit tests.
+class TransponderTests : public CppUnit::TestFixture
+{
+    // Set up the test suite.
+    CPPUNIT_TEST_SUITE(TransponderTests);
+
+    CPPUNIT_TEST(testBasic);
+    CPPUNIT_TEST(testStandby);
+
+    CPPUNIT_TEST_SUITE_END();
+
+    SGSubsystemRef setupStandardTransponder(const std::string& name, int index);
+
+public:
+    // Set up function for each test.
+    void setUp();
+
+    // Clean up after each test.
+    void tearDown();
+
+    // The tests.
+    void testBasic();
+    void testStandby();
+};
