@@ -579,12 +579,12 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
     fltEnd   = tmgr->getLastFlight(req);
 
 
-     //cerr << "Finding available flight " << endl;
+    SG_LOG (SG_AI, SG_BULK, "Finding available flight " );
      // For Now:
      // Traverse every registered flight
-     if (fltBegin == fltEnd) {
-          //cerr << "No Flights Scheduled for " << req << endl;
-     }
+    if (fltBegin == fltEnd) {
+      SG_LOG (SG_AI, SG_BULK, "No Flights Scheduled for " << req );
+    }
      int counter = 0;
      for (FGScheduledFlightVecIterator i = fltBegin; i != fltEnd; i++) {
           (*i)->adjustTime(now);
@@ -613,11 +613,16 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
                    continue;
               }
           }
-          if (! flights.empty()) {
+          if (!flights.empty()) {
             time_t arrival = flights.back()->getArrivalTime();
+            time_t departure = (*i)->getDepartureTime();
             int groundTime = groundTimeFromRadius();
-            if ((*i)->getDepartureTime() < (arrival+(groundTime)))
-                continue;
+            if (departure < (arrival+(groundTime))) {
+              SG_LOG (SG_AI, SG_BULK, "Not flight candidate : " << (*i)->getCallSign() << " Arrival : " << arrival << " Planned Departure " << departure << " < " << (arrival+groundTime));
+              continue;
+            } else {
+              SG_LOG (SG_AI, SG_BULK, "Next flight candidate : " << (*i)->getCallSign() );
+            }
           }
           if (min != 0) {
               time_t dep = (*i)->getDepartureTime();

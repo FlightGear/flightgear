@@ -100,6 +100,13 @@ FGScheduledFlight::FGScheduledFlight(const FGScheduledFlight &other)
   available         = other.available;
 }
 
+/**
+ * @param cs The callsign
+ * @param fr The flightrules 
+ * @param depPrt The departure ICAO
+ * @param arrPrt The arrival ICAO
+ */ 
+
 FGScheduledFlight::FGScheduledFlight(const string& cs,
 		   const string& fr,
 		   const string& depPrt,
@@ -137,7 +144,14 @@ FGScheduledFlight::FGScheduledFlight(const string& cs,
       SG_LOG( SG_AI, SG_ALERT, "Unknown repeat period in flight plan "
                                     "of flight '" << cs << "': " << rep );
     }
-
+  if (!repeatPeriod) {
+      SG_LOG( SG_AI, SG_ALERT, "Zero repeat period in flight plan "
+                                    "of flight '" << cs << "': " << rep );
+      available = false;
+      return;
+  }
+  
+  
   // What we still need to do is preprocess the departure and
   // arrival times. 
   departureTime = processTimeString(deptime);
@@ -220,25 +234,19 @@ void FGScheduledFlight::update()
 
 void FGScheduledFlight::adjustTime(time_t now)
 {
-  //cerr << "1: Adjusting schedule please wait: " << now 
-  //   << " " << arrivalTime << " " << arrivalTime+repeatPeriod << endl;
+  SG_LOG( SG_AI, SG_BULK, "1: Adjusting schedule please wait: " << now << " " << arrivalTime << " " << (arrivalTime+repeatPeriod));
   // Make sure that the arrival time is in between 
   // the current time and the next repeat period.
-  while ((arrivalTime < now) || (arrivalTime > now+repeatPeriod))
-    {
-      if (arrivalTime < now)
-	{
-	  departureTime += repeatPeriod;
-	  arrivalTime   += repeatPeriod;
-	}
-      else if (arrivalTime > now+repeatPeriod)
-	{
-	  departureTime -= repeatPeriod;
-	  arrivalTime   -= repeatPeriod;
-	}
-      //      cerr << "2: Adjusting schedule please wait: " << now 
-      //   << " " << arrivalTime << " " << arrivalTime+repeatPeriod << endl;
-    }
+  while ((arrivalTime < now) || (arrivalTime > now + repeatPeriod)) {
+      if (arrivalTime < now) {
+          departureTime += repeatPeriod;
+          arrivalTime += repeatPeriod;
+      } else if (arrivalTime > now + repeatPeriod) {
+          departureTime -= repeatPeriod;
+          arrivalTime -= repeatPeriod;
+      }
+      SG_LOG( SG_AI, SG_BULK, "2: Adjusting schedule please wait: " << now << " " << arrivalTime << " " << (arrivalTime+repeatPeriod));
+  }
 }
 
 
