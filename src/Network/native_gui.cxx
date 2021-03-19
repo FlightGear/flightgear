@@ -473,7 +473,7 @@ bool FGNativeGUI::open() {
 
 #if FG_HAVE_DDS
     if ( io->get_type() == sgDDSType ) {
-        SG_DDS *dds = static_cast<SG_DDS*>(io);
+        SG_DDS_Topic *dds = static_cast<SG_DDS_Topic*>(io);
         dds->setup("FG_DDS_GUI" , &FG_DDS_GUI_desc, sizeof (FG_DDS_GUI));
     }
 #endif

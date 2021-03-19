@@ -331,7 +331,7 @@ FGIO::parse_port_config( const string_list& tokens, bool& o_ok )
     }
 #if FG_HAVE_DDS
     else if ( medium == "dds")  {
-        io->set_io_channel( new SG_DDS() );
+        io->set_io_channel( new SG_DDS_Topic() );
     }
 #endif
     else
