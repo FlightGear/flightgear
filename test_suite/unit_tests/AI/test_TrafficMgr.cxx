@@ -40,13 +40,12 @@ void TrafficMgrTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("TrafficMgr");
     FGTestApi::setUp::initNavDataCache();
-    auto props = globals->get_props();
-    props->setBoolValue("sim/ai/enabled", true);
-    props->setBoolValue("sim/traffic-manager/enabled", true);
+    fgSetBool("sim/ai/enabled", true);
+    fgSetBool("sim/traffic-manager/enabled", true);
     fgSetBool("/environment/realwx/enabled", false);
     fgSetBool("/environment/metar/valid", false);
     //Otherwise TrafficMgr won't load
-    props->setBoolValue("sim/signals/fdm-initialized", true);
+    fgSetBool("sim/signals/fdm-initialized", true);
     globals->set_fg_root(SGPath::fromUtf8(FG_TEST_SUITE_DATA));
 }
 
