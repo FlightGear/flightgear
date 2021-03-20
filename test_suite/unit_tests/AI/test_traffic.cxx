@@ -56,12 +56,13 @@ void TrafficTests::setUp()
 
     fgSetBool("sim/ai/enabled", true);
     fgSetBool("sim/traffic-manager/enabled", true);
-    fgSetBool("sim/signals/fdm-initialized", false);
+    fgSetBool("sim/signals/fdm-initialized", true);
     fgSetInt("/environment/visibility-m", 1000);
     fgSetBool("/environment/realwx/enabled", false);
     fgSetBool("/environment/metar/valid", false);
     fgSetBool("/sim/terrasync/ai-data-update-now", false);
 
+    globals->append_data_path(SGPath::fromUtf8(FG_TEST_SUITE_DATA), false);
 
     // ensure EDDF has a valid ground net for parking testing
     FGAirport::clearAirportsCache();
@@ -488,11 +489,11 @@ void TrafficTests::testPushforwardParkYBBNRepeat()
     const char* flighttype = "ga";
 
     FGAISchedule* schedule = new FGAISchedule(
-        "B737", "KLM", departureAirport->getId(), "G-BLA", "ID", false, "B737", "KLM", "N", flighttype, radius, 8);
-    FGScheduledFlight* flight = new FGScheduledFlight("gaParkYSSY", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
+        "B737", "KLM", departureAirport->getId(), "G-BLA", "TST_BN_2", false, "B737", "KLM", "N", flighttype, radius, 8);
+    FGScheduledFlight* flight = new FGScheduledFlight("gaParkYSSY", "VFR", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "TST_BN_2");
     schedule->assign(flight);
 
-    FGScheduledFlight* returnFlight = new FGScheduledFlight("gaParkYSSY", "", arrivalAirport->getId(), departureAirport->getId(), 24, arr, ret, "WEEK", "HBR_BN_2");
+    FGScheduledFlight* returnFlight = new FGScheduledFlight("gaParkYSSY", "", arrivalAirport->getId(), departureAirport->getId(), 24, arr, ret, "WEEK", "TST_BN_2");
     schedule->assign(returnFlight);
 
     FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
@@ -551,6 +552,7 @@ FGAIAircraft * TrafficTests::flyAI(FGAIAircraft * aiAircraft, std::string fName)
     FGTestApi::setUp::logLinestringsToKML(fName);
     flightgear::SGGeodVec geods = flightgear::SGGeodVec();
     char buffer[50];
+    int iteration = 1;
     int lastLeg = -1;
     double lastHeading = 0;
     for (size_t i = 0; i < 12000000 && !(aiAircraft->getDie()) && aiAircraft->GetFlightPlan()->getLeg() < 10; i++) {
@@ -574,19 +576,23 @@ FGAIAircraft * TrafficTests::flyAI(FGAIAircraft * aiAircraft, std::string fName)
         if (aiAircraft->GetFlightPlan()->getLeg() == 9) {
             this->dump(aiAircraft);
         }
-        if (aiAircraft->GetFlightPlan()->getLeg() > lastLeg) {
-            sprintf(buffer, "AI Leg %d", lastLeg);
+        if (aiAircraft->GetFlightPlan()->getLeg() != lastLeg) {
+            sprintf(buffer, "AI Leg %d Callsign %s Iteration %d", lastLeg, aiAircraft->getCallSign().c_str(), iteration);
             FGTestApi::writeGeodsToKML(buffer, geods);
+            if (aiAircraft->GetFlightPlan()->getLeg() < lastLeg) {
+                iteration++;
+            }
             lastLeg = aiAircraft->GetFlightPlan()->getLeg();
             SGGeod last = geods.back();
             geods.clear();
             geods.insert(geods.end(), last);
         }
         CPPUNIT_ASSERT_LESSEQUAL(10, aiAircraft->GetFlightPlan()->getLeg());
+        CPPUNIT_ASSERT_MESSAGE( "Aircraft has not completed test in time.", i < 30000);
         FGTestApi::runForTime(3);
     }
     lastLeg = aiAircraft->GetFlightPlan()->getLeg();
-    sprintf(buffer, "AI Leg %d", lastLeg);
+    sprintf(buffer, "AI Leg %d Callsign %s Iteration %d", lastLeg, aiAircraft->getCallSign().c_str(), iteration);
     FGTestApi::writeGeodsToKML(buffer, geods);
     geods.clear();
     return aiAircraft;
