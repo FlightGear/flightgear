@@ -47,6 +47,7 @@ class PosInitTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testParkAtOccupied);
     CPPUNIT_TEST(testParkInvalid);
     CPPUNIT_TEST(testAirportRunwayRepositionAirport);
+    CPPUNIT_TEST(testParkNoAI);
 
 
     // Navaid tests
@@ -99,6 +100,7 @@ public:
     void testDefaultStartup();
     void testParkAtOccupied();
     void testParkInvalid();
+    void testParkNoAI();
     
     // Navaid tests
     void testVOROnlyStartup();

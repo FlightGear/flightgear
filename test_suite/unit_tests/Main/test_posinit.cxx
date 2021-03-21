@@ -982,3 +982,48 @@ void PosInitTests::testMPRunwayStartNoGroundnet()
     checkPosition(rwy->threshold());
 }
 
+void PosInitTests::testParkNoAI()
+{
+    fgSetBool("/sim/traffic-manager/enabled", false);
+    {
+        Options* opts = Options::sharedInstance();
+        opts->setShouldLoadDefaultConfig(false);
+
+        const char* args[] = {"dummypath", "--airport=EDDF", "--parkpos=F235"};
+        opts->init(3, (char**) args, SGPath());
+        opts->processOptions();
+    }
+
+    CPPUNIT_ASSERT(!fgGetBool("/sim/traffic-manager/enabled"));
+    CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
+    CPPUNIT_ASSERT(! fgGetBool("/sim/presets/runway-requested"));
+
+    checkStringProp("/sim/presets/parkpos", "F235");
+    initPosition();
+
+    auto apt = FGAirport::getByIdent("EDDF");
+    auto parking1 = apt->groundNetwork()->findParkingByName("F235");
+    CPPUNIT_ASSERT(parking1);
+
+    fgSetDouble("/environment/metar/base-wind-dir-deg",  350.0);
+    fgSetBool("/environment/metar/valid", true);
+
+    simulateFinalizePosition();
+
+    checkClosestAirport("EDDF"s);
+    checkPosition(parking1->geod(), 20);
+
+    //////////
+    fgSetDouble("/sim/presets/longitude-deg", -9990.00);
+    fgSetDouble("/sim/presets/latitude-deg",  -9990.00);
+    fgSetString("/sim/presets/airport-id", "EDDF");
+    fgSetDouble("/sim/presets/heading-deg",  9990.00);
+    fgSetString("/sim/presets/parkpos", "foobarzot");
+
+    simulateStartReposition();
+    finalizePosition();
+        
+    // we should be on the best runway, let's see
+    auto runway = apt->getRunwayByIdent("36");
+    checkPosition(runway->threshold());
+}
