@@ -1103,7 +1103,7 @@ void fgCreateSubsystems(bool duringReset) {
     ////////////////////////////////////////////////////////////////////
     // Initialize the replay subsystem
     ////////////////////////////////////////////////////////////////////
-    globals->add_new_subsystem<FGReplay>(SGSubsystemMgr::GENERAL);
+    globals->add_new_subsystem<FGReplay>(SGSubsystemMgr::POST_FDM);
     globals->add_subsystem("history", new FGFlightHistory);
     
 #ifdef ENABLE_AUDIO_SUPPORT
