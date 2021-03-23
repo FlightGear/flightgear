@@ -411,7 +411,7 @@ void FGExternalPipe::update_binary( double dt ) {
     *((int *)ptr) = iterations;
     // cout << "iterations = " << iterations << endl;
     ptr += sizeof(int);
-    memcpy( ptr, (char *)( globals->get_props(),&ctrls), length );
+    memcpy( ptr, (char *)(&ctrls), length );
     // cout << "writing control structure, size = "
     //      << length + sizeof(int) << endl;
 
