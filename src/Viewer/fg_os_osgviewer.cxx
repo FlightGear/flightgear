@@ -438,6 +438,7 @@ void fgOSCloseWindow()
         }
     }
     FGScenery::resetPagerSingleton();
+    flightgear::addSentryBreadcrumb("fgOSCloseWindow, clearing camera group", "info");
     flightgear::CameraGroup::setDefault(NULL);
     WindowSystemAdapter::setWSA(NULL);
     viewer = NULL;
