@@ -517,7 +517,7 @@ QUrl QmlAircraftInfo::homePage() const
     if (_item) {
         return resolveItem()->homepageUrl;
     } else if (_package) {
-        const auto u = _package->properties()->getStringValue("urls/home-page");
+        const auto u = _package->getLocalisedProp("urls/home-page");
         return QUrl(QString::fromStdString(u));
     }
 
@@ -529,7 +529,7 @@ QUrl QmlAircraftInfo::supportUrl() const
     if (_item) {
         return resolveItem()->supportUrl;
     } else if (_package) {
-        const auto u = _package->properties()->getStringValue("urls/support");
+        const auto u = _package->getLocalisedProp("urls/support");
         return QUrl(QString::fromStdString(u));
     }
 
@@ -541,7 +541,7 @@ QUrl QmlAircraftInfo::wikipediaUrl() const
     if (_item) {
         return resolveItem()->wikipediaUrl;
     } else if (_package) {
-        const auto u = _package->properties()->getStringValue("urls/wikipedia");
+        const auto u = _package->getLocalisedProp("urls/wikipedia");
         return QUrl(QString::fromStdString(u));
     }
 
