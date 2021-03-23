@@ -61,17 +61,4 @@ public:
     bool close();
 };
 
-
-// Helper functions which may be useful outside this class
-
-// Populate the FGNetCtrls/FG_DDS_Ctrls structure from the property tree.
-template<typename T>
-void FGProps2Ctrls( T *net, bool honor_freezes, bool net_byte_order );
-
-// Update the property tree from the FGNetCtrls/FG_DDS_Ctrls structure.
-template<typename T>
-void FGCtrls2Props( T *net, bool honor_freezes, bool net_byte_order );
-
 #endif // _FG_NATIVE_CTRLS_HXX
-
-

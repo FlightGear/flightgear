@@ -57,18 +57,4 @@ public:
     bool close();
 };
 
-
-// Helper functions which may be useful outside this class
-
-// Populate the FGNetGUI/FG_DDS_GUI structure from the property tree.
-template<typename T>
-void FGProps2GUI( T *net );
-
-// Update the property tree from the FGNetGUI/FG_DDS_GUI structure.
-template<typename T>
-void FGGUI2Props( T *net );
-
-
 #endif // _FG_NATIVE_GUI_HXX
-
-

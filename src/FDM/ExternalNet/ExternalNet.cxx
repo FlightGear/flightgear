@@ -31,6 +31,7 @@
 #include <simgear/io/sg_netBuffer.hxx>
 
 #include <Main/fg_props.hxx>
+#include <Network/native_structs.hxx>
 #include <Network/native_ctrls.hxx>
 #include <Network/native_fdm.hxx>
 
@@ -221,7 +222,7 @@ void FGExternalNet::update(double dt)
 
     // Send control positions to remote fdm
     length = sizeof(ctrls);
-    FGProps2Ctrls<FGNetCtrls>(&ctrls, true, true);
+    FGProps2Ctrls<FGNetCtrls>( globals->get_props(), &ctrls, true, true);
     if (data_client.send((char*)(&ctrls), length, 0) != length) {
         SG_LOG(SG_IO, SG_DEBUG, "Error writing data.");
     } else {
@@ -232,7 +233,7 @@ void FGExternalNet::update(double dt)
     length = sizeof(fdm);
     while ((result = data_server.recv((char*)(&fdm), length, 0)) >= 0) {
         SG_LOG(SG_IO, SG_DEBUG, "Success reading data.");
-        FGFDM2Props<FGNetFDM>(&fdm);
+        FGFDM2Props<FGNetFDM>( globals->get_props(), &fdm);
     }
 }
 

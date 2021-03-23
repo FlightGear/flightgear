@@ -93,9 +93,21 @@ int main()
    * the buffer array to a valid sample memory location. */
   samples[0] = FG_DDS_FDM__alloc ();
 
-  /* Poll until a keys is pressed */
+  // wait set
+  dds_entity_t waitset = dds_create_waitset(participant);
+  dds_entity_t rdcond = dds_create_readcondition(reader,
+                                                 DDS_NOT_READ_SAMPLE_STATE);
+  int status = dds_waitset_attach(waitset, rdcond, reader);
+  if (status < 0)
+      DDS_FATAL("ds_waitset_attach: %s\n", dds_strretcode(-status));
+
+  /* Wait for a new packet. */
   set_mode(1);
-  while( !get_key() )
+
+  size_t num = 1;
+  dds_attach_t results[num];
+  dds_duration_t timeout = DDS_MSECS(500);
+  while(dds_waitset_wait(waitset, results, num, timeout) >= 0)
   {
     /* Do the actual read.
      * The return value contains the number of read samples. */
@@ -117,11 +129,8 @@ int main()
       fflush(stdout);
 //    break;
     }
-    else
-    {
-      /* Polling sleep. */
-      dds_sleepfor(DDS_MSECS(20));
-    }
+
+    if (get_key()) break;
   }
   set_mode(0);
 

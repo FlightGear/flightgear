@@ -40,6 +40,7 @@
 #include <simgear/misc/strutils.hxx> // split()
 
 #include <Main/fg_props.hxx>
+#include <Network/native_structs.hxx>
 #include <Network/native_ctrls.hxx>
 #include <Network/native_fdm.hxx>
 #include <Scenery/scenery.hxx>
@@ -405,12 +406,12 @@ void FGExternalPipe::update_binary( double dt ) {
 
     // Send control positions to remote fdm
     length = sizeof(ctrls);
-    FGProps2Ctrls<FGNetCtrls>( &ctrls, true, false );
+    FGProps2Ctrls<FGNetCtrls>( globals->get_props(), &ctrls, true, false );
     char *ptr = buf;
     *((int *)ptr) = iterations;
     // cout << "iterations = " << iterations << endl;
     ptr += sizeof(int);
-    memcpy( ptr, (char *)(&ctrls), length );
+    memcpy( ptr, (char *)( globals->get_props(),&ctrls), length );
     // cout << "writing control structure, size = "
     //      << length + sizeof(int) << endl;
 
@@ -426,7 +427,7 @@ void FGExternalPipe::update_binary( double dt ) {
                 << fifo_name_2 << " expected 1 item, but got " << result );
     } else {
         // cout << "  read successful." << endl;
-        FGFDM2Props<FGNetFDM>( &fdm, false );
+        FGFDM2Props<FGNetFDM>( globals->get_props(), &fdm, false );
     }
 #endif
 }
