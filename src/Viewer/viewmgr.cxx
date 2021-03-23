@@ -30,6 +30,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/scene/util/OsgMath.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Main/fg_props.hxx>
 #include "view.hxx"
@@ -184,8 +185,13 @@ FGViewMgr::update (double dt)
 
 // update the camera now
     osg::ref_ptr<flightgear::CameraGroup> cameraGroup = flightgear::CameraGroup::getDefault();
+    if (!cameraGroup) {
+        // attempting to diagnose the cause of FLIGHTGEAR-H9F
+        throw sg_exception("FGViewMgr::update: no camera group exists");
+    }
+
     cameraGroup->setCameraParameters(currentView->get_v_fov(),
-                                     cameraGroup->getMasterAspectRatio());
+                                        cameraGroup->getMasterAspectRatio());
     cameraGroup->update(toOsg(currentView->getViewPosition()),
                         toOsg(currentView->getViewOrientation()));
 }
