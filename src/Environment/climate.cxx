@@ -934,6 +934,11 @@ void FGClimate::set_environment()
             fgSetDouble("/environment/season", 0.0);
         }
     }
+
+    // for material animation
+    double latitude_deg = _positionLatitudeNode->getDoubleValue();
+    double desert_pct = std::min( fabs(latitude_deg-23.5)/23.5, 1.0);
+    fgSetDouble("/sim/rendering/desert", 0.1-0.2*desert_pct);
 }
 
 void FGClimate::setEnvironmentUpdate(bool value)
