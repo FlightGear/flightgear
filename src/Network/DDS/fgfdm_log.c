@@ -1,5 +1,7 @@
 #include "dds/dds.h"
+#include "dds_gui.h"
 #include "dds_fdm.h"
+#include "dds_ctrls.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -59,47 +61,83 @@ void set_mode(int want_key)
 int main()
 {
   dds_entity_t participant;
-  dds_entity_t topic;
-  dds_entity_t reader;
-  FG_DDS_FDM *fdm;
+  dds_entity_t gui_topic;
+  dds_entity_t fdm_topic;
+  dds_entity_t ctrls_topic;
+  dds_entity_t gui_reader;
+  dds_entity_t fdm_reader;
+  dds_entity_t ctrls_reader;
+  dds_entity_t rdcond;
   void *samples[MAX_SAMPLES];
   dds_sample_info_t infos[MAX_SAMPLES];
   dds_return_t rc;
   dds_qos_t *qos;
+  int status;
+
+  /* Initialize sample buffer, by pointing the void pointer within
+   * the buffer array to a valid sample memory location. */
+  samples[0] = FG_DDS_FDM__alloc ();
 
   /* Create a Participant. */
   participant = dds_create_participant(DDS_DOMAIN_DEFAULT, NULL, NULL);
   if(participant < 0)
     DDS_FATAL("dds_create_participant: %s\n", dds_strretcode(-participant));
 
-  /* Create a Topic. */
-  topic = dds_create_topic(
-    participant, &FG_DDS_FDM_desc, "FG_DDS_FDM", NULL, NULL);
-  if(topic < 0)
-    DDS_FATAL("dds_create_topic: %s\n", dds_strretcode(-topic));
+  /* Create a wait set */
+  dds_entity_t waitset = dds_create_waitset(participant);
 
-  /* Create a reliable Reader. */
   qos = dds_create_qos();
   dds_qset_reliability(qos, DDS_RELIABILITY_RELIABLE, DDS_SECS(10));
-  reader = dds_create_reader(participant, topic, qos, NULL);
-  if(reader < 0)
-    DDS_FATAL("dds_create_reader: %s\n", dds_strretcode(-reader));
+
+  /* Create a GUI Topic. */
+  gui_topic = dds_create_topic(
+    participant, &FG_DDS_GUI_desc, "FG_DDS_GUI", NULL, NULL);
+  if(gui_topic < 0)
+    DDS_FATAL("dds_create_topic: %s\n", dds_strretcode(-gui_topic));
+
+  gui_reader = dds_create_reader(participant, gui_topic, qos, NULL);
+  if(gui_reader < 0)
+    DDS_FATAL("dds_create_reader: %s\n", dds_strretcode(-gui_reader));
+
+  rdcond = dds_create_readcondition(gui_reader, DDS_NOT_READ_SAMPLE_STATE);
+  status = dds_waitset_attach(waitset, rdcond, gui_reader);
+  if (status < 0)
+      DDS_FATAL("ds_waitset_attach: %s\n", dds_strretcode(-status));
+
+  /* Create an FDM Topic. */
+  fdm_topic = dds_create_topic(
+    participant, &FG_DDS_FDM_desc, "FG_DDS_FDM", NULL, NULL);
+  if(fdm_topic < 0)
+    DDS_FATAL("dds_create_topic: %s\n", dds_strretcode(-fdm_topic));
+
+  fdm_reader = dds_create_reader(participant, fdm_topic, qos, NULL);
+  if(fdm_reader < 0)
+    DDS_FATAL("dds_create_reader: %s\n", dds_strretcode(-fdm_reader));
+
+  rdcond = dds_create_readcondition(fdm_reader, DDS_NOT_READ_SAMPLE_STATE);
+  status = dds_waitset_attach(waitset, rdcond, fdm_reader);
+  if (status < 0)
+      DDS_FATAL("ds_waitset_attach: %s\n", dds_strretcode(-status));
+
+  /* Create an Ctrls Topic. */
+  ctrls_topic = dds_create_topic(
+    participant, &FG_DDS_Ctrls_desc, "FG_DDS_Ctrls", NULL, NULL);
+  if(ctrls_topic < 0)
+    DDS_FATAL("dds_create_topic: %s\n", dds_strretcode(-ctrls_topic));
+
+  ctrls_reader = dds_create_reader(participant, ctrls_topic, qos, NULL);
+  if(ctrls_reader < 0)
+    DDS_FATAL("dds_create_reader: %s\n", dds_strretcode(-ctrls_reader));
+
+  rdcond = dds_create_readcondition(ctrls_reader, DDS_NOT_READ_SAMPLE_STATE);
+  status = dds_waitset_attach(waitset, rdcond, ctrls_reader);
+  if (status < 0)
+      DDS_FATAL("ds_waitset_attach: %s\n", dds_strretcode(-status));
+
   dds_delete_qos(qos);
 
   printf("\n=== [fgfdm_log] Waiting for a sample ...\n");
   fflush(stdout);
-
-  /* Initialize sample buffer, by pointing the void pointer within
-   * the buffer array to a valid sample memory location. */
-  samples[0] = FG_DDS_FDM__alloc ();
-
-  // wait set
-  dds_entity_t waitset = dds_create_waitset(participant);
-  dds_entity_t rdcond = dds_create_readcondition(reader,
-                                                 DDS_NOT_READ_SAMPLE_STATE);
-  int status = dds_waitset_attach(waitset, rdcond, reader);
-  if (status < 0)
-      DDS_FATAL("ds_waitset_attach: %s\n", dds_strretcode(-status));
 
   /* Wait for a new packet. */
   set_mode(1);
@@ -111,24 +149,56 @@ int main()
   {
     /* Do the actual read.
      * The return value contains the number of read samples. */
-    rc = dds_take(reader, samples, infos, 1, 1);
+    rc = dds_take(gui_reader, samples, infos, 1, 1);
     if(rc < 0)
-      DDS_FATAL("dds_read: %s\n", dds_strretcode(-rc));
+      DDS_FATAL("dds_read: (gui) %s\n", dds_strretcode(-rc));
+
+    if((rc > 0) &&(infos[0].valid_data))
+    {
+      FG_DDS_GUI *gui = (FG_DDS_GUI*) samples[0];
+      printf("=== [fgfdm_log] Received : ");
+      printf("GUI Message:\n");
+      printf(" version: %i\n", gui->version);
+      printf(" tuned_freq: %lf\n", gui->longitude);
+      printf(" nav_radial  %lf\n", gui->latitude);
+      printf(" dist_nm:    %lf\n", gui->altitude);
+    }
+
+    rc = dds_take(fdm_reader, samples, infos, 1, 1);
+    if(rc < 0)
+      DDS_FATAL("dds_read: (fdm) %s\n", dds_strretcode(-rc));
 
     /* Check if we read some data and it is valid. */
     if((rc > 0) &&(infos[0].valid_data))
     {
       /* Print Message. */
-      fdm = (FG_DDS_FDM*) samples[0];
+      FG_DDS_FDM *fdm = (FG_DDS_FDM*) samples[0];
       printf("=== [fgfdm_log] Received : ");
       printf("FDM Message:\n");
       printf(" version: %i\n", fdm->version);
-      printf(" longitude: %lf\n", fdm->longitude);
-      printf(" latitude:  %lf\n", fdm->latitude);
-      printf(" altitude:  %lf\n", fdm->altitude);
-      fflush(stdout);
-//    break;
+      printf(" longitude:  %lf\n", fdm->longitude);
+      printf(" latitude:   %lf\n", fdm->latitude);
+      printf(" altitude:   %lf\n", fdm->altitude);
     }
+
+    rc = dds_take(ctrls_reader, samples, infos, 1, 1);
+    if(rc < 0)
+      DDS_FATAL("dds_read: (ctrls) %s\n", dds_strretcode(-rc));
+
+    /* Check if we read some data and it is valid. */
+    if((rc > 0) &&(infos[0].valid_data))
+    {
+      /* Print Message. */
+      FG_DDS_Ctrls *ctrls = (FG_DDS_Ctrls*) samples[0];
+      printf("=== [fgfdm_log] Received : ");
+      printf("Ctrls Message:\n");
+      printf(" version: %i\n", ctrls->version);
+      printf("  aileron:   %lf\n", ctrls->aileron);
+      printf(" elevator:   %lf\n", ctrls->elevator);
+      printf("   rudder:   %lf\n", ctrls->rudder);
+    }
+
+    fflush(stdout);
 
     if (get_key()) break;
   }
