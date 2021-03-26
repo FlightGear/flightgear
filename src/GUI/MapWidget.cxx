@@ -485,6 +485,14 @@ MapWidget::~MapWidget()
   clearData();
 }
 
+static void createPropertyIfRequired(SGPropertyNode_ptr p, const std::string& name, bool defaultValue)
+{
+    auto existing = p->getChild(name);
+    if (!existing) {
+        p->setBoolValue(name, defaultValue);
+    }
+}
+
 void MapWidget::setProperty(SGPropertyNode_ptr prop)
 {
   _root = prop;
@@ -495,17 +503,12 @@ void MapWidget::setProperty(SGPropertyNode_ptr prop)
   
 // expose MAX_ZOOM to the UI
   _root->setIntValue("max-zoom", MAX_ZOOM);
-  _root->setBoolValue("centre-on-aircraft", true);
-  _root->setBoolValue("draw-data", false);
-  _root->setBoolValue("draw-flight-history", false);
-  _root->setBoolValue("magnetic-headings", true);
-
-  /* If /gui/map/key-pan is undefined, fgdata's gui/dialogs/map.xml will set it
-  to "" when it opens map, so if we see this we change to default value of 1.
-  */
-  if (!strcmp( _root->getStringValue("key-pan"), "")) {
-    _root->setIntValue("key-pan", 1);
-  }
+    
+  createPropertyIfRequired(_root, "centre-on-aircraft", true);
+  createPropertyIfRequired(_root, "draw-data", false);
+  createPropertyIfRequired(_root, "draw-flight-history", false);
+  createPropertyIfRequired(_root, "magnetic-headings", true);
+  createPropertyIfRequired(_root, "key-pan", true);
 }
 
 void MapWidget::setSize(int w, int h)
