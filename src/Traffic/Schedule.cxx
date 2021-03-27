@@ -579,7 +579,7 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
     fltEnd   = tmgr->getLastFlight(req);
 
 
-    SG_LOG (SG_AI, SG_BULK, "Finding available flight " );
+    SG_LOG (SG_AI, SG_BULK, "Finding available flight for " << req);
      // For Now:
      // Traverse every registered flight
     if (fltBegin == fltEnd) {
