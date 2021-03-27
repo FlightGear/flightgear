@@ -86,7 +86,7 @@ int main()
     FG_DDS_FDM fdm;
     FG_DDS_GUI gui;
 
-    if (topics["gui"]->read<FG_DDS_GUI>(gui)) {
+    if (topics["gui"]->read(gui)) {
       printf("=== [fgfdm_log] Received : ");
       printf("GUI Message:\n");
       printf(" version: %i\n", gui.version);
@@ -95,7 +95,7 @@ int main()
       printf("    dist_nm: %lf\n", gui.altitude);
     }
 
-    if (topics["fdm"]->read<FG_DDS_FDM>(fdm)) {
+    if (topics["fdm"]->read(fdm)) {
       printf("=== [fgfdm_log] Received : ");
       printf("FDM Message:\n");
       printf(" version: %i\n", fdm.version);
@@ -104,7 +104,7 @@ int main()
       printf("   altitude: %lf\n", fdm.altitude);
     }
 
-    if (topics["ctrls"]->read<FG_DDS_Ctrls>(ctrls)) {
+    if (topics["ctrls"]->read(ctrls)) {
       printf("=== [fgfdm_log] Received : ");
       printf("Ctrls Message:\n");
       printf(" version: %i\n", ctrls.version);
