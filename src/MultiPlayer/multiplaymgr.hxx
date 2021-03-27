@@ -144,6 +144,7 @@ private:
     SGPropertyNode *pMultiPlayRange;
     SGPropertyNode *pMultiPlayTransmitPropertyBase;
     SGPropertyNode *pReplayState;
+    SGPropertyNode *pLogRawSpeedMultiplayer;
    
     typedef std::map<unsigned int, const struct IdPropertyList*> PropertyDefinitionMap;
     PropertyDefinitionMap mPropertyDefinition;

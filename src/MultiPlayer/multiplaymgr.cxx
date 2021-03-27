@@ -1056,6 +1056,7 @@ FGMultiplayMgr::FGMultiplayMgr()
   pMultiPlayRange = fgGetNode("/sim/multiplay/visibility-range-nm", true);
   pMultiPlayRange->setIntValue(100);
   pReplayState = fgGetNode("/sim/replay/replay-state", true);
+  pLogRawSpeedMultiplayer = fgGetNode("/sim/replay/log-raw-speed-multiplayer", true);
 
 
 } // FGMultiplayMgr::FGMultiplayMgr()
@@ -2479,6 +2480,38 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
   if (!mp)
     mp = addMultiplayer(MsgHdr->Callsign, PosMsg->Model, fallback_model_index);
   mp->addMotionInfo(motionInfo, stamp);
+  
+  // Optionally gather information about the raw speed of a selected
+  // multiplayer aircraft. This is for scripts/python/recordreplay.py
+  // --test-motion-mp.
+  //
+  {
+    const char* callsign = pLogRawSpeedMultiplayer->getStringValue();
+    if (callsign && callsign[0] && !strcmp(callsign, MsgHdr->Callsign)) {
+        static SGVec3d s_pos_prev;
+        static double s_simtime_prev = -1;
+        SGVec3d pos = motionInfo.position;
+        double dt = motionInfo.time - s_simtime_prev;
+        if (s_simtime_prev != -1 && dt > 0) {
+            double distance = length(pos - s_pos_prev);
+            double speed = distance / dt;
+            SGPropertyNode* n = fgGetNode("/sim/replay/log-raw-speed-multiplayer-values", true /*create*/);
+            n = n->addChild("value");
+            n->setDoubleValue(speed);
+            SG_LOG(SG_GENERAL, SG_ALERT, "Multiplayer aircraft callsign=" << callsign << ":"
+                    << " motionInfo.time=" << motionInfo.time
+                    << " dt=" << dt
+                    << " distance=" << distance
+                    << " speed=" << speed
+                    << " s_pos_prev=" << s_pos_prev
+                    << " pos=" << pos
+                    << " n->getPath()=" << n->getPath(true /*simplify*/)
+                    );
+        }
+        s_simtime_prev = motionInfo.time;
+        s_pos_prev = pos;
+    }
+  }
 } // FGMultiplayMgr::ProcessPosMsg()
 
 
