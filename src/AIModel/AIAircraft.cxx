@@ -46,6 +46,7 @@ extern double fgIsFinite(double x);
 #include "performancedata.hxx"
 #include "performancedb.hxx"
 #include <signal.h>
+#include <iostream>
 
 using std::string;
 using std::cerr;
@@ -314,12 +315,16 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
             return;
         }
         prev = fp->getPreviousWaypoint();
+        SG_LOG(SG_AI, SG_BULK, "Previous WP \t" << prev->getName());
         curr = fp->getCurrentWaypoint();
+        SG_LOG(SG_AI, SG_BULK, "Current WP \t" << curr->getName());
         next = fp->getNextWaypoint();
+        if( next ) {
+            SG_LOG(SG_AI, SG_BULK, "Next WP \t" << next->getName());
+        }
     }
-    if (!curr)
-    {
-        // Oops! FIXME
+    if (!curr) {
+        SG_LOG(SG_AI, SG_WARN, "No current WP" << next->getName());
         return;
     }
 
@@ -345,15 +350,21 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
 
         //TODO let the fp handle this (loading of next leg)
         fp->IncrementWaypoint( trafficRef != 0 );
-        if  ( ((!(fp->getNextWaypoint()))) && (trafficRef != 0) )
+        if  ( ((!(fp->getNextWaypoint()))) && (trafficRef != 0) ) {
             if (!loadNextLeg()) {
                 setDie(true);
                 return;
             }
+        }
 
         prev = fp->getPreviousWaypoint();
+        SG_LOG(SG_AI, SG_BULK, "Previous WP \t" << prev->getName());
         curr = fp->getCurrentWaypoint();
+        SG_LOG(SG_AI, SG_BULK, "Current WP \t" << curr->getName());
         next = fp->getNextWaypoint();
+        if( next ) {
+            SG_LOG(SG_AI, SG_BULK, "Next WP \t" << next->getName());
+        }
 
         // Now that we have incremented the waypoints, excute some traffic manager specific code
         if (trafficRef) {
@@ -752,8 +763,13 @@ void FGAIAircraft::handleFirstWaypoint() {
         }
 
     prev = fp->getPreviousWaypoint();   //first waypoint
+    SG_LOG(SG_AI, SG_BULK, "Previous WP \t" << prev->getName());
     curr = fp->getCurrentWaypoint();    //second waypoint
+    SG_LOG(SG_AI, SG_BULK, "Current WP \t" << curr->getName());
     next = fp->getNextWaypoint();       //third waypoint (might not exist!)
+    if( next ) {
+        SG_LOG(SG_AI, SG_BULK, "Next WP \t" << next->getName());
+    }
 
     setLatitude(prev->getLatitude());
     setLongitude(prev->getLongitude());
@@ -762,14 +778,17 @@ void FGAIAircraft::handleFirstWaypoint() {
 
     if (prev->getSpeed() > 0.0)
         setHeading(fp->getBearing(prev, curr));
-    else
+    else {
+        // FIXME When going to parking it must be the heading of the parking
         setHeading(fp->getBearing(curr, prev));
+    }
 
     // If next doesn't exist, as in incrementally created flightplans for
     // AI/Trafficmanager created plans,
     // Make sure lead distance is initialized otherwise
-    if (next)
+    if (next) {
         fp->setLeadDistance(speed, hdg, curr, next);
+    }
 
     if (curr->getCrossat() > -1000.0) //use a calculated descent/climb rate
     {
@@ -846,7 +865,7 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
     if (bearing < minBearing) {
         minBearing = bearing;
         if (minBearing < 10) {
-                minBearing = 10;
+            minBearing = 10;
         }
         if ((minBearing < 360.0) && (minBearing > 10.0)) {
             speedFraction = 0.5 + (cos(minBearing *SG_DEGREES_TO_RADIANS) * 0.5);
@@ -1053,7 +1072,7 @@ void FGAIAircraft::updateHeading(double dt) {
             if (headingDiff > 180)
                 headingDiff = fabs(headingDiff - 360);
 
-            groundTargetSpeed = tgt_speed; // * cos(headingDiff * SG_DEGREES_TO_RADIANS);
+            groundTargetSpeed = tgt_speed * cos(headingDiff * SG_DEGREES_TO_RADIANS);
 
             if (sign(groundTargetSpeed) != sign(tgt_speed))
                 groundTargetSpeed = 0.21 * sign(tgt_speed); // to prevent speed getting stuck in 'negative' mode
@@ -1413,4 +1432,72 @@ void FGAIAircraft::updateModelProperties(double dt)
   setNavLight(fp->getPreviousWaypoint()->getNavLight());
   setStrobeLight(fp->getPreviousWaypoint()->getStrobeLight());
   setTaxiLight(fp->getPreviousWaypoint()->getTaxiLight());
+}
+
+void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
+    o << "Lat\t";
+    o << "Lon\t";
+    o << "heading change rate\t";
+    o << "headingErr\t";
+    o << "minBearing\t";
+    o << "speedFraction\t";
+    o << "groundOffset\t";
+    o << "speed\t";
+    o << "groundTargetSpeed\t";
+    o << "getVerticalSpeedFPM\t";
+    o << "getTrueHeadingDeg\t";
+    o << "Bearing\t";
+    o << "headingChangeRate\t";
+    o << "headingError\t";
+    o << "Name\tWP Lat\tWP Lon\tDist\t";
+    o << "Leg\tNum WP\t";
+    o << endl;
+}
+
+void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
+    o << lineIndex << "\t";
+    o << this->getGeodPos().getLatitudeDeg() << "\t";
+    o << this->getGeodPos().getLongitudeDeg() << "\t";
+    o << headingChangeRate << "\t";
+    o << headingError << "\t";
+    o << minBearing << "\t";
+    o << speedFraction << "\t";
+    o << groundOffset << "\t";
+
+    o << round(this->getSpeed()) << "\t";
+    o << groundTargetSpeed  << "\t";
+    o  << round(this->getVerticalSpeedFPM()) << "\t";
+    o << this->getTrueHeadingDeg() << "\t";
+    o << this->GetFlightPlan()->getBearing(this->getGeodPos(), this->GetFlightPlan()->getCurrentWaypoint()) << "\t";
+    o << headingChangeRate << "\t";
+    o  << headingError << "\t";
+    FGAIWaypoint* currentWP = this->GetFlightPlan()->getCurrentWaypoint();
+    if (currentWP) {
+        o << currentWP->getName() << "\t";
+        o << this->GetFlightPlan()->getCurrentWaypoint()->getPos().getLatitudeDeg() << "\t";
+        o << this->GetFlightPlan()->getCurrentWaypoint()->getPos().getLongitudeDeg() << "\t";
+        o << SGGeodesy::distanceM(this->getGeodPos(), currentWP->getPos()) << "\t";
+        o << this->GetFlightPlan()->getStartTime() << "\t";
+    } else {
+        o << "\t\t\t\t";
+    }
+    FGAIFlightPlan* fp = this->GetFlightPlan();
+    if (fp->isValidPlan()) {
+        o << fp->getLeg() << "\t";
+        o << fp->getNrOfWayPoints() << "\t";
+    } else {
+        o << "NotValid\t\t";
+    }
+    o << endl;
+}
+
+std::string FGAIAircraft::getTimeString(int timeOffset)
+{
+    char ret[11];
+    time_t rawtime;
+    time (&rawtime);
+    rawtime = rawtime + timeOffset;
+    tm* timeinfo = gmtime(&rawtime);
+    strftime(ret, 11, "%w/%H:%M:%S", timeinfo);
+    return ret;
 }

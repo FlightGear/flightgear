@@ -24,6 +24,7 @@
 #include "AIBaseAircraft.hxx"
 
 #include <string>
+#include <iostream>
 
 class PerformanceData;
 class FGAISchedule;
@@ -108,6 +109,8 @@ public:
     FGATCController * getATCController() { return controller; };
     
     void clearATCController();
+    void dumpCSVHeader(std::ofstream& o);
+    void dumpCSV(std::ofstream& o, int lineIndex);
 protected:
     void Run(double dt);
 
@@ -160,6 +163,7 @@ private:
     inline bool needGroundElevation() { if (!isStationary()) _needsGroundElevation=true;return _needsGroundElevation;}
 
     double sign(double x);
+    std::string getTimeString(int timeOffset);
 
     void lazyInitControlsNodes();
 
