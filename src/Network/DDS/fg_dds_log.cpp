@@ -71,9 +71,9 @@ int main()
   topics["fdm"] = new SG_DDS_Topic();
   topics["ctrls"] = new SG_DDS_Topic();
 
-  topics["gui"]->setup("FG_DDS_GUI", &FG_DDS_GUI_desc, sizeof(FG_DDS_GUI));
-  topics["fdm"]->setup("FG_DDS_FDM", &FG_DDS_FDM_desc, sizeof(FG_DDS_FDM));
-  topics["ctrls"]->setup("FG_DDS_Ctrls", &FG_DDS_Ctrls_desc, sizeof(FG_DDS_Ctrls));
+  topics["gui"]->setup<FG_DDS_GUI>(&FG_DDS_GUI_desc);
+  topics["fdm"]->setup<FG_DDS_FDM>(&FG_DDS_FDM_desc);
+  topics["ctrls"]->setup<FG_DDS_Ctrls>(&FG_DDS_Ctrls_desc);
 
   participant.add(topics["gui"], SG_IO_IN);
   participant.add(topics["fdm"], SG_IO_IN);
