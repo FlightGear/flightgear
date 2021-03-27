@@ -108,6 +108,7 @@ public:
     FGATCController * getATCController() { return controller; };
     
     void clearATCController();
+    void dump();
 protected:
     void Run(double dt);
 
@@ -160,6 +161,7 @@ private:
     inline bool needGroundElevation() { if (!isStationary()) _needsGroundElevation=true;return _needsGroundElevation;}
 
     double sign(double x);
+    std::string getTimeString(int timeOffset);
 
     void lazyInitControlsNodes();
 

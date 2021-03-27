@@ -21,6 +21,7 @@
 
 #include "test_traffic.hxx"
 
+#include <math.h>
 #include <cstring>
 #include <memory>
 #include <unistd.h>
@@ -559,24 +560,24 @@ FGAIAircraft * TrafficTests::flyAI(FGAIAircraft * aiAircraft, std::string fName)
         if (!aiAircraft->getDie()) {
             // collect position
             if (geods.empty() ||
-                SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 0.1) {
+                SGGeodesy::distanceM(aiAircraft->getGeodPos(), geods.back()) > 0.05) {
                 geods.insert(geods.end(), aiAircraft->getGeodPos());
                 lastHeading = aiAircraft->_getHeading();
             }
+            // follow aircraft
             if (geods.empty() ||
                 (aiAircraft->getSpeed() > 0 &&
-                 SGGeodesy::distanceM(aiAircraft->getGeodPos(), FGTestApi::getPosition()) > 50 &&
+                 SGGeodesy::distanceM(aiAircraft->getGeodPos(), FGTestApi::getPosition()) > 500 &&
                     /* stop following towards the end*/
                     aiAircraft->GetFlightPlan()->getLeg() < 8)) {
                 // std::cout << "Reposition to " << aiAircraft->getGeodPos() << "\t" << aiAircraft->isValid() << "\t" << aiAircraft->getDie() << "\n";
                 FGTestApi::setPositionAndStabilise(aiAircraft->getGeodPos());
             }
         }
-        // in cruise
-        if (aiAircraft->GetFlightPlan()->getLeg() == 9) {
-            this->dump(aiAircraft);
-        }
-        if (aiAircraft->GetFlightPlan()->getLeg() != lastLeg) {
+        // Leg has been incremented
+        if (aiAircraft->GetFlightPlan()->getLeg() != lastLeg ) 
+        // The current WP is really in our new leg
+        {
             sprintf(buffer, "AI Leg %d Callsign %s Iteration %d", lastLeg, aiAircraft->getCallSign().c_str(), iteration);
             FGTestApi::writeGeodsToKML(buffer, geods);
             if (aiAircraft->GetFlightPlan()->getLeg() < lastLeg) {
@@ -587,6 +588,7 @@ FGAIAircraft * TrafficTests::flyAI(FGAIAircraft * aiAircraft, std::string fName)
             geods.clear();
             geods.insert(geods.end(), last);
         }
+        aiAircraft->dump();
         CPPUNIT_ASSERT_LESSEQUAL(10, aiAircraft->GetFlightPlan()->getLeg());
         CPPUNIT_ASSERT_MESSAGE( "Aircraft has not completed test in time.", i < 30000);
         FGTestApi::runForTime(3);
@@ -596,27 +598,6 @@ FGAIAircraft * TrafficTests::flyAI(FGAIAircraft * aiAircraft, std::string fName)
     FGTestApi::writeGeodsToKML(buffer, geods);
     geods.clear();
     return aiAircraft;
-}
-
-void TrafficTests::dump(FGAIAircraft* aiAircraft)
-{
-    std::cout << "********************\n";
-    std::cout << "Geod " << aiAircraft->getGeodPos() << "\t Speed : " << aiAircraft->getSpeed() << "\n";
-    std::cout << "Heading " << aiAircraft->getTrueHeadingDeg() << "\t VSpeed : " << aiAircraft->getVerticalSpeedFPM() << "\n";
-    FGAIWaypoint* currentWP = aiAircraft->GetFlightPlan()->getCurrentWaypoint();
-    if (currentWP) {
-        std::cout << "WP       " << currentWP->getName() << "\t" << aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getPos() << "\r\n";
-        std::cout << "Distance " << SGGeodesy::distanceM(aiAircraft->getGeodPos(), currentWP->getPos()) << "\n";
-    } else {
-        std::cout << "No Current WP\n";
-    }
-    std::cout << "Flightplan "
-              << "\n";
-    FGAIFlightPlan* fp = aiAircraft->GetFlightPlan();
-    if (fp->isValidPlan()) {
-        std::cout << "Leg    : " << fp->getLeg() << "\n";
-        std::cout << "Length : " << fp->getNrOfWayPoints() << "\n";
-    }
 }
 
 std::string TrafficTests::getTimeString(int timeOffset)

@@ -314,12 +314,16 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
             return;
         }
         prev = fp->getPreviousWaypoint();
+        SG_LOG(SG_AI, SG_BULK, "Previous WP \t" << prev->getName());
         curr = fp->getCurrentWaypoint();
+        SG_LOG(SG_AI, SG_BULK, "Current WP \t" << curr->getName());
         next = fp->getNextWaypoint();
+        if( next ) {
+            SG_LOG(SG_AI, SG_BULK, "Next WP \t" << next->getName());
+        }
     }
-    if (!curr)
-    {
-        // Oops! FIXME
+    if (!curr) {
+        SG_LOG(SG_AI, SG_WARN, "No current WP" << next->getName());
         return;
     }
 
@@ -345,15 +349,21 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
 
         //TODO let the fp handle this (loading of next leg)
         fp->IncrementWaypoint( trafficRef != 0 );
-        if  ( ((!(fp->getNextWaypoint()))) && (trafficRef != 0) )
+        if  ( ((!(fp->getNextWaypoint()))) && (trafficRef != 0) ) {
             if (!loadNextLeg()) {
                 setDie(true);
                 return;
             }
+        }
 
         prev = fp->getPreviousWaypoint();
+        SG_LOG(SG_AI, SG_BULK, "Previous WP \t" << prev->getName());
         curr = fp->getCurrentWaypoint();
+        SG_LOG(SG_AI, SG_BULK, "Current WP \t" << curr->getName());
         next = fp->getNextWaypoint();
+        if( next ) {
+            SG_LOG(SG_AI, SG_BULK, "Next WP \t" << next->getName());
+        }
 
         // Now that we have incremented the waypoints, excute some traffic manager specific code
         if (trafficRef) {
@@ -752,8 +762,13 @@ void FGAIAircraft::handleFirstWaypoint() {
         }
 
     prev = fp->getPreviousWaypoint();   //first waypoint
+    SG_LOG(SG_AI, SG_BULK, "Previous WP \t" << prev->getName());
     curr = fp->getCurrentWaypoint();    //second waypoint
+    SG_LOG(SG_AI, SG_BULK, "Current WP \t" << curr->getName());
     next = fp->getNextWaypoint();       //third waypoint (might not exist!)
+    if( next ) {
+        SG_LOG(SG_AI, SG_BULK, "Next WP \t" << next->getName());
+    }
 
     setLatitude(prev->getLatitude());
     setLongitude(prev->getLongitude());
@@ -762,14 +777,17 @@ void FGAIAircraft::handleFirstWaypoint() {
 
     if (prev->getSpeed() > 0.0)
         setHeading(fp->getBearing(prev, curr));
-    else
+    else {
+        // FIXME When going to parking it must be the heading of the parking
         setHeading(fp->getBearing(curr, prev));
+    }
 
     // If next doesn't exist, as in incrementally created flightplans for
     // AI/Trafficmanager created plans,
     // Make sure lead distance is initialized otherwise
-    if (next)
+    if (next) {
         fp->setLeadDistance(speed, hdg, curr, next);
+    }
 
     if (curr->getCrossat() > -1000.0) //use a calculated descent/climb rate
     {
@@ -846,7 +864,7 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
     if (bearing < minBearing) {
         minBearing = bearing;
         if (minBearing < 10) {
-                minBearing = 10;
+            minBearing = 10;
         }
         if ((minBearing < 360.0) && (minBearing > 10.0)) {
             speedFraction = 0.5 + (cos(minBearing *SG_DEGREES_TO_RADIANS) * 0.5);
@@ -1413,4 +1431,39 @@ void FGAIAircraft::updateModelProperties(double dt)
   setNavLight(fp->getPreviousWaypoint()->getNavLight());
   setStrobeLight(fp->getPreviousWaypoint()->getStrobeLight());
   setTaxiLight(fp->getPreviousWaypoint()->getTaxiLight());
+}
+
+void FGAIAircraft::dump()
+{
+    std::cout << "********************\n";
+    std::cout << "Geod " << this->getGeodPos() << "\t Speed : " << round(this->getSpeed()) << "\n";
+    std::cout << "LatLng : " << this->getGeodPos().getLatitudeDeg() << ", " << this->getGeodPos().getLongitudeDeg() << endl;
+    std::cout << "Heading " << this->getTrueHeadingDeg() << "\t VSpeed : " << round(this->getVerticalSpeedFPM()) << "\n";
+    std::cout << "Bearing " << this->GetFlightPlan()->getBearing(this->getGeodPos(), this->GetFlightPlan()->getCurrentWaypoint()) << endl;
+    std::cout << "HeadingChange " << headingChangeRate << "\tHeadingError " << headingError << endl;
+    FGAIWaypoint* currentWP = this->GetFlightPlan()->getCurrentWaypoint();
+    if (currentWP) {
+        std::cout << "WP       " << currentWP->getName() << "\t" << this->GetFlightPlan()->getCurrentWaypoint()->getPos() << "\r\n";
+        std::cout << "Distance " << SGGeodesy::distanceM(this->getGeodPos(), currentWP->getPos()) << "\n";
+    } else {
+        std::cout << "No Current WP\n";
+    }
+    std::cout << "Flightplan "
+              << "\n";
+    FGAIFlightPlan* fp = this->GetFlightPlan();
+    if (fp->isValidPlan()) {
+        std::cout << "Leg    : " << fp->getLeg() << "\n";
+        std::cout << "Length : " << fp->getNrOfWayPoints() << "\n";
+    }
+}
+
+std::string FGAIAircraft::getTimeString(int timeOffset)
+{
+    char ret[11];
+    time_t rawtime;
+    time (&rawtime);
+    rawtime = rawtime + timeOffset;
+    tm* timeinfo = gmtime(&rawtime);
+    strftime(ret, 11, "%w/%H:%M:%S", timeinfo);
+    return ret;
 }
