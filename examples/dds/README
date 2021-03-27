@@ -1,0 +1,18 @@
+Data Distribution Service (DDS) logger
+
+This example uses a waitset to listens to the FlightGear GUI, FDM adn Ctrls
+DDS topics and logs some data for any of them when new data arrives.
+
+Run FlightGear with any combination  of the following command line arguments to
+get it to produce new DDS samples:
+
+fgfs
+ --native-gui=dds,out,30
+ --native-fdm=dds,out,60
+ --native-ctrls=dds,out,10
+
+
+The executable has to be linkes against the CycloneDDS ddsc component and
+all *.c files in src/Network/DDS:
+
+gcc -I ../../src fgfdm_log.c ../../src/Network/DDS/*.c  -l ddsc -o fgfdm_log

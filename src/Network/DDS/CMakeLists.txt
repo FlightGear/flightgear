@@ -12,12 +12,12 @@ set(HEADERS
         dds_gui.h
 	)
 
-add_executable(fgfdm_log
+add_executable(fg_dds_log
     WIN32
     MACOSX_BUNDLE
-    fgfdm_log.c
+    fg_dds_log.cpp
     ${SOURCES}
 )
-target_link_libraries(fgfdm_log CycloneDDS::ddsc)
+setup_fgfs_libraries(fg_dds_log)
 
 flightgear_component(Network "${SOURCES}" "${HEADERS}")

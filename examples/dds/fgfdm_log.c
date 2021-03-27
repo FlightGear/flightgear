@@ -1,10 +1,13 @@
-#include "dds/dds.h"
-#include "dds_gui.h"
-#include "dds_fdm.h"
-#include "dds_ctrls.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include <dds/dds.h>
+
+#include <Network/DDS/dds_gui.h>
+#include <Network/DDS/dds_fdm.h>
+#include <Network/DDS/dds_ctrls.h>
+
 
 /* An array of one message(aka sample in dds terms) will be used. */
 #define MAX_SAMPLES 1
@@ -119,7 +122,7 @@ int main()
   if (status < 0)
       DDS_FATAL("ds_waitset_attach: %s\n", dds_strretcode(-status));
 
-  /* Create an Ctrls Topic. */
+  /* Create a Ctrls Topic. */
   ctrls_topic = dds_create_topic(
     participant, &FG_DDS_Ctrls_desc, "FG_DDS_Ctrls", NULL, NULL);
   if(ctrls_topic < 0)
@@ -160,8 +163,8 @@ int main()
       printf("GUI Message:\n");
       printf(" version: %i\n", gui->version);
       printf(" tuned_freq: %lf\n", gui->longitude);
-      printf(" nav_radial  %lf\n", gui->latitude);
-      printf(" dist_nm:    %lf\n", gui->altitude);
+      printf(" nav_radial: %lf\n", gui->latitude);
+      printf("    dist_nm: %lf\n", gui->altitude);
     }
 
     rc = dds_take(fdm_reader, samples, infos, 1, 1);
@@ -176,9 +179,9 @@ int main()
       printf("=== [fgfdm_log] Received : ");
       printf("FDM Message:\n");
       printf(" version: %i\n", fdm->version);
-      printf(" longitude:  %lf\n", fdm->longitude);
-      printf(" latitude:   %lf\n", fdm->latitude);
-      printf(" altitude:   %lf\n", fdm->altitude);
+      printf("  longitude: %lf\n", fdm->longitude);
+      printf("   latitude: %lf\n", fdm->latitude);
+      printf("   altitude: %lf\n", fdm->altitude);
     }
 
     rc = dds_take(ctrls_reader, samples, infos, 1, 1);
@@ -193,9 +196,9 @@ int main()
       printf("=== [fgfdm_log] Received : ");
       printf("Ctrls Message:\n");
       printf(" version: %i\n", ctrls->version);
-      printf("  aileron:   %lf\n", ctrls->aileron);
-      printf(" elevator:   %lf\n", ctrls->elevator);
-      printf("   rudder:   %lf\n", ctrls->rudder);
+      printf("    aileron: %lf\n", ctrls->aileron);
+      printf("   elevator: %lf\n", ctrls->elevator);
+      printf("     rudder: %lf\n", ctrls->rudder);
     }
 
     fflush(stdout);
