@@ -310,6 +310,7 @@ def test_motion(fgfs, multiplayer=False):
         fg.fg['/sim/replay/record-multiplayer'] = True
         fg2 = Fg( aircraft, f'{fgfs} --callsign=cgdae-t --multiplay=in,4,,5033 --read-only', telnet_port=5501)
         fg2.waitfor('/sim/fdm-initialized', 1, timeout=45)
+        fg.fg['/controls/engines/engine[0]/throttle'] = 0.1
         fg2.fg['/controls/engines/engine[0]/throttle'] = 0.1
         time.sleep(1)
         fgt = fg.fg['/controls/engines/engine[0]/throttle']
@@ -371,6 +372,7 @@ def test_motion(fgfs, multiplayer=False):
     fg.waitfor('/sim/replay/replay-state-eof', 1)
     
     def examine_values(infix=''):
+        log(f'== Looking at /sim/replay/log-raw-speed{infix}-values/value[]')
         items0 = fg.fg.ls( f'/sim/replay/log-raw-speed{infix}-values')
         log(f'len(items0)={len(items0)}')
         if not items0:
@@ -394,6 +396,7 @@ def test_motion(fgfs, multiplayer=False):
     
     if multiplayer:
         examine_values('-multiplayer')
+        examine_values('-multiplayer-post')
     else:
         examine_values()
     
