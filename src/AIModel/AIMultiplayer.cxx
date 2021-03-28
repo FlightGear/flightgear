@@ -545,6 +545,39 @@ void FGAIMultiplayer::update(double dt)
   SG_LOG(SG_AI, SG_DEBUG, "Multiplayer position and orientation: "
          << ecPos << ", " << hlOr);
 
+  {
+    static SGPropertyNode_ptr mLogRawSpeedMultiplayer;
+    if (!mLogRawSpeedMultiplayer) {
+        mLogRawSpeedMultiplayer = fgGetNode("/sim/replay/log-raw-speed-multiplayer", true);
+    }
+    const char* callsign = mLogRawSpeedMultiplayer->getStringValue();
+    if (callsign && callsign[0] && this->_callsign == callsign) {
+        static SGVec3d s_pos_prev;
+        static double s_simtime_prev = -1;
+        SGVec3d pos = ecPos;
+        double sim_time = fgGetDouble("/sim/replay/time");
+        if (s_simtime_prev != -1 && dt > 0) {
+            double dt = sim_time - s_simtime_prev;
+            double distance = length(pos - s_pos_prev);
+            double speed = distance / dt;
+            SGPropertyNode* n = fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-values", true /*create*/);
+            n = n->addChild("value");
+            n->setDoubleValue(speed);
+            SG_LOG(SG_GENERAL, SG_ALERT, "Multiplayer-post aircraft callsign=" << _callsign << ":"
+                    << " sim_time=" << sim_time
+                    << " dt=" << dt
+                    << " distance=" << distance
+                    << " speed=" << speed
+                    << " s_pos_prev=" << s_pos_prev
+                    << " pos=" << pos
+                    << " n->getPath()=" << n->getPath(true /*simplify*/)
+                    );
+        }
+        s_simtime_prev = sim_time;
+        s_pos_prev = pos;
+    }
+  }
+
   //###########################//
   // do calculations for radar //
   //###########################//
