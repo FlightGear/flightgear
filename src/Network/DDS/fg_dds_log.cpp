@@ -67,25 +67,21 @@ int main()
   SG_DDS participant;
   std::map<std::string, SG_DDS_Topic *> topics;
 
-  topics["gui"] = new SG_DDS_Topic();
-  topics["fdm"] = new SG_DDS_Topic();
-  topics["ctrls"] = new SG_DDS_Topic();
-
-  topics["gui"]->setup<FG_DDS_GUI>(&FG_DDS_GUI_desc);
-  topics["fdm"]->setup<FG_DDS_FDM>(&FG_DDS_FDM_desc);
-  topics["ctrls"]->setup<FG_DDS_Ctrls>(&FG_DDS_Ctrls_desc);
-
+  FG_DDS_GUI gui;
+  topics["gui"] = new SG_DDS_Topic(gui, &FG_DDS_GUI_desc);
   participant.add(topics["gui"], SG_IO_IN);
+
+  FG_DDS_FDM fdm;
+  topics["fdm"] = new SG_DDS_Topic(fdm, &FG_DDS_FDM_desc);
   participant.add(topics["fdm"], SG_IO_IN);
+
+  FG_DDS_Ctrls ctrls;
+  topics["ctrls"] = new SG_DDS_Topic(ctrls, &FG_DDS_Ctrls_desc);
   participant.add(topics["ctrls"], SG_IO_IN);
 
   set_mode(1);
   while(participant.wait(0.1f))
   {
-    FG_DDS_Ctrls ctrls;
-    FG_DDS_FDM fdm;
-    FG_DDS_GUI gui;
-
     if (topics["gui"]->read(gui)) {
       printf("=== [fgfdm_log] Received : ");
       printf("GUI Message:\n");
