@@ -280,7 +280,7 @@ public:
 			 p != path_list.end(); ++p)
 			visitDir(*p, 0);
 
-        simgear::requestConsole(); // ensure console is shown on Windows
+        simgear::requestConsole(false); // ensure console is shown on Windows
 
         std::sort(_aircraft.begin(), _aircraft.end(),
                   [](const std::string& lhs, const std::string& rhs) {
@@ -1229,7 +1229,7 @@ fgOptConsole(const char *arg)
     if (!already_done)
     {
         already_done = true;
-        simgear::requestConsole();
+        simgear::requestConsole(false);
     }
     return FG_OPTIONS_OK;
 }
@@ -2862,7 +2862,7 @@ void Options::showUsage() const
   FGLocale *locale = globals->get_locale();
   SGPropertyNode options_root;
 
-  simgear::requestConsole(); // ensure console is shown on Windows
+  simgear::requestConsole(false); // ensure console is shown on Windows
   cout << endl;
 
   try {

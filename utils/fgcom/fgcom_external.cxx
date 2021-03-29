@@ -82,7 +82,7 @@ int main(int argc, char** argv)
     signal(SIGINT,  quit);
     signal(SIGTERM, quit);
 
-    simgear::requestConsole();
+    simgear::requestConsole(true);
     sglog().setLogLevels(SG_ALL, SG_INFO);
     _app += FGCOM_VERSION;
     Modes mode          = PILOT;
