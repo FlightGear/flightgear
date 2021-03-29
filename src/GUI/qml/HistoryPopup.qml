@@ -27,7 +27,7 @@ Item {
 
         Image {
             id: icon
-            source: "qrc:///history-icon"
+            source: "image://colored-icon/history?themeContrast"
             anchors.centerIn: parent
         }
 

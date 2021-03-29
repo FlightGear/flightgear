@@ -86,7 +86,11 @@ FocusScope
 
         Image {
             id: searchIcon
-            source: root.canClear ? "qrc:///clear-text-icon" :"qrc:///search-icon-small"
+
+            // give hover feedback when showing the clear icon
+            source: clearButtonMouse.containsMouse ? "image://colored-icon/clear?destructive"
+                : root.canClear ? "image://colored-icon/clear?text" : "image://colored-icon/search?text"
+
             anchors.right: parent.right
             anchors.rightMargin: Style.margin
             anchors.verticalCenter: parent.verticalCenter

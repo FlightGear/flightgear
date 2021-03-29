@@ -40,7 +40,7 @@ Item {
 
     Image {
         id: gearIcon
-        source: "qrc:///settings-gear-white"
+        source: "image://colored-icon/settings?themeContrast"
         height: root.height - 2
         fillMode: Image.PreserveAspectFit
         anchors.right: parent.right

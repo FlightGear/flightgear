@@ -43,7 +43,7 @@ Rectangle {
             Image {
                 id: menuIconImage
                 anchors.centerIn: parent
-                source: "qrc:///ellipsis-icon"
+                source: "image://colored-icon/ellipsis?themeContrast"
             }
 
             MouseArea {

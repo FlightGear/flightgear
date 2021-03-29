@@ -8,7 +8,7 @@ Rectangle {
     border.color: Style.themeColor
     width: height
     height: Style.baseFontPixelSize + Style.margin * 2
-    color: mouse.containsMouse ? Style.minorFrameColor : "white"
+    color: mouse.containsMouse ? Style.minorFrameColor : Style.backgroundColor
 
     property alias icon: icon.source
 

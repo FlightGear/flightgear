@@ -21,15 +21,16 @@
 #include "AddOnsController.hxx"
 #include "AircraftItemModel.hxx"
 #include "DefaultAircraftLocator.hxx"
+#include "GettingStartedTip.hxx"
 #include "LaunchConfig.hxx"
 #include "LauncherController.hxx"
 #include "LauncherNotificationsController.hxx"
 #include "LauncherPackageDelegate.hxx"
 #include "LocalAircraftCache.hxx"
 #include "LocationController.hxx"
+#include "QmlColoredImageProvider.hxx"
 #include "QtLauncher.hxx"
 #include "UpdateChecker.hxx"
-#include "GettingStartedTip.hxx"
 
 #include <Main/sentryIntegration.hxx>
 
@@ -40,7 +41,9 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
     setTitle("FlightGear " FLIGHTGEAR_VERSION);
 
     m_controller = new LauncherController(this, this);
-    m_controller->initQML();
+
+    int styleTypeId = 0;
+    m_controller->initQML(styleTypeId);
 
     // use a direct connection to be notified synchronously when the render thread
     // starts OpenGL. We use this to log the OpenGL information from the
@@ -48,6 +51,9 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
     connect(this, &QQuickWindow::sceneGraphInitialized,
             this, &LauncherMainWindow::renderTheadSceneGraphInitialized,
             Qt::DirectConnection);
+
+    m_coloredIconProvider = new QmlColoredImageProvider;
+    engine()->addImageProvider("colored-icon", m_coloredIconProvider);
 
     if (!inSimMode) {
 #if defined(Q_OS_MAC)
@@ -99,6 +105,8 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
                                  "This normally occurs on Linux platforms where Qt is split into many small packages. "
                                  "On Ubuntu/Debian systems, the package is called 'qml-module-qtquick-controls2'"));
     }
+
+    m_coloredIconProvider->loadStyleColors(engine(), styleTypeId);
 
     connect(this, &QQuickView::statusChanged, this, &LauncherMainWindow::onQuickStatusChanged);
 

@@ -229,17 +229,10 @@ Item {
         anchors.top: headerText.bottom
         anchors.right: parent.right
         anchors.margins: Style.margin
-        icon: "qrc:///svg/icon-carrier"
+        icon: root.showCarriers ? "image://colored-icon/carrier2?text" 
+                                : "image://colored-icon/airport?text" 
 
-        onClicked:  {
-            root.showCarriers = ! root.showCarriers;
-
-            if (root.showCarriers) {
-              this.icon = "qrc:///svg/icon-airport"
-            } else {
-              this.icon = "qrc:///svg/icon-carrier"
-            }
-        }
+        onClicked: root.showCarriers = ! root.showCarriers;
 
         GettingStartedTip {
             tipId: "locationCarriersList"

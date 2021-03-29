@@ -154,7 +154,7 @@ FocusScope {
 
     Rectangle {
         id: upDownArea
-        color: "white"
+        color: Style.backgroundColor
         anchors.left: input.right
         anchors.verticalCenter: input.verticalCenter
         height: upDownIcon.implicitHeight
@@ -164,7 +164,7 @@ FocusScope {
         Image {
             id: upDownIcon
             // show up/down arrows
-            source: "qrc:///up-down-arrow"
+            source: "image://colored-icon/up-down?text"
         }
 
         MouseArea {

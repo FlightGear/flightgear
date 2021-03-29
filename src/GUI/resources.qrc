@@ -172,4 +172,31 @@
         <file alias="icon-airport">assets/icons8-airport-50.png</file>
         <file alias="aircraft-carrier">assets/aircraft-carrier-icon.svg</file>
     </qresource>
+    <qresource prefix="/icon">
+        <file alias="scroll-down">assets/mask-scroll-down.png</file>
+        <file alias="history">assets/mask-history.png</file>
+        <file alias="settings">assets/mask-settings-gear.png</file>
+        <file alias="search">assets/mask-search.png</file>
+        <file alias="carrier">assets/mask-aircraft-carrier.png</file>
+        <file alias="carrier2">assets/mask-carrier2.png</file>
+        <file alias="map-airplane">assets/mask-airplane.png</file>
+        <file alias="airport">assets/mask-airport.png</file>
+        <file alias="arrow-left">assets/mask-arrow-left.png</file>
+        <file alias="arrow-right">assets/mask-arrow-right.png</file>
+        <file alias="clear">assets/mask-clear.png</file>
+        <file alias="cross">assets/mask-cross.png</file>
+        <file alias="hide">assets/mask-hide.png</file>
+        <file alias="preview">assets/mask-preview.png</file>
+        <file alias="up-down">assets/mask-up-down.png</file>
+        <file alias="star-filled">assets/mask-star-filled.png</file>
+        <file alias="star-outline">assets/mask-star-outline.png</file>
+        <file alias="back">assets/mask-back.png</file>
+        <file alias="cancel-small">assets/mask-cancel-small.png</file>
+        <file alias="reorder-list">assets/mask-reorder-list.png</file>
+        <file alias="reorder-small">assets/mask-reorder-small.png</file>
+        <file alias="cancel">assets/mask-cancel.png</file>
+        <file alias="add">assets/mask-add.png</file>
+        <file alias="toolbox-help">assets/mask-toolbox-help.png</file>
+        <file alias="ellipsis">assets/mask-ellipsis.png</file>
+    </qresource>
 </RCC>

@@ -87,7 +87,7 @@ Item {
         Image {
             id: upDownIcon
             visible: root.enabled
-            source: "qrc:///up-down-arrow"
+            source:  mouseArea.containsMouse ? "image://colored-icon/up-down?theme" : "image://colored-icon/up-down?text"
             anchors.right: parent.right
             anchors.rightMargin: Style.margin
             anchors.verticalCenter: parent.verticalCenter

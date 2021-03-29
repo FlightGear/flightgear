@@ -101,7 +101,7 @@ class LauncherController : public QObject
 public:
     explicit LauncherController(QObject *parent, QWindow* win);
 
-    void initQML();
+    void initQML(int& styleTypeId);
 
     Q_INVOKABLE bool validateMetarString(QString metar);
 

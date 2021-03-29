@@ -217,6 +217,8 @@ if (HAVE_QT)
                         TipBackgroundBox.hxx
                         GettingStartedScope.hxx
                         GettingStartedScope.cxx
+                        QmlColoredImageProvider.hxx
+                        QmlColoredImageProvider.cxx
                         ${QQUI_SOURCES}
                         )
 

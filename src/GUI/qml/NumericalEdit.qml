@@ -276,7 +276,7 @@ FocusScope {
             Image {
                 id: upDownIcon
                 // show up/down arrows
-                source: "qrc:///up-down-arrow"
+                source: "image://colored-icon/up-down?text"
             }
 
             MouseArea {

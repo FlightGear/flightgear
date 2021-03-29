@@ -15,7 +15,7 @@ Item {
         id: icon
         source: {
             var b = mouse.containsMouse ? !root.checked : root.checked;
-            return b ? "qrc:///favourite-icon-filled" : "qrc:///favourite-icon-outline";
+            return b ? "image://colored-icon/star-filled?theme" : "image://colored-icon/star-outline?text";
         }
 
         anchors.centerIn: parent

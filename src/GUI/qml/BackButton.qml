@@ -12,7 +12,7 @@ Item {
     Image {
         id: image
         anchors.centerIn: parent
-        source: "qrc:///back-icon"
+        source:  mouse.containsMouse ? "image://colored-icon/back?active" : "image://colored-icon/back"
     }
 
     MouseArea {

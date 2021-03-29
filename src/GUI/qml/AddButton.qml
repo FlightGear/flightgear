@@ -1,5 +1,5 @@
 import QtQuick 2.4
-import "."
+import FlightGear 1.0
 
 Rectangle {
     id: root
@@ -16,7 +16,8 @@ Rectangle {
     Text {
         id: label
         text: qsTr("Add")
-        color: "white"
+        color: Style.backgroundColor
+
         anchors {
             left: parent.left
             leftMargin: Style.margin
@@ -28,7 +29,8 @@ Rectangle {
     Image {
         id: icon
         anchors.right: parent.right
-        source: "qrc:///add-icon"
+        source: mouse.containsMouse ? "image:///colored-icon/add?active"
+                                    : "image:///colored-icon/add?text"
     }
 
     MouseArea {

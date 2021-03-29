@@ -16,7 +16,8 @@ Item {
         id: icon
         x: 0
         y: 0
-        source: "qrc:///reorder-list-icon-small"
+        source: promptText.visible ? "image://colored-icon/reorder-small?active"
+                                   : "image://colored-icon/reorder-small?text"
     }
 
 
@@ -44,6 +45,7 @@ Item {
     }
 
     Text {
+        id: promptText
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.left
         anchors.rightMargin: Style.margin

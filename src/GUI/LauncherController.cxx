@@ -87,8 +87,6 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
     connect(m_location, &LocationController::descriptionChanged,
             this, &LauncherController::summaryChanged);
 
-    initQML();
-
     m_aircraftModel = new AircraftItemModel(this);
     m_installedAircraftModel = new AircraftProxyModel(this, m_aircraftModel);
     m_installedAircraftModel->setInstalledFilterEnabled(true);
@@ -158,7 +156,7 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
     QTimer::singleShot(2000, this, &LauncherController::checkForOldDownloadDir);
 }
 
-void LauncherController::initQML()
+void LauncherController::initQML(int& styleTypeId)
 {
     qmlRegisterUncreatableType<LauncherController>("FlightGear.Launcher", 1, 0, "LauncherController", "no");
     qmlRegisterUncreatableType<LocationController>("FlightGear.Launcher", 1, 0, "LocationController", "no");
@@ -203,6 +201,7 @@ void LauncherController::initQML()
     qmlRegisterType<ModelDataExtractor>("FlightGear", 1, 0, "ModelDataExtractor");
 
     qmlRegisterSingletonType(QUrl("qrc:/qml/OverlayShared.qml"), "FlightGear", 1, 0, "OverlayShared");
+    styleTypeId = qmlRegisterSingletonType(QUrl("qrc:/qml/Style.qml"), "FlightGear", 1, 0, "Style");
 
     qmlRegisterType<GettingStartedScope>("FlightGear", 1, 0, "GettingStartedScope");
     qmlRegisterType<GettingStartedTipsController>("FlightGear", 1, 0, "GettingStartedController");

@@ -12,6 +12,7 @@ QtObject
     readonly property string frameColor: "#68A6E1"
     readonly property string minorFrameColor: "#9f9f9f"
 
+    readonly property string backgroundColor: "#ffffff"
     readonly property string themeColor: "#1b7ad3"
     readonly property string destructiveActionColor: "#c62703"
 

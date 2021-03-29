@@ -74,7 +74,7 @@ Item {
 
         Text {
             id: headerTitle
-            color: "white"
+            color: Style.themeContrastTextColor
             anchors.verticalCenter: parent.verticalCenter
             font.bold: true
             font.pixelSize: Style.subHeadingFontPixelSize

@@ -35,6 +35,7 @@ class LaunchConfig;
 class ViewCommandLinePage;
 class QQuickItem;
 class LauncherController;
+class QmlColoredImageProvider;
 
 class LauncherMainWindow : public QQuickView
 {
@@ -57,6 +58,7 @@ private:
     bool checkQQC2Availability();
 
     LauncherController* m_controller;
+    QmlColoredImageProvider* m_coloredIconProvider;
 };
 
 #endif // of LAUNCHER_MAIN_WINDOW_HXX

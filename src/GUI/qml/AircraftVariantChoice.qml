@@ -62,7 +62,7 @@ Rectangle {
 
         Image {
             id: upDownIcon
-            source: "qrc:///up-down-arrow"
+            source:  headingMouseArea.containsMouse ? "image://colored-icon/up-down?theme" : "image://colored-icon/up-down?text"
            // x: root.centerX + Math.min(title.implicitWidth * 0.5, title.width * 0.5)
             anchors.verticalCenter: parent.verticalCenter
             visible: __enabled
