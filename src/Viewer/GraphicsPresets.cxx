@@ -30,6 +30,7 @@ const char* kPresetActiveProp = "/sim/rendering/preset-active";
 
 const char* kRestartRequiredProp = "/sim/rendering/restart-required";
 const char* kSceneryReloadRequiredProp = "/sim/rendering/scenery-reload-required";
+const char* kCompositorReloadRequiredProp = "/sim/rendering/compositor-reload-required";
 
 // define the property prefixes which graphics presets are allowed to
 // modify. Changes to properties outside these prefixes will be
@@ -256,6 +257,7 @@ void GraphicsPresets::init()
 
         _restartListener.reset(new RequiredPropertyListener{kRestartRequiredProp, graphicsPropsXML->getChild("restart-required")});
         _sceneryReloadListener.reset(new RequiredPropertyListener{kSceneryReloadRequiredProp, graphicsPropsXML->getChild("scenery-reload-required")});
+        _compositorReloadListener.reset(new RequiredPropertyListener{kCompositorReloadRequiredProp, graphicsPropsXML->getChild("compositor-reload-required")});
 
         SGPropertyNode_ptr toSave = graphicsPropsXML->getChild("save-to-file");
         if (toSave) {

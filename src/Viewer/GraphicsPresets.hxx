@@ -44,7 +44,7 @@ public:
     void applyInitialPreset();
 
     /**
-     * @brief Apple the settings defined in the current graphics preset,
+     * @brief Apply the settings defined in the current graphics preset,
      * to the property tree
      *
      */
@@ -82,6 +82,7 @@ private:
     std::unique_ptr<GraphicsConfigChangeListener> _listener;
     std::unique_ptr<RequiredPropertyListener> _restartListener;
     std::unique_ptr<RequiredPropertyListener> _sceneryReloadListener;
+    std::unique_ptr<RequiredPropertyListener> _compositorReloadListener;
 
     string_list _propertiesToSave;
 };

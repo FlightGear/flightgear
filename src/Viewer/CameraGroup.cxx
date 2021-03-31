@@ -947,6 +947,8 @@ void warpGUIPointer(CameraGroup* cgroup, int x, int y)
 
 void reloadCompositors(CameraGroup *cgroup)
 {
+    cgroup->_viewer->getViewerBase()->stopThreading();
+
     for (auto &info : cgroup->_cameras) {
         // Ignore the GUI camera
         if (info->flags & CameraInfo::GUI)
@@ -959,7 +961,6 @@ void reloadCompositors(CameraGroup *cgroup)
             SGReaderWriterOptions::fromPath(globals->get_fg_root());
         options->setPropertyNode(globals->get_props());
 
-        cgroup->_viewer->getViewerBase()->stopThreading();
         // Force deletion
         info->compositor.reset(nullptr);
         // Then replace it with a new instance
@@ -971,8 +972,10 @@ void reloadCompositors(CameraGroup *cgroup)
                                                   viewport,
                                                   compositor_path,
                                                   options));
-        cgroup->_viewer->getViewerBase()->startThreading();
     }
+
+    cgroup->_viewer->getViewerBase()->startThreading();
+    fgSetBool("/sim/rendering/compositor-reload-required", false);
 }
 
 void CameraGroup::buildDefaultGroup(osgViewer::View* viewer)
