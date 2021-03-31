@@ -21,3 +21,4 @@ build*/
 CMakeLists.txt.user
 *.pro.user
 nbproject
+compile_commands.json
