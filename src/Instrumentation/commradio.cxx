@@ -631,11 +631,13 @@ void CommRadioImpl::update(double dt)
   if (_stationTTL <= 0.0) {
     _stationTTL = 30.0;
 
-    // Note:  122.375 must be rounded DOWN to 122370
-    // in order to be consistent with apt.dat et cetera.
-    int freqKhz = 10 * static_cast<int>(_frequency * 100 + 0.25);
-    _commStationForFrequency = flightgear::CommStation::findByFreq(freqKhz, position, NULL);
+    int freqKhz = static_cast<int>(_frequency * 1000 + 0.5);
+    // make sure the frequency is integral multiple of 25, if not using 8.333 kHz spacing
+    if (!_useEightPointThree && freqKhz % 25) {
+        freqKhz += 5;
+    }
 
+    _commStationForFrequency = flightgear::CommStation::findByFreq(freqKhz, position, NULL);
   }
 
   if (false == _commStationForFrequency.valid()) {

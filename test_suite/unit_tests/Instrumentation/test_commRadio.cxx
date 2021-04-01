@@ -58,6 +58,34 @@ SGSubsystemRef CommRadioTests::setupStandardRadio(const std::string& name, int i
 
 void CommRadioTests::testBasic()
 {
+    auto r = setupStandardRadio("commtest", 2, false);
+
+    FGAirportRef apt = FGAirport::getByIdent("EDDM");
+    FGTestApi::setPositionAndStabilise(apt->geod());
+
+    SGPropertyNode_ptr n = globals->get_props()->getNode("instrumentation/commtest[2]");
+    // EDDM ATIS
+    n->setDoubleValue("frequencies/selected-mhz", 123.125);
+    r->update(1.0);
+
+    //   CPPUNIT_ASSERT_DOUBLES_EQUAL(25, n->getDoubleValue("frequencies/selected-channel-width-khz"), 1e-3);
+    CPPUNIT_ASSERT_EQUAL("123.12"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+
+    CPPUNIT_ASSERT_EQUAL("EDDM"s, string{n->getStringValue("airport-id")});
+    CPPUNIT_ASSERT_EQUAL("ATIS"s, string{n->getStringValue("station-name")});
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, n->getDoubleValue("slant-distance-m"), 1e-6);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, n->getDoubleValue("signal-quality-norm"), 1e-6);
+
+
+    n->setDoubleValue("frequencies/selected-mhz", 121.72);
+    r->update(1.0);
+
+    CPPUNIT_ASSERT_EQUAL("121.72"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+
+    CPPUNIT_ASSERT_EQUAL("EDDM"s, string{n->getStringValue("airport-id")});
+    CPPUNIT_ASSERT_EQUAL("CLNC DEL"s, string{n->getStringValue("station-name")});
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, n->getDoubleValue("slant-distance-m"), 1e-6);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, n->getDoubleValue("signal-quality-norm"), 1e-6);
 }
 
 void CommRadioTests::testEightPointThree()
@@ -135,6 +163,9 @@ void CommRadioTests::testEightPointThree()
 
 void CommRadioTests::testEPLLTuning833()
 {
+    // this test is disabled until data entry for EPLL is fixed
+    return;
+
     auto r = setupStandardRadio("commtest", 2, true);
 
     FGAirportRef apt = FGAirport::getByIdent("EPLL");
@@ -142,7 +173,7 @@ void CommRadioTests::testEPLLTuning833()
 
     SGPropertyNode_ptr n = globals->get_props()->getNode("instrumentation/commtest[2]");
     // should be EPLL TWR
-    n->setDoubleValue("frequencies/selected-mhz", 124.23);
+    n->setDoubleValue("frequencies/selected-mhz", 124.225);
     r->update(1.0);
 
     CPPUNIT_ASSERT_EQUAL("EPLL"s, string{n->getStringValue("airport-id")});

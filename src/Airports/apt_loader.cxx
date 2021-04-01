@@ -822,8 +822,36 @@ void APTLoader::parseCommLine(const string& aptDat,
   if (isAPT1000Code) {
       rowCode -= 1000;
   }
+
   // short int representing tens of kHz, or just kHz directly
-  int freqKhz = std::stoi(token[1]) * (isAPT1000Code ? 1 : 10);
+  int freqKhz = std::stoi(token[1]);
+  if (isAPT1000Code) {
+      const int channel = freqKhz % 25;
+      if (channel != 0 && channel != 5 && channel != 10 && channel != 15) {
+          SG_LOG(SG_GENERAL, SG_ALERT,
+                 aptDat << ":" << lineNum << ": skipping invalid 8.333 kHz Frequency " << freqKhz << " for " << last_apt_id);
+          return;
+      }
+  } else {
+      freqKhz *= 10;
+      const int remainder = freqKhz % 100;
+      // this is to ensure frequencies such as 126.12 become 126.125
+      if (remainder == 20 || remainder == 70) {
+          freqKhz += 5;
+      }
+
+      if (freqKhz % 25) {
+          SG_LOG(SG_GENERAL, SG_ALERT,
+                 aptDat << ":" << lineNum << ": skipping invalid 25 kHz Frequency " << freqKhz << " for " << last_apt_id);
+          return;
+      }
+  }
+
+  if (freqKhz < 118000 || freqKhz >= 137000) {
+      SG_LOG(SG_GENERAL, SG_ALERT,
+             aptDat << ":" << lineNum << ": skipping out of range Frequency " << freqKhz << " for " << last_apt_id);
+      return;
+  }
 
   int rangeNm = 50;
   FGPositioned::Type ty;

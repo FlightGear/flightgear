@@ -154,11 +154,9 @@ void FGATCDialogNew::frequencyDisplay(const std::string& ident)
 
         entry->setStringValue("text[0]/label", comm->ident());
 
-        char buf[8];
-        snprintf(buf, 8, "%.2f", comm->freqMHz());
-        if(buf[5] == '3') buf[5] = '2';
-        if(buf[5] == '8') buf[5] = '7';
-        buf[7] = '\0';
+        char buf[9];
+        ::snprintf(buf, 9, "%.3f", comm->freqMHz());
+        buf[8] = '\0';
 
         entry->setStringValue("text[1]/label", buf);
         entry->setStringValue("button[0]/binding/value", buf);
