@@ -33,7 +33,11 @@ public:
 
     QImage requestImage(const QString& id, QSize* size, const QSize& requestedSize) override;
 
+    QPixmap requestPixmap(const QString& id, QSize* size, const QSize& requestedSize) override;
+
     void loadStyleColors(QQmlEngine* engine, int styleTypeId);
+
+    static QmlColoredImageProvider* instance();
 
 private:
     QColor _themeColor, _textColor, _themeContrastColor, _activeColor;

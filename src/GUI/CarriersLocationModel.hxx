@@ -7,6 +7,7 @@
 #include <simgear/props/props.hxx>
 
 #include <QAbstractListModel>
+#include <QPixmap>
 
 class CarriersLocationModel : public QAbstractListModel
 {
@@ -41,6 +42,7 @@ public:
 
     QStringList parkingsForIndex(int index) const;
 private:
+    mutable QPixmap m_carrierPixmap;
 
     struct Carrier
     {

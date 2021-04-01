@@ -86,7 +86,7 @@ Rectangle {
                         // thumbnail border
 
                         border.width: 1
-                        border.color: "#7f7f7f"
+                        border.color: Style.minorFrameColor
 
                         width: thumbnail.width
                         height: thumbnail.height

@@ -21,8 +21,9 @@
 #ifndef GUI_BASEDIAGRAM_HXX
 #define GUI_BASEDIAGRAM_HXX
 
-#include <QPainterPath>
 #include <QHash>
+#include <QPainterPath>
+#include <QPixmap>
 #include <QQuickPaintedItem>
 #include <QTransform>
 
@@ -131,6 +132,7 @@ private:
     QTransform m_baseDeviceTransform;
     QTransform m_viewportTransform;
     QVector<FGPositionedRef> m_ignored;
+    QPixmap m_carrierPixmap;
 
     mutable QHash<PositionedID, LabelPosition> m_labelPositions;
     mutable QVector<QRect> m_labelRects;

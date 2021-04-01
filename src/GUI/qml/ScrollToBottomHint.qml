@@ -28,6 +28,6 @@ Item {
 
     Image {
         id: image
-        source: "qrc:///scroll-down-icon-white"
+        source: "image://colored-icon/scroll-down?themeContrast"
     }
 }

@@ -20,8 +20,11 @@
 #include <QQmlComponent>
 #include <QQmlEngine>
 
+static QmlColoredImageProvider* static_instance = nullptr;
+
 QmlColoredImageProvider::QmlColoredImageProvider() : QQuickImageProvider(QQmlImageProviderBase::Image)
 {
+    static_instance = this;
 }
 
 void QmlColoredImageProvider::loadStyleColors(QQmlEngine* engine, int styleTypeId)
@@ -49,7 +52,9 @@ QImage QmlColoredImageProvider::requestImage(const QString& id, QSize* size, con
     if (queryPos >= 0) {
         path = ":/icon/" + id.left(queryPos); // without the query part
         const QString q = id.mid(queryPos + 1);
-        if (q == "text") {
+        if (q.startsWith('#')) {
+            c = QColor(q); // allow directly specifying a color
+        } else if (q == "text") {
             c = _textColor;
         } else if (q == "themeContrast") {
             c = _themeContrastColor;
@@ -93,4 +98,15 @@ QImage QmlColoredImageProvider::requestImage(const QString& id, QSize* size, con
     }
 
     return colored;
+}
+
+QPixmap QmlColoredImageProvider::requestPixmap(const QString& id, QSize* size, const QSize& requestedSize)
+{
+    QImage img = requestImage(id, size, requestedSize);
+    return QPixmap::fromImage(img);
+}
+
+QmlColoredImageProvider* QmlColoredImageProvider::instance()
+{
+    return static_instance;
 }

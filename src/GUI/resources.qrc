@@ -1,10 +1,9 @@
 <RCC>
     <qresource prefix="/">
-        <file alias="history-icon">assets/history-icon.png</file>
-        <file alias="right-arrow-icon">assets/arrow-right-icon.png</file>
-        <file alias="left-arrow-icon">assets/arrow-left-icon.png</file>
         <file alias="app-icon-large">../../icons/128x128/apps/flightgear.png</file>
         <file alias="spinner">assets/spinner.gif</file>
+        <file alias="linear-spinner">qml/icons8-linear-spinner.gif</file>
+
         <file alias="heliport-icon">assets/heliport-icon.png</file>
         <file alias="seaport-icon">assets/seaport-icon.png</file>
         <file alias="vor-icon">assets/vor-icon.png</file>
@@ -19,18 +18,6 @@
         <file alias="ndb-large-icon">assets/ndb-large-icon.png</file>
         <file alias="airplane-icon">assets/airplane-icon.png</file>
         <file alias="airport-closed-icon">assets/airport-closed-icon.png</file>
-        <file alias="preview-icon">assets/preview-icon.png</file>
-        <file alias="settings-gear-white">assets/settings-gear-white.png</file>
-        <file alias="toolbox-aircraft">assets/toolbox-aircraft.png</file>
-        <file alias="toolbox-environment">assets/toolbox-environment.png</file>
-        <file alias="toolbox-fly">assets/toolbox-fly.png</file>
-        <file alias="toolbox-location">assets/toolbox-location.png</file>
-        <file alias="toolbox-settings">assets/toolbox-settings.png</file>
-        <file alias="toolbox-summary">assets/toolbox-summary.png</file>
-        <file alias="toolbox-addons">assets/toolbox-addons.png</file>
-        <file alias="toolbox-help">assets/toolbox-help.png</file>
-        <file alias="back-icon">assets/icons8-back-arrow-50.png</file>
-        <file alias="scroll-down-icon-white">assets/icons8-scroll-down-50.png</file>
         <file>qml/AircraftList.qml</file>
         <file>qml/AircraftRating.qml</file>
         <file>qml/ArrowButton.qml</file>
@@ -38,7 +25,6 @@
         <file>qml/Button.qml</file>
         <file>qml/AircraftWarningPanel.qml</file>
         <file>qml/AircraftDetailsView.qml</file>
-        <file>qml/AircraftFullDelegate.qml</file>
         <file>qml/AircraftCompactDelegate.qml</file>
         <file>qml/SearchButton.qml</file>
         <file>qml/AircraftPreviewPanel.qml</file>
@@ -48,9 +34,7 @@
         <file>qml/ToggleSwitch.qml</file>
         <file>qml/RatingSlider.qml</file>
         <file>qml/PopupChoice.qml</file>
-        <file alias="up-down-arrow">assets/up-down-arrow.png</file>
         <file>qml/AircraftVariantChoice.qml</file>
-        <file alias="search-icon-small">assets/search-icon-small.png</file>
         <file>qml/AircraftRatingsPanel.qml</file>
         <file>qml/NoDefaultCatalogPanel.qml</file>
         <file>qml/ListHeaderBox.qml</file>
@@ -78,11 +62,6 @@
         <file>qml/AddOns.qml</file>
         <file>qml/DragToReorderButton.qml</file>
         <file>qml/AddButton.qml</file>
-        <file alias="cancel-icon">qml/icons8-cancel-50.png</file>
-        <file alias="reorder-list-icon">qml/icons8-drag-reorder-filled-50.png</file>
-        <file alias="cancel-icon-small">qml/icons8-cancel-25.png</file>
-        <file alias="reorder-list-icon-small">qml/icons8-drag-reorder-filled-25.png</file>
-        <file alias="add-icon">qml/icons8-plus-26.png</file>
         <file>qml/DeleteButton.qml</file>
         <file>qml/YesNoPanel.qml</file>
         <file>qml/PathListDelegate.qml</file>
@@ -93,8 +72,6 @@
         <file>qml/LocationAirportView.qml</file>
         <file>qml/LocationNavaidView.qml</file>
         <file>qml/LocationCarrierView.qml</file>
-        <file alias="linear-spinner">qml/icons8-linear-spinner.gif</file>
-        <file alias="ellipsis-icon">qml/icons8-ellipsis-filled-50.png</file>
         <file>qml/RadioButton.qml</file>
         <file>qml/IntegerSpinbox.qml</file>
         <file>qml/DoubleSpinbox.qml</file>
@@ -111,8 +88,6 @@
         <file>qml/ToggleBox.qml</file>
         <file>qml/LocationAltitudeRow.qml</file>
         <file>qml/CatalogDelegate.qml</file>
-        <file alias="clear-text-icon">assets/icons8-clear-symbol-26.png</file>
-        <file alias="white-delete-icon">assets/white-cross-icon.png</file>
         <file>qml/FlightPlan.qml</file>
         <file>qml/PlainTextEditBox.qml</file>
         <file>qml/HeaderBox.qml</file>
@@ -135,8 +110,6 @@
         <file>qml/IconButton.qml</file>
         <file>qml/FavouriteToggleButton.qml</file>
         <file>qml/VariantMenu.qml</file>
-        <file alias="favourite-icon-filled">assets/icons8-christmas-star-filled.png</file>
-        <file alias="favourite-icon-outline">assets/icons8-christmas-star-outline.png</file>
         <file>qml/FirstRun.qml</file>
         <file>qml/HelpSupport.qml</file>
         <file>qml/NotificationArea.qml</file>
@@ -150,34 +123,17 @@
         <file>qml/GettingStartedTipDisplay.qml</file>
         <file>qml/CatalogRefreshFailedNotification.qml</file>
     </qresource>
+
     <qresource prefix="/preview">
         <file alias="close-icon">assets/preview-close.png</file>
         <file alias="left-arrow-icon">assets/preview-left-arrow.png</file>
         <file alias="right-arrow-icon">assets/preview-right-arrow.png</file>
-    </qresource>
-    <qresource prefix="/svg">
-        <file alias="toolbox-fly">assets/icons8-airplane-take-off.svg</file>
-        <file alias="toolbox-environment">assets/icons8-windy-weather-filled.svg</file>
-        <file alias="toolbox-location">assets/icons8-location.svg</file>
-        <file alias="toolbox-settings">assets/icons8-automation.svg</file>
-        <file alias="toolbox-addons">assets/icons8-puzzle.svg</file>
-        <file alias="toolbox-summary">assets/icons8-home.svg</file>
-        <file alias="toolbox-aircraft">assets/icons8-aircraft.svg</file>
-        <file alias="toolbox-fly-alt">assets/icons8-rocket.svg</file>
-        <file alias="toolbox-fly-heli">assets/icons8-helicopter.svg</file>
-        <file alias="icon-grid-view">assets/icons8-grid-view.svg</file>
-        <file alias="icon-list-view">assets/icons8-menu.svg</file>
-        <file alias="icon-hide">assets/icons8-hide-50.png</file>
-        <file alias="icon-carrier">assets/icons8-cargo-ship-50.png</file>
-        <file alias="icon-airport">assets/icons8-airport-50.png</file>
-        <file alias="aircraft-carrier">assets/aircraft-carrier-icon.svg</file>
     </qresource>
     <qresource prefix="/icon">
         <file alias="scroll-down">assets/mask-scroll-down.png</file>
         <file alias="history">assets/mask-history.png</file>
         <file alias="settings">assets/mask-settings-gear.png</file>
         <file alias="search">assets/mask-search.png</file>
-        <file alias="carrier">assets/mask-aircraft-carrier.png</file>
         <file alias="carrier2">assets/mask-carrier2.png</file>
         <file alias="map-airplane">assets/mask-airplane.png</file>
         <file alias="airport">assets/mask-airport.png</file>
@@ -212,5 +168,6 @@
         <file alias="toolbox-fly-alt">assets/icons8-rocket.svg</file>
         <file alias="toolbox-fly-heli">assets/icons8-helicopter.svg</file>
 
+        <file alias="aircraft-carrier">assets/aircraft-carrier-icon.svg</file>
     </qresource>
 </RCC>

@@ -15,10 +15,10 @@ Rectangle {
     }
 
     height: width / preview.aspectRatio
-    color: "#7f7f7f"
+    color: Style.minorFrameColor
 
     border.width: 1
-    border.color: "#3f3f3f"
+    border.color: Style.themeColor
 
     Timer {
         id: previewCycleTimer

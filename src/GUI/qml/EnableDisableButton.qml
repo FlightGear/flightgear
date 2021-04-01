@@ -13,7 +13,7 @@ Item {
 
     Image {
         id:  icon
-        source: "qrc:///svg/icon-hide"
+        source: "image://colored-icon/hide"
     }
 
     MouseArea {

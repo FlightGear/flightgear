@@ -22,11 +22,12 @@
 
 #include <limits>
 
-#include <QPainter>
 #include <QDebug>
-#include <QVector2D>
 #include <QMouseEvent>
 #include <QPaintDevice>
+#include <QPainter>
+#include <QQmlEngine>
+#include <QVector2D>
 
 #include <Navaids/navrecord.hxx>
 #include <Navaids/positioned.hxx>
@@ -35,6 +36,7 @@
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/airways.hxx>
 
+#include "QmlColoredImageProvider.hxx"
 #include "QtLauncher_fwd.hxx"
 
 using namespace flightgear;
@@ -157,8 +159,13 @@ void BaseDiagram::paintAirplaneIcon(QPainter* painter, const SGGeod& geod, int h
 
 void BaseDiagram::paintCarrierIcon(QPainter* painter, const SGGeod& geod, int headingDeg)
 {
+    if (m_carrierPixmap.isNull()) {
+        auto iconProvider = QmlColoredImageProvider::instance();
+        QSize sz;
+        m_carrierPixmap = iconProvider->requestPixmap("aircraft-carrier?#ff00ff", &sz, {});
+    }
+
     QPointF pos = project(geod);
-    QPixmap pix(":/svg/aircraft-carrier");
     pos = m_viewportTransform.map(pos);
     painter->save();
     painter->setWorldTransform(m_baseDeviceTransform);
@@ -167,9 +174,9 @@ void BaseDiagram::paintCarrierIcon(QPainter* painter, const SGGeod& geod, int he
     painter->rotate(headingDeg);
 
     painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
-    QRect carrierIconRect = pix.rect();
+    QRect carrierIconRect = m_carrierPixmap.rect();
     carrierIconRect.moveCenter(QPoint(0,0));
-    painter->drawPixmap(carrierIconRect, pix);
+    painter->drawPixmap(carrierIconRect, m_carrierPixmap);
 
     painter->restore();
 }

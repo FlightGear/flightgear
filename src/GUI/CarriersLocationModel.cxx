@@ -5,6 +5,7 @@
 #include <QPixmap>
 
 #include "AIModel/AIManager.hxx"
+#include "QmlColoredImageProvider.hxx"
 
 CarriersLocationModel::CarriersLocationModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -61,6 +62,12 @@ QVariant CarriersLocationModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return QVariant();
 
+    if (m_carrierPixmap.isNull()) {
+        auto iconProvider = QmlColoredImageProvider::instance();
+        QSize sz;
+        m_carrierPixmap = iconProvider->requestPixmap("aircraft-carrier?theme", &sz, {});
+    }
+
     const auto& c = mCarriers.at(static_cast<size_t>(index.row()));
     switch (role) {
     case Qt::DisplayRole:
@@ -69,7 +76,7 @@ QVariant CarriersLocationModel::data(const QModelIndex &index, int role) const
     case IdentRole:         return c.mCallsign;
     case DescriptionRole:   return c.mDescription;
     case TypeRole:          return "Carrier";
-    case IconRole:          return QPixmap(":/svg/aircraft-carrier");
+    case IconRole: return m_carrierPixmap;
     default:
         break;
     }

@@ -65,7 +65,7 @@ Item {
 
             Image {
                 id: closeButton
-                source: "qrc:///white-delete-icon"
+                source: "image://colored-icon/cross?themeContrast"
 
                 anchors {
                     verticalCenter: parent.verticalCenter
