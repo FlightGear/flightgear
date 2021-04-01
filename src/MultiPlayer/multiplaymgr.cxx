@@ -2499,7 +2499,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
             SGPropertyNode* n = fgGetNode("/sim/replay/log-raw-speed-multiplayer-values", true /*create*/);
             n = n->addChild("value");
             n->setDoubleValue(speed);
-            SG_LOG(SG_GENERAL, SG_ALERT, "Multiplayer aircraft callsign=" << callsign << ":"
+            SG_LOG(SG_GENERAL, SG_DEBUG, "Multiplayer aircraft callsign=" << callsign << ":"
                     << " motionInfo.time=" << motionInfo.time
                     << " dt=" << dt
                     << " distance=" << distance
