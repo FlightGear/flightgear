@@ -69,10 +69,19 @@ public:
         return result;
     }
 
-    void removeIndex(int index)
+    void removeIndex(int row)
     {
-        beginRemoveRows({}, index, index);
-        _data.erase(_data.begin() + index);
+        // work aroud the role-by-role destruction order of model data
+        // clear out the source first so the Loader unloads, before we
+        // null args. This avoids 'args is null' warnings from the loaded
+        // notification
+        _data[row].source.clear();
+        const auto idx = index(row, 0);
+        emit dataChanged(idx, idx, {SourceRole});
+        
+        // now we can remove everything else
+        beginRemoveRows({}, row, row);
+        _data.erase(_data.begin() + row);
         endRemoveRows();
     }
 
