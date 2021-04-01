@@ -198,5 +198,19 @@
         <file alias="add">assets/mask-add.png</file>
         <file alias="toolbox-help">assets/mask-toolbox-help.png</file>
         <file alias="ellipsis">assets/mask-ellipsis.png</file>
+
+        <file alias="grid-view">assets/icons8-grid-view.svg</file>
+        <file alias="list-view">assets/icons8-menu.svg</file>
+
+        <file alias="toolbox-fly">assets/icons8-airplane-take-off.svg</file>
+        <file alias="toolbox-environment">assets/icons8-windy-weather-filled.svg</file>
+        <file alias="toolbox-location">assets/icons8-location.svg</file>
+        <file alias="toolbox-settings">assets/icons8-automation.svg</file>
+        <file alias="toolbox-addons">assets/icons8-puzzle.svg</file>
+        <file alias="toolbox-summary">assets/icons8-home.svg</file>
+        <file alias="toolbox-aircraft">assets/icons8-aircraft.svg</file>
+        <file alias="toolbox-fly-alt">assets/icons8-rocket.svg</file>
+        <file alias="toolbox-fly-heli">assets/icons8-helicopter.svg</file>
+
     </qresource>
 </RCC>

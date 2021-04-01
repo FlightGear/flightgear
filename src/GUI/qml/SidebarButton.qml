@@ -1,5 +1,5 @@
 import QtQuick 2.4
-import "."
+import FlightGear 1.0
 
 
 Item {
@@ -10,7 +10,7 @@ Item {
     width: Style.strutSize * 2
     height: iconImage.height + label.height + Style.margin + (__smallMargin * 2)
 
-    property alias icon: iconImage.source
+    property string icon: ""
     property alias label: label.text
 
     signal clicked()
@@ -35,6 +35,7 @@ Item {
 
     Image {
         id: iconImage
+        source: root.icon + "?themeContrast"
         anchors.horizontalCenter: parent.horizontalCenter
         opacity: root.enabled ? 1.0 : 0.5
        y: __smallMargin
@@ -42,7 +43,7 @@ Item {
 
     Text {
         id: label
-        color: "white"
+        color: Style.themeContrastTextColor
         // enabled appearance is done via opacity to match the icon
         opacity: root.enabled ? 1.0 : 0.5
         width: parent.width

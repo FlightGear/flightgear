@@ -29,8 +29,8 @@ Rectangle {
     Image {
         id: icon
         anchors.right: parent.right
-        source: mouse.containsMouse ? "image:///colored-icon/add?active"
-                                    : "image:///colored-icon/add?text"
+        source: mouse.containsMouse ? "image://colored-icon/add?active"
+                                    : "image://colored-icon/add?text"
     }
 
     MouseArea {

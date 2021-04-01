@@ -19,8 +19,10 @@ Rectangle {
         width: parent.width - Style.margin
         height: parent.height - Style.margin
         anchors.centerIn: parent
-        source: root.gridMode ? "qrc:///svg/icon-grid-view"
-                              : "qrc:///svg/icon-list-view"
+
+        readonly property string __iconSuffix: mouse.containsMouse ? "?theme" : "?text"
+        source: (root.gridMode ? "image://colored-icon/grid-view"
+                              : "image://colored-icon/list-view") + __iconSuffix
     }
 
     MouseArea {
