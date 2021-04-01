@@ -1103,7 +1103,14 @@ void fgCreateSubsystems(bool duringReset) {
     ////////////////////////////////////////////////////////////////////
     // Initialize the replay subsystem
     ////////////////////////////////////////////////////////////////////
-    globals->add_new_subsystem<FGReplay>(SGSubsystemMgr::POST_FDM);
+    // We also call FGReplay::unit() method here, to work around a
+    // problem where JSBSim appears to rely on FGReplay creating certain
+    // properties before it is initialised. This caused problems when
+    // FGReplay was changed to be POST_FDM.
+    ////////////////////////////////////////////////////////////////////
+    globals->add_new_subsystem<FGReplay>(SGSubsystemMgr::POST_FDM)
+            ->init(); // Special case.
+
     globals->add_subsystem("history", new FGFlightHistory);
     
 #ifdef ENABLE_AUDIO_SUPPORT
