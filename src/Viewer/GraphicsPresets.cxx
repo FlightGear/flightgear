@@ -46,6 +46,14 @@ namespace flightgear {
 
 class GraphicsPresets::GraphicsConfigChangeListener : public SGPropertyChangeListener
 {
+    struct WatchedProp {
+        std::string previousValue;
+        SGPropertyNode_ptr node;
+    };
+
+    using PropertyNodeList = std::vector<WatchedProp>;
+    PropertyNodeList _watchedProps;
+
 public:
     GraphicsConfigChangeListener()
     {
@@ -54,42 +62,56 @@ public:
 
     void registerWithProperty(SGPropertyNode_ptr n)
     {
-        auto it = std::find(_watchedProps.begin(), _watchedProps.end(), n);
+        auto it = findProp(n);
         if (it != _watchedProps.end()) {
             // this would happen if a preset somehow set the same property more than once
             SG_LOG(SG_GUI, SG_ALERT, "GraphicsPresets: Duplicate registration for:" << n->getPath());
             return;
         }
 
-        _watchedProps.push_back(n);
+        WatchedProp p = {n->getStringValue(), n};
+        _watchedProps.push_back(p);
         n->addChangeListener(this);
     }
 
     void unregisterFromProperties()
     {
         for (const auto& w : _watchedProps) {
-            w->removeChangeListener(this);
+            w.node->removeChangeListener(this);
         }
         _watchedProps.clear();
     }
 
     void valueChanged(SGPropertyNode* prop) override
     {
-        SG_LOG(SG_GUI, SG_INFO, "GraphicsPreset clearing; setting:" << prop->getPath() << " was modified");
-        if (_presetProp->hasValue()) {
-            flightgear::addSentryBreadcrumb("clearing graphics preset, config was customised at:" + prop->getPath(), "info");
-            _presetProp->clearValue();
-
-            auto gp = globals->get_subsystem<GraphicsPresets>();
-            gp->clearPreset();
+        if (!_presetProp->hasValue()) {
+            return;
         }
+
+        auto it = findProp(prop);
+        assert(it != _watchedProps.end());
+        const std::string newValue = prop->getStringValue();
+        if (newValue == it->previousValue) {
+            return;
+        }
+
+        SG_LOG(SG_GUI, SG_INFO, "GraphicsPreset clearing; setting:" << prop->getPath() << " was modified");
+        flightgear::addSentryBreadcrumb("clearing graphics preset, config was customised at:" + prop->getPath(), "info");
+        _presetProp->clearValue();
+
+        auto gp = globals->get_subsystem<GraphicsPresets>();
+        gp->clearPreset();
     }
 
 private:
     SGPropertyNode_ptr _presetProp;
 
-    using PropertyNodeList = std::vector<SGPropertyNode_ptr>;
-    PropertyNodeList _watchedProps;
+    PropertyNodeList::iterator findProp(SGPropertyNode* node)
+    {
+        return std::find_if(_watchedProps.begin(), _watchedProps.end(), [node](const WatchedProp& w) {
+            return w.node == node;
+        });
+    }
 };
 
 /**
