@@ -229,6 +229,8 @@ public:
     using AggregateErrors = std::vector<AggregateReport>;
     AggregateErrors _aggregated;
     int _activeReportIndex = -1;
+    string_list _significantProperties; ///< properties we want to include in reports, for debugging
+
     /**
     find the appropriate agrgegate for an error, based on its context
      */
@@ -335,6 +337,7 @@ public:
     void writeReportToStream(const AggregateReport& report, std::ostream& os) const;
     void writeContextToStream(const ErrorOcurrence& error, std::ostream& os) const;
     void writeLogToStream(const ErrorOcurrence& error, std::ostream& os) const;
+    void writeSignificantPropertiesToStream(std::ostream& os) const;
 
     bool dismissReportCommand(const SGPropertyNode* args, SGPropertyNode*);
     bool saveReportCommand(const SGPropertyNode* args, SGPropertyNode*);
@@ -486,7 +489,24 @@ void ErrorReporter::ErrorReporterPrivate::writeReportToStream(const AggregateRep
         os << "\t" << o << "\n";
     }
     os << endl;
+
+    writeSignificantPropertiesToStream(os);
 }
+
+void ErrorReporter::ErrorReporterPrivate::writeSignificantPropertiesToStream(std::ostream& os) const
+{
+    os << "Properties:" << endl;
+    for (const auto& ps : _significantProperties) {
+        auto node = fgGetNode(ps);
+        if (!node) {
+            os << "\t" << ps << ": not defined\n";
+        } else {
+            os << "\t" << ps << ": " << node->getStringValue() << "\n";
+        }
+    }
+    os << endl;
+}
+
 
 bool ErrorReporter::ErrorReporterPrivate::dismissReportCommand(const SGPropertyNode* args, SGPropertyNode*)
 {
@@ -585,6 +605,29 @@ bool ErrorReporter::ErrorReporterPrivate::AggregateReport::addOccurence(const Er
 ErrorReporter::ErrorReporter() : d(new ErrorReporterPrivate)
 {
     d->_logCallback.reset(new RecentLogCallback);
+
+    // define significant properties
+    d->_significantProperties = {
+        "/sim/aircraft-id",
+        "/sim/aircraft-dir",
+        "/sim/rendering/gl-version",
+        "/sim/rendering/gl-renderer",
+        "/sim/rendering/gl-shading-language-version",
+        "/sim/rendering/max-texture-size",
+        "/sim/rendering/max-texture-units",
+        "/sim/rendering/shaders/skydome",
+        "/sim/rendering/shaders/water",
+        "/sim/rendering/shaders/model",
+        "/sim/rendering/shaders/landmass",
+        "/sim/rendering/shaders/vegetation-effects",
+        "/sim/rendering/shaders/transition",
+        "/sim/rendering/max-paged-lod",
+        "/sim/rendering/photoscenery/enabled",
+        "/sim/rendering/preset-description",
+        "/sim/rendering/multithreading-mode",
+        "/sim/rendering/multi-sample-buffers",
+        "/sim/rendering/multi-samples",
+        "/scenery/use-vpb"};
 }
 
 void ErrorReporter::bind()
