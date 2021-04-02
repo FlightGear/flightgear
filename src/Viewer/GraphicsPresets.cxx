@@ -332,6 +332,14 @@ auto GraphicsPresets::listPresets() -> GraphicsPresetVec
         }
     } // of Video/ data dirs iteration
 
+    // Sort the resulting list by the order number or alphabetically if some
+    // presets have the same order number
+    sort(result.begin(), result.end(), [](auto &a, auto &b) {
+        if (a.orderNum != b.orderNum)
+            return a.orderNum < b.orderNum;
+        return a.name < b.name;
+    });
+
     return result;
 }
 
@@ -444,6 +452,7 @@ bool GraphicsPresets::loadPresetXML(const SGPath& p, GraphicsPresetInfo& info)
     const string id = props->getStringValue("id");
     const string rawName = props->getStringValue("name");
     const string rawDesc = props->getStringValue("description");
+    int orderNum = props->getIntValue("order-num", 99);
 
     if (id.empty() || rawName.empty() || rawDesc.empty()) {
         SG_LOG(SG_IO, SG_ALERT, "Missing preset info loading: " << p.str());
@@ -453,6 +462,7 @@ bool GraphicsPresets::loadPresetXML(const SGPath& p, GraphicsPresetInfo& info)
     info.id = id;
     info.name = globals->get_locale()->getLocalizedString(rawName, "graphics-presets");
     info.description = globals->get_locale()->getLocalizedString(rawDesc, "graphics-presets");
+    info.orderNum = orderNum;
 
     if (info.name.empty())
         info.name = rawName; // no translation defined

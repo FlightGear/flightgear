@@ -24,6 +24,7 @@ public:
         std::string id;
         std::string name;        // localized
         std::string description; // localized
+        int orderNum;
         string_list devices;
 
         SGPropertyNode_ptr properties;
