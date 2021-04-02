@@ -63,6 +63,7 @@ Item {
                 border.width: 1
                 border.color: Style.frameColor
                 clip: true
+                color: Style.panelBackground
 
                 Column {
                     id: catalogsColumn
@@ -129,6 +130,7 @@ Item {
                 border.width: 1
                 border.color: Style.frameColor
                 clip: true
+                color: Style.panelBackground
 
                 Column {
                     id: aircraftPathsColumn
@@ -185,6 +187,7 @@ Item {
                 border.width: 1
                 border.color: Style.frameColor
                 clip: true
+                color: Style.panelBackground
 
                 Column {
                     id: addonModulePathsColumn
@@ -252,6 +255,7 @@ Item {
                 border.width: 1
                 border.color: Style.frameColor
                 clip: true
+                color: Style.panelBackground
 
                 Column {
                     id: sceneryPathsColumn

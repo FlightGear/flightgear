@@ -16,7 +16,7 @@ Rectangle {
     Text {
         id: label
         text: qsTr("Add")
-        color: Style.backgroundColor
+        color: Style.themeContrastTextColor
 
         anchors {
             left: parent.left

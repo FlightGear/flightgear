@@ -14,11 +14,6 @@ Item {
 
     GettingStartedScope.controller: tips.controller
 
-    Rectangle {
-        anchors.fill: parent
-        color: "#7f7f7f"
-    }
-
     readonly property string __aircraftDescription: _launcher.selectedAircraftInfo.description
 
     PreviewImage {
@@ -129,7 +124,7 @@ Item {
             anchors.fill: parent
             z: -1
             opacity: Style.panelOpacity
-            color: "white"
+            color: Style.panelBackground
         }
 
         Grid {

@@ -42,7 +42,8 @@ FocusScope
         border.width: 1
         border.color: (mouse.containsMouse | active) ? Style.themeColor: Style.minorFrameColor
         clip: true
-
+        color: Style.backgroundColor
+        
         TextInput {
             id: buttonText
             anchors.left: parent.left

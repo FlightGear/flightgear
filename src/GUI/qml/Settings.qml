@@ -3,10 +3,16 @@ import QtQuick.Controls 2.2
 
 import FlightGear.Launcher 1.0
 import FlightGear 1.0
-import "."
 
 Item {
     id: settings
+
+    Rectangle {
+        visible: _launcher.isSearchActive
+        anchors.fill: parent
+        color: Style.backgroundColor
+    }
+
     Rectangle {
         // search 'dimming' rectangle
         visible: _launcher.isSearchActive
@@ -52,7 +58,7 @@ Item {
                 width: parent.width
                 height: headerText.height
 
-                Text {
+                StyledText {
                     id: headerText
                     text: qsTr("Settings")
                     font.pixelSize: Style.headingFontPixelSize

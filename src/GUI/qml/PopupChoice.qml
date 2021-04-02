@@ -1,7 +1,6 @@
 import QtQuick 2.4
 import FlightGear.Launcher 1.0
 import FlightGear 1.0
-import "."
 
 Item {
     id: root
@@ -62,6 +61,7 @@ Item {
         border.width: 1
         height: currentChoiceText.implicitHeight + Style.margin
         clip: true
+        color: Style.backgroundColor
 
         anchors.left: label.right
         anchors.leftMargin: Style.margin

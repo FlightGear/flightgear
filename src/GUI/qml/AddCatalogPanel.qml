@@ -7,6 +7,7 @@ Rectangle {
     id: addCatalogPanel
     state: "start"
     height: column.height
+    color: Style.panelBackground
 
     readonly property bool isActive: (state != "start")
     Behavior on height {

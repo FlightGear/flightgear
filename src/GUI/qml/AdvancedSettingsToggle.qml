@@ -1,5 +1,4 @@
 import QtQuick 2.4
-import "."
 
 Item {
     id: root
@@ -32,7 +31,7 @@ Item {
         anchors.right: gearIcon.left
         anchors.rightMargin: Style.margin
         anchors.verticalCenter: parent.verticalCenter
-        color: "white"
+        color: Style.themeContrastTextColor
         font.underline: mouse.containsMouse
         font.pixelSize: Style.baseFontPixelSize
     }

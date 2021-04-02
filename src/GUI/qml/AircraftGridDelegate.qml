@@ -17,7 +17,7 @@ Item {
         height: parent.height - 4
         color: "transparent"
         border.width: 1
-        border.color: "#dfdfdf"
+        border.color: Style.minorFrameColor
     }
 
     MouseArea {
@@ -47,7 +47,7 @@ Item {
             Rectangle {
                 anchors.centerIn: parent
                 border.width: 1
-                border.color: "#7f7f7f"
+                border.color: Style.minorFrameColor
                 width: thumbnail.width
                 height: thumbnail.height
 

@@ -191,6 +191,7 @@ FocusScope {
         radius: Style.roundRadius
         border.color: root.enable ? (edit.activeFocus ? Style.frameColor : Style.minorFrameColor) : Style.disabledMinorFrameColor
         border.width: 1
+        color: root.enabled ? Style.panelBackground : Style.backgroundColor
 
         ClickableText {
             id: prefix

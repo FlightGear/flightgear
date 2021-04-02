@@ -3,7 +3,6 @@ import QtQuick.Controls 2.2
 
 import FlightGear 1.0
 import FlightGear.Launcher 1.0
-import "."
 
 Item {
     id: root
@@ -93,7 +92,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: "white"
+        color: Style.backgroundColor
     }
 
     Component {
@@ -102,6 +101,7 @@ Item {
             id: delegateRoot
             height: delegateContent.height + Style.margin
             width: searchView.width
+            color: Style.backgroundColor
 
             function itemDescription()
             {
@@ -126,10 +126,10 @@ Item {
                 height: Math.max(delegateIcon.height, delegateText.height)
                 width: parent.width
 
-                Rectangle {
-                    visible: delegateMouse.containsMouse
-                    color: "#cfcfcf"
-                }
+                // Rectangle {
+                //     visible: delegateMouse.containsMouse
+                //     color: "#cfcfcf"
+                // }
 
                 PixmapImage {
                     id: delegateIcon
@@ -180,7 +180,7 @@ Item {
         }
     }
 
-    Text {
+    StyledText {
         id: headerText
         text: qsTr("Location")
         font.pixelSize: Style.headingFontPixelSize

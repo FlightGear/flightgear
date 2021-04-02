@@ -53,7 +53,8 @@ FocusScope {
         border.color: root.enabled ? (edit.activeFocus ? Style.frameColor : Style.minorFrameColor) : Style.disabledMinorFrameColor
         border.width: 1
         clip: true
-
+        color: Style.backgroundColor
+        
         TextInput {
             id: edit
             enabled: root.enabled

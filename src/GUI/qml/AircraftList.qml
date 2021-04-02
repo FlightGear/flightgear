@@ -1,7 +1,6 @@
 import QtQuick 2.2
 import FlightGear.Launcher 1.0 as FG
 import FlightGear 1.0
-import "." // -> forces the qmldir to be loaded
 
 FocusScope
 {
@@ -38,6 +37,7 @@ FocusScope
         id: tabBar
         height: searchButton.height + (Style.margin * 2)
         width: parent.width
+        color: Style.backgroundColor
 
         GridToggleButton {
             id: gridModeToggle

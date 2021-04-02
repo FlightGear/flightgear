@@ -1,7 +1,6 @@
 import QtQuick 2.4
 import QtQuick.Controls 2.2
 import FlightGear 1.0
-import "."
 
 Rectangle {
     id: root
@@ -12,7 +11,7 @@ Rectangle {
     property int maximumPermittedHeight: 450
     property string displayRole: "display"
 
-    color: "white"
+    color: Style.panelBackground
     border.width: 1
     border.color: Style.minorFrameColor
     width: flick.width + Style.margin

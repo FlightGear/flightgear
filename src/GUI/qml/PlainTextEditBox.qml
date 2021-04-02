@@ -12,7 +12,8 @@ Rectangle {
     implicitHeight: edit.height + Style.margin
     border.color: edit.activeFocus ? Style.frameColor : Style.minorFrameColor
     border.width: 1
-
+    color: Style.panelBackground
+    
     signal editingFinished();
 
     TextEdit {

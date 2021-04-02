@@ -124,6 +124,16 @@ Item {
         }
     }
 
+    // background fill
+    Rectangle {
+        height: parent.height
+        anchors {
+            left: sidebar.right
+            right: parent.right
+        }
+        color: Style.backgroundColor
+    }
+
     Settings {
         id: settings
 

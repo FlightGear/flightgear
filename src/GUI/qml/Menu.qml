@@ -45,9 +45,9 @@ Item {
     Rectangle {
         id: menuFrame
         border.width: 1
-        border.color: Style.themeColor
+        border.color: Style.minorFrameColor
         height: contentBox.childrenRect.height + 2
-        color: "white"
+        color: Style.panelBackground
 
         // width is computed during show(), but if we don't see a valid
         // value here, the Column doesn't position the items until

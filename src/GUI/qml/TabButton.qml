@@ -12,12 +12,12 @@ Rectangle {
     height: buttonText.height + (radius * 2)
     radius: 6
 
-    color: mouse.containsMouse ? "#064989" : (active ? "#1b7ad3" : "white")
+    color: mouse.containsMouse ? Style.activeColor : (active ? Style.themeColor : Style.backgroundColor)
 
     StyledText {
         id: buttonText
         anchors.centerIn: parent
-        color: (active | mouse.containsMouse) ? "white" : "#3f3f3f"
+        color: (active | mouse.containsMouse) ? Style.themeContrastTextColor : Style.baseTextColor
     }
 
     MouseArea {

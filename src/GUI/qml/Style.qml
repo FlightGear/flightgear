@@ -15,6 +15,7 @@ QtObject
     readonly property string backgroundColor: "#ffffff"
     readonly property string themeColor: "#1b7ad3"
     readonly property string destructiveActionColor: "#c62703"
+    readonly property string panelBackground: "#efefef"
 
     readonly property string activeColor: Qt.darker(themeColor)
     readonly property string inverseActiveColor: "#2f2f2f"

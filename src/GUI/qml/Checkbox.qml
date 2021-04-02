@@ -17,13 +17,14 @@ Item {
         anchors.left: parent.left
         anchors.leftMargin: 8
         anchors.verticalCenter: parent.verticalCenter
+        color: Style.panelBackground
 
         Rectangle {
             width: 12
             height: 12
             anchors.centerIn: parent
             id: checkMark
-            color: Style.themeColor
+            color: mouseArea.containsMouse ? Style.activeColor : Style.themeColor
             visible: checked
         }
     }

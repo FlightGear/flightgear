@@ -1,7 +1,6 @@
 import QtQuick 2.4
 import FlightGear 1.0
 import FlightGear.Launcher 1.0
-import "."
 
 Item {
     property alias geod: diagram.geod
@@ -53,7 +52,7 @@ Item {
             anchors.fill: parent
             z: -1
             opacity: Style.panelOpacity
-            color: "white"
+            color: Style.panelBackground
         }
 
         RadioButtonGroup {
