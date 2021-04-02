@@ -65,7 +65,7 @@ public:
      */
     GraphicsPresetVec listPresets();
 
-    bool saveToXML(const SGPath& path, const std::string& name);
+    bool saveToXML(const SGPath& path, const std::string& name, const std::string& desc);
 
 private:
     void clearPreset();

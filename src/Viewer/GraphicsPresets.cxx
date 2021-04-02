@@ -6,6 +6,7 @@
 #include <unordered_set>
 
 // SG
+#include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/commands.hxx>
@@ -200,17 +201,21 @@ static bool do_apply_preset(const SGPropertyNode* arg, SGPropertyNode* root)
 
 static bool do_save_preset(const SGPropertyNode* arg, SGPropertyNode* root)
 {
-    // TODO implement me
     if (!arg->hasChild("path")) {
         SG_LOG(SG_GUI, SG_ALERT, "do_save_preset: no out path argument provided");
         return false;
     }
 
-    const SGPath path = SGPath::fromUtf8(arg->getStringValue("path"));
+    const string spath = arg->getStringValue("path");
+    if (spath == "!ask") {
+    }
+
+    const SGPath path = SGPath::fromUtf8(spath);
     const string name = arg->getStringValue("name");
+    const string description = arg->getStringValue("description");
     auto gp = globals->get_subsystem<GraphicsPresets>();
 
-    return gp->saveToXML(path, name);
+    return gp->saveToXML(path, name, description);
 }
 
 static bool do_list_standard_presets(const SGPropertyNode* arg, SGPropertyNode* root)
@@ -285,6 +290,9 @@ void GraphicsPresets::init()
         if (toSave) {
             for (const auto& p : toSave->getChildren("property")) {
                 string t = simgear::strutils::strip(p->getStringValue());
+                if (t.at(0) == '/') {
+                    t = t.substr(1); // remove leading '/'
+                }
                 _propertiesToSave.push_back(t);
             }
         }
@@ -510,19 +518,31 @@ bool GraphicsPresets::loadPresetXML(const SGPath& p, GraphicsPresetInfo& info)
     return true;
 }
 
-bool GraphicsPresets::saveToXML(const SGPath& path, const std::string& name)
+bool GraphicsPresets::saveToXML(const SGPath& path, const std::string& name, const std::string& desc)
 {
     SGPropertyNode_ptr presetXML(new SGPropertyNode);
     presetXML->setStringValue("id", path.file_base()); // without .xml
     presetXML->setStringValue("name", name);
-    // no description
+    presetXML->setStringValue("description", desc);
 
-    auto settingsNode = presetXML->getChild("settings", true);
+    auto settingsNode = presetXML->getChild("settings", 0, true);
 
-    copyPropertiesIf(globals->get_props(), settingsNode, [this](const SGPropertyNode* nd) {
-        // TODO
-        return true;
-    });
+    for (const auto& path : _propertiesToSave) {
+        auto srcNode = fgGetNode(path);
+        if (!srcNode || !srcNode->hasValue())
+            continue;
+
+        auto dstNode = settingsNode->getNode(path, true);
+        copyProperties(srcNode, dstNode);
+    }
+
+    try {
+        sg_ofstream os(path, std::ios::out | std::ios::trunc);
+        writeProperties(os, presetXML, true /*write all*/);
+    } catch (sg_exception& e) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Failed to save presets file to:" << path << "\nt\tFailed:" << e.getFormattedMessage());
+        return false;
+    }
 
     return true;
 }
