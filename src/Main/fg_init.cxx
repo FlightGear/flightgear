@@ -924,51 +924,26 @@ void fgCreateSubsystems(bool duringReset) {
     SG_LOG( SG_GENERAL, SG_INFO, "Creating Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "======== ==========");
 
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the sound subsystem.
-    ////////////////////////////////////////////////////////////////////
     // Sound manager uses an own subsystem group "SOUND" which is the last
     // to be updated in every loop.
     // Sound manager is updated last so it can use the CPU while the GPU
     // is processing the scenery (doubled the frame-rate for me) -EMH-
     globals->add_new_subsystem<FGSoundManager>(SGSubsystemMgr::SOUND);
 
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the event manager subsystem.
-    ////////////////////////////////////////////////////////////////////
-
     globals->get_event_mgr()->init();
     globals->get_event_mgr()->setRealtimeProperty(fgGetNode("/sim/time/delta-realtime-sec", true));
 
-    ////////////////////////////////////////////////////////////////////
     // Initialize the property interpolator subsystem. Put into the INIT
     // group because the "nasal" subsystem may need it at GENERAL take-down.
-    ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("prop-interpolator", new FGInterpolator, SGSubsystemMgr::INIT);
 
-
-    ////////////////////////////////////////////////////////////////////
-    // Add the FlightGear property utilities.
-    ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("properties", new FGProperties);
-
-
-    ////////////////////////////////////////////////////////////////////
-    // Add the FlightGear property utilities.
-    ////////////////////////////////////////////////////////////////////
     globals->add_new_subsystem<flightgear::AirportDynamicsManager>();
-
-    ////////////////////////////////////////////////////////////////////
-    // Add the performance monitoring system.
-    ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("performance-mon",
             new SGPerformanceMonitor(globals->get_subsystem_mgr(),
                                      fgGetNode("/sim/performance-monitor", true)));
 
-    ////////////////////////////////////////////////////////////////////
     // Initialize the material property subsystem.
-    ////////////////////////////////////////////////////////////////////
-
     SGPath mpath( globals->get_fg_root() );
     mpath.append( fgGetString("/sim/rendering/materials-file") );
     if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath, globals->get_props()) ) {
@@ -981,161 +956,81 @@ void fgCreateSubsystems(bool duringReset) {
     }
     globals->add_new_subsystem<FGDNSClient>();
 
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the flight model subsystem.
-    ////////////////////////////////////////////////////////////////////
-
     globals->add_subsystem("flight", new FDMShell, SGSubsystemMgr::FDM);
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the weather subsystem.
-    ////////////////////////////////////////////////////////////////////
 
     // Initialize the weather modeling subsystem
     globals->add_subsystem("environment", new FGEnvironmentMgr);
     globals->add_new_subsystem<Ephemeris>();
     
-    ////////////////////////////////////////////////////////////////////
     // Initialize the aircraft systems and instrumentation (before the
     // autopilot.)
-    ////////////////////////////////////////////////////////////////////
-
     globals->add_subsystem("systems", new FGSystemMgr, SGSubsystemMgr::FDM);
     globals->add_subsystem("instrumentation", new FGInstrumentMgr, SGSubsystemMgr::FDM);
     globals->add_subsystem("hud", new HUD, SGSubsystemMgr::DISPLAY);
     globals->add_subsystem("cockpit-displays", new flightgear::CockpitDisplayManager, SGSubsystemMgr::DISPLAY);
-  
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the XML Autopilot subsystem.
-    ////////////////////////////////////////////////////////////////////
-
     globals->add_subsystem( "xml-autopilot", FGXMLAutopilotGroup::createInstance("autopilot"), SGSubsystemMgr::FDM );
     globals->add_subsystem( "xml-proprules", FGXMLAutopilotGroup::createInstance("property-rule"), SGSubsystemMgr::GENERAL );
     globals->add_new_subsystem<FGRouteMgr>();
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the Input-Output subsystem
-    ////////////////////////////////////////////////////////////////////
     globals->add_subsystem( "io", new FGIO );
-  
-    ////////////////////////////////////////////////////////////////////
-    // Create and register the logger.
-    ////////////////////////////////////////////////////////////////////
-    
     globals->add_subsystem("logger", new FGLogger);
-
-    ////////////////////////////////////////////////////////////////////
-    // Create and register the XML GUI.
-    ////////////////////////////////////////////////////////////////////
-
     globals->add_subsystem("gui", new NewGUI, SGSubsystemMgr::INIT);
 
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the canvas 2d drawing subsystem.
-    ////////////////////////////////////////////////////////////////////
     simgear::canvas::Canvas::setSystemAdapter(
       simgear::canvas::SystemAdapterPtr(new canvas::FGCanvasSystemAdapter)
     );
     globals->add_subsystem("Canvas", new CanvasMgr, SGSubsystemMgr::DISPLAY);
     globals->add_subsystem("CanvasGUI", new GUIMgr, SGSubsystemMgr::DISPLAY);
-
-    ////////////////////////////////////////////////////////////////////
-   // Initialize the ATC subsystem
-    ////////////////////////////////////////////////////////////////////
-
     globals->add_new_subsystem<PerformanceDB>(SGSubsystemMgr::POST_FDM);
     globals->add_subsystem("ATC", new FGATCManager, SGSubsystemMgr::POST_FDM);
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize multiplayer subsystem
-    ////////////////////////////////////////////////////////////////////
-
     globals->add_subsystem("mp", new FGMultiplayMgr, SGSubsystemMgr::POST_FDM);
 
-#ifdef ENABLE_SWIFT
-    ////////////////////////////////////////////////////////////////////
-    // Initialize Swift subsystem
-    ////////////////////////////////////////////////////////////////////
-
+    #ifdef ENABLE_SWIFT
     globals->add_subsystem("swift", new SwiftConnection, SGSubsystemMgr::POST_FDM);
-#endif
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialise the AI Model Manager
-    ////////////////////////////////////////////////////////////////////
+    #endif
 
     globals->add_subsystem("ai-model", new FGAIManager, SGSubsystemMgr::POST_FDM);
     globals->add_subsystem("submodel-mgr", new FGSubmodelMgr, SGSubsystemMgr::POST_FDM);
-
 
     // It's probably a good idea to initialize the top level traffic manager
     // After the AI and ATC systems have been initialized properly.
     // AI Traffic manager
     globals->add_subsystem("traffic-manager", new FGTrafficManager, SGSubsystemMgr::POST_FDM);
 
-    ////////////////////////////////////////////////////////////////////
-    // Add a new 2D panel.
-    ////////////////////////////////////////////////////////////////////
-
     fgSetArchivable("/sim/panel/visibility");
     fgSetArchivable("/sim/panel/x-offset");
     fgSetArchivable("/sim/panel/y-offset");
     fgSetArchivable("/sim/panel/jitter");
   
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the controls subsystem.
-    ////////////////////////////////////////////////////////////////////
-    
     globals->add_new_subsystem<FGControls>(SGSubsystemMgr::GENERAL);
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the input subsystem.
-    ////////////////////////////////////////////////////////////////////
-
     globals->add_new_subsystem<FGInput>(SGSubsystemMgr::GENERAL);
 
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the replay subsystem
-    ////////////////////////////////////////////////////////////////////
     // We also call FGReplay::unit() method here, to work around a
     // problem where JSBSim appears to rely on FGReplay creating certain
     // properties before it is initialised. This caused problems when
     // FGReplay was changed to be POST_FDM.
-    ////////////////////////////////////////////////////////////////////
     globals->add_new_subsystem<FGReplay>(SGSubsystemMgr::POST_FDM)
             ->init(); // Special case.
 
     globals->add_subsystem("history", new FGFlightHistory);
     
-#ifdef ENABLE_AUDIO_SUPPORT
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the sound-effects subsystem.
-    ////////////////////////////////////////////////////////////////////
+    #ifdef ENABLE_AUDIO_SUPPORT
     globals->add_subsystem("voice", new FGVoiceMgr, SGSubsystemMgr::DISPLAY);
-#endif
+    #endif
 
-#ifdef ENABLE_IAX
-    ////////////////////////////////////////////////////////////////////
+    #ifdef ENABLE_IAX
     // Initialize the FGCom subsystem.
     // very important this goes in the SOUND group, since IAXClient
     // depends on OpenAL, which is shutdown when the SOUND group
     // shutdown.
     // Sentry: FLIGHTGEAR-66
-
-    ////////////////////////////////////////////////////////////////////
     globals->add_new_subsystem<FGCom>(SGSubsystemMgr::SOUND);
-#endif
+    #endif
 
     {
       SGSubsystem * httpd = flightgear::http::FGHttpd::createInstance( fgGetNode(flightgear::http::PROPERTY_ROOT) );
       if( NULL != httpd ) 
         globals->add_subsystem("httpd", httpd  );
     }
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the lighting subsystem.
-    ////////////////////////////////////////////////////////////////////
 
     // ordering here is important : Nasal (via events), then models, then views
     if (!duringReset) {
@@ -1146,7 +1041,6 @@ void fgCreateSubsystems(bool duringReset) {
 
     globals->add_new_subsystem<FGAircraftModel>(SGSubsystemMgr::DISPLAY);
     globals->add_new_subsystem<FGModelMgr>(SGSubsystemMgr::DISPLAY);
-
     globals->add_new_subsystem<FGViewMgr>(SGSubsystemMgr::DISPLAY);
 }
 
