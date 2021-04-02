@@ -42,6 +42,7 @@
 
 #include <Main/fg_props.hxx>
 #include <MultiPlayer/mpmessages.hxx>
+#include <Time/TimeManager.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/FGEventHandler.hxx>
 
@@ -161,7 +162,8 @@ FGReplay::FGReplay() :
     m_medium_sample_rate(0.5), // medium term sample rate (sec)
     m_long_sample_rate(5.0),   // long term sample rate (sec)
     m_pRecorder(new FGFlightRecorder("replay-config")),
-    m_MultiplayMgr(globals->get_subsystem<FGMultiplayMgr>())
+    m_MultiplayMgr(globals->get_subsystem<FGMultiplayMgr>()),
+    m_simple_time_enabled(fgGetNode("/sim/time/simple-time/enabled", true))
 {
     SGPropertyNode* continuous = fgGetNode("/sim/replay/record-continuous", true);
     SGPropertyNode* fdm = fgGetNode("/sim/signals/fdm-initialized", true);
@@ -906,7 +908,7 @@ FGReplay::update( double dt )
     int current_replay_state = last_replay_state;
     timingInfo.clear();
     stamp("begin");
-
+    
     if ( disable_replay->getBoolValue() )
     {
         if (fgGetBool("/sim/freeze/master",false)||
@@ -1061,6 +1063,11 @@ FGReplay::update( double dt )
     if ((!fgGetBool("/sim/fdm-initialized", false))||(dt==0.0))
         return;
 
+    if (m_simple_time_enabled->getBoolValue())
+    {
+        sim_time = globals->get_subsystem<TimeManager>()->getMPProtocolClockSec();
+    }
+    else
     {
         double new_sim_time = sim_time + dt;
         // don't record multiple records with the same timestamp (or go backwards in time)
@@ -1151,7 +1158,7 @@ FGReplay::update( double dt )
 
     if ( sim_time - st_front->sim_time > m_high_res_time )
     {
-        while ( sim_time - st_front->sim_time > m_high_res_time )
+        while ( !short_term.empty() && sim_time - st_front->sim_time > m_high_res_time )
         {
             st_front = short_term.front();
             MoveFrontMultiplayerPackets(short_term);
@@ -1163,14 +1170,16 @@ FGReplay::update( double dt )
         if ( sim_time - last_mt_time > m_medium_sample_rate )
         {
             last_mt_time = sim_time;
-            st_front = short_term.front();
-            medium_term.push_back( st_front );
-            short_term.pop_front();
+            if (!short_term.empty()) {
+                st_front = short_term.front();
+                medium_term.push_back( st_front );
+                short_term.pop_front();
+            }
 
             FGReplayData *mt_front = medium_term.front();
             if ( sim_time - mt_front->sim_time > m_medium_res_time )
             {
-                while ( sim_time - mt_front->sim_time > m_medium_res_time )
+                while ( !medium_term.empty() && sim_time - mt_front->sim_time > m_medium_res_time )
                 {
                     mt_front = medium_term.front();
                     MoveFrontMultiplayerPackets(medium_term);
@@ -1181,14 +1190,16 @@ FGReplay::update( double dt )
                 if ( sim_time - last_lt_time > m_long_sample_rate )
                 {
                     last_lt_time = sim_time;
-                    mt_front = medium_term.front();
-                    long_term.push_back( mt_front );
-                    medium_term.pop_front();
+                    if (!medium_term.empty()) {
+                        mt_front = medium_term.front();
+                        long_term.push_back( mt_front );
+                        medium_term.pop_front();
+                    }
 
                     FGReplayData *lt_front = long_term.front();
                     if ( sim_time - lt_front->sim_time > m_low_res_time )
                     {
-                        while ( sim_time - lt_front->sim_time > m_low_res_time )
+                        while ( !long_term.empty() && sim_time - lt_front->sim_time > m_low_res_time )
                         {
                             lt_front = long_term.front();
                             MoveFrontMultiplayerPackets(long_term);
@@ -1216,7 +1227,7 @@ FGReplay::update( double dt )
 }
 
 FGReplayData*
-FGReplay::record(double time)
+FGReplay::record(double sim_time)
 {
     FGReplayData* r = NULL;
 
@@ -1226,7 +1237,7 @@ FGReplay::record(double time)
         recycler.pop_front();
     }
 
-    return m_pRecorder->capture(time, r);
+    return m_pRecorder->capture(sim_time, r);
 }
 
 /** 

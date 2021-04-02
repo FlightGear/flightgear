@@ -274,6 +274,8 @@ private:
     // For writing uncompressed fgtape file.
     SGPropertyNode_ptr  m_continuous_out_config;
     std::ofstream       m_continuous_out;
+    
+    SGPropertyNode_ptr  m_simple_time_enabled;
 };
 
 #endif // _FG_REPLAY_HXX
