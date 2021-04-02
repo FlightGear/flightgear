@@ -922,16 +922,6 @@ fgOptFgScenery( const char *arg )
 }
 
 static int
-fgOptEnhancedLighting( const char *arg )
-{
-    SG_LOG(SG_ALL,SG_ALERT,
-           "the options --enable-enhanced-lighting and "
-           "--disable-enhanced-lighting are no longer supported and will be "
-           "removed in a future FlightGear version! Please do not use them");
-    return FG_OPTIONS_EXIT;
-}
-
-static int
 fgOptAllowNasalRead( const char *arg )
 {
     PathList paths = SGPath::pathsFromUtf8(arg);
@@ -1887,8 +1877,6 @@ struct OptionDesc {
     {"fog-nicest",                   false, OPTION_STRING, "/sim/rendering/fog", false, "nicest", 0 },
     {"disable-horizon-effect",       false, OPTION_BOOL,   "/sim/rendering/horizon-effect", false, "", 0 },
     {"enable-horizon-effect",        false, OPTION_BOOL,   "/sim/rendering/horizon-effect", true, "", 0 },
-    {"disable-enhanced-lighting",    false, OPTION_FUNC,   "", false, "", fgOptEnhancedLighting },
-    {"enable-enhanced-lighting",     false, OPTION_FUNC,   "", false, "", fgOptEnhancedLighting },
     {"disable-distance-attenuation", false, OPTION_BOOL,   "/sim/rendering/distance-attenuation", false, "", 0 },
     {"enable-distance-attenuation",  false, OPTION_BOOL,   "/sim/rendering/distance-attenuation", true, "", 0 },
     {"disable-specular-highlight",   false, OPTION_BOOL,   "/sim/rendering/specular-highlight", false, "", 0 },

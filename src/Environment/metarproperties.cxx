@@ -351,8 +351,7 @@ void MetarProperties::setMetar( SGSharedPtr<FGMetar> m )
 
         // fog/mist/haze cloud layer does not work with 3d clouds yet :-(
         bool setGroundCloudLayer = _rootNode->getBoolValue("set-ground-cloud-layer", false ) &&
-              false == (fgGetBool("/sim/rendering/shader-effects", false ) && 
-                        fgGetBool("/sim/rendering/clouds3d-enable", false ) );
+              false == fgGetBool("/sim/rendering/clouds3d-enable", false);
 
         if( setGroundCloudLayer ) {
             // create a cloud layer #0 starting at the ground if its fog, mist or haze
