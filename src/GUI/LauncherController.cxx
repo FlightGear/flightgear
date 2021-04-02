@@ -913,14 +913,14 @@ void LauncherController::setMinWindowSize(QSize sz)
 QUrl LauncherController::flyIconUrl() const
 {
     if (m_aircraftType == Helicopter) {
-        return QUrl{"qrc:///svg/toolbox-fly-heli"};
+        return QUrl{"image://colored-icon/toolbox-fly-heli"};
     } else if (m_selectedAircraftInfo) {
         if (m_selectedAircraftInfo->hasTag("spaceship")) {
-            return QUrl{"qrc:///svg/toolbox-fly-alt"};
+            return QUrl{"image://colored-icon/toolbox-fly-alt"};
         }
     }
 
-    return QUrl{"qrc:///svg/toolbox-fly"};
+    return QUrl{"image://colored-icon/toolbox-fly"};
 }
 
 QString LauncherController::flyButtonLabel() const
