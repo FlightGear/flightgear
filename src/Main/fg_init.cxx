@@ -924,12 +924,6 @@ void fgCreateSubsystems(bool duringReset) {
     SG_LOG( SG_GENERAL, SG_INFO, "Creating Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "======== ==========");
 
-    // Sound manager uses an own subsystem group "SOUND" which is the last
-    // to be updated in every loop.
-    // Sound manager is updated last so it can use the CPU while the GPU
-    // is processing the scenery (doubled the frame-rate for me) -EMH-
-    globals->add_new_subsystem<FGSoundManager>(SGSubsystemMgr::SOUND);
-
     globals->get_event_mgr()->init();
     globals->get_event_mgr()->setRealtimeProperty(fgGetNode("/sim/time/delta-realtime-sec", true));
 
@@ -937,11 +931,15 @@ void fgCreateSubsystems(bool duringReset) {
     // group because the "nasal" subsystem may need it at GENERAL take-down.
     globals->add_subsystem("prop-interpolator", new FGInterpolator, SGSubsystemMgr::INIT);
 
-    globals->add_subsystem("properties", new FGProperties);
-    globals->add_new_subsystem<flightgear::AirportDynamicsManager>();
+    globals->add_subsystem("properties", new FGProperties, SGSubsystemMgr::GENERAL);
+    globals->add_new_subsystem<flightgear::AirportDynamicsManager>(SGSubsystemMgr::GENERAL);
     globals->add_subsystem("performance-mon",
-            new SGPerformanceMonitor(globals->get_subsystem_mgr(),
-                                     fgGetNode("/sim/performance-monitor", true)));
+            new SGPerformanceMonitor(
+                    globals->get_subsystem_mgr(),
+                    fgGetNode("/sim/performance-monitor", true)
+                    ),
+            SGSubsystemMgr::GENERAL
+            );
 
     // Initialize the material property subsystem.
     SGPath mpath( globals->get_fg_root() );
@@ -952,15 +950,15 @@ void fgCreateSubsystems(bool duringReset) {
 
     // may exist already due to GUI startup or --load-tape=http...
     if (!globals->get_subsystem<FGHTTPClient>()) {
-        globals->add_new_subsystem<FGHTTPClient>();
+        globals->add_new_subsystem<FGHTTPClient>(SGSubsystemMgr::GENERAL);
     }
-    globals->add_new_subsystem<FGDNSClient>();
+    globals->add_new_subsystem<FGDNSClient>(SGSubsystemMgr::GENERAL);
 
     globals->add_subsystem("flight", new FDMShell, SGSubsystemMgr::FDM);
 
     // Initialize the weather modeling subsystem
-    globals->add_subsystem("environment", new FGEnvironmentMgr);
-    globals->add_new_subsystem<Ephemeris>();
+    globals->add_subsystem("environment", new FGEnvironmentMgr, SGSubsystemMgr::GENERAL);
+    globals->add_new_subsystem<Ephemeris>(SGSubsystemMgr::GENERAL);
     
     // Initialize the aircraft systems and instrumentation (before the
     // autopilot.)
@@ -970,9 +968,9 @@ void fgCreateSubsystems(bool duringReset) {
     globals->add_subsystem("cockpit-displays", new flightgear::CockpitDisplayManager, SGSubsystemMgr::DISPLAY);
     globals->add_subsystem( "xml-autopilot", FGXMLAutopilotGroup::createInstance("autopilot"), SGSubsystemMgr::FDM );
     globals->add_subsystem( "xml-proprules", FGXMLAutopilotGroup::createInstance("property-rule"), SGSubsystemMgr::GENERAL );
-    globals->add_new_subsystem<FGRouteMgr>();
-    globals->add_subsystem( "io", new FGIO );
-    globals->add_subsystem("logger", new FGLogger);
+    globals->add_new_subsystem<FGRouteMgr>(SGSubsystemMgr::GENERAL);
+    globals->add_subsystem( "io", new FGIO, SGSubsystemMgr::GENERAL );
+    globals->add_subsystem("logger", new FGLogger, SGSubsystemMgr::GENERAL);
     globals->add_subsystem("gui", new NewGUI, SGSubsystemMgr::INIT);
 
     simgear::canvas::Canvas::setSystemAdapter(
@@ -1011,12 +1009,18 @@ void fgCreateSubsystems(bool duringReset) {
     globals->add_new_subsystem<FGReplay>(SGSubsystemMgr::POST_FDM)
             ->init(); // Special case.
 
-    globals->add_subsystem("history", new FGFlightHistory);
+    globals->add_subsystem("history", new FGFlightHistory, SGSubsystemMgr::GENERAL);
     
     #ifdef ENABLE_AUDIO_SUPPORT
     globals->add_subsystem("voice", new FGVoiceMgr, SGSubsystemMgr::DISPLAY);
     #endif
 
+    // Sound manager uses an own subsystem group "SOUND" which is the last
+    // to be updated in every loop.
+    // Sound manager is updated last so it can use the CPU while the GPU
+    // is processing the scenery (doubled the frame-rate for me) -EMH-
+    globals->add_new_subsystem<FGSoundManager>(SGSubsystemMgr::SOUND);
+    
     #ifdef ENABLE_IAX
     // Initialize the FGCom subsystem.
     // very important this goes in the SOUND group, since IAXClient
@@ -1029,14 +1033,14 @@ void fgCreateSubsystems(bool duringReset) {
     {
       SGSubsystem * httpd = flightgear::http::FGHttpd::createInstance( fgGetNode(flightgear::http::PROPERTY_ROOT) );
       if( NULL != httpd ) 
-        globals->add_subsystem("httpd", httpd  );
+        globals->add_subsystem("httpd", httpd, SGSubsystemMgr::GENERAL );
     }
 
     // ordering here is important : Nasal (via events), then models, then views
     if (!duringReset) {
         globals->add_subsystem("lighting", new FGLight, SGSubsystemMgr::DISPLAY);
         globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
-        globals->add_subsystem("tides", new FGTide );
+        globals->add_subsystem("tides", new FGTide, SGSubsystemMgr::GENERAL );
     }
 
     globals->add_new_subsystem<FGAircraftModel>(SGSubsystemMgr::DISPLAY);

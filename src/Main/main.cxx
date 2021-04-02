@@ -188,7 +188,7 @@ static void initTerrasync()
 
     simgear::SGTerraSync* terra_sync = new simgear::SGTerraSync();
     terra_sync->setRoot(globals->get_props());
-    globals->add_subsystem("terrasync", terra_sync);
+    globals->add_subsystem("terrasync", terra_sync, SGSubsystemMgr::GENERAL);
 
     terra_sync->bind();
     terra_sync->init();
@@ -705,7 +705,7 @@ int fgMainInit( int argc, char **argv )
     fgInitSecureMode();
     fgInitAircraftPaths(false);
 
-    auto errorManager = globals->add_new_subsystem<flightgear::ErrorReporter>();
+    auto errorManager = globals->add_new_subsystem<flightgear::ErrorReporter>(SGSubsystemMgr::GENERAL);
     errorManager->preinit();
 
     configResult = fgInitAircraft(false);

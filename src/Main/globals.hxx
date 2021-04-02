@@ -180,14 +180,11 @@ public:
 
     void add_subsystem (const char * name,
                                 SGSubsystem * subsystem,
-                                SGSubsystemMgr::GroupType
-                                type = SGSubsystemMgr::GENERAL,
+                                SGSubsystemMgr::GroupType type,
                                 double min_time_sec = 0);
 
     template<class T>
-    T* add_new_subsystem (SGSubsystemMgr::GroupType
-                                type = SGSubsystemMgr::GENERAL,
-                                double min_time_sec = 0)
+    T* add_new_subsystem (SGSubsystemMgr::GroupType type, double min_time_sec = 0)
     {
         T* sub = new T;
         add_subsystem(T::staticSubsystemClassId(), sub, type, min_time_sec);
