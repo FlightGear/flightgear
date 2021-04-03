@@ -32,6 +32,12 @@ Args:
         We deliberately change frame rate while recording UFO moving at
         constant speed.
     
+    --test-motion-mp
+        Checks that speed of MP on replay is not affected by frame rate.
+
+        We deliberately change frame rate while recording UFO moving at
+        constant speed.
+    
     BOOLS is comma-sparated list of 0 or 1, with 1 activating the particular
     feature. So for example '--continuous 0' tests normal recording/replay',
     '--continuous 1' tests continuous recording/replay, and continuous 0,1'
@@ -58,6 +64,23 @@ def log(text):
     sys.stderr.flush()
 
 g_cleanup = []
+g_tapedir = './recordreplay.py.tapes'
+
+
+def remove(path):
+    log(f'Removing: {path}')
+    try:
+        os.remove(path)
+    except Exception as e:
+        log(f'Failed to remove {path}: {e}')
+
+
+def readlink(path):
+    ret = os.readlink(path)
+    if not os.path.isabs(ret):
+        ret = os.path.join(os.path.dirname(path), ret)
+    return ret
+
 
 class Fg:
     '''
@@ -82,6 +105,8 @@ class Fg:
         if telnet_port is None:
             telnet_port = 5500
         args += f' --telnet={telnet_port}'
+        args += f' --prop:/sim/replay/tape-directory={g_tapedir}'
+        
         args2 = args.split()
         
         environ = os.environ.copy()
@@ -188,7 +213,7 @@ def make_recording(
             fg.run_command('run view-step step=1')
             time.sleep(1)
         fg.fg['/sim/replay/record-continuous'] = 0
-        path = f'{fg.aircraft}-continuous.fgtape'
+        path = f'{g_tapedir}/{fg.aircraft}-continuous.fgtape'
         time.sleep(1)
     else:
         # Normal recording will have effectively already started, so we sleep
@@ -208,13 +233,13 @@ def make_recording(
         fg.fg.telnet._putcmd('run save-tape tape-data/starttime= tape-data/stoptime=')
         response = fg.fg.telnet._getresp()
         log(f'response: {response!r}')
-        path = f'{fg.aircraft}.fgtape'
+        path = f'{g_tapedir}/{fg.aircraft}.fgtape'
     
     # Check recording is new.
     os.system(f'ls -lL {path}')
     s = os.stat(path, follow_symlinks=True)
     assert s.st_mtime > t
-    path2 = os.readlink(path)
+    path2 = readlink(path)
     log(f'path={path} path2={path2}')
     return path
     
@@ -259,11 +284,11 @@ def test_record_replay(
             length=length,
             )
     
-    g_cleanup.append(lambda: os.remove(path))
+    g_cleanup.append(lambda: remove(path))
     fg.close()
     
     # Load recording into new Flightgear.
-    path = f'{aircraft}-continuous.fgtape' if continuous else f'{aircraft}.fgtape'
+    path = f'{g_tapedir}/{aircraft}-continuous.fgtape' if continuous else f'{g_tapedir}/{aircraft}.fgtape'
     fg = Fg(aircraft, f'{fgfs_load} {args} --load-tape={path}')
     fg.waitfor('/sim/fdm-initialized', 1, timeout=45)
     fg.waitfor('/sim/replay/replay-state', 1)
@@ -291,7 +316,7 @@ def test_record_replay(
     
     fg.close()
     
-    os.remove(path) 
+    remove(path) 
 
     log('Test passed')
 
@@ -300,7 +325,7 @@ def test_motion(fgfs, multiplayer=False):
 
     aircraft = 'ufo'
     fg = Fg( aircraft, f'{fgfs}')
-    path = f'{fg.aircraft}-continuous.fgtape'
+    path = f'{g_tapedir}/{fg.aircraft}-continuous.fgtape'
     
     fg.waitfor('/sim/fdm-initialized', 1, timeout=45)
     
@@ -351,8 +376,9 @@ def test_motion(fgfs, multiplayer=False):
         fg2.close()
     time.sleep(2)
     
-    path2 = os.readlink( path)
-    g_cleanup.append(lambda: os.remove(path2))
+    path2 = readlink( path)
+    log(f'*** path={path} path2={path2}')
+    g_cleanup.append(lambda: remove(path2))
     
     if multiplayer:
         fg = Fg( aircraft, f'{fgfs} --load-tape={path} --prop:/sim/replay/log-raw-speed-multiplayer=cgdae-t')
@@ -430,6 +456,8 @@ if __name__ == '__main__':
             do_all = True
         elif arg == '--continuous':
             continuous_s = map(int, next(args).split(','))
+        elif arg == '--tape-dir':
+            g_tapedir = next(args)
         elif arg == '--extra-properties':
             extra_properties_s = map(int, next(args).split(','))
         elif arg == '--it-max':
