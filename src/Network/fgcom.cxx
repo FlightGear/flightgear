@@ -38,6 +38,7 @@
 #include <ATC/CommStation.hxx>
 #include <Airports/airport.hxx>
 #include <Navaids/navlist.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #include <3rdparty/iaxclient/lib/iaxclient.h>
 
@@ -469,6 +470,9 @@ void FGCom::shutdown()
   iaxc_stop_processing_thread();
   iaxc_shutdown();
 
+    // added to help debugging lingering IAX thread after fgOSCloseWindow
+    flightgear::addSentryBreadcrumb("Did shutdown FGCom", "info");
+    
   assert( static_instance == this );
   static_instance = NULL;
 }
