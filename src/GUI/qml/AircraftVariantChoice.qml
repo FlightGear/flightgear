@@ -1,5 +1,4 @@
 import QtQuick 2.4
-import "." // -> forces the qmldir to be loaded
 import FlightGear 1.0
 import FlightGear.Launcher 1.0
 

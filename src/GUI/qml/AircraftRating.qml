@@ -1,5 +1,5 @@
 import QtQuick 2.4
-import "."
+import FlightGear 1.0
 
 Item {
     id: root
@@ -31,7 +31,7 @@ Item {
             model: 5
 
             delegate: Rectangle {
-                color: ((model.index + 1) <= root.value) ? "#3f3f3f" : "#cfcfcf"
+                color: ((model.index + 1) <= root.value) ? Style.themeColor : Style.disabledTextColor
                 width: radius * 2
                 height: radius * 2
                 radius: Style.roundRadius

@@ -1,5 +1,5 @@
 import QtQuick 2.4
-import "."
+import FlightGear 1.0
 
 Rectangle {
     id: root
@@ -16,7 +16,7 @@ Rectangle {
         id: label
         x: Style.margin
         anchors.verticalCenter: parent.verticalCenter
-        color: "white"
+        color: Style.themeContrastTextColor
         font.underline: mouse.containsMouse
     }
 

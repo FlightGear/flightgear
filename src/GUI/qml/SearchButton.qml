@@ -1,5 +1,5 @@
 import QtQuick 2.2
-import "."
+import FlightGear 1.0
 
 FocusScope
 {

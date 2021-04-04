@@ -1,9 +1,8 @@
 import QtQuick 2.4
-import QtQuick.Controls 2.2
+import QtQuick.Controls 2.2 as QQC
 
 import FlightGear 1.0
-import FlightGear.Launcher 1.0
-import "."
+import FlightGear.Launcher 1.0 
 
 Item {
     id: root
@@ -21,7 +20,7 @@ Item {
         contentHeight: textColumn.childrenRect.height + imageClipFrame.height + (Style.strutSize * 2)
         flickableDirection: Flickable.VerticalFlick
 
-        ScrollBar.vertical: ScrollBar {}
+        QQC.ScrollBar.vertical: QQC.ScrollBar {}
 
         anchors.fill: parent
 

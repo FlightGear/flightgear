@@ -1,5 +1,5 @@
 import QtQuick 2.6 // so we can use Shortcut
-import "."
+import FlightGear 1.0
 
 BaseMenuItem {
     id: root

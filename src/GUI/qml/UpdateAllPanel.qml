@@ -1,6 +1,6 @@
 import QtQuick 2.2
 import FlightGear.Launcher 1.0 as FG
-import "."
+import FlightGear 1.0
 
 ListHeaderBox {
     id: root

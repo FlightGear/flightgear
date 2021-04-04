@@ -1,6 +1,6 @@
 import QtQuick 2.2
 import FlightGear.Launcher 1.0 as FG
-import "."
+import FlightGear 1.0
 
 Item {
     id: root
@@ -16,7 +16,7 @@ Item {
         x: Style.strutSize
         height: Style.strutSize
         y: Style.margin
-        color: "white"
+        color: Style.backgroundColor
         border.width: 1
         border.color: Style.minorFrameColor
 

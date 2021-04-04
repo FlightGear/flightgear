@@ -1,5 +1,5 @@
 import QtQuick 2.4
-import "."
+import FlightGear 1.0
 
 Rectangle {
     id: headerRect
@@ -13,7 +13,7 @@ Rectangle {
 
     Text {
         id: headerTitle
-        color: "white"
+        color: Style.themeContrastTextColor
         anchors.verticalCenter: parent.verticalCenter
         font.bold: true
         font.pixelSize: Style.subHeadingFontPixelSize
