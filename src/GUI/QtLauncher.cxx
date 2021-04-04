@@ -358,7 +358,10 @@ static void simgearMessageOutput(QtMsgType type, const QMessageLogContext &conte
     // important we copy the file name here, since QMessageLogContext doesn't
     sglog().logCopyingFilename(SG_GUI, mappedPriority, file, context.line, s);
     if (type == QtFatalMsg) {
-        abort();
+        // if we abort() here, we get a thread crash which prevents
+        // us actually seeing the error
+        // we'll attempt to continue so we do the SG_POPUP dialog, maybe it works
+        // if it crashes we're no worse off than calling abort() here
     }
 }
 
@@ -380,7 +383,7 @@ static std::unique_ptr<QApplication> static_qApp;
 void selectUITranslation()
 {
     QStringList uiLanguages = QLocale::system().uiLanguages();
-    qWarning() << "UI languages:" << uiLanguages;
+    //qWarning() << "UI languages:" << uiLanguages;
 
     for (QString locale : qAsConst(uiLanguages)) {
         // remove script if it exists, eg zh-Hans-CN -> zh-CN
