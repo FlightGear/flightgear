@@ -1230,6 +1230,14 @@ bool FGAIAircraft::reachedEndOfCruise(double &distance) {
     }
     
     if (curr->getName() == string("BOD")) {
+        // Sentry: FLIGHTGEAR-893
+        if (!trafficRef->getArrivalAirport()) {
+            SG_LOG(SG_AI, SG_WARN, trafficRef->getCallSign() << "FGAIAircraft::reachedEndOfCruise: no arrival airport");
+            setDie(true);
+            // return 'done' here, we are broken
+            return true;
+        }
+        
         double dist = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
         double descentSpeed = (getPerformance()->vDescent() * SG_NM_TO_METER) / 3600.0;     // convert from kts to meter/s
         double descentRate  = (getPerformance()->descentRate() * SG_FEET_TO_METER) / 60.0;  // convert from feet/min to meter/s
