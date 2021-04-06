@@ -4,12 +4,14 @@ set(SOURCES
         dds_ctrls.c
         dds_gui.c
         dds_fdm.c
+        dds_props.c
 	)
 
 set(HEADERS
         dds_ctrls.h
         dds_fdm.h
         dds_gui.h
+        dds_props.h
 	)
 
 add_executable(fg_dds_log

@@ -62,11 +62,16 @@ set(HEADERS
 	rul.hxx
 	)
 
+if (CycloneDDS_FOUND)
+  set(SOURCES ${SOURCES} dds_props.cxx)
+  set(HEADERS ${HEADERS} dds_props.hxx)
+endif()
+
 if(ENABLE_IAX)
     list(APPEND SOURCES fgcom.cxx)
     list(APPEND HEADERS fgcom.hxx)
 endif()
-   	
+
 flightgear_component(Network "${SOURCES}" "${HEADERS}")
 
 if (CycloneDDS_FOUND)

@@ -1,0 +1,85 @@
+// format dfescription: https://www.omg.org/spec/IDL/4.2/PDF
+
+// Adapted from net_fdm.hxx
+module FG
+{
+
+// defining it this way also generates accompanying #defines in the header file.
+const short DDS_PROP_REQUEST = -1;
+
+enum propType
+{
+    DDS_NONE,	// The node hasn't been assigned a value yet
+    DDS_ALIAS,	// The node "points" to another node
+    DDS_BOOL,
+    DDS_INT,	// 32-bit integer
+    DDS_LONG,	// 64-bit integer
+    DDS_FLOAT,	// 32-bit floating point number
+    DDS_DOUBLE,	// 64-bit floating point number
+    DDS_STRING,	// UTF-8 string
+    DDS_UNSPECIFIED // Resolves to STRING
+};
+
+union propValue switch ( propType )
+{
+    case DDS_BOOL:
+        boolean Bool;
+
+    case DDS_NONE:
+    case DDS_INT:
+        long Int32;
+
+    case DDS_LONG:
+        long long Int64;
+
+    case DDS_FLOAT:
+        float Float32;
+
+    case DDS_DOUBLE:
+        double Float64;
+
+    case DDS_ALIAS:
+    case DDS_STRING:
+    case DDS_UNSPECIFIED:
+        string String;
+};
+
+// Initial property request sequence
+// for properties where the id is not yet known:
+// 1. Set id to FG_DDS_PROP_REQUEST
+// 2. set guid to the 16-byte participants GUID
+// 3. Set type to STRING
+// 4. Set val.String to the propery path
+// 5. Send the package.
+//
+// 6. wait for an answer
+//    * Check whether guid matches the participants GUID.
+//    * The index of the requested propery path is stored in the id variable
+//      which should be used by successive request as the id for that property.
+//    * The type variable indicates the type of the value of the property.
+//    * The val union holds the value of the propery.
+//
+// Successive property request sequence:
+// 1. Set id to the id of the requested property
+// 2. Send the package.
+//
+// 3. wait for an answer
+//    * Check whether id matches the requested property id.
+//    * The type variable indicates the type of the value of the property.
+//    * The val union holds the value of the propery.
+//
+// guid is not defined as an array of 16 unsigned characters to keep the
+// sample small for successive requests. This way only a FG_DDS_PROP_REQUEST
+// sample will reserve the full 16-bytes.
+struct DDS_PROP
+{
+    long id;		// property index and DDS id
+
+    propType type;
+    propValue val;
+
+    string guid;	// requesters globally unique identifier
+};
+#pragma keylist DDS_PROP id
+
+}; // module FG
