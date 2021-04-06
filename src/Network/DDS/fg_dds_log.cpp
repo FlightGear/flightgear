@@ -6,9 +6,7 @@
 
 #include <simgear/io/SGDataDistributionService.hxx>
 
-#include "dds_gui.h"
-#include "dds_fdm.h"
-#include "dds_ctrls.h"
+#include "dds_fwd.hxx"
 
 /* An array of one message(aka sample in dds terms) will be used. */
 #define MAX_SAMPLES 1
@@ -64,8 +62,8 @@ void set_mode(int want_key)
 
 int main()
 {
+  std::map<std::string, SG_DDS_Topic*> topics;
   SG_DDS participant;
-  std::map<std::string, SG_DDS_Topic *> topics;
 
   FG_DDS_GUI gui;
   topics["gui"] = new SG_DDS_Topic(gui, &FG_DDS_GUI_desc);
@@ -83,7 +81,7 @@ int main()
   while(participant.wait(0.1f))
   {
     if (topics["gui"]->read(gui)) {
-      printf("=== [fgfdm_log] Received : ");
+      printf("=== [fg_dds_log] Received : ");
       printf("GUI Message:\n");
       printf(" version: %i\n", gui.version);
       printf(" tuned_freq: %lf\n", gui.longitude);
@@ -92,7 +90,7 @@ int main()
     }
 
     if (topics["fdm"]->read(fdm)) {
-      printf("=== [fgfdm_log] Received : ");
+      printf("=== [fg_dds_log] Received : ");
       printf("FDM Message:\n");
       printf(" version: %i\n", fdm.version);
       printf("  longitude: %lf\n", fdm.longitude);
@@ -101,7 +99,7 @@ int main()
     }
 
     if (topics["ctrls"]->read(ctrls)) {
-      printf("=== [fgfdm_log] Received : ");
+      printf("=== [fg_dds_log] Received : ");
       printf("Ctrls Message:\n");
       printf(" version: %i\n", ctrls.version);
       printf("    aileron: %lf\n", ctrls.aileron);
