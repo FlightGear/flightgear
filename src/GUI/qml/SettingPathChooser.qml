@@ -36,14 +36,14 @@ SettingControl {
         id: label
         text: root.label
         anchors.verticalCenter: chooseButton.verticalCenter
-        color: (root.enabled ? "black" : Style.inactiveThemeColor)
+        color: (root.enabled ? Style.baseTextColor : Style.disabledTextColor)
     }
 
     Text {
         id: currentPath
         text: root.isDefault ? qsTr("%1 (default)").arg(root.defaultPath) : root.path
         anchors.verticalCenter: chooseButton.verticalCenter
-        color: (root.enabled ? "black" : Style.inactiveThemeColor)
+        color: (root.enabled ? Style.baseTextColor : Style.disabledTextColor)
         font.italic: true
         anchors.left: label.right
         anchors.leftMargin: Style.margin
