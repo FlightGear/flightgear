@@ -35,6 +35,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Sound/soundmanager.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
@@ -129,6 +130,7 @@ FGFX::init()
 
     SGPropertyNode root;
     try {
+        flightgear::SentryXMLErrorSupression sup;
         readProperties(path, &root);
     } catch (const sg_exception &) {
         SG_LOG(SG_SOUND, SG_ALERT,
