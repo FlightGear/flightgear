@@ -77,10 +77,14 @@ int main()
   topics["ctrls"] = new SG_DDS_Topic(ctrls, &FG_DDS_Ctrls_desc);
   participant.add(topics["ctrls"], SG_IO_IN);
 
+  FG_DDS_PROP prop;
+  topics["prop"] = new SG_DDS_Topic(prop, &FG_DDS_PROP_desc);
+  participant.add(topics["prop"], SG_IO_IN);
+
   set_mode(1);
   while(participant.wait(0.1f))
   {
-    if (topics["gui"]->read(gui)) {
+    if (topics["gui"]->read()) {
       printf("=== [fg_dds_log] Received : ");
       printf("GUI Message:\n");
       printf(" version: %i\n", gui.version);
@@ -89,7 +93,7 @@ int main()
       printf("    dist_nm: %lf\n", gui.altitude);
     }
 
-    if (topics["fdm"]->read(fdm)) {
+    if (topics["fdm"]->read()) {
       printf("=== [fg_dds_log] Received : ");
       printf("FDM Message:\n");
       printf(" version: %i\n", fdm.version);
@@ -98,13 +102,59 @@ int main()
       printf("   altitude: %lf\n", fdm.altitude);
     }
 
-    if (topics["ctrls"]->read(ctrls)) {
+    if (topics["ctrls"]->read()) {
       printf("=== [fg_dds_log] Received : ");
       printf("Ctrls Message:\n");
       printf(" version: %i\n", ctrls.version);
       printf("    aileron: %lf\n", ctrls.aileron);
       printf("   elevator: %lf\n", ctrls.elevator);
       printf("     rudder: %lf\n", ctrls.rudder);
+    }
+
+    if (topics["prop"]->read()) {
+      printf("=== [fg_dds_log] Received : ");
+      printf("PROP Message:\n");
+      printf("     type: ");
+      switch(prop.type)
+      {
+      case FG_DDS_NONE:
+        printf("       type: none");
+        break;
+      case FG_DDS_ALIAS:
+        printf("       type: alias");
+        printf("      value: %s\n", prop.val._u.String);
+        break;
+      case FG_DDS_BOOL:
+        printf("       type: bool");
+        printf("      value: %i\n", prop.val._u.Bool);
+        break;
+      case FG_DDS_INT:
+        printf("       type: int");
+        printf("      value: %i\n", prop.val._u.Int32);
+        break;
+      case FG_DDS_LONG:
+        printf("       type: long");
+        printf("      value: %li\n", prop.val._u.Int64);
+        break;
+      case FG_DDS_FLOAT:
+        printf("       type: float");
+        printf("      value: %f\n", prop.val._u.Float32);
+        break;
+      case FG_DDS_DOUBLE:
+        printf("       type: double");
+        printf("      value: %lf\n", prop.val._u.Float64);
+        break;
+      case FG_DDS_STRING:
+        printf("       type: string");
+        printf("      value: %s\n", prop.val._u.String);
+        break;
+      case FG_DDS_UNSPECIFIED:
+        printf("       type: unspecified");
+        printf("      value: %s\n", prop.val._u.String);
+        break;
+      default:
+        break;
+      }
     }
 
     fflush(stdout);

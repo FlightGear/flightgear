@@ -7,4 +7,4 @@
 #include "dds_gui.h"
 #include "dds_fdm.h"
 #include "dds_ctrls.h"
-
+#include "dds_props.h"
