@@ -161,9 +161,7 @@ FGPUIMenuBar::fireItem (puObject * item)
     const char * name = item->getLegend();
     vector<SGBinding *> &bindings = _bindings[name];
     int nBindings = bindings.size();
-
-	const string label = item->getLabel() ? string{ item->getLabel() } : "<unknown>";
-    flightgear::addSentryBreadcrumb("fire menu item:" + label, "info");
+    flightgear::addSentryBreadcrumb("fire menu item:" + string{name}, "info");
 
     for (int i = 0; i < nBindings; i++)
         bindings[i]->fire();
