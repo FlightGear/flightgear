@@ -12,6 +12,7 @@
 
 #include <Main/fg_props.hxx>
 #include <GUI/CocoaHelpers_private.h>
+#include <Main/sentryIntegration.hxx>
 
 #include <iostream>
 
@@ -222,7 +223,10 @@ void FGCocoaMenuBar::CocoaMenuBarPrivate::fireBindingsForItem(NSMenuItem *item)
   if (it == itemBindings.end()) {
     return;
   }
-    
+ 
+    NSString* label = [item title];
+    const auto s = stdStringFromCocoa(label);
+    flightgear::addSentryBreadcrumb("fire menu item:" + s, "info");
   fireBindingList(it->second);
 }
 
