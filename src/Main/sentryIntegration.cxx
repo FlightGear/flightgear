@@ -503,9 +503,8 @@ void sentryReportUserError(const std::string& aggregate, const std::string& deta
 
     sentry_set_context("what", info);
 
-    sentry_value_set_by_key(sentryMessage, "value", sentry_value_new_string(aggregate.c_str()));
     sentry_value_t event = sentry_value_new_event();
-    sentry_value_set_by_key(event, "message", sentryMessage);
+    sentry_value_set_by_key(event, "message", sentry_value_new_string(aggregate.c_str()));
 
     sentry_capture_event(event);
 }
