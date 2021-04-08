@@ -46,6 +46,7 @@ extern double fgIsFinite(double x);
 #include "performancedata.hxx"
 #include "performancedb.hxx"
 #include <signal.h>
+#include <iostream>
 
 using std::string;
 using std::cerr;
@@ -1071,7 +1072,7 @@ void FGAIAircraft::updateHeading(double dt) {
             if (headingDiff > 180)
                 headingDiff = fabs(headingDiff - 360);
 
-            groundTargetSpeed = tgt_speed; // * cos(headingDiff * SG_DEGREES_TO_RADIANS);
+            groundTargetSpeed = tgt_speed * cos(headingDiff * SG_DEGREES_TO_RADIANS);
 
             if (sign(groundTargetSpeed) != sign(tgt_speed))
                 groundTargetSpeed = 0.21 * sign(tgt_speed); // to prevent speed getting stuck in 'negative' mode
@@ -1433,28 +1434,61 @@ void FGAIAircraft::updateModelProperties(double dt)
   setTaxiLight(fp->getPreviousWaypoint()->getTaxiLight());
 }
 
-void FGAIAircraft::dump()
-{
-    std::cout << "********************\n";
-    std::cout << "Geod " << this->getGeodPos() << "\t Speed : " << round(this->getSpeed()) << "\n";
-    std::cout << "LatLng : " << this->getGeodPos().getLatitudeDeg() << ", " << this->getGeodPos().getLongitudeDeg() << endl;
-    std::cout << "Heading " << this->getTrueHeadingDeg() << "\t VSpeed : " << round(this->getVerticalSpeedFPM()) << "\n";
-    std::cout << "Bearing " << this->GetFlightPlan()->getBearing(this->getGeodPos(), this->GetFlightPlan()->getCurrentWaypoint()) << endl;
-    std::cout << "HeadingChange " << headingChangeRate << "\tHeadingError " << headingError << endl;
+void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
+    o << "Lat\t";
+    o << "Lon\t";
+    o << "heading change rate\t";
+    o << "headingErr\t";
+    o << "minBearing\t";
+    o << "speedFraction\t";
+    o << "groundOffset\t";
+    o << "speed\t";
+    o << "groundTargetSpeed\t";
+    o << "getVerticalSpeedFPM\t";
+    o << "getTrueHeadingDeg\t";
+    o << "Bearing\t";
+    o << "headingChangeRate\t";
+    o << "headingError\t";
+    o << "Name\tWP Lat\tWP Lon\tDist\t";
+    o << "Leg\tNum WP\t";
+    o << endl;
+}
+
+void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
+    o << lineIndex << "\t";
+    o << this->getGeodPos().getLatitudeDeg() << "\t";
+    o << this->getGeodPos().getLongitudeDeg() << "\t";
+    o << headingChangeRate << "\t";
+    o << headingError << "\t";
+    o << minBearing << "\t";
+    o << speedFraction << "\t";
+    o << groundOffset << "\t";
+
+    o << round(this->getSpeed()) << "\t";
+    o << groundTargetSpeed  << "\t";
+    o  << round(this->getVerticalSpeedFPM()) << "\t";
+    o << this->getTrueHeadingDeg() << "\t";
+    o << this->GetFlightPlan()->getBearing(this->getGeodPos(), this->GetFlightPlan()->getCurrentWaypoint()) << "\t";
+    o << headingChangeRate << "\t";
+    o  << headingError << "\t";
     FGAIWaypoint* currentWP = this->GetFlightPlan()->getCurrentWaypoint();
     if (currentWP) {
-        std::cout << "WP       " << currentWP->getName() << "\t" << this->GetFlightPlan()->getCurrentWaypoint()->getPos() << "\r\n";
-        std::cout << "Distance " << SGGeodesy::distanceM(this->getGeodPos(), currentWP->getPos()) << "\n";
+        o << currentWP->getName() << "\t";
+        o << this->GetFlightPlan()->getCurrentWaypoint()->getPos().getLatitudeDeg() << "\t";
+        o << this->GetFlightPlan()->getCurrentWaypoint()->getPos().getLongitudeDeg() << "\t";
+        o << SGGeodesy::distanceM(this->getGeodPos(), currentWP->getPos()) << "\t";
+        o << this->GetFlightPlan()->getStartTime() << "\t";
     } else {
-        std::cout << "No Current WP\n";
+        o << "\t\t\t\t";
     }
-    std::cout << "Flightplan "
-              << "\n";
     FGAIFlightPlan* fp = this->GetFlightPlan();
     if (fp->isValidPlan()) {
-        std::cout << "Leg    : " << fp->getLeg() << "\n";
-        std::cout << "Length : " << fp->getNrOfWayPoints() << "\n";
+        o << fp->getLeg() << "\t";
+        o << fp->getNrOfWayPoints() << "\t";
+    } else {
+        o << "NotValid\t\t";
     }
+    o << endl;
 }
 
 std::string FGAIAircraft::getTimeString(int timeOffset)

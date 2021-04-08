@@ -24,6 +24,7 @@
 #include "AIBaseAircraft.hxx"
 
 #include <string>
+#include <iostream>
 
 class PerformanceData;
 class FGAISchedule;
@@ -108,7 +109,8 @@ public:
     FGATCController * getATCController() { return controller; };
     
     void clearATCController();
-    void dump();
+    void dumpCSVHeader(std::ofstream& o);
+    void dumpCSV(std::ofstream& o, int lineIndex);
 protected:
     void Run(double dt);
 
