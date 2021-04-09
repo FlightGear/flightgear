@@ -113,47 +113,45 @@ int main()
 
     if (topics["prop"]->read()) {
       printf("=== [fg_dds_log] Received : ");
-      printf("PROP Message:\n");
-      printf("     type: ");
-      switch(prop.type)
+      printf("Prop Message:\n");
+      if (prop.id == FG_DDS_PROP_REQUEST) {
+        printf(" request: %s\n", prop.val._u.String);
+        printf("GUID: ");
+        for(int i=0; i<16; ++i)
+          printf("%X ", prop.guid[i]);
+        printf("\n");
+      }
+      else
       {
-      case FG_DDS_NONE:
-        printf("       type: none");
-        break;
-      case FG_DDS_ALIAS:
-        printf("       type: alias");
-        printf("      value: %s\n", prop.val._u.String);
-        break;
-      case FG_DDS_BOOL:
-        printf("       type: bool");
-        printf("      value: %i\n", prop.val._u.Bool);
-        break;
-      case FG_DDS_INT:
-        printf("       type: int");
-        printf("      value: %i\n", prop.val._u.Int32);
-        break;
-      case FG_DDS_LONG:
-        printf("       type: long");
-        printf("      value: %li\n", prop.val._u.Int64);
-        break;
-      case FG_DDS_FLOAT:
-        printf("       type: float");
-        printf("      value: %f\n", prop.val._u.Float32);
-        break;
-      case FG_DDS_DOUBLE:
-        printf("       type: double");
-        printf("      value: %lf\n", prop.val._u.Float64);
-        break;
-      case FG_DDS_STRING:
-        printf("       type: string");
-        printf("      value: %s\n", prop.val._u.String);
-        break;
-      case FG_DDS_UNSPECIFIED:
-        printf("       type: unspecified");
-        printf("      value: %s\n", prop.val._u.String);
-        break;
-      default:
-        break;
+        switch(prop.val._d)
+        {
+        case FG_DDS_BOOL:
+          printf("       type: bool");
+          printf("      value: %i\n", prop.val._u.Bool);
+          break;
+        case FG_DDS_INT:
+          printf("       type: int");
+          printf("      value: %i\n", prop.val._u.Int32);
+          break;
+        case FG_DDS_LONG:
+          printf("       type: long");
+          printf("      value: %li\n", prop.val._u.Int64);
+          break;
+        case FG_DDS_FLOAT:
+          printf("       type: float");
+          printf("      value: %f\n", prop.val._u.Float32);
+          break;
+        case FG_DDS_DOUBLE:
+          printf("       type: double");
+          printf("      value: %lf\n", prop.val._u.Float64);
+          break;
+        case FG_DDS_STRING:
+          printf("       type: string");
+          printf("      value: %s\n", prop.val._u.String);
+          break;
+        default:
+          break;
+        }
       }
     }
 

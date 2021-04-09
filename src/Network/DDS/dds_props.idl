@@ -75,10 +75,10 @@ struct DDS_PROP
 {
     long id;		// property index and DDS id
 
+    octet guid[16];
+
     propType type;
     propValue val;
-
-    string guid;	// requesters globally unique identifier
 };
 #pragma keylist DDS_PROP id
 

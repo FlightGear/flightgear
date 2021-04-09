@@ -56,9 +56,9 @@ typedef struct FG_propValue
 typedef struct FG_DDS_PROP
 {
   int32_t id;
+  uint8_t guid[16];
   FG_propType type;
   FG_propValue val;
-  char * guid;
 } FG_DDS_PROP;
 
 extern const dds_topic_descriptor_t FG_DDS_PROP_desc;

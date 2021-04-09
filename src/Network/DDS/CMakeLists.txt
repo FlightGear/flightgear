@@ -22,4 +22,13 @@ add_executable(fg_dds_log
 )
 setup_fgfs_libraries(fg_dds_log)
 
+add_executable(fg_dds_prop
+    WIN32
+    MACOSX_BUNDLE
+    fg_dds_prop.cpp
+    ${SOURCES}
+)
+setup_fgfs_libraries(fg_dds_prop)
+
+
 flightgear_component(Network "${SOURCES}" "${HEADERS}")

@@ -17,6 +17,7 @@ static const dds_key_descriptor_t FG_DDS_PROP_keys[1] =
 static const uint32_t FG_DDS_PROP_ops [] =
 {
   DDS_OP_ADR | DDS_OP_TYPE_4BY | DDS_OP_FLAG_SGN | DDS_OP_FLAG_KEY, offsetof (FG_DDS_PROP, id),
+  DDS_OP_ADR | DDS_OP_TYPE_ARR | DDS_OP_SUBTYPE_1BY, offsetof (FG_DDS_PROP, guid), 16,
   DDS_OP_ADR | DDS_OP_TYPE_4BY | DDS_OP_FLAG_SGN, offsetof (FG_DDS_PROP, type),
   DDS_OP_ADR | DDS_OP_TYPE_UNI | DDS_OP_SUBTYPE_4BY | DDS_OP_FLAG_SGN, offsetof (FG_DDS_PROP, val._d), 9u, (31u << 16) + 4u,
   DDS_OP_JEQ | DDS_OP_TYPE_BOO | 0, FG_DDS_BOOL, offsetof (FG_DDS_PROP, val._u.Bool),
@@ -28,7 +29,6 @@ static const uint32_t FG_DDS_PROP_ops [] =
   DDS_OP_JEQ | DDS_OP_TYPE_STR | 0, FG_DDS_ALIAS, offsetof (FG_DDS_PROP, val._u.String),
   DDS_OP_JEQ | DDS_OP_TYPE_STR | 0, FG_DDS_STRING, offsetof (FG_DDS_PROP, val._u.String),
   DDS_OP_JEQ | DDS_OP_TYPE_STR | 0, FG_DDS_UNSPECIFIED, offsetof (FG_DDS_PROP, val._u.String),
-  DDS_OP_ADR | DDS_OP_TYPE_STR, offsetof (FG_DDS_PROP, guid),
   DDS_OP_RTS
 };
 
@@ -42,5 +42,5 @@ const dds_topic_descriptor_t FG_DDS_PROP_desc =
   FG_DDS_PROP_keys,
   14,
   FG_DDS_PROP_ops,
-  "<MetaData version=\"1.0.0\"><Module name=\"FG\"><Enum name=\"propType\"><Element name=\"DDS_NONE\" value=\"0\"/><Element name=\"DDS_ALIAS\" value=\"1\"/><Element name=\"DDS_BOOL\" value=\"2\"/><Element name=\"DDS_INT\" value=\"3\"/><Element name=\"DDS_LONG\" value=\"4\"/><Element name=\"DDS_FLOAT\" value=\"5\"/><Element name=\"DDS_DOUBLE\" value=\"6\"/><Element name=\"DDS_STRING\" value=\"7\"/><Element name=\"DDS_UNSPECIFIED\" value=\"8\"/></Enum><Union name=\"propValue\"><SwitchType><Type name=\"propType\"/></SwitchType><Case name=\"Bool\"><Boolean/><Label value=\"DDS_BOOL\"/></Case><Case name=\"Int32\"><Long/><Label value=\"DDS_NONE\"/><Label value=\"DDS_INT\"/></Case><Case name=\"Int64\"><LongLong/><Label value=\"DDS_LONG\"/></Case><Case name=\"Float32\"><Float/><Label value=\"DDS_FLOAT\"/></Case><Case name=\"Float64\"><Double/><Label value=\"DDS_DOUBLE\"/></Case><Case name=\"String\"><String/><Label value=\"DDS_ALIAS\"/><Label value=\"DDS_STRING\"/><Label value=\"DDS_UNSPECIFIED\"/></Case></Union><Struct name=\"DDS_PROP\"><Member name=\"id\"><Long/></Member><Member name=\"type\"><Type name=\"propType\"/></Member><Member name=\"val\"><Type name=\"propValue\"/></Member><Member name=\"guid\"><String/></Member></Struct></Module></MetaData>"
+  "<MetaData version=\"1.0.0\"><Module name=\"FG\"><Enum name=\"propType\"><Element name=\"DDS_NONE\" value=\"0\"/><Element name=\"DDS_ALIAS\" value=\"1\"/><Element name=\"DDS_BOOL\" value=\"2\"/><Element name=\"DDS_INT\" value=\"3\"/><Element name=\"DDS_LONG\" value=\"4\"/><Element name=\"DDS_FLOAT\" value=\"5\"/><Element name=\"DDS_DOUBLE\" value=\"6\"/><Element name=\"DDS_STRING\" value=\"7\"/><Element name=\"DDS_UNSPECIFIED\" value=\"8\"/></Enum><Union name=\"propValue\"><SwitchType><Type name=\"propType\"/></SwitchType><Case name=\"Bool\"><Boolean/><Label value=\"DDS_BOOL\"/></Case><Case name=\"Int32\"><Long/><Label value=\"DDS_NONE\"/><Label value=\"DDS_INT\"/></Case><Case name=\"Int64\"><LongLong/><Label value=\"DDS_LONG\"/></Case><Case name=\"Float32\"><Float/><Label value=\"DDS_FLOAT\"/></Case><Case name=\"Float64\"><Double/><Label value=\"DDS_DOUBLE\"/></Case><Case name=\"String\"><String/><Label value=\"DDS_ALIAS\"/><Label value=\"DDS_STRING\"/><Label value=\"DDS_UNSPECIFIED\"/></Case></Union><Struct name=\"DDS_PROP\"><Member name=\"id\"><Long/></Member><Member name=\"guid\"><Array size=\"16\"><Octet/></Array></Member><Member name=\"type\"><Type name=\"propType\"/></Member><Member name=\"val\"><Type name=\"propValue\"/></Member></Struct></Module></MetaData>"
 };
