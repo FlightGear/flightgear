@@ -36,8 +36,8 @@
 
 class FGDDSProps : public FGProtocol {
 
-    std::map<uint32_t,SGPropertyNode_ptr> by_id;
-    std::map<std::string,SGPropertyNode_ptr> by_path;
+    simgear::PropertyList prop_list;
+    std::map<std::string,uint32_t> path_list;
 
     static void setProp(FG_DDS_PROP& prop, SGPropertyNode_ptr p);
     

@@ -25,6 +25,7 @@
 #  include <config.h>
 #endif
 
+#include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
 #include <simgear/props/props.hxx>
@@ -80,29 +81,42 @@ bool FGDDSProps::process() {
         {
             if (prop.id == FG_DDS_PROP_REQUEST)
             {
-                auto it = by_path.find(prop.val._u.String);
-                if (it == by_path.end())
+                if (prop.type == FG_DDS_STRING)
                 {
-                    SGPropertyNode_ptr props = globals->get_props();
-                    SGPropertyNode_ptr p = props->getNode(prop.val._u.String);
-                    if (p)
+                    const char *path = prop.val._u.String;
+                    auto it = path_list.find(path);
+                    if (it == path_list.end())
                     {
-                        prop.id = by_id.size();
-                        by_id[prop.id] = p;
-                        by_path[prop.val._u.String] = p;
+                        SGPropertyNode_ptr props = globals->get_props();
+                        SGPropertyNode_ptr p = props->getNode(path);
+                        if (p)
+                        {
+                            prop.id = prop_list.size();
+
+                            try {
+                                prop_list.push_back(p);
+                                path_list[prop.val._u.String] = prop.id;
+
+                            } catch (sg_exception&) {
+                                SG_LOG(SG_IO, SG_ALERT, "out of memory");
+                            }
+                        }
+                        setProp(prop, p);
                     }
-                    setProp(prop, p);
+                    else
+                    {
+                        prop.id = std::distance(path_list.begin(), it);
+                        setProp(prop, prop_list[prop.id]);
+                    }
                 }
                 else
                 {
-                    prop.id = std::distance(by_path.begin(), it);
-                    setProp(prop, it->second);
+                    SG_LOG(SG_IO, SG_DEBUG, "Recieved a mangled DDS sample.");
+                    setProp(prop, nullptr);
                 }
             }
-            else
-            {
-                SGPropertyNode_ptr p = by_id[prop.id];
-                setProp(prop, p);
+            else {
+                setProp(prop, prop_list[prop.id]);
             }
 
             // send the response.
