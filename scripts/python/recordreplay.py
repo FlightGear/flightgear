@@ -196,7 +196,11 @@ class Fg:
             # by download_and_compile.sh's run_fgfs.sh script.
             #
             # This is Unix-only.
-            child_pids = subprocess.check_output(f'pgrep -P {self.child.pid}', shell=True)
+            try:
+                child_pids = subprocess.check_output(f'pgrep -P {self.child.pid}', shell=True)
+            except Exception:
+                # We get here if self.child has no child processes.
+                child_pids = b''
             child_pids = child_pids.decode('utf-8')
             child_pids = child_pids.split()
             for child_pid in child_pids:
