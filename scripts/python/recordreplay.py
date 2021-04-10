@@ -68,6 +68,9 @@ g_tapedir = './recordreplay.py.tapes'
 
 
 def remove(path):
+    '''
+    Removes file, ignoring any error.
+    '''
     log(f'Removing: {path}')
     try:
         os.remove(path)
@@ -76,6 +79,9 @@ def remove(path):
 
 
 def readlink(path):
+    '''
+    Returns absolute path destination of link.
+    '''
     ret = os.readlink(path)
     if not os.path.isabs(ret):
         ret = os.path.join(os.path.dirname(path), ret)
@@ -84,8 +90,10 @@ def readlink(path):
 
 class Fg:
     '''
-    Runs flightgear. self.fg is a FlightGear.FlightGear instance, which uses
-    telnet to communicate with Flightgear.
+    Runs flightgear, with support for setting/getting properties etc.
+
+    self.fg is a FlightGear.FlightGear instance, which uses telnet to
+    communicate with Flightgear.
     '''
     def __init__(self, aircraft, args, env=None, telnet_port=None):
         '''
@@ -131,7 +139,9 @@ class Fg:
             except Exception as e:
                 log(f'*** preexec failed with e={e}')
                 raise
-        self.child = subprocess.Popen(args2, env=environ,
+        self.child = subprocess.Popen(
+                args2,
+                env=environ,
                 preexec_fn=preexec,
                 )
         
@@ -180,9 +190,24 @@ class Fg:
     
     def close(self):
         assert self.child
+        log(f'close(): stopping flightgear pid={self.child.pid}')
+        if 1:
+            # Kill any child processes so that things work if fgfs is being run
+            # by download_and_compile.sh's run_fgfs.sh script.
+            #
+            # This is Unix-only.
+            child_pids = subprocess.check_output(f'pgrep -P {self.child.pid}', shell=True)
+            child_pids = child_pids.decode('utf-8')
+            child_pids = child_pids.split()
+            for child_pid in child_pids:
+                #log(f'*** close() child_pid={child_pid}')
+                child_pid = int(child_pid)
+                #log(f'*** close() killing child_pid={child_pid}')
+                os.kill(child_pid, signal.SIGTERM)
         self.child.terminate()
         self.child.wait()
         self.child = None
+        #log(f'*** close() returning.')
 
     def __del__(self):
         if self.child:
@@ -322,27 +347,47 @@ def test_record_replay(
 
 
 def test_motion(fgfs, multiplayer=False):
+    '''
+    Records UFO moving with constant velocity with varying framerates, then
+    replays with varying framerates and checks that replayed UFO moves with
+    expected constant speed.
 
+    If <multiplayer> is true we also record MP UFO running in second Flightgear
+    instance and check that it too moves at constant speed when replaying.
+    '''
+    log('')
+    log('='*80)
+    log('== Record')
+    
     aircraft = 'ufo'
-    fg = Fg( aircraft, f'{fgfs}')
+    if multiplayer:
+        fg = Fg( aircraft, f'{fgfs}  --prop:/sim/replay/log-raw-speed-multiplayer=cgdae-t')
+    else:
+        fg = Fg( aircraft, f'{fgfs}')
     path = f'{g_tapedir}/{fg.aircraft}-continuous.fgtape'
     
     fg.waitfor('/sim/fdm-initialized', 1, timeout=45)
     
     fg.fg['/controls/engines/engine[0]/throttle'] = 0
     
+    # Throttle/speed for ufo is set in fgdata/Aircraft/ufo/ufo.nas.
+    #
+    speed_max = 2000    # default for ufo; current=7.
+    fixed_speed = 100
+    throttle = fixed_speed / speed_max
+    
     if multiplayer:
         fg.fg['/sim/replay/record-multiplayer'] = True
         fg2 = Fg( aircraft, f'{fgfs} --callsign=cgdae-t --multiplay=in,4,,5033 --read-only', telnet_port=5501)
         fg2.waitfor('/sim/fdm-initialized', 1, timeout=45)
-        fg.fg['/controls/engines/engine[0]/throttle'] = 0.1
-        fg2.fg['/controls/engines/engine[0]/throttle'] = 0.1
+        fg.fg['/controls/engines/engine[0]/throttle'] = throttle
+        fg2.fg['/controls/engines/engine[0]/throttle'] = throttle
         time.sleep(1)
         fgt = fg.fg['/controls/engines/engine[0]/throttle']
         fg2t = fg2.fg['/controls/engines/engine[0]/throttle']
         log(f'fgt={fgt} fg2t={fg2t}')
     else:
-        fg.fg['/controls/engines/engine[0]/throttle'] = 0.1
+        fg.fg['/controls/engines/engine[0]/throttle'] = throttle
     
     # Run UFO with constant speed, varying the framerate so we check whether
     # recorded speeds are affected.
@@ -362,7 +407,7 @@ def test_motion(fgfs, multiplayer=False):
     fg.fg['/sim/frame-rate-throttle-hz'] = 2
     time.sleep(5)
     
-    # Restore original frame rate.
+    # Change frame rate.
     fg.fg['/sim/frame-rate-throttle-hz'] = 5
     if multiplayer:
         fg2.fg['/sim/frame-rate-throttle-hz'] = 2
@@ -380,10 +425,20 @@ def test_motion(fgfs, multiplayer=False):
     log(f'*** path={path} path2={path2}')
     g_cleanup.append(lambda: remove(path2))
     
+    log('')
+    log('='*80)
+    log('== Replay')
+    
     if multiplayer:
-        fg = Fg( aircraft, f'{fgfs} --load-tape={path} --prop:/sim/replay/log-raw-speed-multiplayer=cgdae-t')
+        fg = Fg( aircraft, f'{fgfs} --load-tape={path}'
+                f' --prop:/sim/replay/log-raw-speed-multiplayer=cgdae-t'
+                f' --prop:/sim/replay/log-raw-speed=true'
+                )
     else:
-        fg = Fg( aircraft, f'{fgfs} --load-tape={path} --prop:/sim/replay/log-raw-speed=true')
+        fg = Fg( aircraft,
+                f'{fgfs} --load-tape={path} --prop:/sim/replay/log-raw-speed=true',
+                #env='SG_LOG_DELTAS=flightgear/src/Aircraft/flightrecorder.cxx:replay=3',
+                )
     fg.waitfor('/sim/fdm-initialized', 1, timeout=45)
     fg.fg['/sim/frame-rate-throttle-hz'] = 10
     fg.waitfor('/sim/replay/replay-state', 1)
@@ -397,36 +452,46 @@ def test_motion(fgfs, multiplayer=False):
     
     fg.waitfor('/sim/replay/replay-state-eof', 1)
     
+    errors = []
     def examine_values(infix=''):
+        '''
+        Looks at /sim/replay/log-raw-speed{infix}-values/value[], which will
+        contain measured speed of user/MP UFO. We check that the values are all
+        as expected - constant speed.
+        '''
         log(f'== Looking at /sim/replay/log-raw-speed{infix}-values/value[]')
         items0 = fg.fg.ls( f'/sim/replay/log-raw-speed{infix}-values')
-        log(f'len(items0)={len(items0)}')
-        if not items0:
-            while 1:
-                log(f'*** hanging because failed to read contents of: /sim/replay/log-raw-speed{infix}-values')
-                time.sleep(5)
+        log(f'{infix} len(items0)={len(items0)}')
+        assert items0, f'Failed to read items in /sim/replay/log-raw-speed{infix}-values/'
         items = []
         for item in items0:
             if item.name == 'value':
                 #log(f'have read item: {item}')
                 items.append(item)
         num_errors = 0
-        for item in items[:-1]: # Ignore last  item because replay at end interpolates.
+        for item in items[:-1]: # Ignore last item because replay at end interpolates.
             speed = float(item.value)
             prefix = ' '
-            if abs(speed - 200) > 0.5:
+            if abs(speed - fixed_speed) > 0.1:
                 num_errors += 1
                 prefix = '*'
-            log( f'    {prefix} speed={speed} details: {item}')
-        assert num_errors == 0, 'Replay showed uneven speed.'
+            log( f'    {infix} {prefix} speed={speed:12.4} details: {item}')
+        if num_errors != 0:
+            log( f'*** Replay showed uneven speed')
+            errors.append('1')
     
     if multiplayer:
+        examine_values()
         examine_values('-multiplayer')
         examine_values('-multiplayer-post')
     else:
         examine_values()
     
     fg.close()
+    if errors:
+        raise Exception('Failure')
+
+    log('test_motion() passed')
 
 
 if __name__ == '__main__':
@@ -479,6 +544,8 @@ if __name__ == '__main__':
             do_test = 'motion-mp'
         else:
             raise Exception(f'Unrecognised arg: {arg!r}')
+    
+    g_tapedir = os.path.abspath(g_tapedir)
     
     if do_test == 'motion':
         test_motion( fgfs)
@@ -545,11 +612,7 @@ if __name__ == '__main__':
     for f in g_cleanup:
         try:
             f()
-        except:
+        except Exception:
             pass
-    
-    if 0:
-        # This path can be used to check we cleanup properly after an error.
-        fg = Fg('./build-walk/fgfs.exe-run.sh --aircraft=harrier-gr3 --airport=egtk')
-        time.sleep(5)
-        assert 0
+
+    log(f'{__file__}: Returning 0')
