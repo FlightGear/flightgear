@@ -133,6 +133,21 @@ private:
     int m_setWindowRectangle_called_y = 0;
     int m_setWindowRectangle_delta_x = 0;
     int m_setWindowRectangle_delta_y = 0;
+
+    SGPropertyNode_ptr  m_composite_viewer_enabled;
+
+    enum WindowType
+    {
+        WindowType_NONE,
+        WindowType_MAIN,
+        WindowType_SVIEW
+    };
+    WindowType
+    eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
+                    int& x, int& y);
+
+    bool isMainWindow(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us);
+    
 };
 
 bool eventToWindowCoords(const osgGA::GUIEventAdapter* ea, double& x, double& y);

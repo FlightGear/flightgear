@@ -43,7 +43,8 @@ FGEventHandler::FGEventHandler() :
     resizable(true),
     mouseWarped(false),
     scrollButtonPressed(false),
-    changeStatsCameraRenderOrder(false)
+    changeStatsCameraRenderOrder(false),
+    m_composite_viewer_enabled(fgGetNode("/sim/rendering/composite-viewer-enabled", true))
 {
     using namespace osgGA;
     statsHandler->setKeyEventTogglesOnScreenStats(displayStatsKey);
@@ -79,19 +80,10 @@ void FGEventHandler::init(const osgGA::GUIEventAdapter& ea,
 }
 #endif
 
-namespace
-{
-enum WindowType
-{
-    WindowType_NONE,
-    WindowType_MAIN,
-    WindowType_SVIEW
-};
-
 // Calculate event coordinates in the viewport of the GUI camera, if
 // possible. Otherwise sets (x, y) to (-1, -1).
-WindowType
-eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
+FGEventHandler::WindowType
+FGEventHandler::eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
                 int& x, int& y)
 {
     WindowType  ret = WindowType_NONE;
@@ -109,16 +101,9 @@ eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
     
     osg::Viewport* vport;
     
-    if (eventGC == main_window->gc.get()) {
-        osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
-        if (!guiCamera)
-            return WindowType_NONE;
-        vport = guiCamera->getViewport();
-        if (!vport)
-            return WindowType_NONE;
-        ret = WindowType_MAIN;
-    }
-    else {
+    if (m_composite_viewer_enabled->getBoolValue()
+            && eventGC != main_window->gc.get()) {
+        // CompositeViewer is enabled and this is not the main window.
         simgear::compositor::Compositor* compositor = SviewGetEventViewport(ea);
         if (!compositor) {
             SG_LOG(SG_GENERAL, SG_ALERT, "SviewGetEventViewport() returned nullptr");
@@ -130,6 +115,15 @@ eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
             return WindowType_NONE;
         }
         ret = WindowType_SVIEW;
+    }
+    else {
+        osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
+        if (!guiCamera)
+            return WindowType_NONE;
+        vport = guiCamera->getViewport();
+        if (!vport)
+            return WindowType_NONE;
+        ret = WindowType_MAIN;
     }
     
     // Scale x, y to the dimensions of the window
@@ -152,13 +146,11 @@ enabled. It seems that OSG-3.4 incorrectly calls our event handler for
 extra view windows (e.g. resize/close events), so we try to detect
 this. Unfortunately OSG also messes up <ea>'s graphics context pointer so this
 does't alwys work. */
-bool isMainWindow(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us)
+bool FGEventHandler::isMainWindow(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us)
 {
     int x;
     int y;
     return eventToViewport(ea, us, x, y) == WindowType_MAIN;
-}
-
 }
 
 void FGEventHandler::setWindowRectangleInteriorWithCorrection(osgViewer::GraphicsWindow* window, int x, int y, int width, int height)
