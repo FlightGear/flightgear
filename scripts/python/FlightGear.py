@@ -71,10 +71,17 @@ class FGTelnet(Telnet):
         return
 
     def _getresp(self):
-        (_i,_match,resp) = Telnet.expect(self, self.prompt, self.timeout)
+        # Telnet.expect() can return short result, so we call it in a loop.
+        response = b''
+        while 1:
+            _i, _match, data = Telnet.expect(self, self.prompt, self.timeout)
+            response += data
+            if _i == 0:
+                break   # We have the prompt that marks the end of the data.
+            assert _i == -1, f'i={i}'
         # Remove the terminating prompt.
         # Everything preceding it is the response.
-        return resp.decode('utf-8').split('\n')[:-1]
+        return response.decode('utf-8').split('\n')[:-1]
 
 class LsItem:
     def __init__(self, num_children, name, index, type_, value):
@@ -160,7 +167,11 @@ class FlightGear:
             if line.endswith('\r'):
                 line = line[:-1]
             #print(f'line={line!r}')
-            num_children, name, index, type_, value = line.split(' ', 4)
+            try:
+                num_children, name, index, type_, value = line.split(' ', 4)
+            except Exception as e:
+                print(f'*** dir_={dir_!r} len(lines)={len(lines)}. failed to read items from line={line!r}. lines is: {lines!r}')
+                raise
             index = int(index)
             num_children = int(num_children)
             item = LsItem(num_children, name, index, type_, value)
