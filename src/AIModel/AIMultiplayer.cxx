@@ -28,6 +28,7 @@
 #include <string>
 #include <stdio.h>
 
+#include <Aircraft/replay.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Time/TimeManager.hxx>
@@ -41,22 +42,31 @@ using std::string;
 FGAIMultiplayer::FGAIMultiplayer() :
    FGAIBase(otMultiplayer, fgGetBool("/sim/multiplay/hot", false))
 {
-   no_roll = false;
+    no_roll = false;
 
-   mTimeOffsetSet = false;
-   mAllowExtrapolation = true;
-   mLagAdjustSystemSpeed = 10;
-   mLastTimestamp = 0;
-   lastUpdateTime = 0;
-   playerLag = 0.03;
-   compensateLag = 1;
-   realTime = false;
-   lastTime=0.0;
-   lagPpsAveraged = 1.0;
-   rawLag = 0.0;
-   rawLagMod = 0.0;
-   lagModAveraged = 0.0;
-   _searchOrder = PREFER_DATA;
+    mTimeOffsetSet = false;
+    mAllowExtrapolation = true;
+    mLagAdjustSystemSpeed = 10;
+    mLastTimestamp = 0;
+    lastUpdateTime = 0;
+    playerLag = 0.03;
+    compensateLag = 1;
+    realTime = false;
+    lastTime=0.0;
+    lagPpsAveraged = 1.0;
+    rawLag = 0.0;
+    rawLagMod = 0.0;
+    lagModAveraged = 0.0;
+    _searchOrder = PREFER_DATA;
+   
+    m_simple_time_enabled       = fgGetNode("/sim/time/simple-time/enabled", true);
+    m_sim_replay_replay_state   = fgGetNode("/sim/replay/replay-state", true);
+    m_sim_replay_time           = fgGetNode("/sim/replay/time", true);
+   
+    m_simple_time_first_time = true;
+    m_simple_time_compensation = 0.0;
+    m_simple_time_recent_packet_time = 0;
+    mLogRawSpeedMultiplayer = fgGetNode("/sim/replay/log-raw-speed-multiplayer", true);
 }
 
 FGAIMultiplayer::~FGAIMultiplayer() {
@@ -84,6 +94,12 @@ bool FGAIMultiplayer::init(ModelSearchOrder searchOrder)
     bool result = FGAIBase::init(searchOrder);
     // propagate installation state (used by MP pilot list)
     props->setBoolValue("model-installed", _installed);
+    
+    m_node_simple_time_latest           = props->getNode("simple-time/latest", true);
+    m_node_simple_time_offset           = props->getNode("simple-time/offset", true);
+    m_node_simple_time_offset_smoothed  = props->getNode("simple-time/offset-smoothed", true);
+    m_node_simple_time_compensation     = props->getNode("simple-time/compensation", true);
+   
     return result;
 }
 
@@ -125,6 +141,112 @@ SGRawValueMethods<FGAIMultiplayer, type>(*this, \
 #undef AIMPRWProp
 }
 
+
+void FGAIMultiplayer::FGAIMultiplayerInterpolate(
+        MotionInfo::iterator prevIt,
+        MotionInfo::iterator nextIt,
+        double tau,
+        SGVec3d& ecPos,
+        SGQuatf& ecOrient,
+        SGVec3f& ecLinearVel
+        )
+{
+    // Here we do just linear interpolation on the position
+    ecPos = interpolate(tau, prevIt->second.position, nextIt->second.position);
+    ecOrient = interpolate((float)tau, prevIt->second.orientation,
+        nextIt->second.orientation);
+    ecLinearVel = interpolate((float)tau, prevIt->second.linearVel, nextIt->second.linearVel);
+    speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
+
+    if (prevIt->second.properties.size()
+        == nextIt->second.properties.size())
+    {
+        std::vector<FGPropertyData*>::const_iterator prevPropIt;
+        std::vector<FGPropertyData*>::const_iterator prevPropItEnd;
+        std::vector<FGPropertyData*>::const_iterator nextPropIt;
+        std::vector<FGPropertyData*>::const_iterator nextPropItEnd;
+        prevPropIt = prevIt->second.properties.begin();
+        prevPropItEnd = prevIt->second.properties.end();
+        nextPropIt = nextIt->second.properties.begin();
+        nextPropItEnd = nextIt->second.properties.end();
+        while (prevPropIt != prevPropItEnd)
+        {
+            PropertyMap::iterator pIt = mPropertyMap.find((*prevPropIt)->id);
+            //cout << " Setting property..." << (*prevPropIt)->id;
+
+            if (pIt != mPropertyMap.end())
+            {
+                //cout << "Found " << pIt->second->getPath() << ":";
+
+                float val;
+                /*
+                 * RJH - 2017-01-25
+                 * During multiplayer operations a series of crashes were encountered that affected all players
+                 * within range of each other and resulting in an exception being thrown at exactly the same moment in time
+                 * (within case props::STRING: ref http://i.imgur.com/y6MBoXq.png)
+                 * Investigation showed that the nextPropIt and prevPropIt were pointing to different properties
+                 * which may be caused due to certain models that have overloaded mp property transmission and
+                 * these craft have their properties truncated due to packet size. However the result of this
+                 * will be different contents in the previous and current packets, so here we protect against
+                 * this by only considering properties where the previous and next id are the same.
+                 * It might be a better solution to search the previous and next lists to locate the matching id's
+                 */
+                if (*nextPropIt && (*nextPropIt)->id == (*prevPropIt)->id)
+                {
+                    switch ((*prevPropIt)->type)
+                    {
+                        case simgear::props::INT:
+                        case simgear::props::BOOL:
+                        case simgear::props::LONG:
+                            // Jean Pellotier, 2018-01-02 : we don't want interpolation for integer values, they are mostly used
+                            // for non linearly changing values (e.g. transponder etc ...)
+                            // fixes: https://sourceforge.net/p/flightgear/codetickets/1885/
+                            pIt->second->setIntValue((*nextPropIt)->int_value);
+                            break;
+                        case simgear::props::FLOAT:
+                        case simgear::props::DOUBLE:
+                            val = (1 - tau)*(*prevPropIt)->float_value +
+                                tau*(*nextPropIt)->float_value;
+                            //cout << "Flo: " << val << "\n";
+                            pIt->second->setFloatValue(val);
+                            break;
+                        case simgear::props::STRING:
+                        case simgear::props::UNSPECIFIED:
+                            //cout << "Str: " << (*nextPropIt)->string_value << "\n";
+                            pIt->second->setStringValue((*nextPropIt)->string_value);
+                            break;
+                        default:
+                            // FIXME - currently defaults to float values
+                            val = (1 - tau)*(*prevPropIt)->float_value +
+                                tau*(*nextPropIt)->float_value;
+                            //cout << "Unk: " << val << "\n";
+                            pIt->second->setFloatValue(val);
+                            break;
+                    }
+                }
+                else
+                {
+                    SG_LOG(SG_AI, SG_WARN, "MP packet mismatch during lag interpolation: " << (*prevPropIt)->id << " != " << (*nextPropIt)->id << "\n");
+                }
+            }
+            else
+            {
+                SG_LOG(SG_AI, SG_DEBUG, "Unable to find property: " << (*prevPropIt)->id << "\n");
+            }
+
+            ++prevPropIt;
+            ++nextPropIt;
+        }
+    }
+
+    // Now throw away too old data
+    if (prevIt != mMotionInfo.begin())
+    {
+        --prevIt;
+        mMotionInfo.erase(mMotionInfo.begin(), prevIt);
+    }
+}
+
 void FGAIMultiplayer::update(double dt)
 {
     using namespace simgear;
@@ -140,341 +262,264 @@ void FGAIMultiplayer::update(double dt)
     {
         return;
     }
-    // The current simulation time we need to update for,
-    // note that the simulation time is updated before calling all the
-    // update methods. Thus it contains the time intervals *end* time
-    // 2018: notice this time is specifically used for mp protocol
-    double curtime = globals->get_subsystem<TimeManager>()->getMPProtocolClockSec();
 
-    // Get the last available time
-    MotionInfo::reverse_iterator it = mMotionInfo.rbegin();
-    double curentPkgTime = it->second.time;
-
-    // Dynamically optimize the time offset between the feeder and the client
-    // Well, 'dynamically' means that the dynamic of that update must be very
-    // slow. You would otherwise notice huge jumps in the multiplayer models.
-    // The reason is that we want to avoid huge extrapolation times since
-    // extrapolation is highly error prone. For that we need something
-    // approaching the average latency of the packets. This first order lag
-    // component will provide this. We just take the error of the currently
-    // requested time to the most recent available packet. This is the
-    // target we want to reach in average.
-    double lag = it->second.lag;
-
-    rawLag = curentPkgTime - curtime;
-    realTime = false; //default behaviour
-
-    if (!mTimeOffsetSet)
+    // test_motion is used with scripts/python/recordreplay.py
+    // --test-motion-mp.
+    //
+    bool test_motion = false;
+    bool verbose = false;
     {
-        mTimeOffsetSet = true;
-        mTimeOffset = curentPkgTime - curtime - lag;
-        lastTime = curentPkgTime;
-        lagModAveraged = remainder((curentPkgTime - curtime), 3600.0);
-        props->setDoubleValue("lag/pps-averaged", lagPpsAveraged);
-        props->setDoubleValue("lag/lag-mod-averaged", lagModAveraged);
+        const char* callsign = mLogRawSpeedMultiplayer->getStringValue();
+        if (callsign && callsign[0] && this->_callsign == callsign)
+        {
+            test_motion = true;
+            //verbose = true;
+        }
     }
-    else
+    
+    double curtime;
+    double tInterp;
+    if (m_simple_time_enabled->getBoolValue())
     {
-        if ((curentPkgTime - lastTime) != 0)
+        // Simplified timekeeping.
+        //
+        if (m_sim_replay_replay_state->getBoolValue())
         {
-            lagPpsAveraged = 0.99 * lagPpsAveraged + 0.01 * fabs( 1 / (lastTime - curentPkgTime));
-            lastTime = curentPkgTime;
-            rawLagMod = remainder(rawLag, 3600.0);
-            lagModAveraged = lagModAveraged *0.99 + 0.01 * rawLagMod;
-            props->setDoubleValue("lag/pps-averaged", lagPpsAveraged);
-            props->setDoubleValue("lag/lag-mod-averaged", lagModAveraged);
-        }
-
-        double offset = 0.0;
-
-        //spectator mode, more late to be in the interpolation zone
-        if (compensateLag == 3)
-        {
-            offset = curentPkgTime -curtime -lag + playerLag;
-            // old behaviour
-        }
-        else if (compensateLag == 1)
-        {
-            offset = curentPkgTime - curtime - lag;
-
-            // using the prediction mode to display the mpaircraft in the futur/past with given playerlag value
-            //currently compensatelag = 2
-        }
-        else if (fabs(lagModAveraged) < 0.3)
-        {
-            mTimeOffset = (round(rawLag/3600))*3600; //real time mode if close enough
-            realTime = true;
+            tInterp = m_sim_replay_time->getDoubleValue();
         }
         else
         {
-            offset = curentPkgTime - curtime + 0.48*lag + playerLag;
+            tInterp = globals->get_subsystem<TimeManager>()->getMPProtocolClockSec();
         }
+        curtime = tInterp;
+    }
+    else
+    {
+        // Get the last available time
+        MotionInfo::reverse_iterator motioninfo_back = mMotionInfo.rbegin();
+        const double curentPkgTime = motioninfo_back->first;
 
-        if (!realTime)
+        // The current simulation time we need to update for,
+        // note that the simulation time is updated before calling all the
+        // update methods. Thus motioninfo_back contains the time intervals *end* time
+        // 2018: notice this time is specifically used for mp protocol
+        curtime = globals->get_subsystem<TimeManager>()->getMPProtocolClockSec();
+
+        // Dynamically optimize the time offset between the feeder and the client
+        // Well, 'dynamically' means that the dynamic of that update must be very
+        // slow. You would otherwise notice huge jumps in the multiplayer models.
+        // The reason is that we want to avoid huge extrapolation times since
+        // extrapolation is highly error prone. For that we need something
+        // approaching the average latency of the packets. This first order lag
+        // component will provide this. We just take the error of the currently
+        // requested time to the most recent available packet. This is the
+        // target we want to reach in average.
+        double lag = motioninfo_back->second.lag;
+
+        rawLag = curentPkgTime - curtime;
+        realTime = false; //default behaviour
+
+        if (!mTimeOffsetSet)
         {
-            if ((!mAllowExtrapolation && offset + lag < mTimeOffset) || (offset - 10 > mTimeOffset))
+            mTimeOffsetSet = true;
+            mTimeOffset = curentPkgTime - curtime - lag;
+            lastTime = curentPkgTime;
+            lagModAveraged = remainder((curentPkgTime - curtime), 3600.0);
+            props->setDoubleValue("lag/pps-averaged", lagPpsAveraged);
+            props->setDoubleValue("lag/lag-mod-averaged", lagModAveraged);
+        }
+        else
+        {
+            if ((curentPkgTime - lastTime) != 0)
             {
-                mTimeOffset = offset;
-                SG_LOG(SG_AI, SG_DEBUG, "Resetting time offset adjust system to "
-                       "avoid extrapolation: time offset = " << mTimeOffset);
+                lagPpsAveraged = 0.99 * lagPpsAveraged + 0.01 * fabs( 1 / (lastTime - curentPkgTime));
+                lastTime = curentPkgTime;
+                rawLagMod = remainder(rawLag, 3600.0);
+                lagModAveraged = lagModAveraged *0.99 + 0.01 * rawLagMod;
+                props->setDoubleValue("lag/pps-averaged", lagPpsAveraged);
+                props->setDoubleValue("lag/lag-mod-averaged", lagModAveraged);
+            }
+
+            double offset = 0.0;
+
+            //spectator mode, more late to be in the interpolation zone
+            if (compensateLag == 3)
+            {
+                offset = curentPkgTime - curtime - lag + playerLag;
+                // old behaviour
+            }
+            else if (compensateLag == 1)
+            {
+                offset = curentPkgTime - curtime - lag;
+
+                // using the prediction mode to display the mpaircraft in the futur/past with given playerlag value
+                //currently compensatelag = 2
+            }
+            else if (fabs(lagModAveraged) < 0.3)
+            {
+                mTimeOffset = (round(rawLag/3600))*3600; //real time mode if close enough
+                realTime = true;
             }
             else
             {
-                // the error of the offset, respectively the negative error to avoid
-                // a minus later ...
-                double err = offset - mTimeOffset;
-                // limit errors leading to shorter lag values somehow, that is late
-                // arriving packets will pessimize the overall lag much more than
-                // early packets will shorten the overall lag
-                double sysSpeed;
-                //trying to slow the rudderlag phenomenon thus using more the prediction system
-                //if we are off by less than 1.5s, do a little correction, and bigger step above 1.5s
-                if (fabs(err) < 1.5)
+                offset = curentPkgTime - curtime + 0.48*lag + playerLag;
+            }
+
+            if (!realTime)
+            {
+                if ((!mAllowExtrapolation && offset + lag < mTimeOffset) || (offset - 10 > mTimeOffset))
                 {
-                    if (err < 0)
-                    {
-                        sysSpeed = mLagAdjustSystemSpeed*err*0.01;
-                    }
-                    else
-                    {
-                        sysSpeed = SGMiscd::min(0.5*err*err, 0.05);
-                    }
+                    mTimeOffset = offset;
+                    SG_LOG(SG_AI, SG_DEBUG, "Resetting time offset adjust system to "
+                           "avoid extrapolation: time offset = " << mTimeOffset);
                 }
                 else
                 {
-                    if (err < 0)
+                    // the error of the offset, respectively the negative error to avoid
+                    // a minus later ...
+                    double err = offset - mTimeOffset;
+                    // limit errors leading to shorter lag values somehow, that is late
+                    // arriving packets will pessimize the overall lag much more than
+                    // early packets will shorten the overall lag
+                    double sysSpeed;
+                    //trying to slow the rudderlag phenomenon thus using more the prediction system
+                    //if we are off by less than 1.5s, do a little correction, and bigger step above 1.5s
+                    if (fabs(err) < 1.5)
                     {
-                        // Ok, we have some very late packets and nothing newer increase the
-                        // lag by the given speedadjust
-                        sysSpeed = mLagAdjustSystemSpeed*err;
+                        if (err < 0)
+                        {
+                            sysSpeed = mLagAdjustSystemSpeed*err*0.01;
+                        }
+                        else
+                        {
+                            sysSpeed = SGMiscd::min(0.5*err*err, 0.05);
+                        }
                     }
                     else
                     {
-                        // We have a too pessimistic display delay shorten that a small bit
-                        sysSpeed = SGMiscd::min(0.1*err*err, 0.5);
+                        if (err < 0)
+                        {
+                            // Ok, we have some very late packets and nothing newer increase the
+                            // lag by the given speedadjust
+                            sysSpeed = mLagAdjustSystemSpeed*err;
+                        }
+                        else
+                        {
+                            // We have a too pessimistic display delay shorten that a small bit
+                            sysSpeed = SGMiscd::min(0.1*err*err, 0.5);
+                        }
                     }
-                }
 
-                // simple euler integration for that first order system including some
-                // overshooting guard to prevent to aggressive system speeds
-                // (stiff systems) to explode the systems state
-                double systemIncrement = dt*sysSpeed;
-                if (fabs(err) < fabs(systemIncrement))
-                {
-                    systemIncrement = err;
-                }
-                mTimeOffset += systemIncrement;
+                    // simple euler integration for that first order system including some
+                    // overshooting guard to prevent to aggressive system speeds
+                    // (stiff systems) to explode the systems state
+                    double systemIncrement = dt*sysSpeed;
+                    if (fabs(err) < fabs(systemIncrement))
+                    {
+                        systemIncrement = err;
+                    }
+                    mTimeOffset += systemIncrement;
 
-                SG_LOG(SG_AI, SG_DEBUG, "Offset adjust system: time offset = "
-                     << mTimeOffset << ", expected longitudinal position error due to "
-                     " current adjustment of the offset: "
-                     << fabs(norm(it->second.linearVel)*systemIncrement));
+                    SG_LOG(SG_AI, SG_DEBUG, "Offset adjust system: time offset = "
+                         << mTimeOffset << ", expected longitudinal position error due to "
+                         " current adjustment of the offset: "
+                         << fabs(norm(motioninfo_back->second.linearVel)*systemIncrement));
+                }
             }
         }
-    }
 
-    // Compute the time in the feeders time scale which fits the current time
-    // we need to
-    double tInterp = curtime + mTimeOffset;
+        // Compute the time in the feeders time scale which fits the current time
+        // we need to
+        tInterp = curtime + mTimeOffset;
+    }
 
     SGVec3d ecPos;
     SGQuatf ecOrient;
     SGVec3f ecLinearVel;
 
-    if (tInterp < curentPkgTime)
+    const char* calc_type = nullptr;
+
+    MotionInfo::iterator nextIt = mMotionInfo.upper_bound(tInterp);
+    MotionInfo::iterator prevIt = nextIt;
+    
+    if (nextIt != mMotionInfo.end() && nextIt->first >= tInterp)
     {
+        calc_type = "interpolation";
         // Ok, we need a time prevous to the last available packet,
         // that is good ...
         // the case tInterp = curentPkgTime need to be in the interpolation, to avoid a bug zeroing the position
 
-        // Find the first packet before the target time
-        MotionInfo::iterator nextIt = mMotionInfo.upper_bound(tInterp);
-        if (nextIt == mMotionInfo.begin())
+        double tau = 0;
+        if (nextIt == mMotionInfo.end())    // Not sure this can happen.
         {
-            SG_LOG(SG_AI, SG_DEBUG, "Taking oldest packet!");
-            // We have no packet before the target time, just use the first one
-            MotionInfo::iterator firstIt = mMotionInfo.begin();
-            ecPos = firstIt->second.position;
-            ecOrient = firstIt->second.orientation;
-            ecLinearVel = firstIt->second.linearVel;
-            speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
-
-            std::vector<FGPropertyData*>::const_iterator firstPropIt;
-            std::vector<FGPropertyData*>::const_iterator firstPropItEnd;
-            firstPropIt = firstIt->second.properties.begin();
-            firstPropItEnd = firstIt->second.properties.end();
-            while (firstPropIt != firstPropItEnd)
-            {
-                //cout << " Setting property..." << (*firstPropIt)->id;
-                PropertyMap::iterator pIt = mPropertyMap.find((*firstPropIt)->id);
-                if (pIt != mPropertyMap.end())
-                {
-                    //cout << "Found " << pIt->second->getPath() << ":";
-                    switch ((*firstPropIt)->type)
-                    {
-                        case props::INT:
-                        case props::BOOL:
-                        case props::LONG:
-                            pIt->second->setIntValue((*firstPropIt)->int_value);
-                            //cout << "Int: " << (*firstPropIt)->int_value << "\n";
-                            break;
-                        case props::FLOAT:
-                        case props::DOUBLE:
-                            pIt->second->setFloatValue((*firstPropIt)->float_value);
-                            //cout << "Flo: " << (*firstPropIt)->float_value << "\n";
-                            break;
-                        case props::STRING:
-                        case props::UNSPECIFIED:
-                            pIt->second->setStringValue((*firstPropIt)->string_value);
-                            //cout << "Str: " << (*firstPropIt)->string_value << "\n";
-                            break;
-                        default:
-                            // FIXME - currently defaults to float values
-                            pIt->second->setFloatValue((*firstPropIt)->float_value);
-                            //cout << "Unknown: " << (*firstPropIt)->float_value << "\n";
-                            break;
-                    }
-                }
-                else
-                {
-                  SG_LOG(SG_AI, SG_DEBUG, "Unable to find property: " << (*firstPropIt)->id << "\n");
-                }
-                ++firstPropIt;
-            }
-        }
-        else
-        {
-            // Ok, we have really found something where our target time is in between
-            // do interpolation here
-            MotionInfo::iterator prevIt = nextIt;
-            --prevIt;
-
             /*
             * RJH: 2017-02-16 another exception thrown here when running under debug (and hence huge frame delays)
             * the value of nextIt was already end(); which I think means that we cannot run the entire next section of code.
             */
-            if (nextIt != prevIt && nextIt != mMotionInfo.end())
+            // Leave prevIt and nextIt pointing at same item.
+            --nextIt;
+            --prevIt;
+        }
+        else if (nextIt == mMotionInfo.begin())
+        {
+            // Leave prevIt and nextIt pointing at same item.
+        }
+        else
+        {
+            --prevIt;
+            // Interpolation coefficient is between 0 and 1
+            double intervalStart = prevIt->first;
+            double intervalEnd = nextIt->first;
+
+            double intervalLen = intervalEnd - intervalStart;
+            if (intervalLen != 0.0)
             {
-                // Interpolation coefficient is between 0 and 1
-                double intervalStart = prevIt->second.time;
-                double intervalEnd = nextIt->second.time;
-
-                double intervalLen = intervalEnd - intervalStart;
-                double tau = 0.0;
-                if (intervalLen != 0.0)
-                {
-                    tau = (tInterp - intervalStart) / intervalLen;
-                }
-
-                SG_LOG(SG_AI, SG_DEBUG, "Multiplayer vehicle interpolation: ["
-                        << intervalStart << ", " << intervalEnd << "], intervalLen = "
-                        << intervalLen << ", interpolation parameter = " << tau);
-
-                // Here we do just linear interpolation on the position
-                ecPos = interpolate(tau, prevIt->second.position, nextIt->second.position);
-                ecOrient = interpolate((float)tau, prevIt->second.orientation, nextIt->second.orientation);
-                ecLinearVel = interpolate((float)tau, prevIt->second.linearVel, nextIt->second.linearVel);
-                speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
-
-                if (prevIt->second.properties.size() == nextIt->second.properties.size())
-                {
-                    std::vector<FGPropertyData*>::const_iterator prevPropIt;
-                    std::vector<FGPropertyData*>::const_iterator prevPropItEnd;
-                    std::vector<FGPropertyData*>::const_iterator nextPropIt;
-                    std::vector<FGPropertyData*>::const_iterator nextPropItEnd;
-                    prevPropIt = prevIt->second.properties.begin();
-                    prevPropItEnd = prevIt->second.properties.end();
-                    nextPropIt = nextIt->second.properties.begin();
-                    nextPropItEnd = nextIt->second.properties.end();
-                    while (prevPropIt != prevPropItEnd)
-                    {
-                        PropertyMap::iterator pIt = mPropertyMap.find((*prevPropIt)->id);
-                        //cout << " Setting property..." << (*prevPropIt)->id;
-
-                        if (pIt != mPropertyMap.end())
-                        {
-                            //cout << "Found " << pIt->second->getPath() << ":";
-
-                            float val;
-                            /*
-                             * RJH - 2017-01-25
-                             * During multiplayer operations a series of crashes were encountered that affected all players
-                             * within range of each other and resulting in an exception being thrown at exactly the same moment in time
-                             * (within case props::STRING: ref http://i.imgur.com/y6MBoXq.png)
-                             * Investigation showed that the nextPropIt and prevPropIt were pointing to different properties
-                             * which may be caused due to certain models that have overloaded mp property transmission and
-                             * these craft have their properties truncated due to packet size. However the result of this
-                             * will be different contents in the previous and current packets, so here we protect against
-                             * this by only considering properties where the previous and next id are the same.
-                             * It might be a better solution to search the previous and next lists to locate the matching id's
-                             */
-                            if (*nextPropIt && (*nextPropIt)->id == (*prevPropIt)->id)
-                            {
-                                switch ((*prevPropIt)->type)
-                                {
-                                    case props::INT:
-                                    case props::BOOL:
-                                    case props::LONG:
-                                        // Jean Pellotier, 2018-01-02 : we don't want interpolation for integer values, they are mostly used
-                                        // for non linearly changing values (e.g. transponder etc ...)
-                                        // fixes: https://sourceforge.net/p/flightgear/codetickets/1885/
-                                        pIt->second->setIntValue((*nextPropIt)->int_value);
-                                        break;
-                                    case props::FLOAT:
-                                    case props::DOUBLE:
-                                        val = (1 - tau)*(*prevPropIt)->float_value + tau*(*nextPropIt)->float_value;
-                                        //cout << "Flo: " << val << "\n";
-                                        pIt->second->setFloatValue(val);
-                                        break;
-                                    case props::STRING:
-                                    case props::UNSPECIFIED:
-                                        //cout << "Str: " << (*nextPropIt)->string_value << "\n";
-                                        pIt->second->setStringValue((*nextPropIt)->string_value);
-                                        break;
-                                    default:
-                                        // FIXME - currently defaults to float values
-                                        val = (1 - tau)*(*prevPropIt)->float_value + tau*(*nextPropIt)->float_value;
-                                        //cout << "Unk: " << val << "\n";
-                                        pIt->second->setFloatValue(val);
-                                        break;
-                                }
-                            }
-                            else
-                            {
-                                SG_LOG(SG_AI, SG_WARN, "MP packet mismatch during lag interpolation: " << (*prevPropIt)->id << " != " << (*nextPropIt)->id << "\n");
-                            }
-                        }
-                        else
-                        {
-                            SG_LOG(SG_AI, SG_DEBUG, "Unable to find property: " << (*prevPropIt)->id << "\n");
-                        }
-
-                        ++prevPropIt;
-                        ++nextPropIt;
-                    }
-                }
-
-                // Now throw away too old data
-                if (prevIt != mMotionInfo.begin())
-                {
-                    --prevIt;
-                    mMotionInfo.erase(mMotionInfo.begin(), prevIt);
-                }
+                tau = (tInterp - intervalStart) / intervalLen;
             }
+        }
+        
+        FGAIMultiplayerInterpolate(prevIt, nextIt, tau, ecPos, ecOrient, ecLinearVel);
+        
+        if (verbose)
+        {
+            int width=16;
+            SG_LOG(SG_AI, SG_ALERT, "Interpolation:"
+                    << std::setprecision(5)
+                    << std::fixed
+                    << " prevIt->second.time="  << std::setw(width) << prevIt->second.time
+                    << " nextIt->second.time="  << std::setw(width) << nextIt->second.time
+                    << " tau="                  << std::setw(width) << tau
+                    << " tInterp="              << std::setw(width) << tInterp
+                    );
         }
     }
     else
     {
+        calc_type = "extrapolation";
         // Ok, we need to predict the future, so, take the best data we can have
         // and do some eom computation to guess that for now.
-        FGExternalMotionData& motionInfo = it->second;
+        
+        assert(nextIt == mMotionInfo.end());
+        --nextIt;
+        --prevIt;   // so mMotionInfo.erase() does the right thing below.
+        const FGExternalMotionData& motionInfo = nextIt->second;
 
-        // The time to predict, limit to 3 seconds
-        double t = tInterp - motionInfo.time;
-        t = SGMisc<double>::min(t, 3);
-
-        SG_LOG(SG_AI, SG_DEBUG, "Multiplayer vehicle extrapolation: "
-               "extrapolation time = " << t);
+        // The time to predict, limit to 3 seconds. But don't do this if we are
+        // running motion tests, because it can mess up the results.
+        //
+        double t = tInterp - nextIt->first;
+        if (!test_motion)
+        {
+            if (t > 3)
+            {
+                t = 3;
+                props->setBoolValue("lag/extrapolation-range-error", true);
+            }
+            else
+            {
+                props->setBoolValue("lag/extrapolation-out-of-range", false);
+            }
+        }
 
         // using velocity and acceleration to guess a parabolic position...
         ecPos = motionInfo.position;
@@ -504,11 +549,27 @@ void FGAIMultiplayer::update(double dt)
 		    ecPos += t*(ecVel);
 	    }
 
+        if (verbose)
+        {
+            int width=16;
+            SG_LOG(SG_AI, SG_ALERT, "Extrapolation:"
+                    << std::setprecision(5)
+                    << std::fixed
+                    << " t="                    << std::setw(width) << t
+                    << " tInterp="              << std::setw(width) << tInterp
+                    << " motionInfo.time="      << std::setw(width) << motionInfo.time
+                    << " ecVel="                << std::setw(width) << ecVel
+                    << " length(ecVel)="        << std::setw(width) << length(ecVel)
+                    << " normalize(ecVel)="     << std::setw(width) << normalize(ecVel)
+                    << " ecAcc="                << std::setw(width) << ecAcc
+                    << " motionInfo.position="  << motionInfo.position
+                    );
+        }
 	    std::vector<FGPropertyData*>::const_iterator firstPropIt;
         std::vector<FGPropertyData*>::const_iterator firstPropItEnd;
         speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
-        firstPropIt = it->second.properties.begin();
-        firstPropItEnd = it->second.properties.end();
+        firstPropIt = motionInfo.properties.begin();
+        firstPropItEnd = motionInfo.properties.end();
         while (firstPropIt != firstPropItEnd)
         {
             PropertyMap::iterator pIt = mPropertyMap.find((*firstPropIt)->id);
@@ -518,38 +579,43 @@ void FGAIMultiplayer::update(double dt)
             {
                 switch ((*firstPropIt)->type)
                 {
-                    case props::INT:
-                    case props::BOOL:
-                    case props::LONG:
-                        pIt->second->setIntValue((*firstPropIt)->int_value);
-                        //cout << "Int: " << (*firstPropIt)->int_value << "\n";
-                        break;
-                    case props::FLOAT:
-                    case props::DOUBLE:
-                        pIt->second->setFloatValue((*firstPropIt)->float_value);
-                        //cout << "Flo: " << (*firstPropIt)->float_value << "\n";
-                        break;
-                    case props::STRING:
-                    case props::UNSPECIFIED:
-                        pIt->second->setStringValue((*firstPropIt)->string_value);
-                        //cout << "Str: " << (*firstPropIt)->string_value << "\n";
-                        break;
-                    default:
-                        // FIXME - currently defaults to float values
-                        pIt->second->setFloatValue((*firstPropIt)->float_value);
-                        //cout << "Unk: " << (*firstPropIt)->float_value << "\n";
-                        break;
+                  case props::INT:
+                  case props::BOOL:
+                  case props::LONG:
+                      pIt->second->setIntValue((*firstPropIt)->int_value);
+                      //cout << "Int: " << (*firstPropIt)->int_value << "\n";
+                      break;
+                  case props::FLOAT:
+                  case props::DOUBLE:
+                      pIt->second->setFloatValue((*firstPropIt)->float_value);
+                      //cout << "Flo: " << (*firstPropIt)->float_value << "\n";
+                      break;
+                  case props::STRING:
+                  case props::UNSPECIFIED:
+                      pIt->second->setStringValue((*firstPropIt)->string_value);
+                      //cout << "Str: " << (*firstPropIt)->string_value << "\n";
+                      break;
+                  default:
+                      // FIXME - currently defaults to float values
+                      pIt->second->setFloatValue((*firstPropIt)->float_value);
+                      //cout << "Unk: " << (*firstPropIt)->float_value << "\n";
+                      break;
                 }
             }
             else
             {
-              SG_LOG(SG_AI, SG_DEBUG, "Unable to find property: " << (*firstPropIt)->id << "\n");
+                SG_LOG(SG_AI, SG_DEBUG, "Unable to find property: " << (*firstPropIt)->id << "\n");
             }
 
             ++firstPropIt;
         }
     }
 
+    // Remove any motion information before <prevIt> - we will not need this in
+    // the future.
+    //
+    mMotionInfo.erase(mMotionInfo.begin(), prevIt);
+    
     // extract the position
     pos = SGGeod::fromCart(ecPos);
     double recent_alt_ft = altitude_ft;
@@ -585,41 +651,90 @@ void FGAIMultiplayer::update(double dt)
     _vBodyNode->setValue(ecLinearVel[1] * SG_METER_TO_FEET);
     _wBodyNode->setValue(ecLinearVel[2] * SG_METER_TO_FEET);
 
-    SG_LOG(SG_AI, SG_DEBUG, "Multiplayer position and orientation: " << ecPos << ", " << hlOr);
+    //SG_LOG(SG_AI, SG_DEBUG, "Multiplayer position and orientation: " << ecPos << ", " << hlOr);
 
+    // If test_motion is set, we populate
+    // /sim/replay/log-raw-speed-multiplayer-post-values/value[] with the raw
+    // speed of our MP aircraft.
+    //
+    // For use with scripts/python/recordreplay.py --test-motion-mp.
     {
-        static SGPropertyNode_ptr mLogRawSpeedMultiplayer;
-        if (!mLogRawSpeedMultiplayer)
+        SGGeod pos_geod = pos;
+        if (test_motion)
         {
-            mLogRawSpeedMultiplayer = fgGetNode("/sim/replay/log-raw-speed-multiplayer", true);
-        }
-        const char* callsign = mLogRawSpeedMultiplayer->getStringValue();
-        if (callsign && callsign[0] && this->_callsign == callsign)
-        {
+            static SGVec3d s_pos_0;
             static SGVec3d s_pos_prev;
-            static double s_simtime_prev = -1;
+            static double s_t_prev = -1;
             SGVec3d pos = ecPos;
-            double sim_time = fgGetDouble("/sim/replay/time");
-            if (s_simtime_prev != -1 && dt > 0)
+            double sim_replay_time = fgGetDouble("/sim/replay/time");
+            double t = fgGetBool("/sim/replay/replay-state") ? sim_replay_time : tInterp;
+            if (s_t_prev == -1)
             {
-                double dt = sim_time - s_simtime_prev;
-                double distance = length(pos - s_pos_prev);
-                double speed = distance / dt;
-                SGPropertyNode* n = fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-values", true /*create*/);
-                n = n->addChild("value");
-                n->setDoubleValue(speed);
-                SG_LOG(SG_GENERAL, SG_ALERT, "Multiplayer-post aircraft callsign=" << _callsign << ":"
-                        << " sim_time=" << sim_time
-                        << " dt=" << dt
-                        << " distance=" << distance
-                        << " speed=" << speed
-                        << " s_pos_prev=" << s_pos_prev
-                        << " pos=" << pos
-                        << " n->getPath()=" << n->getPath(true /*simplify*/)
-                        );
+                s_pos_0 = pos;
             }
-            s_simtime_prev = sim_time;
-            s_pos_prev = pos;
+            double t_dt = t - s_t_prev;
+            if (s_t_prev != -1 /*&& t_dt != 0*/)
+            {
+                SGVec3d delta_pos = pos - s_pos_prev;
+                SGVec3d delta_pos_norm = normalize(delta_pos);
+                double distance0 = length(pos - s_pos_0);
+                double distance = length(delta_pos);
+                double speed = (t_dt) ? distance / t_dt : -999;
+                if (t_dt)
+                {
+                    SGPropertyNode* n0 = fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-values", true /*create*/);
+                    SGPropertyNode* n;
+                    
+                    n = n0->addChild("value");
+                    n->setDoubleValue(speed);
+                    
+                    n = n0->addChild("description");
+                    char buffer[128];
+                    snprintf(buffer, sizeof(buffer), "s_t_prev=%f t=%f t_dt=%f distance=%f",
+                            s_t_prev, t, t_dt, distance);
+                    n->setStringValue(buffer);
+                }
+                
+                if (verbose)
+                {
+                    SGGeod  user_pos_geod = SGGeod::fromDegFt(
+                            fgGetDouble("/position/longitude-deg"),
+                            fgGetDouble("/position/latitude-deg"),
+                            fgGetDouble("/position/altitude-ft")
+                            );
+
+                    double user_to_mp_bearing = SGGeodesy::courseDeg(user_pos_geod, pos_geod);
+                    double user_to_mp_distance = SGGeodesy::distanceM(user_pos_geod, pos_geod);
+
+                    int width=16;
+                    SG_LOG(SG_GENERAL, SG_ALERT, "Multiplayer-post aircraft callsign=" << _callsign << ":"
+                            << std::setprecision(5)
+                            << std::fixed
+                            << " nextIt->second.time="      << std::setw(width) << nextIt->second.time
+                            << " sim_replay_time="          << std::setw(width) << sim_replay_time
+                            << " tInterp="                  << std::setw(width) << tInterp
+                            << " getMPProtocolClockSec="    << std::setw(width) << globals->get_subsystem<TimeManager>()->getMPProtocolClockSec()
+                            << " curtime="                  << std::setw(width) << curtime
+                            << " realTime="                 << std::setw(width) << realTime
+                            << " s_t_prev="                 << std::setw(width) << s_t_prev
+                            << " t="                        << std::setw(width) << t
+                            << " t_dt="                     << std::setw(width) << t_dt
+                            << " dt="                       << std::setw(width) << dt
+                            << " distance0="                << std::setw(width) << distance0
+                            << " distance="                 << std::setw(width) << distance
+                            << " speed="                    << std::setw(width) << speed
+                            << " delta_pos_norm="           << std::setw(width) << delta_pos_norm
+                            << " calc_type="                << std::setw(width) << calc_type
+                            << " user_to_mp_distance="      << std::setw(width) << user_to_mp_distance
+                            << " user_to_mp_bearing="       << std::setw(width) << user_to_mp_bearing
+                            );
+                }
+            }
+            if (t_dt)
+            {
+                s_t_prev = t;
+                s_pos_prev = pos;
+            }
         }
     }
 
@@ -661,23 +776,112 @@ void
 FGAIMultiplayer::addMotionInfo(FGExternalMotionData& motionInfo,
                                long stamp)
 {
-  mLastTimestamp = stamp;
+    mLastTimestamp = stamp;
 
-  if (!mMotionInfo.empty()) {
-    double diff = motionInfo.time - mMotionInfo.rbegin()->first;
+    if (!mMotionInfo.empty()) {
+        double diff = motionInfo.time - mMotionInfo.rbegin()->first;
 
-    // packet is very old -- MP has probably reset (incl. his timebase)
-    if (diff < -10.0)
-      mMotionInfo.clear();
+        // packet is very old -- MP has probably reset (incl. his timebase)
+        if (diff < -10.0)
+            mMotionInfo.clear();
 
-    // drop packets arriving out of order
-    else if (diff < 0.0)
-      return;
-  }
-  mMotionInfo[motionInfo.time] = motionInfo;
-  // We just copied the property (pointer) list - they are ours now. Clear the
-  // properties list in given/returned object, so former owner won't deallocate them.
-  motionInfo.properties.clear();
+        // drop packets arriving out of order
+        else if (diff < 0.0)
+            return;
+    }
+  
+    if (m_simple_time_enabled->getBoolValue()) {
+        // Update simple-time stats and set m_simple_time_compensation.
+        //
+        double t = m_sim_replay_replay_state->getBoolValue()
+                ? m_sim_replay_time->getDoubleValue()
+                : globals->get_subsystem<TimeManager>()->getMPProtocolClockSec()
+                ;
+    
+        m_simple_time_offset = motionInfo.time - t;
+        if (m_simple_time_first_time)
+        {
+            m_simple_time_first_time = false;
+            m_simple_time_offset_smoothed = m_simple_time_offset;
+        }
+        double e = 0.01;
+        m_simple_time_offset_smoothed = (1-e) * m_simple_time_offset_smoothed
+                + e * m_simple_time_offset;
+
+        if (m_simple_time_offset_smoothed < -2.0 || m_simple_time_offset_smoothed > 1)
+        {
+            // If the sender is using simple-time mode and their clock is
+            // synchronised to ours (e.g. both using NTP), <time_offset> will
+            // be a negative value due to the network delay plus any difference
+            // in the remote and local UTC time.
+            //
+            // Thus we could expect m_time_offset_max around -0.2.
+            //
+            // If m_time_offset_max is very different from zero, this indicates
+            // that the sender is not putting UTC time into MP packets. E.g.
+            // they are using simple-time mode but their system clock is not
+            // set correctly; or they are not using simple-time mode so are
+            // sending their FDM time or a time that has been synchronised with
+            // other MP aircraft. Another possibility is that our UTC clock is
+            // incorrect.
+            //
+            // We need a time that can be consistently compared with our UTC
+            // tInterp. So we set m_time_compensation to something to be
+            // added to all times received in MP packets from _callsign. We
+            // use compensated time for keys in the the mMotionInfo[]
+            // map, thus code should generally use these key values, not
+            // mMotionInfo[].time.
+            //
+            m_simple_time_compensation = -m_simple_time_offset_smoothed;
+            
+            // m_simple_time_offset_smoothed will usually be too big to be
+            // useful here.
+            //
+            props->setDoubleValue("lag/lag-mod-averaged", 0);
+        }
+        else
+        {
+            m_simple_time_compensation = 0;
+            props->setDoubleValue("lag/lag-mod-averaged", m_simple_time_offset_smoothed);
+        }
+        
+        m_node_simple_time_latest->setDoubleValue(motionInfo.time);
+        m_node_simple_time_offset->setDoubleValue(m_simple_time_offset);
+        m_node_simple_time_offset_smoothed->setDoubleValue(m_simple_time_offset_smoothed);
+        m_node_simple_time_compensation->setDoubleValue(m_simple_time_compensation);
+
+        double t_key = motionInfo.time + m_simple_time_compensation;
+        if (m_simple_time_recent_packet_time)
+        {
+            double dt = t_key - m_simple_time_recent_packet_time;
+            if (dt != 0)
+            {
+                double e = 0.05;
+                lagPpsAveraged = (1-e) * lagPpsAveraged + e * (1/dt);
+                props->setDoubleValue("lag/pps-averaged", lagPpsAveraged);
+            }
+        }
+        m_simple_time_recent_packet_time = t_key;
+        
+        // We use compensated time <t_key> as key in mMotionInfo.
+        // m_time_compensation is set to non-zero if packets seem to have
+        // wildly different times from us, if simple-time mode is enabled.
+        //
+        // So most code with an <iterator> into mMotionInfo that needs to
+        // use the MP packet's time, will actuall use iterator->first, not
+        // iterator->second.time..
+        //
+        mMotionInfo[t_key] = motionInfo;
+    }
+    else
+    {
+        mMotionInfo[motionInfo.time] = motionInfo;
+    }
+
+    // We just copied the property (pointer) list - they are ours now. Clear the
+    // properties list in given/returned object, so former owner won't deallocate them.
+    motionInfo.properties.clear();
+  
 }
 
 void

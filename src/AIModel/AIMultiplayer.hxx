@@ -40,42 +40,68 @@ public:
   void setDoubleProperty(const std::string& prop, double val);
 
   long getLastTimestamp(void) const
-  { return mLastTimestamp; }
+  {
+    return mLastTimestamp;
+  }
 
   void setAllowExtrapolation(bool allowExtrapolation)
-  { mAllowExtrapolation = allowExtrapolation; }
+  {
+    mAllowExtrapolation = allowExtrapolation;
+  
+  }
   bool getAllowExtrapolation(void) const
-  { return mAllowExtrapolation; }
+  {
+    return mAllowExtrapolation;
+  }
+  
   void setLagAdjustSystemSpeed(double lagAdjustSystemSpeed)
   {
     if (lagAdjustSystemSpeed < 0)
       lagAdjustSystemSpeed = 0;
     mLagAdjustSystemSpeed = lagAdjustSystemSpeed;
   }
+  
   double getLagAdjustSystemSpeed(void) const
-  { return mLagAdjustSystemSpeed; }
+  {
+    return mLagAdjustSystemSpeed;
+  }
 
   void addPropertyId(unsigned id, const char* name)
-  { mPropertyMap[id] = props->getNode(name, true); }
+  {
+    mPropertyMap[id] = props->getNode(name, true);
+  }
 
   double getplayerLag(void) const
-  { return playerLag; }
+  {
+    return playerLag;
+  }
 
   void setplayerLag(double mplayerLag)
-  {playerLag = mplayerLag; }
+  {
+    playerLag = mplayerLag;
+  }
 
   int getcompensateLag(void) const
-  { return compensateLag; }
+  {
+    return compensateLag;
+  }
 
   void setcompensateLag(int mcompensateLag)
-  {compensateLag = mcompensateLag; }
+  {
+    compensateLag = mcompensateLag;
+  }
 
   SGPropertyNode* getPropertyRoot()
-  { return props; }
+  {
+    return props;
+  }
   
   void clearMotionInfo();
 
-  const char* getTypeString(void) const override { return "multiplayer"; }
+  const char* getTypeString(void) const override
+  {
+    return "multiplayer";
+  }
 
 private:
 
@@ -87,6 +113,21 @@ private:
   // and the property nodes
   typedef std::map<unsigned, SGSharedPtr<SGPropertyNode> > PropertyMap;
   PropertyMap mPropertyMap;
+  
+  // Calculates position, orientation and velocity using interpolation between
+  // *prevIt and *nextIt, specifically (1-tau)*(*prevIt) + tau*(*nextIt).
+  //
+  // Cannot call this method 'interpolate' because that would hide the name in
+  // OSG.
+  //
+  void FGAIMultiplayerInterpolate(
+        MotionInfo::iterator prevIt,
+        MotionInfo::iterator nextIt,
+        double tau,
+        SGVec3d& ecPos,
+        SGQuatf& ecOrient,
+        SGVec3f& ecLinearVel
+        );
 
   bool mTimeOffsetSet;
   bool realTime;
@@ -113,6 +154,27 @@ private:
   SGPropertyNode_ptr _uBodyNode;
   SGPropertyNode_ptr _vBodyNode;
   SGPropertyNode_ptr _wBodyNode;
+  
+  // Things for simple-time.
+  //
+  SGPropertyNode_ptr m_simple_time_enabled;
+  
+  SGPropertyNode_ptr m_sim_replay_replay_state;
+  SGPropertyNode_ptr m_sim_replay_time;
+  
+  bool      m_simple_time_first_time;
+  double    m_simple_time_offset;
+  double    m_simple_time_offset_smoothed;
+  double    m_simple_time_compensation;
+  double    m_simple_time_recent_packet_time;
+  
+  SGPropertyNode_ptr    m_node_simple_time_latest;
+  SGPropertyNode_ptr    m_node_simple_time_offset;
+  SGPropertyNode_ptr    m_node_simple_time_offset_smoothed;
+  SGPropertyNode_ptr    m_node_simple_time_compensation;
+  
+  // For use with scripts/python/recordreplay.py --test-motion-mp.
+  SGPropertyNode_ptr mLogRawSpeedMultiplayer;
 };
 
 #endif  // _FG_AIMultiplayer_HXX
