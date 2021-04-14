@@ -34,11 +34,30 @@
 #include <Main/globals.hxx>
 #include <Time/bodysolver.hxx>
 
-using std::string;
+
+
+#ifdef HAVE_UNISTD_H
+    #include <unistd.h>    // for gettimeofday() and the _POSIX_TIMERS define
+#endif
+
+#ifdef HAVE_SYS_TIME_H
+    #include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
+#endif
+
+#if defined(_POSIX_TIMERS) && (0 < _POSIX_TIMERS)
+    #include <time.h>
+#endif
+
+#ifdef WIN32
+    #include <windows.h>
+    #include <mmsystem.h>
+#endif
+
+
 
 static bool do_timeofday (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    const string &offset_type = arg->getStringValue("timeofday", "noon");
+    const std::string &offset_type = arg->getStringValue("timeofday", "noon");
     int offset = arg->getIntValue("offset", 0);
     TimeManager* self = (TimeManager*) globals->get_subsystem("time");
     if (offset_type == "real") {
@@ -127,6 +146,10 @@ void TimeManager::init()
         _mpClockOffset->setDoubleValue(0.0);
     }
     _computeDrift->setBoolValue(true);
+
+  _simpleTimeEnabled = fgGetNode("/sim/time/simple-time/enabled", true);
+  _simpleTimeUtc = fgGetNode("/sim/time/simple-time/utc", true);
+  _simpleTimeFdm = fgGetNode("/sim/time/simple-time/fdm", true);
 }
 
 void TimeManager::unbind()
@@ -194,8 +217,175 @@ void TimeManager::valueChanged(SGPropertyNode* aProp)
   }
 }
 
+// simple-time mode requires UTC time.
+//
+// SGTimeStamp() doesn't return UTC time on some systems, e.g. Linux with
+// _POSIX_TIMERS > 0 uses _POSIX_MONOTONIC_CLOCK if available.
+//
+// So we define our own time function here.
+//
+static double TimeUTC()
+{
+    time_t      sec;
+    unsigned    nsec;
+    
+    #ifdef _WIN32
+        static bool qpc_init = false;
+        static LARGE_INTEGER s_frequency;
+        static BOOL s_use_qpc;
+        if (!qpc_init) {
+            s_use_qpc = QueryPerformanceFrequency(&s_frequency);
+            qpc_init = true;
+        }
+        if (qpc_init && s_use_qpc) {
+            LARGE_INTEGER now;
+            QueryPerformanceCounter(&now);
+            sec = now.QuadPart / s_frequency.QuadPart;
+            nsec = (1000000000LL * (now.QuadPart - sec * s_frequency.QuadPart)) / s_frequency.QuadPart;
+        }
+        else {
+            unsigned int msec = timeGetTime();
+            sec = msec / 1000;
+            nsec = (msec - sec * 1000) * 1000 * 1000;
+        }
+    #elif defined(_POSIX_TIMERS) && (0 < _POSIX_TIMERS)
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+        sec = ts.tv_sec;
+        nsec = ts.tv_nsec;
+    #elif defined( HAVE_GETTIMEOFDAY ) // openbsd
+        struct timeval current;
+        gettimeofday(&current, NULL);
+        sec = current.tv_sec;
+        nsec = current.tv_usec * 1000;
+    #elif defined( HAVE_GETLOCALTIME )
+        SYSTEMTIME current;
+        GetLocalTime(&current);
+        sec = current.wSecond;
+        nsec = current.wMilliseconds * 1000 * 1000;
+    #else
+        #error Unable to find UTC time.
+    #endif
+    return sec + nsec * 1.0e-9;
+}
+
+static void SleepUTC(double t)
+{
+    #ifdef _WIN32
+    int msec = (int) (t * 1000);
+    if (msec > 0) {
+        Sleep(msec);
+    }
+    #else
+    time_t sec = (time_t) floor(t);
+    int nsec = (t - sec) * 1e9;
+    struct timespec ts = { sec, nsec };
+    for(;;) {
+        struct timespec rem;
+        int e = nanosleep(&ts, &rem);
+        if (e == 0) {
+            break;
+        }
+        assert(errno == -EINTR);
+        ts = rem;
+    }
+    #endif
+}
+
+void TimeManager::computeTimeDeltasSimple(double& simDt, double& realDt)
+{
+    double t = TimeUTC();
+    double modelHz = _modelHz->getDoubleValue();
+    bool scenery_loaded = _sceneryLoaded->getBoolValue();
+
+    if (_firstUpdate) {
+        _firstUpdate = false;
+        _simple_time_utc = t;
+        _simple_time_fdm = t;
+        SGSubsystemGroup* fdmGroup = globals->get_subsystem_mgr()->get_group(SGSubsystemMgr::FDM);
+        fdmGroup->set_fixed_update_time(1.0 / modelHz);
+    }
+
+    // Sleep if necessary to respect _maxFrameRate. It's simpler to do this
+    // inline instead of calling throttleUpdateRate().
+    //
+    double sleep_time = 0;
+    if (scenery_loaded) {
+        double max_frame_rate = _maxFrameRate->getDoubleValue();
+        if (max_frame_rate != 0) {
+            double delay_end = _simple_time_utc + 1.0/max_frame_rate;
+            if (delay_end > t) {
+                sleep_time = delay_end - t;
+                //SGTimeStamp::sleepForMSec(sleep_time * 1000);
+                SleepUTC(sleep_time);
+                t = delay_end;
+            }
+        }
+    }
+    else {
+        // suppress framerate while initial scenery isn't loaded yet (splash screen still active) 
+        _lastFrameTime=0;
+        _frameCount = 0;
+    }
+    
+    // Increment <_simple_time_fdm> by a multiple of the FDM interval, such
+    // that it is as close as possible, but not greater than, the current UTC
+    // time <t>.
+    //
+    double dt_fdm = floor( (t - _simple_time_fdm) * modelHz) / modelHz;
+    _simple_time_fdm += dt_fdm;
+    _frameLatencyMax = std::max(_frameLatencyMax, t - _simple_time_utc);
+    _simple_time_utc = t;
+    
+    _simpleTimeUtc->setDoubleValue(_simple_time_utc);
+    _simpleTimeFdm->setDoubleValue(_simple_time_fdm);
+
+    // simDt defaults to dt_fdm, but is affected by whether we are paused or
+    // running the FDM at faster/slowe than normal.
+    if (_clockFreeze->getBoolValue() || !scenery_loaded) {
+        simDt = 0;
+    }
+    else {
+        simDt = dt_fdm * _simTimeFactor->getDoubleValue();
+    }
+    realDt = dt_fdm;
+    globals->inc_sim_time_sec(simDt);
+
+    _mpProtocolClock = _simple_time_fdm;
+    _mpProtocolClockNode->setDoubleValue(_mpProtocolClock);
+
+    // Not sure anyone calls getSteadyClockSec()?
+    _steadyClock = _simple_time_fdm;
+    _steadyClockNode->setDoubleValue(_steadyClock);
+
+    // These are used by Nasal scripts, e.g. when interpolating property
+    // values.
+    _timeDelta->setDoubleValue(realDt);
+    _simTimeDelta->setDoubleValue(simDt);
+
+    SG_LOG(SG_GENERAL, SG_DEBUG, ""
+            << std::setprecision(5)
+            << std::fixed
+            << std::setw(16)
+            << " " << ((simDt >= 1.0) ? "*" : " ")
+            << " simDt=" << simDt
+            << " realDt=" << realDt
+            << " sleep_time=" << sleep_time
+            << " _simple_time_utc=" << _simple_time_utc
+            << " _simple_time_fdm=" << _simple_time_fdm
+            << " utc-fdm=" << (_simple_time_utc - _simple_time_fdm)
+            << " _steadyClock=" << _steadyClock
+            << " _mpProtocolClock=" << _mpProtocolClock
+            );
+}
+
 void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
 {
+    if (_simpleTimeEnabled->getBoolValue()) {
+        computeTimeDeltasSimple(simDt, realDt);
+        return;
+    }
+
     const double modelHz = _modelHz->getDoubleValue();
 
     // Update the elapsed time.
@@ -252,15 +442,15 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
   if (dt > _frameLatencyMax)
       _frameLatencyMax = dt;
 
-// Limit the time we need to spend in simulation loops
-// That means, if the /sim/max-simtime-per-frame value is strictly positive
-// you can limit the maximum amount of time you will do simulations for
-// one frame to display. The cpu time spent in simulations code is roughly
-// at least O(real_delta_time_sec). If this is (due to running debug
-// builds or valgrind or something different blowing up execution times)
-// larger than the real time you will no longer get any response
-// from flightgear. This limits that effect. Just set to property from
-// your .fgfsrc or commandline ...
+  // Limit the time we need to spend in simulation loops
+  // That means, if the /sim/max-simtime-per-frame value is strictly positive
+  // you can limit the maximum amount of time you will do simulations for
+  // one frame to display. The cpu time spent in simulations code is roughly
+  // at least O(real_delta_time_sec). If this is (due to running debug
+  // builds or valgrind or something different blowing up execution times)
+  // larger than the real time you will no longer get any response
+  // from flightgear. This limits that effect. Just set to property from
+  // your .fgfsrc or commandline ...
   double dtMax = _maxDtPerFrame->getDoubleValue();
   if (0 < dtMax && dtMax < dt) {
     dt = dtMax;
@@ -270,8 +460,8 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
     globals->get_subsystem_mgr()->get_group(SGSubsystemMgr::FDM);
   fdmGroup->set_fixed_update_time(1.0 / modelHz);
 
-// round the real time down to a multiple of 1/model-hz.
-// this way all systems are updated the _same_ amount of dt.
+  // round the real time down to a multiple of 1/model-hz.
+  // this way all systems are updated the _same_ amount of dt.
   dt += _dtRemainder;
 
   // we keep the mp clock sync with the sim time, as it's used as timestamp
@@ -300,7 +490,7 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
   _steadyClockNode->setDoubleValue(_steadyClock);
   _mpProtocolClockNode->setDoubleValue(_mpProtocolClock);
 
-// These are useful, especially for Nasal scripts.
+  // These are useful, especially for Nasal scripts.
   _timeDelta->setDoubleValue(realDt);
   _simTimeDelta->setDoubleValue(simDt);
 }
@@ -441,7 +631,7 @@ void TimeManager::initTimeOffset()
 {
 
   long int offset = fgGetLong("/sim/startup/time-offset");
-  string offset_type = fgGetString("/sim/startup/time-offset-type");
+  std::string offset_type = fgGetString("/sim/startup/time-offset-type");
   setTimeOffset(offset_type, offset);
 }
 
@@ -498,7 +688,7 @@ void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
   
   if( fgGetBool("/sim/time/warp-easing", false) && !fgGetBool("/devices/status/keyboard/ctrl", false)) {
     double duration = fgGetDouble("/sim/time/warp-easing-duration-secs", 5.0 );
-    const string easing = fgGetString("/sim/time/warp-easing-method", "swing" );
+    const std::string easing = fgGetString("/sim/time/warp-easing-method", "swing" );
     SGPropertyNode n;
     n.setDoubleValue( orig_warp + warp );
     _warp->interpolate( "numeric", n, duration, easing );

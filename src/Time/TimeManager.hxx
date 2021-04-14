@@ -49,6 +49,8 @@ public:
     static const char* staticSubsystemClassId() { return "time"; }
 
     void computeTimeDeltas(double& simDt, double& realDt);
+    
+    void computeTimeDeltasSimple(double& simDt, double& realDt);
 
     // SGPropertyChangeListener overrides
     void valueChanged(SGPropertyNode *) override;
@@ -124,6 +126,12 @@ private:
     SGPropertyNode_ptr _sceneryLoaded;
     SGPropertyNode_ptr _modelHz;
     SGPropertyNode_ptr _timeDelta, _simTimeDelta;
+    
+    SGPropertyNode_ptr _simpleTimeEnabled;
+    SGPropertyNode_ptr _simpleTimeUtc;
+    SGPropertyNode_ptr _simpleTimeFdm;
+    double _simple_time_utc;
+    double _simple_time_fdm;
 };
 
 #endif // of FG_TIME_TIMEMANAGER_HXX
