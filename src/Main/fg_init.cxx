@@ -1004,6 +1004,22 @@ void fgCreateSubsystems(bool duringReset) {
         globals->add_subsystem("swift", new SwiftConnection, SGSubsystemMgr::POST_FDM);
         #endif
 
+        // FGReplay.
+        //
+        // FGReplay is after FGMultiplayMgr, so that it can record the most
+        // recent MP packets.
+        //
+        // FGReplay is before FGAIManager so that, when replaying, it can push
+        // MP packets into FGMultiplayMgr's queue before FGAIManager reads from
+        // this queue.
+        //
+        // We also call FGReplay::init() method here, to work around a
+        // problem where JSBSim appears to rely on FGReplay creating certain
+        // properties before it is initialised. This caused problems when
+        // FGReplay was changed to be POST_FDM.
+        globals->add_new_subsystem<FGReplay>(SGSubsystemMgr::POST_FDM)
+                ->init(); // Special case.
+
         globals->add_subsystem("ai-model", new FGAIManager, SGSubsystemMgr::POST_FDM);
         globals->add_subsystem("submodel-mgr", new FGSubmodelMgr, SGSubsystemMgr::POST_FDM);
 
@@ -1016,13 +1032,6 @@ void fgCreateSubsystems(bool duringReset) {
         fgSetArchivable("/sim/panel/x-offset");
         fgSetArchivable("/sim/panel/y-offset");
         fgSetArchivable("/sim/panel/jitter");
-
-        // We also call FGReplay::unit() method here, to work around a
-        // problem where JSBSim appears to rely on FGReplay creating certain
-        // properties before it is initialised. This caused problems when
-        // FGReplay was changed to be POST_FDM.
-        globals->add_new_subsystem<FGReplay>(SGSubsystemMgr::POST_FDM)
-                ->init(); // Special case.
     }
     
     // SGSubsystemMgr::DISPLAY
