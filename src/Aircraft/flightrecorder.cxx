@@ -787,8 +787,8 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer,
                 }
                 m_CaptureDouble[i].Signal->setDoubleValue(v);
             }
-            
-            if (m_LogRawSpeed->getBoolValue()) {
+
+            if (m_LogRawSpeed->getBoolValue() && _pNextBuffer && pLastBuffer) {
                 // Log raw speed values to
                 // /sim/replay/log-raw-speed-values/value[]. This is used by
                 // scripts/python/recordreplay.py --test-motion.
@@ -800,14 +800,17 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer,
                         );
                 SGVec3d pos = SGVec3d::fromGeod(pos_geod);
                 static SGVec3d pos_prev;
-                static double simtime_prev = -1;
-                double dt = SimTime - simtime_prev;
-                if (simtime_prev != -1 && dt > 0) {
+                static double t_prev = -1;
+                double t = SimTime;
+                double dt = t - t_prev;
+                if (t_prev != -1 && dt > 0) {
                     double distance = length(pos - pos_prev);
                     double speed = dt ? distance / dt : -1;
-                    SG_LOG(SG_GENERAL, SG_DEBUG, "User aircraft:"
+                    SG_LOG(SG_GENERAL, SG_DEBUG, ""
+                            << " User aircraft:"
                             << " pLastBuffer=" << ((void*) pLastBuffer)
-                            << " SimTime=" << SimTime
+                            << " t_prev=" << std::setprecision(10) << t_prev
+                            << " t=" << std::setprecision(10) << t
                             << " dt=" << dt
                             << " distance=" << distance
                             << " speed=" << speed
@@ -816,7 +819,7 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer,
                     n->addChild("value")->setDoubleValue(speed);
                 }
                 pos_prev = pos;
-                simtime_prev = SimTime;
+                t_prev = t;
             }
             
             Offset += SignalCount * sizeof(double);
