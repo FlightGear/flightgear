@@ -364,8 +364,9 @@ def test_motion(fgfs, multiplayer=False):
     log('== Record')
     
     aircraft = 'ufo'
+    fgfs += ' --prop:bool:/sim/time/simple-time/enabled=true'
     if multiplayer:
-        fg = Fg( aircraft, f'{fgfs}  --prop:/sim/replay/log-raw-speed-multiplayer=cgdae-t')
+        fg = Fg( aircraft, f'{fgfs} --prop:/sim/replay/log-raw-speed-multiplayer=cgdae-t')
     else:
         fg = Fg( aircraft, f'{fgfs}')
     path = f'{g_tapedir}/{fg.aircraft}-continuous.fgtape'
@@ -468,18 +469,25 @@ def test_motion(fgfs, multiplayer=False):
         log(f'{infix} len(items0)={len(items0)}')
         assert items0, f'Failed to read items in /sim/replay/log-raw-speed{infix}-values/'
         items = []
+        descriptions = []
         for item in items0:
             if item.name == 'value':
                 #log(f'have read item: {item}')
                 items.append(item)
+            elif item.name == 'description':
+                descriptions.append(item)
         num_errors = 0
-        for item in items[:-1]: # Ignore last item because replay at end interpolates.
+        for i in range(len(items)-1):   # Ignore last item because replay at end interpolates.
+            item = items[i]
+            description = ''
+            if i < len(descriptions):
+                description = descriptions[i].value
             speed = float(item.value)
             prefix = ' '
             if abs(speed - fixed_speed) > 0.1:
                 num_errors += 1
                 prefix = '*'
-            log( f'    {infix} {prefix} speed={speed:12.4} details: {item}')
+            log( f'    {infix} {prefix} speed={speed:12.4} details: {item}: {description}')
         if num_errors != 0:
             log( f'*** Replay showed uneven speed')
             errors.append('1')
