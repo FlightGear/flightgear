@@ -34,7 +34,7 @@
 #include <Main/globals.hxx>
 #include <Time/bodysolver.hxx>
 
-
+#include <algorithm>
 
 #ifdef HAVE_UNISTD_H
     #include <unistd.h>    // for gettimeofday() and the _POSIX_TIMERS define
