@@ -5,7 +5,10 @@ module FG
 {
 
 // defining it this way also generates accompanying #defines in the header file.
+const octet DDS_PROP_VERSION = 0;
 const short DDS_PROP_REQUEST = -1;
+const boolean DDS_MODE_READ = 0;
+const boolean DDS_MODE_WRITE = 1;
 
 enum propType
 {
@@ -47,38 +50,40 @@ union propValue switch ( propType )
 // Initial property request sequence
 // for properties where the id is not yet known:
 // 1. Set id to FG_DDS_PROP_REQUEST
-// 2. set guid to the 16-byte participants GUID
-// 3. Set type to STRING
-// 4. Set val.String to the propery path
-// 5. Send the package.
+// 2. Set version to FG_DDS_PROP_VERSION
+// 3. Set mode to FG_DDS_MODE_READ
+// 4. set guid to the 16-byte participants GUID
+// 5. Set val type to STRING
+// 6. Set val String to the propery path
+// 7. Send the package.
 //
-// 6. wait for an answer
+// 8. Wait for an answer
 //    * Check whether guid matches the participants GUID.
 //    * The index of the requested propery path is stored in the id variable
 //      which should be used by successive request as the id for that property.
-//    * The type variable indicates the type of the value of the property.
 //    * The val union holds the value of the propery.
 //
 // Successive property request sequence:
-// 1. Set id to the id of the requested property
-// 2. Send the package.
+// 1. Make sure id is to the id of the requested property
+// 2. Make sure version is to FG_DDS_PROP_VERSION
+// 3. Set mode to FG_DDS_MODE_READ or FG_DDS_MODE_WRITE
+// 3a. Optionally set the val union to match the property to overwrite.
+// 4. Send the package.
 //
-// 3. wait for an answer
+// 5. Wait for an answer
 //    * Check whether id matches the requested property id.
-//    * The type variable indicates the type of the value of the property.
 //    * The val union holds the value of the propery.
-//
-// guid is not defined as an array of 16 unsigned characters to keep the
-// sample small for successive requests. This way only a FG_DDS_PROP_REQUEST
-// sample will reserve the full 16-bytes.
 struct DDS_PROP
 {
-    long id;		// property index and DDS id
+    long id;		// 32-bit property index and DDS id.
+    octet version;	// 8-bit sample-type version number.
 
+    boolean mode;	// FG_DDS_MODE_READ or FG_DDS_MODE_WRITE
+    propValue val;	// property value or path.
+
+    // A sequence could be used here but unfortunatelly it's initializer
+    // already is 10-bytes in size.
     octet guid[16];
-
-    propType type;
-    propValue val;
 };
 #pragma keylist DDS_PROP id
 

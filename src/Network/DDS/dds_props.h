@@ -17,7 +17,10 @@
 extern "C" {
 #endif
 
+#define FG_DDS_PROP_VERSION 0
 #define FG_DDS_PROP_REQUEST -1
+#define FG_DDS_MODE_READ (0)
+#define FG_DDS_MODE_WRITE (1)
 typedef enum FG_propType
 {
   FG_DDS_NONE,
@@ -56,9 +59,10 @@ typedef struct FG_propValue
 typedef struct FG_DDS_PROP
 {
   int32_t id;
-  uint8_t guid[16];
-  FG_propType type;
+  uint8_t version;
+  bool mode;
   FG_propValue val;
+  uint8_t guid[16];
 } FG_DDS_PROP;
 
 extern const dds_topic_descriptor_t FG_DDS_PROP_desc;

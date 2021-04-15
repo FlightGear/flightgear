@@ -81,7 +81,7 @@ bool FGDDSProps::process() {
         {
             if (prop.id == FG_DDS_PROP_REQUEST)
             {
-                if (prop.type == FG_DDS_STRING)
+                if (prop.val._d == FG_DDS_STRING)
                 {
                     const char *path = prop.val._u.String;
                     auto it = path_list.find(path);
@@ -148,31 +148,31 @@ void FGDDSProps::setProp(FG_DDS_PROP& prop, SGPropertyNode_ptr p)
     {
         simgear::props::Type type = p->getType();
         if (type == simgear::props::BOOL) {
-            prop.type = FG_DDS_BOOL;
+            prop.val._d = FG_DDS_BOOL;
             prop.val._u.Bool = p->getBoolValue();
         } else if (type == simgear::props::INT) {
-            prop.type = FG_DDS_INT;
+            prop.val._d = FG_DDS_INT;
             prop.val._u.Int32 = p->getIntValue();
         } else if (type == simgear::props::LONG) {
-            prop.type = FG_DDS_LONG;
+            prop.val._d = FG_DDS_LONG;
             prop.val._u.Int64 = p->getLongValue();
         } else if (type == simgear::props::FLOAT) {
-            prop.type = FG_DDS_FLOAT;
+            prop.val._d = FG_DDS_FLOAT;
             prop.val._u.Float32 = p->getFloatValue();
         } else if (type == simgear::props::DOUBLE) {
-            prop.type = FG_DDS_DOUBLE;
+            prop.val._d = FG_DDS_DOUBLE;
             prop.val._u.Float64 = p->getDoubleValue();
         } else if (type == simgear::props::ALIAS) {
-            prop.type = FG_DDS_ALIAS;
+            prop.val._d = FG_DDS_ALIAS;
             prop.val._u.String = const_cast<char*>(p->getStringValue());
         } else if (type == simgear::props::STRING) {
-            prop.type = FG_DDS_STRING;
+            prop.val._d = FG_DDS_STRING;
             prop.val._u.String = const_cast<char*>(p->getStringValue());
         } else if (type == simgear::props::UNSPECIFIED) {
-            prop.type = FG_DDS_UNSPECIFIED;
+            prop.val._d = FG_DDS_UNSPECIFIED;
             prop.val._u.String = const_cast<char*>(p->getStringValue());
         } else {
-            prop.type = FG_DDS_NONE;
+            prop.val._d = FG_DDS_NONE;
             prop.val._u.Int32 = 0;
         }
     }

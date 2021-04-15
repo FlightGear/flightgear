@@ -111,11 +111,15 @@ int main()
       printf("     rudder: %lf\n", ctrls.rudder);
     }
 
-    if (topics["prop"]->read()) {
+    if (topics["prop"]->read() &&
+         prop.version == FG_DDS_PROP_VERSION )
+    {
       printf("=== [fg_dds_log] Received : ");
       printf("Prop Message:\n");
+      printf(" version: %i\n", prop.version);
+      printf(" mode: %s\n", prop.mode ? "write" : "read");
       if (prop.id == FG_DDS_PROP_REQUEST) {
-        printf(" request: %s\n", prop.val._u.String);
+        printf(" path: %s\n", prop.val._u.String);
         printf("GUID: ");
         for(int i=0; i<16; ++i)
           printf("%X ", prop.guid[i]);
