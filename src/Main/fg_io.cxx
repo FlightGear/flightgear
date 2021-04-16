@@ -55,7 +55,6 @@
 #include <Network/native_ctrls.hxx>
 #include <Network/native_fdm.hxx>
 #include <Network/native_gui.hxx>
-#include <Network/dds_props.hxx>
 #include <Network/opengc.hxx>
 #include <Network/nmea.hxx>
 #include <Network/props.hxx>
@@ -66,6 +65,7 @@
 
 #if FG_HAVE_DDS
 #include <simgear/io/SGDataDistributionService.hxx>
+#include <Network/dds_props.hxx>
 #endif
 #if FG_HAVE_HLA
 #include <Network/HLA/hla.hxx>
