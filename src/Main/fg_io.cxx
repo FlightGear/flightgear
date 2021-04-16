@@ -237,14 +237,15 @@ FGIO::parse_port_config( const string_list& tokens, bool& o_ok )
     }
 
     if (tokens.size() < 4) {
+#if FG_HAVE_DDS
         SG_LOG( SG_IO, SG_ALERT, "Too few arguments for network protocol. At least 3 arguments required. " <<
                 "Usage: --" << protocol <<
-#if FG_HAVE_DDS
-                "=(file|socket|serial|dds)" <<
+                "=(file|socket|serial|dds), (in|out|bi), hertz");
 #else
-                "=(file|socket|serial)" <<
+        SG_LOG( SG_IO, SG_ALERT, "Too few arguments for network protocol. At least 3 arguments required. " <<
+                "Usage: --" << protocol <<
+                "=(file|socket|serial), (in|out|bi), hertz");
 #endif
-                ", (in|out|bi), hertz");
         delete io;
         return NULL;
     }
