@@ -348,8 +348,10 @@ public:
     fgGetNode("/environment/clouds/status")->addChangeListener(this);
 
     auto vpb_active = fgGetNode("/scenery/use-vpb");
-    vpb_active->addChangeListener(this);
-    SGSceneFeatures::instance()->setVPBActive(vpb_active->getBoolValue());
+    if (vpb_active) {
+        vpb_active->addChangeListener(this);
+        SGSceneFeatures::instance()->setVPBActive(vpb_active->getBoolValue());
+    }
   }
 
   ~ScenerySwitchListener()

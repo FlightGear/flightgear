@@ -180,6 +180,10 @@ void FGGlobals::initProperties()
     viewLat = props->getNode("sim/current-view/viewer-lat-deg", true);
     viewAlt = props->getNode("sim/current-view/viewer-elev-ft", true);
 
+    referenceOffsetX = props->getNode("sim/model/reference-offset-x", true);
+    referenceOffsetY = props->getNode("sim/model/reference-offset-y", true);
+    referenceOffsetZ = props->getNode("sim/model/reference-offset-z", true);
+
     orientPitch = props->getNode("orientation/pitch-deg", true);
     orientHeading = props->getNode("orientation/heading-deg", true);
     orientRoll = props->getNode("orientation/roll-deg", true);
@@ -612,6 +616,21 @@ SGVec3d
 FGGlobals::get_view_position_cart() const
 {
   return SGVec3d::fromGeod(get_view_position());
+}
+SGVec3d FGGlobals::get_ownship_reference_position_cart() const
+{
+    SGVec3d  pos = get_aircraft_position_cart();
+
+    if (referenceOffsetX)
+        pos[0] += referenceOffsetX->getDoubleValue();
+
+    if (referenceOffsetY)
+        pos[1] += referenceOffsetY->getDoubleValue();
+
+    if (referenceOffsetZ)
+        pos[2] += referenceOffsetZ->getDoubleValue();
+
+    return pos;
 }
 
 static void treeDumpRefCounts(int depth, SGPropertyNode* nd)

@@ -73,74 +73,6 @@ static bool global_callbackRegistered = false;
 
 void finalizePosition();
 
-namespace { // annonymous namepsace to avoid warnings about inline classes
-
-// Set current tower position lon/lat given an airport id
-bool fgSetTowerPosFromAirportID( const string& id)
-{
-  const FGAirport *a = fgFindAirportID( id);
-  if (a) {
-    SGGeod tower = a->getTowerLocation();
-    fgSetDouble("/sim/tower/longitude-deg",  tower.getLongitudeDeg());
-    fgSetDouble("/sim/tower/latitude-deg",  tower.getLatitudeDeg());
-    fgSetDouble("/sim/tower/altitude-ft", tower.getElevationFt());
-    return true;
-  } else {
-    return false;
-  }
-}
-
-class FGTowerLocationListener : public SGPropertyChangeListener {
-
-  void valueChanged(SGPropertyNode* node) override
-  {
-    string id(node->getStringValue());
-    if (fgGetBool("/sim/tower/auto-position",true))
-    {
-      // enforce using closest airport when auto-positioning is enabled
-      const char* closest_airport = fgGetString("/sim/airport/closest-airport-id", "");
-      if (closest_airport && (id != closest_airport))
-      {
-        id = closest_airport;
-        node->setStringValue(id);
-      }
-    }
-    fgSetTowerPosFromAirportID(id);
-  }
-};
-
-class FGClosestTowerLocationListener : public SGPropertyChangeListener
-{
-  void valueChanged(SGPropertyNode* )
-  {
-    // closest airport has changed
-    if (fgGetBool("/sim/tower/auto-position",true))
-    {
-      // update tower position
-      const char* id = fgGetString("/sim/airport/closest-airport-id", "");
-      if (id && *id!=0)
-        fgSetString("/sim/tower/airport-id", id);
-    }
-  }
-};
-
-} // of anonymous namespace
-
-
-void initTowerLocationListener() {
-
-  SGPropertyChangeListener* tll = new FGTowerLocationListener();
-  globals->addListenerToCleanup(tll);
-  fgGetNode("/sim/tower/airport-id",  true)
-  ->addChangeListener( tll, true );
-
-  FGClosestTowerLocationListener* ntcl = new FGClosestTowerLocationListener();
-  globals->addListenerToCleanup(ntcl);
-  fgGetNode("/sim/airport/closest-airport-id", true)
-  ->addChangeListener(ntcl , true );
-  fgGetNode("/sim/tower/auto-position", true)
-  ->addChangeListener(ntcl, true );
-}
 
 static void setInitialPosition(const SGGeod& aPos, double aHeadingDeg)
 {
@@ -425,7 +357,28 @@ static InitPosResult setInitialPosFromCarrier( const string& carrier )
     // so our PagedLOD is loaded
     fgSetDouble("/sim/presets/longitude-deg",  initialPos.second.getLongitudeDeg());
     fgSetDouble("/sim/presets/latitude-deg",  initialPos.second.getLatitudeDeg());
-    SG_LOG( SG_GENERAL, SG_DEBUG, "Initial carrier pos = " << initialPos.second );
+
+    const std::string carrier = fgGetString("/sim/presets/carrier");
+    const std::string carrierpos = fgGetString("/sim/presets/carrier-position");
+    const std::string parkpos = fgGetString("/sim/presets/parkpos");
+
+    if (!carrier.empty())
+    {
+        std::string cpos = simgear::strutils::lowercase(carrierpos);
+
+        const bool    inair = (cpos == "flols") || (cpos == "abeam");
+
+        if (cpos == "flols" || cpos == "abeam")
+            fgSetInt("/sim/presets/carrier-course", 3);// base=1, launch=2, recovery=3
+        else if (parkpos.find("cat") != std::string::npos)
+            fgSetInt("/sim/presets/carrier-course", 2);// base=1, launch=2, recovery=3
+        else
+            fgSetInt("/sim/presets/carrier-course", 1); // base
+    }
+    else
+        fgSetInt("/sim/presets/carrier-course", 0); // not defined.
+
+    SG_LOG( SG_GENERAL, SG_DEBUG, "Initial carrier pos = " << initialPos.second << " course " << fgGetInt("/sim/presets/carrier-course"));
     return VicinityPosition;
   }
 
@@ -433,7 +386,7 @@ static InitPosResult setInitialPosFromCarrier( const string& carrier )
   return Failure;
 }
 
-static InitPosResult checkCarrierSceneryLoaded(const SGSharedPtr<FGAICarrier> carrierRef)
+static InitPosResult checkCarrierSceneryLoaded(FGAICarrier* carrierRef)
 {
     SGVec3d cartPos = carrierRef->getCartPos();
     auto framestamp = globals->get_renderer()->getFrameStamp();

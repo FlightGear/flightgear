@@ -111,11 +111,11 @@ extern "C" {
     extern void awaitNasalGarbageCollectionComplete(bool can_wait);
 }
 #endif
-static  simgear::Notifications::MainLoopNotification mln_begin(simgear::Notifications::MainLoopNotification::Type::Begin);
-static  simgear::Notifications::MainLoopNotification mln_end(simgear::Notifications::MainLoopNotification::Type::End);
-static  simgear::Notifications::MainLoopNotification mln_started(simgear::Notifications::MainLoopNotification::Type::Started);
-static  simgear::Notifications::MainLoopNotification mln_stopped(simgear::Notifications::MainLoopNotification::Type::Stopped);
-static  simgear::Notifications::NasalGarbageCollectionConfigurationNotification *ngccn = nullptr;
+static  SGSharedPtr<simgear::Notifications::MainLoopNotification> mln_begin(new simgear::Notifications::MainLoopNotification(simgear::Notifications::MainLoopNotification::Type::Begin));
+static  SGSharedPtr<simgear::Notifications::MainLoopNotification> mln_end(new simgear::Notifications::MainLoopNotification(simgear::Notifications::MainLoopNotification::Type::End));
+static  SGSharedPtr<simgear::Notifications::MainLoopNotification> mln_started(new simgear::Notifications::MainLoopNotification(simgear::Notifications::MainLoopNotification::Type::Started));
+static  SGSharedPtr<simgear::Notifications::MainLoopNotification> mln_stopped(new simgear::Notifications::MainLoopNotification(simgear::Notifications::MainLoopNotification::Type::Stopped));
+static  SGSharedPtr<simgear::Notifications::NasalGarbageCollectionConfigurationNotification> ngccn;
 // This method is usually called after OSG has finished rendering a frame in what OSG calls an idle handler and
 // is reposonsible for invoking all of the relevant per frame processing; most of which is handled by subsystems.
 static void fgMainLoop( void )
@@ -143,7 +143,7 @@ static void fgMainLoop( void )
     notify_gc_config = ngccn->SetActive(use_threaded_gc);
     notify_gc_config |= ngccn->SetWait(threaded_wait);
     if (notify_gc_config)
-         simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(*ngccn);
+         simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(ngccn);
 
      simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_begin);
 
@@ -356,7 +356,6 @@ static void fgIdleFunction ( void ) {
     } else if (( idle_state == 5 ) || (idle_state == 2005)) {
         idle_state+=2;
         flightgear::initPosition();
-        flightgear::initTowerLocationListener();
 
         simgear::SGModelLib::init(globals->get_fg_root().utf8Str(), globals->get_props());
 
@@ -428,7 +427,7 @@ static void fgIdleFunction ( void ) {
         flightgear::registerMainLoop();
 
         ngccn = new simgear::Notifications::NasalGarbageCollectionConfigurationNotification(nasal_gc_threaded->getBoolValue(), nasal_gc_threaded_wait->getBoolValue());
-         simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(*ngccn);
+         simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(ngccn);
          simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_started);
         
         flightgear::addSentryBreadcrumb("entering main loop", "info");
@@ -537,7 +536,7 @@ static void logToHome(const std::string& pri)
     if (!pri.empty()) {
         try {
             fileLogLevel = std::min(fileLogLevel, logstream::priorityFromString(pri));
-        } catch (std::exception& e) {
+        } catch (std::exception& ) {
             // let's not worry about this, and just log at INFO
         }
     }

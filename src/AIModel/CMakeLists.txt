@@ -36,6 +36,7 @@ set(HEADERS
 	AIGroundVehicle.hxx
 	AIManager.hxx
 	AIMultiplayer.hxx
+	AINotifications.hxx
 	AIShip.hxx
 	AIStatic.hxx
 	AIStorm.hxx

@@ -147,6 +147,8 @@ private:
     SGPropertyNode_ptr viewLon, viewLat, viewAlt;
     SGPropertyNode_ptr orientHeading, orientPitch, orientRoll;
 
+    SGPropertyNode_ptr referenceOffsetX, referenceOffsetY, referenceOffsetZ;
+
     /**
      * helper to initialise standard properties on a new property tree
      */
@@ -349,6 +351,8 @@ public:
     SGGeod get_view_position() const;
 
     SGVec3d get_view_position_cart() const;
+
+    SGVec3d get_ownship_reference_position_cart() const;
 
     inline string_list *get_channel_options_list () {
 	return channel_options_list;

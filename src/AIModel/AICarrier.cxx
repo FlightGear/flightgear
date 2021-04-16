@@ -30,16 +30,59 @@
 #include <Main/util.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
+#include <Main/util.hxx>
+
 
 #include "AICarrier.hxx"
+#include "AINotifications.hxx"
 
-FGAICarrier::FGAICarrier() :
-    FGAIShip(otCarrier),
-    deck_altitude(65.0065)
+FGAICarrier::FGAICarrier() : FGAIShip(otCarrier),
+                             deck_altitude_ft(65.0065),
+    AIControl(false),
+    MPControl(false),
+    angle(0),
+    base_course(0), 
+    base_speed(0),
+    dist(0),
+    elevators(false),
+    in_to_wind(false),
+    jbd(false),
+    jbd_pos_norm(0),
+    jbd_time_constant(0),
+    jbd_transition_time(0),
+    lineup(0),
+    max_lat(0),
+    max_long(0),
+    min_lat(0),
+    min_long(0),
+    pos_norm(0),
+    raw_jbd_pos_norm(0),
+    raw_pos_norm(0),
+    rel_wind(0),
+    rel_wind_from_deg(0),
+    rel_wind_speed_kts(0),
+    returning(false),
+    source(0),
+    time_constant(0),
+     transition_time(0),
+    turn_to_base_course(true),
+    turn_to_recovery_hdg(true),
+    turn_to_launch_hdg(true),
+    view_index(0),
+    wave_off_lights_demand(false),
+    wind_from_deg(0),
+    wind_from_east(0),
+    wind_from_north(0),
+    wind_speed_kts(0)
 {
+    simgear::Emesary::GlobalTransmitter::instance()->Register(this);
 }
 
-FGAICarrier::~FGAICarrier() = default;
+FGAICarrier::~FGAICarrier()
+{
+   simgear::Emesary::GlobalTransmitter::instance()->DeRegister(this);
+}
 
 void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
   if (!scFileNode)
@@ -49,7 +92,7 @@ void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
 
   setRadius(scFileNode->getDoubleValue("turn-radius-ft", 2000));
   setSign(scFileNode->getStringValue("pennant-number"));
-  setDeckAltitude(scFileNode->getDoubleValue("deck-altitude"));
+  setDeckAltitudeFt(scFileNode->getDoubleValue("deck-altitude"));
   setWind_from_east(scFileNode->getDoubleValue("wind_from_east", 0));
   setWind_from_north(scFileNode->getDoubleValue("wind_from_north", 0));
   setTACANChannelID(scFileNode->getStringValue("TACAN-channel-ID", "029Y"));
@@ -60,21 +103,35 @@ void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
   setMPControl(scFileNode->getBoolValue("mp-control", false));
   setAIControl(scFileNode->getBoolValue("ai-control", false));
   setCallSign(scFileNode->getStringValue("callsign", ""));
+  
+  angled_deck_degrees = scFileNode->getDoubleValue("angled-deck-degrees", -8.5);
 
+    SGPropertyNode* flolsNode = getPositionFromNode(scFileNode, "flols-pos", _flolsPosOffset);
+    if (flolsNode) {
+        _flolsHeadingOffsetDeg = flolsNode->getDoubleValue("heading-offset-deg", 0.0);
+        _flolsApproachAngle = flolsNode->getDoubleValue("glidepath-angle-deg", 3.5);
+    }
+    else {
+        _flolsPosOffset(2) = -(deck_altitude_ft * SG_FEET_TO_METER + 10);
+    }
+    
+    //// the FLOLS (or IFLOLS) position doesn't produce an accurate angle;
+    //// so to fix this we can definition the touchdown position which 
+    //// is the centreline of the 3rd wire
 
-  SGPropertyNode* flols = scFileNode->getChild("flols-pos");
-  if (flols) {
-    // Transform to the right coordinate frame, configuration is done in
-    // the usual x-back, y-right, z-up coordinates, computations
-    // in the simulation usual body x-forward, y-right, z-down coordinates
-    _flolsPosOffset(0) = - flols->getDoubleValue("x-offset-m", 0);
-    _flolsPosOffset(1) = flols->getDoubleValue("y-offset-m", 0);
-    _flolsPosOffset(2) = - flols->getDoubleValue("z-offset-m", 0);
+    _flolsTouchdownPosition = _flolsPosOffset; // default to the flolsPosition
+    getPositionFromNode(scFileNode, "flols-touchdown-position", _flolsTouchdownPosition);
 
-    _flolsHeadingOffsetDeg = flols->getDoubleValue("heading-offset-deg", 0.0);
-    _flolsApproachAngle = flols->getDoubleValue("glidepath-angle-deg", 3.5);
-  } else
-    _flolsPosOffset = SGVec3d::zeros();
+    if (!getPositionFromNode(scFileNode, "tower-position", _towerPosition)) {
+        _towerPosition(2) = -(deck_altitude_ft * SG_FEET_TO_METER + 10);
+        SG_LOG(SG_AI, SG_INFO, "AICarrier: tower-position not defined - using default");
+    }
+
+    if (!getPositionFromNode(scFileNode, "lso-position", _lsoPosition)){
+        _lsoPosition(2) = -(deck_altitude_ft * SG_FEET_TO_METER + 10);
+        SG_LOG(SG_AI, SG_INFO, "AICarrier: lso-position not defined - using default");
+    }
+
 
   std::vector<SGPropertyNode_ptr> props = scFileNode->getChildren("parking-pos");
   std::vector<SGPropertyNode_ptr>::const_iterator it;
@@ -117,8 +174,8 @@ void FGAICarrier::setMinLong(double deg) {
 }
 
 
-void FGAICarrier::setDeckAltitude(const double altitude_feet) {
-    deck_altitude = altitude_feet;
+void FGAICarrier::setDeckAltitudeFt(const double altitude_feet) {
+    deck_altitude_ft = altitude_feet;
 }
 
 void FGAICarrier::setSign(const string& s) {
@@ -171,12 +228,12 @@ void FGAICarrier::update(double dt) {
     SGQuatd hl2body = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
     // and postrotate the orientation of the AIModel wrt the horizontal
     // local frame
-    SGQuatd ec2body = ec2hl*hl2body;
+    SGQuatd ec2body = ec2hl * hl2body;
     // The cartesian position of the carrier in the wgs84 world
     SGVec3d cartPos = SGVec3d::fromGeod(pos);
 
     // The position of the eyepoint - at least near that ...
-    SGVec3d eyePos(globals->get_view_position_cart());
+    SGVec3d eyePos(globals->get_ownship_reference_position_cart());
     // Add the position offset of the AIModel to gain the earth
     // centered position
     SGVec3d eyeWrtCarrier = eyePos - cartPos;
@@ -185,16 +242,71 @@ void FGAICarrier::update(double dt) {
     // the eyepoints vector wrt the flols position
     SGVec3d eyeWrtFlols = eyeWrtCarrier - _flolsPosOffset;
 
+    SGVec3d flols_location = getCartPosAt(_flolsPosOffset);
+
     // the distance from the eyepoint to the flols
     dist = norm(eyeWrtFlols);
 
+    // lineup (left/right) - stern lights and Carrier landing system (Aircraft/Generic/an_spn_46.nas)
+    double lineup_hdg, lineup_az2, lineup_s;
+
+    SGGeod g_eyePos = SGGeod::fromCart(eyePos);
+    SGGeod g_carrier = SGGeod::fromCart(cartPos);
+
+    //
+    // set the view as requested by control/view-index.
+    SGGeod viewPosition;
+    switch (view_index) {
+    default:
+    case 0:
+        viewPosition = SGGeod::fromCart(getCartPosAt(_towerPosition));
+        break;
+
+    case 1:
+        viewPosition = SGGeod::fromCart(getCartPosAt(_flolsTouchdownPosition));
+        break;
+
+    case 2:
+        viewPosition = SGGeod::fromCart(getCartPosAt(_lsoPosition));
+        break;
+    }
+    _view_position_lat_deg_node->setDoubleValue(viewPosition.getLatitudeDeg());
+    _view_position_lon_deg_node->setDoubleValue(viewPosition.getLongitudeDeg());
+    _view_position_alt_ft_node->setDoubleValue(viewPosition.getElevationFt());
+
+    SGGeodesy::inverse(g_carrier, g_eyePos, lineup_hdg, lineup_az2, lineup_s);
+
+    double target_lineup = _getHeading() + angled_deck_degrees + 180.0;
+    SG_NORMALIZE_RANGE(target_lineup, 0.0, 360.0);
+
+    lineup = lineup_hdg - target_lineup;
     // now the angle, positive angles are upwards
     if (fabs(dist) < SGLimits<double>::min()) {
-      angle = 0;
+        angle = 0;
     } else {
-      double sAngle = -eyeWrtFlols(2)/dist;
-      sAngle = SGMiscd::min(1, SGMiscd::max(-1, sAngle));
-      angle = SGMiscd::rad2deg(asin(sAngle));
+        double sAngle = -eyeWrtFlols(2) / dist;
+        sAngle        = SGMiscd::min(1, SGMiscd::max(-1, sAngle));
+        angle         = SGMiscd::rad2deg(asin(sAngle));
+    }
+    if (dist < 8000){
+        SGVec3d eyeWrtFlols_tdp = eyeWrtCarrier - _flolsTouchdownPosition;
+
+        // the distance from the eyepoint to the flols
+        double dist_tdp = norm(eyeWrtFlols_tdp);
+        double angle_tdp = 0;
+
+        // now the angle, positive angles are upwards
+        if (fabs(dist_tdp) < SGLimits<double>::min()) {
+            angle_tdp = 0;
+        }
+        else {
+            double sAngle = -eyeWrtFlols_tdp(2) / dist_tdp;
+            sAngle = SGMiscd::min(1, SGMiscd::max(-1, sAngle));
+            angle_tdp = SGMiscd::rad2deg(asin(sAngle));
+        }
+
+//        printf("angle %5.2f td angle %5.2f \n", angle, angle_tdp);
+        //angle += 1.481; // adjust for FLOLS offset (measured on Nimitz class)
     }
 
     // set the value of source
@@ -212,6 +324,28 @@ void FGAICarrier::update(double dt) {
       source = 6;
     else
       source = 0;
+      
+    // only bother with waveoff FLOLS when ownship within a reasonable range.
+    // red ball is <= 3.075 to 2.65, below this is off. above this is orange.
+    // only do this when within ~1.8nm
+    if (dist < 3200) {
+        if (dist > 100) {
+            bool new_wave_off_lights_demand = (angle <= 3.0);
+
+            if (new_wave_off_lights_demand != wave_off_lights_demand) {
+                // start timing when the lights come up.
+                wave_off_lights_demand = new_wave_off_lights_demand;
+            }
+
+            //// below 1degrees close in is to low to continue; wave them off.
+            if (angle < 2 && dist < 800) {
+                wave_off_lights_demand = true;
+            }
+        }
+    }
+    else {
+        wave_off_lights_demand = true; // sensible default when very far away.
+    }
 } //end update
 
 bool FGAICarrier::init(ModelSearchOrder searchOrder) {
@@ -230,9 +364,24 @@ bool FGAICarrier::init(ModelSearchOrder searchOrder) {
             fgGetNode("/environment/config/boundary/entry[0]/wind-speed-kt", true);
 
 
-    turn_to_launch_hdg = false;
-    turn_to_recovery_hdg = false;
-    turn_to_base_course = true;
+    int dmd_course = fgGetInt("/sim/presets/carrier-course");
+    if (dmd_course == 2) {
+        // launch
+        turn_to_launch_hdg   = true;
+        turn_to_recovery_hdg = false;
+        turn_to_base_course  = false;
+    } else if (dmd_course == 3) {
+        //  recovery
+        turn_to_launch_hdg   = false;
+        turn_to_recovery_hdg = true;
+        turn_to_base_course  = false;
+    } else {
+        // default to base
+        turn_to_launch_hdg   = false;
+        turn_to_recovery_hdg = false;
+        turn_to_base_course  = true;
+    }
+
     returning = false;
     in_to_wind = false;
 
@@ -251,12 +400,12 @@ bool FGAICarrier::init(ModelSearchOrder searchOrder) {
     return true;
 }
 
-void FGAICarrier::bind() {
+void FGAICarrier::bind(){
     FGAIShip::bind();
 
     props->untie("velocities/true-airspeed-kt");
 
-    props->getNode("position/deck-altitude-feet", true)->setDoubleValue(deck_altitude);
+    props->getNode("position/deck-altitude-feet", true)->setDoubleValue(deck_altitude_ft);
 
     tie("controls/flols/source-lights",
         SGRawValuePointer<int>(&source));
@@ -264,6 +413,8 @@ void FGAICarrier::bind() {
         SGRawValuePointer<double>(&dist));
     tie("controls/flols/angle-degs",
         SGRawValuePointer<double>(&angle));
+    tie("controls/flols/lineup-degs",
+        SGRawValuePointer<double>(&lineup));
     tie("controls/turn-to-launch-hdg",
         SGRawValuePointer<bool>(&turn_to_launch_hdg));
     tie("controls/in-to-wind",
@@ -292,8 +443,8 @@ void FGAICarrier::bind() {
         SGRawValuePointer<double>(&rel_wind_speed_kts));
     tie("environment/in-to-wind",
         SGRawValuePointer<bool>(&in_to_wind));
-    //tie("controls/flols/wave-off-lights",
-    //    SGRawValuePointer<bool>(&wave_off_lights));
+    tie("controls/flols/wave-off-lights-demand",
+        SGRawValuePointer<bool>(&wave_off_lights_demand));
     tie("controls/elevators",
         SGRawValuePointer<bool>(&elevators));
     tie("surface-positions/elevators-pos-norm",
@@ -315,14 +466,25 @@ void FGAICarrier::bind() {
     tie("controls/turn-to-base-course",
         SGRawValuePointer<bool>(&turn_to_base_course));
 
+    tie("controls/view-index", SGRawValuePointer<int>(&view_index));
+
     props->setBoolValue("controls/flols/cut-lights", false);
     props->setBoolValue("controls/flols/wave-off-lights", false);
+    props->setBoolValue("controls/flols/wave-off-lights-emergency", false);
     props->setBoolValue("controls/flols/cond-datum-lights", true);
     props->setBoolValue("controls/crew", false);
     props->setStringValue("navaids/tacan/channel-ID", TACAN_channel_id.c_str());
     props->setStringValue("sign", sign.c_str());
     props->setBoolValue("controls/lighting/deck-lights", false);
     props->setDoubleValue("controls/lighting/flood-lights-red-norm", 0);
+
+    _flols_x_node = props->getNode("position/flols-x", true);
+    _flols_y_node = props->getNode("position/flols-y", true);
+    _flols_z_node = props->getNode("position/flols-z", true);
+
+    _view_position_lat_deg_node = props->getNode("position/view-position-lat", true);
+    _view_position_lon_deg_node = props->getNode("position/view-position-lon", true);
+    _view_position_alt_ft_node = props->getNode("position/view-position-alt", true);
 
     // Write out a list of the parking positions - useful for the UI to select
     // from
@@ -708,4 +870,24 @@ void FGAICarrier::extractCarriersFromScenario(SGPropertyNode_ptr xmlNode, SGProp
             carrierNode->addChild("parking-pos")->setStringValue(p->getStringValue("name"));
         }
     }
+}
+
+simgear::Emesary::ReceiptStatus FGAICarrier::Receive(simgear::Emesary::INotificationPtr n)
+{
+    auto nctn = dynamic_pointer_cast<NearestCarrierToNotification>(n);
+
+    if (nctn) {
+        if (!nctn->GetCarrier() || nctn->GetDistanceMeters() > nctn->GetDistanceToMeters(pos)) {
+            nctn->SetCarrier(this, &pos);
+            nctn->SetViewPositionLatNode(_view_position_lat_deg_node);
+            nctn->SetViewPositionLonNode(_view_position_lon_deg_node);
+            nctn->SetViewPositionAltNode(_view_position_alt_ft_node);
+            nctn->SetDeckheight(deck_altitude_ft);
+            nctn->SetHeading(hdg);
+            nctn->SetVckts(speed);
+            nctn->SetCarrierIdent(this->_getName());
+        }
+        return simgear::Emesary::ReceiptStatus::OK;
+    }
+    return simgear::Emesary::ReceiptStatus::NotProcessed;
 }

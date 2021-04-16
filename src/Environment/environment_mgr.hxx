@@ -25,6 +25,7 @@
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
+#include <simgear/math/SGMath.hxx>
 
 #include <cmath>
 
@@ -75,6 +76,7 @@ public:
 private:
     friend FGEnvironmentMgrMultiplayerListener;
     void updateClosestAirport();
+    void updateTowerPosition();
 
     double get_cloud_layer_span_m (int index) const;
     void set_cloud_layer_span_m (int index, double span_m);
@@ -98,9 +100,16 @@ private:
     FGClouds *fgClouds = nullptr;
     bool _cloudLayersDirty = true;
     simgear::TiedPropertyList _tiedProperties;
-    SGPropertyChangeListener * _3dCloudsEnableListener = nullptr;
-    FGEnvironmentMgrMultiplayerListener * _multiplayerListener = nullptr;
-    SGSky* _sky = nullptr;
+    SGPropertyChangeListener * _3dCloudsEnableListener;
+    FGEnvironmentMgrMultiplayerListener * _multiplayerListener;
+    SGSky* _sky;
+
+    SGPropertyNode_ptr towerViewPositionLatDegNode;
+    SGPropertyNode_ptr towerViewPositionLonDegNode;
+    SGPropertyNode_ptr towerViewPositionAltFtNode;
+
+    const class FGAICarrier* nearestCarrier;
+    const class FGAirport* nearestAirport;
 };
 
 #endif // _ENVIRONMENT_MGR_HXX

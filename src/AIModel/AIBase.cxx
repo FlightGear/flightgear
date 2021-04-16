@@ -897,6 +897,22 @@ bool FGAIBase::getGroundElevationM(const SGGeod& pos, double& elev,
                                                    _model.get());
 }
 
+SGPropertyNode* FGAIBase::getPositionFromNode(SGPropertyNode* scFileNode, const std::string &key, SGVec3d &position) {
+    SGPropertyNode* positionNode = scFileNode->getChild(key);
+    if (positionNode) {
+        // Transform to the right coordinate frame, configuration is done in
+        // the usual x-back, y-right, z-up coordinates, computations
+        // in the simulation usual body x-forward, y-right, z-down coordinates
+        position(0) = -positionNode->getDoubleValue("x-offset-m", 0);
+        position(1) = positionNode->getDoubleValue("y-offset-m", 0);
+        position(2) = -positionNode->getDoubleValue("z-offset-m", 0);
+        return positionNode;
+    }
+    else
+        position = SGVec3d::zeros();
+    return nullptr;
+}
+
 double FGAIBase::_getCartPosX() const {
     SGVec3d cartPos = getCartPos();
     return cartPos.x();

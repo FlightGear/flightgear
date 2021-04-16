@@ -51,6 +51,8 @@
 #include "climate.hxx"
 #include "magvarmanager.hxx"
 
+#include "AIModel/AINotifications.hxx"
+
 class FG3DCloudsListener : public SGPropertyChangeListener {
 public:
   FG3DCloudsListener( FGClouds * fgClouds );
@@ -275,73 +277,138 @@ FGEnvironmentMgr::update (double dt)
     _cloudLayersDirty = false;
     fgClouds->set_update_event( fgClouds->get_update_event()+1 );
   }
-
+  updateTowerPosition();
+  
   fgSetDouble( "/environment/gravitational-acceleration-mps2",
     Environment::Gravity::instance()->getGravity(aircraftPos));
 }
 
-void
-FGEnvironmentMgr::updateClosestAirport()
+void FGEnvironmentMgr::updateTowerPosition()
 {
-  SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "FGEnvironmentMgr::update: updating closest airport");
+    if (towerViewPositionLatDegNode != nullptr && towerViewPositionLonDegNode != nullptr && towerViewPositionAltFtNode != nullptr) {
+        auto automaticTowerActive = fgGetBool("/sim/tower/auto-position", true);
 
-  SGGeod pos = globals->get_aircraft_position();
-  FGAirport * nearestAirport = FGAirport::findClosest(pos, 100.0);
-  if( nearestAirport == NULL )
-  {
-    SG_LOG(SG_ENVIRONMENT,SG_INFO,"FGEnvironmentMgr::update: No airport within 100NM range");
-  }
-  else
-  {
-    const string currentId = fgGetString("/sim/airport/closest-airport-id", "");
-    if (currentId != nearestAirport->ident())
-    {
-      SG_LOG(SG_ENVIRONMENT, SG_INFO, "FGEnvironmentMgr::updateClosestAirport: selected:" << nearestAirport->ident());
-      fgSetString("/sim/airport/closest-airport-id",
-                  nearestAirport->ident().c_str());
-    }
-  }
-  
-  {
-    /* If we are viewing a multiplayer aircraft, find nearest airport so that
-    Tower View etc works. */
-    std::string   view_config_root = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)");
-    
-    if (view_config_root != "/" && view_config_root != "") {
-      /* We are currently viewing a multiplayer aircraft. */
-      
-      SGGeod  pos = SGGeod::fromDegFt(
-          ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/longitude-deg)"),
-          ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/latitude-deg)"),
-          ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/altitude-ft)")
-          );
-      FGAirport * nearestAirport = FGAirport::findClosest(pos, 100.0);
-      
-      if (nearestAirport) {
-        std::string   path = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)/sim/tower/");
-        fgSetString(path + "airport-id", nearestAirport->getId());
-        
-        if (nearestAirport->hasTower()) {
-          SGGeod  tower_pos = nearestAirport->getTowerLocation();
-          fgSetDouble(path + "latitude-deg", tower_pos.getLatitudeDeg());
-          fgSetDouble(path + "longitude-deg", tower_pos.getLongitudeDeg());
-          fgSetDouble(path + "altitude-ft", tower_pos.getElevationFt());
-          SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "airport-id=" << nearestAirport->getId() << " tower_pos=" << tower_pos);
+        fgSetDouble("/sim/airport/nearest-tower-latitude-deg",  towerViewPositionLatDegNode->getDoubleValue());
+        fgSetDouble("/sim/airport/nearest-tower-longitude-deg", towerViewPositionLonDegNode->getDoubleValue());
+        fgSetDouble("/sim/airport/nearest-tower-altitude-ft",   towerViewPositionAltFtNode->getDoubleValue());
+
+        if (automaticTowerActive) {
+            fgSetDouble("/sim/tower/latitude-deg", towerViewPositionLatDegNode->getDoubleValue());
+            fgSetDouble("/sim/tower/longitude-deg", towerViewPositionLonDegNode->getDoubleValue());
+            fgSetDouble("/sim/tower/altitude-ft", towerViewPositionAltFtNode->getDoubleValue());
         }
-        else {
-          /* Use location of airport. */
-          fgSetDouble(path + "latitude-deg", nearestAirport->getLatitude());
-          fgSetDouble(path + "longitude-deg", nearestAirport->getLongitude());
-          fgSetDouble(path + "altitude-ft", nearestAirport->getElevation() + 20);
-          SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "no tower for airport-id=" << nearestAirport->getId());
-        }
-      }
-      else {
-        SG_LOG(SG_ENVIRONMENT,SG_DEBUG,"FGEnvironmentMgr::update: No airport within 100NM range of current multiplayer aircraft");
-      }
     }
-  }
 }
+
+void FGEnvironmentMgr::updateClosestAirport()
+{
+    SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "FGEnvironmentMgr::update: updating closest airport");
+
+    SGGeod pos = globals->get_aircraft_position();
+
+    //
+    // If we are viewing a multiplayer aircraft, find nearest airport so that
+    // Tower View etc works.
+    std::string view_config_root = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)");
+
+    if (view_config_root != "/" && view_config_root != "") {
+        /* We are currently viewing a multiplayer aircraft. */
+        pos = SGGeod::fromDegFt(
+            ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/longitude-deg)"),
+            ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/latitude-deg)"),
+            ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/altitude-ft)"));
+    }
+
+    // nearest tower logic;
+    // 1. find nearest airport
+    // 2. find nearest carrier
+    // - select the nearest one as the tower.
+
+    nearestAirport = FGAirport::findClosest(pos, 100.0);
+    auto automaticTowerActive = fgGetBool("/sim/tower/auto-position", true);
+
+    SGGeod nearestTowerPosition;
+    bool nearestTowerPositionValid = false;
+    std::string nearestIdent;
+    const SGGeod airportGeod;
+    double towerDistance = numeric_limits<double>::max();
+    if (nearestAirport) {
+        const string currentId = fgGetString("/sim/airport/closest-airport-id", "");
+        if (currentId != nearestAirport->ident()) {
+            SG_LOG(SG_ENVIRONMENT, SG_INFO, "FGEnvironmentMgr::updateClosestAirport: selected:" << nearestAirport->ident());
+            fgSetString("/sim/airport/closest-airport-id", nearestAirport->ident().c_str());
+        }
+
+        if (nearestAirport->hasTower())
+            nearestTowerPosition = nearestAirport->getTowerLocation();
+        else
+            nearestTowerPosition = nearestAirport->geod();
+
+        nearestIdent = nearestAirport->ident();
+        nearestTowerPositionValid = true;
+
+        towerDistance = SGGeodesy::distanceM(nearestTowerPosition, pos);
+        
+        // when the tower doesn't move we can clear these. 
+        // if the carrier is nearer these variables will be set in that logic.
+        towerViewPositionLatDegNode = towerViewPositionLonDegNode = towerViewPositionAltFtNode = nullptr;
+    }
+    else {
+        SG_LOG(SG_ENVIRONMENT, SG_WARN, "FGEnvironmentMgr::update: No airport within 100NM range");
+    }
+    auto nctn = SGSharedPtr< NearestCarrierToNotification> (new NearestCarrierToNotification(pos));
+    if (simgear::Emesary::ReceiptStatus::OK == simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(nctn)) {
+        SG_LOG(SG_ENVIRONMENT, SG_INFO, "Nearest carrier " << nctn->GetCarrierIdent() << " at a distance of " << nctn->GetDistanceMeters());
+        if (nearestCarrier != nctn->GetCarrier()) {
+            nearestCarrier = nctn->GetCarrier();
+            fgSetString("/sim/airport/nearest-carrier", nctn->GetCarrierIdent());
+        }
+    } else {
+        SG_LOG(SG_ENVIRONMENT, SG_INFO, "No carriers found");
+        fgSetString("/sim/airport/nearest-carrier", "");
+        fgSetDouble("/sim/airport/nearest-carrier-latitude-deg", 0);
+        fgSetDouble("/sim/airport/nearest-carrier-longitude-deg", 0);
+        fgSetDouble("/sim/airport/nearest-carrier-altitude-ft", 0);
+        fgSetDouble("/sim/airport/nearest-carrier-deck-height", 0);
+        nearestCarrier = nullptr;
+    }
+
+    if (nearestCarrier != nullptr) {
+        SGGeod carrierGeod(*nctn->GetPosition());
+
+        // figure out if the carrier's tower is closer
+        if (!nearestTowerPositionValid || nctn->GetDistanceMeters() < towerDistance) {
+            nearestTowerPosition = carrierGeod;
+            nearestIdent = nctn->GetCarrierIdent();
+            nearestTowerPositionValid = true;
+
+            //
+            // these will be used to determine and update the tower position
+            towerViewPositionLatDegNode = nctn->GetViewPositionLatNode();
+            towerViewPositionLonDegNode = nctn->GetViewPositionLonNode();
+            towerViewPositionAltFtNode = nctn->GetViewPositionAltNode();
+        }
+        // although the carrier is moving - these values can afford to be 10 seconds old so we don't need to
+        // update them.
+        fgSetDouble("/sim/airport/nearest-carrier-latitude-deg", nctn->GetPosition()->getLatitudeDeg());
+        fgSetDouble("/sim/airport/nearest-carrier-longitude-deg", nctn->GetPosition()->getLongitudeDeg());
+        fgSetDouble("/sim/airport/nearest-carrier-altitude-ft", nctn->GetPosition()->getElevationFt());
+        fgSetDouble("/sim/airport/nearest-carrier-deck-height", nctn->GetDeckheight());
+    }
+
+    if (fgGetString("/sim/airport/nearest-tower-ident") != nearestIdent) {
+        SG_LOG(SG_ENVIRONMENT, SG_ALERT, "Nearest airport tower now " << nearestIdent);
+        fgSetString("/sim/airport/nearest-tower-ident", nearestIdent);
+    }
+    if (automaticTowerActive) {
+        if (fgGetString("/sim/tower/airport-id") != nearestIdent) {
+            fgSetString("/sim/tower/airport-id", nearestIdent);
+            SG_LOG(SG_ENVIRONMENT, SG_INFO, "Auto Tower: now " << nearestIdent);
+        }
+    }
+    updateTowerPosition();
+}
+
 
 FGEnvironment
 FGEnvironmentMgr::getEnvironment () const

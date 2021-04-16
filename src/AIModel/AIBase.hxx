@@ -136,6 +136,7 @@ public:
     bool getGroundElevationM(const SGGeod& pos, double& elev,
                              const simgear::BVHMaterial** material) const;
 
+    SGPropertyNode* getPositionFromNode(SGPropertyNode* scFileNode, const std::string& key, SGVec3d& position);
 
     double getTrueHeadingDeg() const
     {
