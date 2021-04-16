@@ -56,22 +56,22 @@ typedef struct FG_propValue
 ((FG_propValue*) dds_alloc (sizeof (FG_propValue)));
 
 
-typedef struct FG_DDS_PROP
+typedef struct FG_DDS_prop
 {
   int32_t id;
   uint8_t version;
   bool mode;
   FG_propValue val;
   uint8_t guid[16];
-} FG_DDS_PROP;
+} FG_DDS_prop;
 
-extern const dds_topic_descriptor_t FG_DDS_PROP_desc;
+extern const dds_topic_descriptor_t FG_DDS_prop_desc;
 
-#define FG_DDS_PROP__alloc() \
-((FG_DDS_PROP*) dds_alloc (sizeof (FG_DDS_PROP)));
+#define FG_DDS_prop__alloc() \
+((FG_DDS_prop*) dds_alloc (sizeof (FG_DDS_prop)));
 
-#define FG_DDS_PROP_free(d,o) \
-dds_sample_free ((d), &FG_DDS_PROP_desc, (o))
+#define FG_DDS_prop_free(d,o) \
+dds_sample_free ((d), &FG_DDS_prop_desc, (o))
 
 #ifdef __cplusplus
 }

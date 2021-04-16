@@ -77,8 +77,8 @@ int main()
   topics["ctrls"] = new SG_DDS_Topic(ctrls, &FG_DDS_Ctrls_desc);
   participant.add(topics["ctrls"], SG_IO_IN);
 
-  FG_DDS_PROP prop;
-  topics["prop"] = new SG_DDS_Topic(prop, &FG_DDS_PROP_desc);
+  FG_DDS_prop prop;
+  topics["prop"] = new SG_DDS_Topic(prop, &FG_DDS_prop_desc);
   participant.add(topics["prop"], SG_IO_IN);
 
   set_mode(1);
@@ -118,6 +118,7 @@ int main()
       printf("Prop Message:\n");
       printf(" version: %i\n", prop.version);
       printf(" mode: %s\n", prop.mode ? "write" : "read");
+      printf("   id: %i\n", prop.id);
       if (prop.id == FG_DDS_PROP_REQUEST) {
         printf(" path: %s\n", prop.val._u.String);
         printf("GUID: ");

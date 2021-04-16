@@ -53,7 +53,7 @@ union propValue switch ( propType )
 // 2. Set version to FG_DDS_PROP_VERSION
 // 3. Set mode to FG_DDS_MODE_READ
 // 4. set guid to the 16-byte participants GUID
-// 5. Set val type to STRING
+// 5. Set val type to FG_DDS_STRING
 // 6. Set val String to the propery path
 // 7. Send the package.
 //
@@ -73,7 +73,7 @@ union propValue switch ( propType )
 // 5. Wait for an answer
 //    * Check whether id matches the requested property id.
 //    * The val union holds the value of the propery.
-struct DDS_PROP
+struct DDS_prop
 {
     long id;		// 32-bit property index and DDS id.
     octet version;	// 8-bit sample-type version number.
@@ -85,6 +85,6 @@ struct DDS_PROP
     // already is 10-bytes in size.
     octet guid[16];
 };
-#pragma keylist DDS_PROP id
+#pragma keylist DDS_prop id
 
 }; // module FG

@@ -55,6 +55,7 @@
 #include <Network/native_ctrls.hxx>
 #include <Network/native_fdm.hxx>
 #include <Network/native_gui.hxx>
+#include <Network/dds_props.hxx>
 #include <Network/opengc.hxx>
 #include <Network/nmea.hxx>
 #include <Network/props.hxx>
@@ -155,6 +156,10 @@ FGIO::parse_port_config( const string_list& tokens, bool& o_ok )
             io = new FGNativeGUI;
         } else if ( protocol == "nmea" ) {
             io = new FGNMEA();
+#if FG_HAVE_DDS
+        } else if ( protocol == "dds-props") {
+            io = new FGDDSProps;
+#endif
         } else if ( protocol == "props" || protocol == "telnet" ) {
             io = new FGProps( tokens );
             o_ok = true;
@@ -233,7 +238,13 @@ FGIO::parse_port_config( const string_list& tokens, bool& o_ok )
 
     if (tokens.size() < 4) {
         SG_LOG( SG_IO, SG_ALERT, "Too few arguments for network protocol. At least 3 arguments required. " <<
-                "Usage: --" << protocol << "=(file|socket|serial), (in|out|bi), hertz");
+                "Usage: --" << protocol <<
+#if FG_HAVE_DDS
+                "=(file|socket|serial|dds)" <<
+#else
+                "=(file|socket|serial)" <<
+#endif
+                ", (in|out|bi), hertz");
         delete io;
         return NULL;
     }

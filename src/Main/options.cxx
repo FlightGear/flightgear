@@ -1929,6 +1929,7 @@ struct OptionDesc {
     {"native-ctrls",                 true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"native-fdm",                   true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"native-gui",                   true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"dds-props",                    true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"opengc",                       true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"AV400",                        true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"AV400Sim",                     true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },

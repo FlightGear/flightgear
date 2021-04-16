@@ -9,39 +9,39 @@
 #include "dds_props.h"
 
 
-static const dds_key_descriptor_t FG_DDS_PROP_keys[1] =
+static const dds_key_descriptor_t FG_DDS_prop_keys[1] =
 {
   { "id", 0 }
 };
 
-static const uint32_t FG_DDS_PROP_ops [] =
+static const uint32_t FG_DDS_prop_ops [] =
 {
-  DDS_OP_ADR | DDS_OP_TYPE_4BY | DDS_OP_FLAG_SGN | DDS_OP_FLAG_KEY, offsetof (FG_DDS_PROP, id),
-  DDS_OP_ADR | DDS_OP_TYPE_1BY, offsetof (FG_DDS_PROP, version),
-  DDS_OP_ADR | DDS_OP_TYPE_BOO, offsetof (FG_DDS_PROP, mode),
-  DDS_OP_ADR | DDS_OP_TYPE_UNI | DDS_OP_SUBTYPE_4BY | DDS_OP_FLAG_SGN, offsetof (FG_DDS_PROP, val._d), 9u, (31u << 16) + 4u,
-  DDS_OP_JEQ | DDS_OP_TYPE_BOO | 0, FG_DDS_BOOL, offsetof (FG_DDS_PROP, val._u.Bool),
-  DDS_OP_JEQ | DDS_OP_TYPE_4BY | DDS_OP_FLAG_SGN | 0, FG_DDS_NONE, offsetof (FG_DDS_PROP, val._u.Int32),
-  DDS_OP_JEQ | DDS_OP_TYPE_4BY | DDS_OP_FLAG_SGN | 0, FG_DDS_INT, offsetof (FG_DDS_PROP, val._u.Int32),
-  DDS_OP_JEQ | DDS_OP_TYPE_8BY | DDS_OP_FLAG_SGN | 0, FG_DDS_LONG, offsetof (FG_DDS_PROP, val._u.Int64),
-  DDS_OP_JEQ | DDS_OP_TYPE_4BY | DDS_OP_FLAG_FP | 0, FG_DDS_FLOAT, offsetof (FG_DDS_PROP, val._u.Float32),
-  DDS_OP_JEQ | DDS_OP_TYPE_8BY | DDS_OP_FLAG_FP | 0, FG_DDS_DOUBLE, offsetof (FG_DDS_PROP, val._u.Float64),
-  DDS_OP_JEQ | DDS_OP_TYPE_STR | 0, FG_DDS_ALIAS, offsetof (FG_DDS_PROP, val._u.String),
-  DDS_OP_JEQ | DDS_OP_TYPE_STR | 0, FG_DDS_STRING, offsetof (FG_DDS_PROP, val._u.String),
-  DDS_OP_JEQ | DDS_OP_TYPE_STR | 0, FG_DDS_UNSPECIFIED, offsetof (FG_DDS_PROP, val._u.String),
-  DDS_OP_ADR | DDS_OP_TYPE_ARR | DDS_OP_SUBTYPE_1BY, offsetof (FG_DDS_PROP, guid), 16,
+  DDS_OP_ADR | DDS_OP_TYPE_4BY | DDS_OP_FLAG_SGN | DDS_OP_FLAG_KEY, offsetof (FG_DDS_prop, id),
+  DDS_OP_ADR | DDS_OP_TYPE_1BY, offsetof (FG_DDS_prop, version),
+  DDS_OP_ADR | DDS_OP_TYPE_BOO, offsetof (FG_DDS_prop, mode),
+  DDS_OP_ADR | DDS_OP_TYPE_UNI | DDS_OP_SUBTYPE_4BY | DDS_OP_FLAG_SGN, offsetof (FG_DDS_prop, val._d), 9u, (31u << 16) + 4u,
+  DDS_OP_JEQ | DDS_OP_TYPE_BOO | 0, FG_DDS_BOOL, offsetof (FG_DDS_prop, val._u.Bool),
+  DDS_OP_JEQ | DDS_OP_TYPE_4BY | DDS_OP_FLAG_SGN | 0, FG_DDS_NONE, offsetof (FG_DDS_prop, val._u.Int32),
+  DDS_OP_JEQ | DDS_OP_TYPE_4BY | DDS_OP_FLAG_SGN | 0, FG_DDS_INT, offsetof (FG_DDS_prop, val._u.Int32),
+  DDS_OP_JEQ | DDS_OP_TYPE_8BY | DDS_OP_FLAG_SGN | 0, FG_DDS_LONG, offsetof (FG_DDS_prop, val._u.Int64),
+  DDS_OP_JEQ | DDS_OP_TYPE_4BY | DDS_OP_FLAG_FP | 0, FG_DDS_FLOAT, offsetof (FG_DDS_prop, val._u.Float32),
+  DDS_OP_JEQ | DDS_OP_TYPE_8BY | DDS_OP_FLAG_FP | 0, FG_DDS_DOUBLE, offsetof (FG_DDS_prop, val._u.Float64),
+  DDS_OP_JEQ | DDS_OP_TYPE_STR | 0, FG_DDS_ALIAS, offsetof (FG_DDS_prop, val._u.String),
+  DDS_OP_JEQ | DDS_OP_TYPE_STR | 0, FG_DDS_STRING, offsetof (FG_DDS_prop, val._u.String),
+  DDS_OP_JEQ | DDS_OP_TYPE_STR | 0, FG_DDS_UNSPECIFIED, offsetof (FG_DDS_prop, val._u.String),
+  DDS_OP_ADR | DDS_OP_TYPE_ARR | DDS_OP_SUBTYPE_1BY, offsetof (FG_DDS_prop, guid), 16,
   DDS_OP_RTS
 };
 
-const dds_topic_descriptor_t FG_DDS_PROP_desc =
+const dds_topic_descriptor_t FG_DDS_prop_desc =
 {
-  sizeof (FG_DDS_PROP),
+  sizeof (FG_DDS_prop),
   8u,
   DDS_TOPIC_FIXED_KEY | DDS_TOPIC_NO_OPTIMIZE | DDS_TOPIC_CONTAINS_UNION,
   1u,
-  "FG::DDS_PROP",
-  FG_DDS_PROP_keys,
+  "FG::DDS_prop",
+  FG_DDS_prop_keys,
   15,
-  FG_DDS_PROP_ops,
-  "<MetaData version=\"1.0.0\"><Module name=\"FG\"><Enum name=\"propType\"><Element name=\"DDS_NONE\" value=\"0\"/><Element name=\"DDS_ALIAS\" value=\"1\"/><Element name=\"DDS_BOOL\" value=\"2\"/><Element name=\"DDS_INT\" value=\"3\"/><Element name=\"DDS_LONG\" value=\"4\"/><Element name=\"DDS_FLOAT\" value=\"5\"/><Element name=\"DDS_DOUBLE\" value=\"6\"/><Element name=\"DDS_STRING\" value=\"7\"/><Element name=\"DDS_UNSPECIFIED\" value=\"8\"/></Enum><Union name=\"propValue\"><SwitchType><Type name=\"propType\"/></SwitchType><Case name=\"Bool\"><Boolean/><Label value=\"DDS_BOOL\"/></Case><Case name=\"Int32\"><Long/><Label value=\"DDS_NONE\"/><Label value=\"DDS_INT\"/></Case><Case name=\"Int64\"><LongLong/><Label value=\"DDS_LONG\"/></Case><Case name=\"Float32\"><Float/><Label value=\"DDS_FLOAT\"/></Case><Case name=\"Float64\"><Double/><Label value=\"DDS_DOUBLE\"/></Case><Case name=\"String\"><String/><Label value=\"DDS_ALIAS\"/><Label value=\"DDS_STRING\"/><Label value=\"DDS_UNSPECIFIED\"/></Case></Union><Struct name=\"DDS_PROP\"><Member name=\"id\"><Long/></Member><Member name=\"version\"><Octet/></Member><Member name=\"mode\"><Boolean/></Member><Member name=\"val\"><Type name=\"propValue\"/></Member><Member name=\"guid\"><Array size=\"16\"><Octet/></Array></Member></Struct></Module></MetaData>"
+  FG_DDS_prop_ops,
+  "<MetaData version=\"1.0.0\"><Module name=\"FG\"><Enum name=\"propType\"><Element name=\"DDS_NONE\" value=\"0\"/><Element name=\"DDS_ALIAS\" value=\"1\"/><Element name=\"DDS_BOOL\" value=\"2\"/><Element name=\"DDS_INT\" value=\"3\"/><Element name=\"DDS_LONG\" value=\"4\"/><Element name=\"DDS_FLOAT\" value=\"5\"/><Element name=\"DDS_DOUBLE\" value=\"6\"/><Element name=\"DDS_STRING\" value=\"7\"/><Element name=\"DDS_UNSPECIFIED\" value=\"8\"/></Enum><Union name=\"propValue\"><SwitchType><Type name=\"propType\"/></SwitchType><Case name=\"Bool\"><Boolean/><Label value=\"DDS_BOOL\"/></Case><Case name=\"Int32\"><Long/><Label value=\"DDS_NONE\"/><Label value=\"DDS_INT\"/></Case><Case name=\"Int64\"><LongLong/><Label value=\"DDS_LONG\"/></Case><Case name=\"Float32\"><Float/><Label value=\"DDS_FLOAT\"/></Case><Case name=\"Float64\"><Double/><Label value=\"DDS_DOUBLE\"/></Case><Case name=\"String\"><String/><Label value=\"DDS_ALIAS\"/><Label value=\"DDS_STRING\"/><Label value=\"DDS_UNSPECIFIED\"/></Case></Union><Struct name=\"DDS_prop\"><Member name=\"id\"><Long/></Member><Member name=\"version\"><Octet/></Member><Member name=\"mode\"><Boolean/></Member><Member name=\"val\"><Type name=\"propValue\"/></Member><Member name=\"guid\"><Array size=\"16\"><Octet/></Array></Member></Struct></Module></MetaData>"
 };

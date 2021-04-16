@@ -48,10 +48,10 @@ bool FGDDSProps::open() {
     SGIOChannel *io = get_io_channel();
 
     SG_DDS_Topic *dds = static_cast<SG_DDS_Topic*>(io);
-    dds->setup<FG_DDS_PROP>(&FG_DDS_PROP_desc);
+    dds->setup(prop, &FG_DDS_prop_desc);
 
     // always send and recieve.
-    if (! io->open(SG_IO_BI)) {
+    if (!io->open(SG_IO_BI)) {
         SG_LOG(SG_IO, SG_ALERT, "Error opening channel communication layer.");
         return false;
     }
@@ -64,7 +64,6 @@ bool FGDDSProps::open() {
 // process work for this port
 bool FGDDSProps::process() {
     SGIOChannel *io = get_io_channel();
-    FG_DDS_PROP prop;
 
     int length = sizeof(prop);
     char *buf = reinterpret_cast<char*>(&prop);
@@ -74,10 +73,12 @@ bool FGDDSProps::process() {
         // act as a client: send a request and wait for an answer.
 
     }
-    else if (get_direction() == SG_IO_OUT)
+    else if (get_direction() == SG_IO_OUT || get_direction() == SG_IO_BI)
     {
         // act as a server: read requests and send the results.
-        while (io->read(buf, length) == length)
+        while (io->read(buf, length) &&
+                prop.version == FG_DDS_PROP_VERSION &&
+                prop.mode == FG_DDS_MODE_READ)
         {
             if (prop.id == FG_DDS_PROP_REQUEST)
             {
@@ -92,7 +93,6 @@ bool FGDDSProps::process() {
                         if (p)
                         {
                             prop.id = prop_list.size();
-
                             try {
                                 prop_list.push_back(p);
                                 path_list[prop.val._u.String] = prop.id;
@@ -120,7 +120,7 @@ bool FGDDSProps::process() {
             }
 
             // send the response.
-            if (! io->write(buf, length)) {
+            if (!io->write(buf, length)) {
                 SG_LOG(SG_IO, SG_ALERT, "Error writing data.");
             }
         } // while
@@ -142,8 +142,11 @@ bool FGDDSProps::close() {
     return true;
 }
 
-void FGDDSProps::setProp(FG_DDS_PROP& prop, SGPropertyNode_ptr p)
+void FGDDSProps::setProp(FG_DDS_prop& prop, SGPropertyNode_ptr p)
 {
+//  prop.id = FG_DDS_PROP_REQUEST;
+    prop.version = FG_DDS_PROP_VERSION;
+    prop.mode = FG_DDS_MODE_WRITE;
     if (p)
     {
         simgear::props::Type type = p->getType();

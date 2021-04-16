@@ -1,6 +1,6 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
 #include <simgear/io/SGDataDistributionService.hxx>
 
@@ -13,8 +13,8 @@ int main()
 {
   SG_DDS participant;
 
-  FG_DDS_PROP prop;
-  SG_DDS_Topic *topic = new SG_DDS_Topic(prop, &FG_DDS_PROP_desc);
+  FG_DDS_prop prop;
+  SG_DDS_Topic *topic = new SG_DDS_Topic(prop, &FG_DDS_prop_desc);
 
   participant.add(topic, SG_IO_BI);
 
@@ -25,20 +25,22 @@ int main()
     printf("%X ", prop.guid[i]);
   printf("\n");
 
-  prop.version = FG_DDS_PROP_VERSION;
-  prop.mode = FG_DDS_MODE_READ;
-
   char path[256];
   printf("\nType 'q' to quit\n");
   do
   {
-    printf("Property path: ");
+    printf("Property path or id: ");
     int len = scanf("%255s", path);
     if (len == EOF) continue;
 
     if (*path == 'q') break;
 
-    prop.id = FG_DDS_PROP_REQUEST;
+    char *end;
+    int id = strtol(path, &end, 10);
+
+    prop.id = (end == path) ? FG_DDS_PROP_REQUEST : id;
+    prop.version = FG_DDS_PROP_VERSION;
+    prop.mode = FG_DDS_MODE_READ;
     prop.val._d = FG_DDS_STRING;
     prop.val._u.String = path;
 

@@ -63,8 +63,13 @@ set(HEADERS
 	)
 
 if (CycloneDDS_FOUND)
-  set(SOURCES ${SOURCES} dds_props.cxx)
-  set(HEADERS ${HEADERS} dds_props.hxx)
+  list(APPEND SOURCES
+        dds_props.cxx
+        )
+
+  list(APPEND HEADERS
+        dds_props.hxx
+        )
 endif()
 
 if(ENABLE_IAX)
