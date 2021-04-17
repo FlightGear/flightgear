@@ -1176,35 +1176,41 @@ FGReplay::update( double dt )
                 short_term.pop_front();
             }
 
-            FGReplayData *mt_front = medium_term.front();
-            if ( sim_time - mt_front->sim_time > m_medium_res_time )
+            if (!medium_term.empty())
             {
-                while ( !medium_term.empty() && sim_time - mt_front->sim_time > m_medium_res_time )
+                FGReplayData *mt_front = medium_term.front();
+                if ( sim_time - mt_front->sim_time > m_medium_res_time )
                 {
-                    mt_front = medium_term.front();
-                    MoveFrontMultiplayerPackets(medium_term);
-                    recycler.push_back(mt_front);
-                    medium_term.pop_front();
-                }
-                // update the long term list
-                if ( sim_time - last_lt_time > m_long_sample_rate )
-                {
-                    last_lt_time = sim_time;
-                    if (!medium_term.empty()) {
+                    while ( !medium_term.empty() && sim_time - mt_front->sim_time > m_medium_res_time )
+                    {
                         mt_front = medium_term.front();
-                        long_term.push_back( mt_front );
+                        MoveFrontMultiplayerPackets(medium_term);
+                        recycler.push_back(mt_front);
                         medium_term.pop_front();
                     }
-
-                    FGReplayData *lt_front = long_term.front();
-                    if ( sim_time - lt_front->sim_time > m_low_res_time )
+                    // update the long term list
+                    if ( sim_time - last_lt_time > m_long_sample_rate )
                     {
-                        while ( !long_term.empty() && sim_time - lt_front->sim_time > m_low_res_time )
+                        last_lt_time = sim_time;
+                        if (!medium_term.empty()) {
+                            mt_front = medium_term.front();
+                            long_term.push_back( mt_front );
+                            medium_term.pop_front();
+                        }
+
+                        if (!long_term.empty())
                         {
-                            lt_front = long_term.front();
-                            MoveFrontMultiplayerPackets(long_term);
-                            recycler.push_back(lt_front);
-                            long_term.pop_front();
+                            FGReplayData *lt_front = long_term.front();
+                            if ( sim_time - lt_front->sim_time > m_low_res_time )
+                            {
+                                while ( !long_term.empty() && sim_time - lt_front->sim_time > m_low_res_time )
+                                {
+                                    lt_front = long_term.front();
+                                    MoveFrontMultiplayerPackets(long_term);
+                                    recycler.push_back(lt_front);
+                                    long_term.pop_front();
+                                }
+                            }
                         }
                     }
                 }
