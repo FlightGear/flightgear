@@ -57,8 +57,6 @@ FGAircraftModel::FGAircraftModel ()
     _speed_e(0),
     _speed_d(0)
 {
-    _fx = new FGFX("fx");
-    _fx->init();
 }
 
 FGAircraftModel::~FGAircraftModel ()
@@ -76,6 +74,8 @@ FGAircraftModel::init ()
         return;
     }
 
+    _fx = new FGFX("fx");
+    _fx->init();
     simgear::ErrorReportContext ec("primary-aircraft", "yes");
 
     SGPropertyNode_ptr sim = fgGetNode("/sim", true);
