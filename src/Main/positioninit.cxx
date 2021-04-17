@@ -386,7 +386,7 @@ static InitPosResult setInitialPosFromCarrier( const string& carrier )
   return Failure;
 }
 
-static InitPosResult checkCarrierSceneryLoaded(FGAICarrier* carrierRef)
+static InitPosResult checkCarrierSceneryLoaded(const SGSharedPtr<FGAICarrier> carrierRef)
 {
     SGVec3d cartPos = carrierRef->getCartPos();
     auto framestamp = globals->get_renderer()->getFrameStamp();
