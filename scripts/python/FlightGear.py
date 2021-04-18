@@ -84,12 +84,28 @@ class FGTelnet(Telnet):
         return response.decode('utf-8').split('\n')[:-1]
 
 class LsItem:
-    def __init__(self, num_children, name, index, type_, value):
+    def __init__(self, num_children, name, index, type_, value_text):
         self.num_children = num_children
         self.name = name
         self.index = index
         self.type_ = type_
-        self.value = value
+        self.value_text = value_text
+        # Convert to correct type; type_ is originally from
+        # flightgear/src/Network/props.cxx:getValueTypeString().
+        #
+        if type_ in ('unknown', 'unspecified', 'none'):
+            value = value_text
+        elif type_ == 'bool':
+            value = (value_text == 'true')
+        elif type_ in ('int', 'long'):
+            value = int(value_text)
+        elif type_ in ('float', 'double'):
+            self.value = float(value_text)
+        elif type_ == 'string':
+            self.value = value_text
+        else:
+            assert 0, f'Unrecognised type: {type_}'
+    
     def __str__(self):
         return f'num_children={self.num_children} name={self.name}[{self.index}] type={self.type_}: {self.value!r}'
 
