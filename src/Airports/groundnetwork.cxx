@@ -384,7 +384,7 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(FGTaxiNode* start, FGTaxiNode* en
             break;
         }
 
-        for (auto target : segmentsFrom(best)) {
+        for (auto target : findSegmentsFrom(best)) {
             double edgeLength = dist(best->cart(), target->cart());
             double alt = searchData[best].score + edgeLength + edgePenalty(target);
             if (alt < searchData[target].score) {    // Relax (u,v)
@@ -508,7 +508,7 @@ void FGGroundNetwork::addParking(const FGParkingRef &park)
     }
 }
 
-FGTaxiNodeVector FGGroundNetwork::segmentsFrom(const FGTaxiNodeRef &from) const
+FGTaxiNodeVector FGGroundNetwork::findSegmentsFrom(const FGTaxiNodeRef &from) const
 {
     FGTaxiNodeVector result;
     FGTaxiSegmentVector::const_iterator it;
@@ -520,6 +520,30 @@ FGTaxiNodeVector FGGroundNetwork::segmentsFrom(const FGTaxiNodeRef &from) const
 
     return result;
 }
+
+FGTaxiSegment* FGGroundNetwork::findSegmentByHeading(const FGTaxiNode* from, const double heading) const {
+    if (from == 0) {
+        return NULL;
+    }
+
+    FGTaxiSegment* best = nullptr;
+
+  // completely boring linear search of segments. Can be improved if/when
+  // this ever becomes a hot-spot
+    for (auto seg : segments) {
+        if (seg->startNode != from) {
+            continue;
+        }
+
+        if( !best || fabs(best->getHeading()-heading) > fabs(seg->getHeading()-heading)) {
+            best = seg;
+        }
+    }
+
+    return best; // not found
+}
+
+
 
 const intVec& FGGroundNetwork::getTowerFrequencies() const
 {

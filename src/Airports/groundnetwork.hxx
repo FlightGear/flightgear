@@ -199,8 +199,6 @@ private:
     void addSegment(const FGTaxiNodeRef& from, const FGTaxiNodeRef& to);
     void addParking(const FGParkingRef& park);
 
-    FGTaxiNodeVector segmentsFrom(const FGTaxiNodeRef& from) const;
-
     void addAwosFreq     (int val) {
         freqAwos.push_back(val);
     };
@@ -246,8 +244,6 @@ public:
 
     FGTaxiNodeRef findNearestNodeOffRunway(const SGGeod& aGeod, FGRunway* aRunway, double distanceM) const;
 
-    FGTaxiSegment *findSegment(unsigned int idx) const;
-
     FGTaxiSegment* findOppositeSegment(unsigned int index) const;
 
     const FGParkingList& allParkings() const;
@@ -263,6 +259,14 @@ public:
      * segment originating at 'from' is acceptable.
      */
     FGTaxiSegment *findSegment(const FGTaxiNode* from, const FGTaxiNode* to) const;
+    /** Find the taxiway segment best matching the heading*/
+    FGTaxiSegment *findSegmentByHeading(const FGTaxiNode* from, const double heading) const;
+    FGTaxiSegment *findSegment(unsigned int idx) const;
+    /**
+     * Find the segments connected to the node.
+    */
+    FGTaxiNodeVector findSegmentsFrom(const FGTaxiNodeRef& from) const;
+
   
     FGTaxiRoute findShortestRoute(FGTaxiNode* start, FGTaxiNode* end, bool fullSearch=true);
 
