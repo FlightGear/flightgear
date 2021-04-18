@@ -129,6 +129,18 @@ private:
         SGVec3f& ecLinearVel
         );
 
+  // Calculates position, orientation and velocity using extrapolation from
+  // *nextIt.
+  //
+  void FGAIMultiplayerExtrapolate(
+        MotionInfo::iterator nextIt,
+        double tInterp,
+        bool motion_logging,
+        SGVec3d& ecPos,
+        SGQuatf& ecOrient,
+        SGVec3f& ecLinearVel
+        );
+
   bool mTimeOffsetSet;
   bool realTime;
   int compensateLag;

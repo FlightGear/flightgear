@@ -85,9 +85,9 @@ bool FGAIMultiplayer::init(ModelSearchOrder searchOrder)
 
     string::size_type loc1= str1.find( str2, 0 );
     if ( (loc1 != string::npos && str2 != "") ){
-        //	   cout << " string found "	<< str2 << " in " << str1 << endl;
+        // cout << " string found " << str2 << " in " << str1 << endl;
         isTanker = true;
-        //	   cout << "isTanker " << isTanker << " " << mCallSign <<endl;
+        // cout << "isTanker " << isTanker << " " << mCallSign <<endl;
     }
 
     // load model
@@ -115,9 +115,9 @@ void FGAIMultiplayer::bind() {
 
     tie("controls/invisible",
         SGRawValuePointer<bool>(&invisible));
-	_uBodyNode = props->getNode("velocities/uBody-fps", true);
-	_vBodyNode = props->getNode("velocities/vBody-fps", true);
-	_wBodyNode = props->getNode("velocities/wBody-fps", true);
+    _uBodyNode = props->getNode("velocities/uBody-fps", true);
+    _vBodyNode = props->getNode("velocities/vBody-fps", true);
+    _wBodyNode = props->getNode("velocities/wBody-fps", true);
 
 #define AIMPROProp(type, name) \
 SGRawValueMethods<FGAIMultiplayer, type>(*this, &FGAIMultiplayer::get##name)
@@ -247,6 +247,192 @@ void FGAIMultiplayer::FGAIMultiplayerInterpolate(
     }
 }
 
+void FGAIMultiplayer::FGAIMultiplayerExtrapolate(
+        MotionInfo::iterator nextIt,
+        double tInterp,
+        bool motion_logging,
+        SGVec3d& ecPos,
+        SGQuatf& ecOrient,
+        SGVec3f& ecLinearVel
+        )
+{
+    const FGExternalMotionData& motionInfo = nextIt->second;
+
+    // The time to predict, limit to 3 seconds. But don't do this if we are
+    // running motion tests, because it can mess up the results.
+    //
+    double t = tInterp - nextIt->first;
+    if (!motion_logging)
+    {
+        if (t > 3)
+        {
+            t = 3;
+            props->setBoolValue("lag/extrapolation-range-error", true);
+        }
+        else
+        {
+            props->setBoolValue("lag/extrapolation-out-of-range", false);
+        }
+    }
+
+    // using velocity and acceleration to guess a parabolic position...
+    ecPos = motionInfo.position;
+    ecOrient = motionInfo.orientation;
+    ecLinearVel = motionInfo.linearVel;
+    SGVec3d ecVel = toVec3d(ecOrient.backTransform(ecLinearVel));
+    SGVec3f angularVel = motionInfo.angularVel;
+    SGVec3d ecAcc = toVec3d(ecOrient.backTransform(motionInfo.linearAccel));
+
+    double normVel = norm(ecVel);
+
+    // not doing rotationnal prediction for small speed or rotation rate,
+    // to avoid agitated parked plane
+    if (( norm(angularVel) > 0.05 ) || ( normVel > 1.0 ))
+    {
+        ecOrient += t*ecOrient.derivative(angularVel);
+    }
+
+    // not using acceleration for small speed, to have better parked planes
+    // note that anyway acceleration is not transmit yet by mp
+    if ( normVel > 1.0 )
+    {
+        ecPos += t*(ecVel + 0.5*t*ecAcc);
+    }
+    else
+    {
+        ecPos += t*(ecVel);
+    }
+
+    std::vector<FGPropertyData*>::const_iterator firstPropIt;
+    std::vector<FGPropertyData*>::const_iterator firstPropItEnd;
+    speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
+    firstPropIt = motionInfo.properties.begin();
+    firstPropItEnd = motionInfo.properties.end();
+    while (firstPropIt != firstPropItEnd)
+    {
+        PropertyMap::iterator pIt = mPropertyMap.find((*firstPropIt)->id);
+        //cout << " Setting property..." << (*firstPropIt)->id;
+
+        if (pIt != mPropertyMap.end())
+        {
+            switch ((*firstPropIt)->type)
+            {
+              case simgear::props::INT:
+              case simgear::props::BOOL:
+              case simgear::props::LONG:
+                  pIt->second->setIntValue((*firstPropIt)->int_value);
+                  //cout << "Int: " << (*firstPropIt)->int_value << "\n";
+                  break;
+              case simgear::props::FLOAT:
+              case simgear::props::DOUBLE:
+                  pIt->second->setFloatValue((*firstPropIt)->float_value);
+                  //cout << "Flo: " << (*firstPropIt)->float_value << "\n";
+                  break;
+              case simgear::props::STRING:
+              case simgear::props::UNSPECIFIED:
+                  pIt->second->setStringValue((*firstPropIt)->string_value);
+                  //cout << "Str: " << (*firstPropIt)->string_value << "\n";
+                  break;
+              default:
+                  // FIXME - currently defaults to float values
+                  pIt->second->setFloatValue((*firstPropIt)->float_value);
+                  //cout << "Unk: " << (*firstPropIt)->float_value << "\n";
+                  break;
+            }
+        }
+        else
+        {
+            SG_LOG(SG_AI, SG_DEBUG, "Unable to find property: " << (*firstPropIt)->id << "\n");
+        }
+
+        ++firstPropIt;
+    }
+}
+
+
+// Populate
+// /sim/replay/log-raw-speed-multiplayer-post-*-values/value[] with information
+// on motion of MP and user aircraft.
+//
+// For use with scripts/python/recordreplay.py --test-motion-mp.
+//
+static void s_MotionLogging(const std::string& _callsign, double tInterp, SGVec3d ecPos, const SGGeod& pos)
+{
+    SGGeod pos_geod = pos;
+    if (!fgGetBool("/sim/replay/replay-state-eof"))
+    {
+        static SGVec3d s_pos_0;
+        static SGVec3d s_pos_prev;
+        static double s_t_prev = -1;
+        SGVec3d pos = ecPos;
+        double sim_replay_time = fgGetDouble("/sim/replay/time");
+        double t = fgGetBool("/sim/replay/replay-state") ? sim_replay_time : tInterp;
+        if (s_t_prev == -1)
+        {
+            s_pos_0 = pos;
+        }
+        double t_dt = t - s_t_prev;
+        if (s_t_prev != -1 /*&& t_dt != 0*/)
+        {
+            SGVec3d delta_pos = pos - s_pos_prev;
+            SGVec3d delta_pos_norm = normalize(delta_pos);
+            double distance0 = length(pos - s_pos_0);
+            double distance = length(delta_pos);
+            double speed = (t_dt) ? distance / t_dt : -999;
+            if (t_dt)
+            {
+                SGPropertyNode* n0 = fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-values", true /*create*/);
+                SGPropertyNode* n;
+
+                n = n0->addChild("value");
+                n->setDoubleValue(speed);
+
+                n = n0->addChild("description");
+                char buffer[128];
+                snprintf(buffer, sizeof(buffer), "s_t_prev=%f t=%f t_dt=%f distance=%f",
+                        s_t_prev, t, t_dt, distance);
+                n->setStringValue(buffer);
+            }
+
+            SGGeod  user_pos_geod = SGGeod::fromDegFt(
+                    fgGetDouble("/position/longitude-deg"),
+                    fgGetDouble("/position/latitude-deg"),
+                    fgGetDouble("/position/altitude-ft")
+                    );
+            SGVec3d user_pos = SGVec3d::fromGeod(user_pos_geod);
+
+            double user_to_mp_distance = SGGeodesy::distanceM(user_pos_geod, pos_geod);
+            double user_to_mp_bearing = SGGeodesy::courseDeg(user_pos_geod, pos_geod);
+            double user_distance0 = length(user_pos - s_pos_0);
+
+            if (1)
+            {
+                fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-relative-distance", true /*create*/)
+                        ->addChild("value")
+                        ->setDoubleValue(user_to_mp_distance)
+                        ;
+                fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-relative-bearing", true /*create*/)
+                        ->addChild("value")
+                        ->setDoubleValue(user_to_mp_bearing)
+                        ;
+                fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-absolute-distance", true /*create*/)
+                        ->addChild("value")
+                        ->setDoubleValue(distance0)
+                        ;
+                fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-user-absolute-distance", true /*create*/)
+                        ->addChild("value")
+                        ->setDoubleValue(user_distance0)
+                        ;
+            }
+        }
+        if (t_dt)
+        {
+            s_t_prev = t;
+            s_pos_prev = pos;
+        }
+    }
+}
+
 void FGAIMultiplayer::update(double dt)
 {
     using namespace simgear;
@@ -263,17 +449,15 @@ void FGAIMultiplayer::update(double dt)
         return;
     }
 
-    // test_motion is used with scripts/python/recordreplay.py
-    // --test-motion-mp.
+    // motion_logging is true if we are being run by
+    // scripts/python/recordreplay.py --test-motion-mp.
     //
-    bool test_motion = false;
-    bool verbose = false;
+    bool motion_logging = false;
     {
         const char* callsign = mLogRawSpeedMultiplayer->getStringValue();
         if (callsign && callsign[0] && this->_callsign == callsign)
         {
-            test_motion = true;
-            //verbose = true;
+            motion_logging = true;
         }
     }
     
@@ -438,14 +622,11 @@ void FGAIMultiplayer::update(double dt)
     SGQuatf ecOrient;
     SGVec3f ecLinearVel;
 
-    const char* calc_type = nullptr;
-
     MotionInfo::iterator nextIt = mMotionInfo.upper_bound(tInterp);
     MotionInfo::iterator prevIt = nextIt;
     
     if (nextIt != mMotionInfo.end() && nextIt->first >= tInterp)
     {
-        calc_type = "interpolation";
         // Ok, we need a time prevous to the last available packet,
         // that is good ...
         // the case tInterp = curentPkgTime need to be in the interpolation, to avoid a bug zeroing the position
@@ -480,136 +661,14 @@ void FGAIMultiplayer::update(double dt)
         }
         
         FGAIMultiplayerInterpolate(prevIt, nextIt, tau, ecPos, ecOrient, ecLinearVel);
-        
-        if (verbose)
-        {
-            int width=16;
-            SG_LOG(SG_AI, SG_ALERT, "Interpolation:"
-                    << std::setprecision(5)
-                    << std::fixed
-                    << " prevIt->second.time="  << std::setw(width) << prevIt->second.time
-                    << " nextIt->second.time="  << std::setw(width) << nextIt->second.time
-                    << " tau="                  << std::setw(width) << tau
-                    << " tInterp="              << std::setw(width) << tInterp
-                    );
-        }
     }
     else
     {
-        calc_type = "extrapolation";
         // Ok, we need to predict the future, so, take the best data we can have
         // and do some eom computation to guess that for now.
-        
-        assert(nextIt == mMotionInfo.end());
         --nextIt;
         --prevIt;   // so mMotionInfo.erase() does the right thing below.
-        const FGExternalMotionData& motionInfo = nextIt->second;
-
-        // The time to predict, limit to 3 seconds. But don't do this if we are
-        // running motion tests, because it can mess up the results.
-        //
-        double t = tInterp - nextIt->first;
-        if (!test_motion)
-        {
-            if (t > 3)
-            {
-                t = 3;
-                props->setBoolValue("lag/extrapolation-range-error", true);
-            }
-            else
-            {
-                props->setBoolValue("lag/extrapolation-out-of-range", false);
-            }
-        }
-
-        // using velocity and acceleration to guess a parabolic position...
-        ecPos = motionInfo.position;
-        ecOrient = motionInfo.orientation;
-        ecLinearVel = motionInfo.linearVel;
-        SGVec3d ecVel = toVec3d(ecOrient.backTransform(ecLinearVel));
-        SGVec3f angularVel = motionInfo.angularVel;
-        SGVec3d ecAcc = toVec3d(ecOrient.backTransform(motionInfo.linearAccel));
-
-	    double normVel = norm(ecVel);
-
-	    // not doing rotationnal prediction for small speed or rotation rate,
-	    // to avoid agitated parked plane
-        if (( norm(angularVel) > 0.05 ) || ( normVel > 1.0 ))
-        {
-		    ecOrient += t*ecOrient.derivative(angularVel);
-	    }
-
-	    // not using acceleration for small speed, to have better parked planes
-	    // note that anyway acceleration is not transmit yet by mp
-	    if ( normVel > 1.0 )
-        {
-		    ecPos += t*(ecVel + 0.5*t*ecAcc);
-	    }
-        else
-        {
-		    ecPos += t*(ecVel);
-	    }
-
-        if (verbose)
-        {
-            int width=16;
-            SG_LOG(SG_AI, SG_ALERT, "Extrapolation:"
-                    << std::setprecision(5)
-                    << std::fixed
-                    << " t="                    << std::setw(width) << t
-                    << " tInterp="              << std::setw(width) << tInterp
-                    << " motionInfo.time="      << std::setw(width) << motionInfo.time
-                    << " ecVel="                << std::setw(width) << ecVel
-                    << " length(ecVel)="        << std::setw(width) << length(ecVel)
-                    << " normalize(ecVel)="     << std::setw(width) << normalize(ecVel)
-                    << " ecAcc="                << std::setw(width) << ecAcc
-                    << " motionInfo.position="  << motionInfo.position
-                    );
-        }
-	    std::vector<FGPropertyData*>::const_iterator firstPropIt;
-        std::vector<FGPropertyData*>::const_iterator firstPropItEnd;
-        speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
-        firstPropIt = motionInfo.properties.begin();
-        firstPropItEnd = motionInfo.properties.end();
-        while (firstPropIt != firstPropItEnd)
-        {
-            PropertyMap::iterator pIt = mPropertyMap.find((*firstPropIt)->id);
-            //cout << " Setting property..." << (*firstPropIt)->id;
-
-            if (pIt != mPropertyMap.end())
-            {
-                switch ((*firstPropIt)->type)
-                {
-                  case props::INT:
-                  case props::BOOL:
-                  case props::LONG:
-                      pIt->second->setIntValue((*firstPropIt)->int_value);
-                      //cout << "Int: " << (*firstPropIt)->int_value << "\n";
-                      break;
-                  case props::FLOAT:
-                  case props::DOUBLE:
-                      pIt->second->setFloatValue((*firstPropIt)->float_value);
-                      //cout << "Flo: " << (*firstPropIt)->float_value << "\n";
-                      break;
-                  case props::STRING:
-                  case props::UNSPECIFIED:
-                      pIt->second->setStringValue((*firstPropIt)->string_value);
-                      //cout << "Str: " << (*firstPropIt)->string_value << "\n";
-                      break;
-                  default:
-                      // FIXME - currently defaults to float values
-                      pIt->second->setFloatValue((*firstPropIt)->float_value);
-                      //cout << "Unk: " << (*firstPropIt)->float_value << "\n";
-                      break;
-                }
-            }
-            else
-            {
-                SG_LOG(SG_AI, SG_DEBUG, "Unable to find property: " << (*firstPropIt)->id << "\n");
-            }
-
-            ++firstPropIt;
-        }
+        FGAIMultiplayerExtrapolate(nextIt, tInterp, motion_logging, ecPos, ecOrient, ecLinearVel);
     }
 
     // Remove any motion information before <prevIt> - we will not need this in
@@ -654,114 +713,11 @@ void FGAIMultiplayer::update(double dt)
 
     //SG_LOG(SG_AI, SG_DEBUG, "Multiplayer position and orientation: " << ecPos << ", " << hlOr);
 
-    // If test_motion is set, we populate
-    // /sim/replay/log-raw-speed-multiplayer-post-values/value[] with the raw
-    // speed of our MP aircraft.
-    //
-    // For use with scripts/python/recordreplay.py --test-motion-mp.
+    if (motion_logging)
     {
-        SGGeod pos_geod = pos;
-        if (test_motion && !fgGetBool("/sim/replay/replay-state-eof"))
-        {
-            static SGVec3d s_pos_0;
-            static SGVec3d s_pos_prev;
-            static double s_t_prev = -1;
-            SGVec3d pos = ecPos;
-            double sim_replay_time = fgGetDouble("/sim/replay/time");
-            double t = fgGetBool("/sim/replay/replay-state") ? sim_replay_time : tInterp;
-            if (s_t_prev == -1)
-            {
-                s_pos_0 = pos;
-            }
-            double t_dt = t - s_t_prev;
-            if (s_t_prev != -1 /*&& t_dt != 0*/)
-            {
-                SGVec3d delta_pos = pos - s_pos_prev;
-                SGVec3d delta_pos_norm = normalize(delta_pos);
-                double distance0 = length(pos - s_pos_0);
-                double distance = length(delta_pos);
-                double speed = (t_dt) ? distance / t_dt : -999;
-                if (t_dt)
-                {
-                    SGPropertyNode* n0 = fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-values", true /*create*/);
-                    SGPropertyNode* n;
-                    
-                    n = n0->addChild("value");
-                    n->setDoubleValue(speed);
-                    
-                    n = n0->addChild("description");
-                    char buffer[128];
-                    snprintf(buffer, sizeof(buffer), "s_t_prev=%f t=%f t_dt=%f distance=%f",
-                            s_t_prev, t, t_dt, distance);
-                    n->setStringValue(buffer);
-                }
-                
-                SGGeod  user_pos_geod = SGGeod::fromDegFt(
-                        fgGetDouble("/position/longitude-deg"),
-                        fgGetDouble("/position/latitude-deg"),
-                        fgGetDouble("/position/altitude-ft")
-                        );
-                SGVec3d user_pos = SGVec3d::fromGeod(user_pos_geod);
-
-                double user_to_mp_distance = SGGeodesy::distanceM(user_pos_geod, pos_geod);
-                double user_to_mp_bearing = SGGeodesy::courseDeg(user_pos_geod, pos_geod);
-                double user_distance0 = length(user_pos - s_pos_0);
-                
-                if (1)
-                {
-                    fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-relative-distance", true /*create*/)
-                            ->addChild("value")
-                            ->setDoubleValue(user_to_mp_distance)
-                            ;
-                    fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-relative-bearing", true /*create*/)
-                            ->addChild("value")
-                            ->setDoubleValue(user_to_mp_bearing)
-                            ;
-                    fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-absolute-distance", true /*create*/)
-                            ->addChild("value")
-                            ->setDoubleValue(distance0)
-                            ;
-                    fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-user-absolute-distance", true /*create*/)
-                            ->addChild("value")
-                            ->setDoubleValue(user_distance0)
-                            ;
-                }
-                
-                if (verbose)
-                {
-                    int width=16;
-                    SG_LOG(SG_GENERAL, SG_ALERT, "Multiplayer-post aircraft callsign=" << _callsign << ":"
-                            << std::setprecision(5)
-                            << std::fixed
-                            << " nextIt->second.time="      << std::setw(width) << nextIt->second.time
-                            << " sim_replay_time="          << std::setw(width) << sim_replay_time
-                            << " tInterp="                  << std::setw(width) << tInterp
-                            << " getMPProtocolClockSec="    << std::setw(width) << globals->get_subsystem<TimeManager>()->getMPProtocolClockSec()
-                            << " curtime="                  << std::setw(width) << curtime
-                            << " realTime="                 << std::setw(width) << realTime
-                            << " s_t_prev="                 << std::setw(width) << s_t_prev
-                            << " t="                        << std::setw(width) << t
-                            << " t_dt="                     << std::setw(width) << t_dt
-                            << " dt="                       << std::setw(width) << dt
-                            << " distance0="                << std::setw(width) << distance0
-                            << " user_distance0="           << std::setw(width) << user_distance0
-                            << " speed="                    << std::setw(width) << speed
-                            << " speed="                    << std::setw(width) << speed
-                            << " delta_pos_norm="           << std::setw(width) << delta_pos_norm
-                            << " calc_type="                << std::setw(width) << calc_type
-                            << " user_to_mp_distance="      << std::setw(width) << user_to_mp_distance
-                            << " user_to_mp_bearing="       << std::setw(width) << user_to_mp_bearing
-                            );
-                }
-            }
-            if (t_dt)
-            {
-                s_t_prev = t;
-                s_pos_prev = pos;
-            }
-        }
+        s_MotionLogging(_callsign, tInterp, ecPos, pos);
     }
-
+    
     //###########################//
     // do calculations for radar //
     //###########################//
