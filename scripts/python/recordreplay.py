@@ -492,10 +492,68 @@ def test_motion(fgfs, multiplayer=False):
             log( f'*** Replay showed uneven speed')
             errors.append('1')
     
+    def show_values(paths):
+        if isinstance(paths, str):
+            paths = paths,
+        log(f'Values in {paths}:')
+        line2values = dict()
+        for i, path in enumerate(paths):
+            line = 0
+            for item in fg.fg.ls(path):
+                if item.name == 'value':
+                    line2values.setdefault(line, []).append(item.value)
+                    line += 1
+        for line in sorted(line2values.keys()):
+            t = ''
+            for value in line2values[line]:
+                t += f' {value}'
+            log(f'    {t}')
+    
     if multiplayer:
         examine_values()
         examine_values('-multiplayer')
         examine_values('-multiplayer-post')
+        
+        if 0:
+            show_values('/sim/replay/log-raw-speed-multiplayer-post-relative-distance')
+            show_values('/sim/replay/log-raw-speed-multiplayer-post-relative-bearing')
+            show_values('/sim/replay/log-raw-speed-multiplayer-post-absolute-distance')
+            show_values('/sim/replay/log-raw-speed-multiplayer-post-user-absolute-distance')
+        
+        def get_values(path):
+            '''
+            Returns <path>/value[] as a list.
+            '''
+            ret = []
+            for item in fg.fg.ls(path):
+                if item.name == 'value':
+                    ret.append(item.value)
+            return ret
+        
+        # Check that distance between user and mp is constant.
+        #
+        # The two paths below contain values[] that are the distances of the
+        # mp and user aircraft from their starting points. Both are moving at
+        # the same speed in the same direction, so the differences between each
+        # pair of values should be constant.
+        #
+        distances_mp = get_values('/sim/replay/log-raw-speed-multiplayer-post-absolute-distance')
+        distances_user = get_values('/sim/replay/log-raw-speed-multiplayer-post-user-absolute-distance')
+        log(f'len(distances_user)={len(distances_user)} len(distances_mp)={len(distances_mp)}')
+        assert len(distances_user) == len(distances_mp)
+        assert len(distances_user) > 20
+        for i in range(len(distances_user)):
+            distance_mp = distances_mp[i]
+            distance_user = distances_user[i]
+            delta = distance_mp - distance_user
+            if i == 0:
+                delta_original = delta
+            prefix = ' '
+            if abs(delta - delta_original) > 0.01:
+                #log('replay shows varying differences between user and mp aircraft')
+                errors.append('1')
+                prefix = '*'
+            log(f'    {prefix} user={distance_user} mp={distance_mp} delta={delta}')
     else:
         examine_values()
     

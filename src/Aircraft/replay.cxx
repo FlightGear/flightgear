@@ -1009,6 +1009,9 @@ FGReplay::update( double dt )
                 m_MultiplayMgr->ClearMotion();
             }
 
+            current_time += dt;
+            SG_LOG(SG_GENERAL, SG_BULK, "current_time=" << std::fixed << std::setprecision(6) << current_time);
+            
             bool IsFinished = replay( current_time );
             if (IsFinished)
             {
@@ -1022,7 +1025,6 @@ FGReplay::update( double dt )
             }
             else
             {
-                current_time += dt;
                 was_finished_already = false;
             }
             replay_time->setDoubleValue(current_time);

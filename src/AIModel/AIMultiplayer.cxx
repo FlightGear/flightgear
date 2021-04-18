@@ -286,6 +286,7 @@ void FGAIMultiplayer::update(double dt)
         if (m_sim_replay_replay_state->getBoolValue())
         {
             tInterp = m_sim_replay_time->getDoubleValue();
+            SG_LOG(SG_GENERAL, SG_BULK, "tInterp=" << std::fixed << std::setprecision(6) << tInterp);
         }
         else
         {
@@ -660,7 +661,7 @@ void FGAIMultiplayer::update(double dt)
     // For use with scripts/python/recordreplay.py --test-motion-mp.
     {
         SGGeod pos_geod = pos;
-        if (test_motion)
+        if (test_motion && !fgGetBool("/sim/replay/replay-state-eof"))
         {
             static SGVec3d s_pos_0;
             static SGVec3d s_pos_prev;
@@ -695,17 +696,39 @@ void FGAIMultiplayer::update(double dt)
                     n->setStringValue(buffer);
                 }
                 
+                SGGeod  user_pos_geod = SGGeod::fromDegFt(
+                        fgGetDouble("/position/longitude-deg"),
+                        fgGetDouble("/position/latitude-deg"),
+                        fgGetDouble("/position/altitude-ft")
+                        );
+                SGVec3d user_pos = SGVec3d::fromGeod(user_pos_geod);
+
+                double user_to_mp_distance = SGGeodesy::distanceM(user_pos_geod, pos_geod);
+                double user_to_mp_bearing = SGGeodesy::courseDeg(user_pos_geod, pos_geod);
+                double user_distance0 = length(user_pos - s_pos_0);
+                
+                if (1)
+                {
+                    fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-relative-distance", true /*create*/)
+                            ->addChild("value")
+                            ->setDoubleValue(user_to_mp_distance)
+                            ;
+                    fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-relative-bearing", true /*create*/)
+                            ->addChild("value")
+                            ->setDoubleValue(user_to_mp_bearing)
+                            ;
+                    fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-absolute-distance", true /*create*/)
+                            ->addChild("value")
+                            ->setDoubleValue(distance0)
+                            ;
+                    fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-user-absolute-distance", true /*create*/)
+                            ->addChild("value")
+                            ->setDoubleValue(user_distance0)
+                            ;
+                }
+                
                 if (verbose)
                 {
-                    SGGeod  user_pos_geod = SGGeod::fromDegFt(
-                            fgGetDouble("/position/longitude-deg"),
-                            fgGetDouble("/position/latitude-deg"),
-                            fgGetDouble("/position/altitude-ft")
-                            );
-
-                    double user_to_mp_bearing = SGGeodesy::courseDeg(user_pos_geod, pos_geod);
-                    double user_to_mp_distance = SGGeodesy::distanceM(user_pos_geod, pos_geod);
-
                     int width=16;
                     SG_LOG(SG_GENERAL, SG_ALERT, "Multiplayer-post aircraft callsign=" << _callsign << ":"
                             << std::setprecision(5)
@@ -721,7 +744,8 @@ void FGAIMultiplayer::update(double dt)
                             << " t_dt="                     << std::setw(width) << t_dt
                             << " dt="                       << std::setw(width) << dt
                             << " distance0="                << std::setw(width) << distance0
-                            << " distance="                 << std::setw(width) << distance
+                            << " user_distance0="           << std::setw(width) << user_distance0
+                            << " speed="                    << std::setw(width) << speed
                             << " speed="                    << std::setw(width) << speed
                             << " delta_pos_norm="           << std::setw(width) << delta_pos_norm
                             << " calc_type="                << std::setw(width) << calc_type
