@@ -384,7 +384,7 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(FGTaxiNode* start, FGTaxiNode* en
             break;
         }
 
-        for (auto target : segmentsFrom(best)) {
+        for (auto target : findSegmentsFrom(best)) {
             double edgeLength = dist(best->cart(), target->cart());
             double alt = searchData[best].score + edgeLength + edgePenalty(target);
             if (alt < searchData[target].score) {    // Relax (u,v)
@@ -508,7 +508,7 @@ void FGGroundNetwork::addParking(const FGParkingRef &park)
     }
 }
 
-FGTaxiNodeVector FGGroundNetwork::segmentsFrom(const FGTaxiNodeRef &from) const
+FGTaxiNodeVector FGGroundNetwork::findSegmentsFrom(const FGTaxiNodeRef &from) const
 {
     FGTaxiNodeVector result;
     FGTaxiSegmentVector::const_iterator it;

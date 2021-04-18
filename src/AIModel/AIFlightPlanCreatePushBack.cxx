@@ -133,8 +133,9 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
     } else {  // In case of a push forward departure...
         ac->setTaxiClearanceRequest(false);
         double az2 = 0.0;
+// FIXME Pushforward must use a forward segment not the first one found.
+        FGTaxiSegment* pushForwardSegment = dep->groundNetwork()->findSegmentByHeading(parking, parking->getHeading()); 
 
-        FGTaxiSegment* pushForwardSegment = dep->groundNetwork()->findSegment(parking, 0);
         if (!pushForwardSegment) {
             // there aren't any routes for this parking, so create a simple segment straight ahead for 2 meters based on the parking heading
             SG_LOG(SG_AI, SG_DEV_WARN, "Gate " << parking->ident() << "/" << parking->getName()
@@ -161,8 +162,9 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
             SGGeodesy::direct(parking->geod(), parkingHeading,
                               ((i / 10.0) * distance), pushForwardPt, az2);
             char buffer[16];
-            snprintf(buffer, 16, "pushback-%02d", i);
+            snprintf(buffer, 16, "pushforward-%02d", i);
             FGAIWaypoint *wpt = createOnGround(ac, string(buffer), pushForwardPt, dep->getElevation(), vTaxiReduced);
+            SG_LOG(SG_AI, SG_BULK, "Created WP : \t" << wpt->getName() << "\t" << wpt->getPos());
 
             wpt->setRouteIndex(pushForwardSegment->getIndex());
             pushBackWaypoint(wpt);
