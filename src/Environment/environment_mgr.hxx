@@ -99,6 +99,10 @@ private:
     FGEnvironment * _environment = nullptr; // always the same, for now
     FGClouds *fgClouds = nullptr;
     bool _cloudLayersDirty = true;
+    int max_tower_height_feet;
+    int min_tower_height_feet;
+    int default_tower_height_feet;
+
     simgear::TiedPropertyList _tiedProperties;
     SGPropertyChangeListener * _3dCloudsEnableListener;
     FGEnvironmentMgrMultiplayerListener * _multiplayerListener;
