@@ -97,13 +97,16 @@ FGDeviceConfigurationMap::configurationForDeviceName(const std::string& name)
       
   SGPropertyNode_ptr result(new SGPropertyNode);
   try {
-    readProperties(it->second, result);
-    result->setStringValue("source", it->second.utf8Str());
-  } catch (sg_exception&) {
-    SG_LOG(SG_INPUT, SG_WARN, "parse failure reading:" << it->second);
-    return {};
+      flightgear::SentryXMLErrorSupression xs;
+      readProperties(it->second, result);
+      result->setStringValue("source", it->second.utf8Str());
+  } catch (sg_exception& e) {
+      simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::InputDeviceConfig,
+                             "Failed to parse device configuration:" + e.getFormattedMessage(),
+                             it->second);
+      return {};
   }
-  
+
   return result;
 }
 
@@ -168,7 +171,6 @@ void FGDeviceConfigurationMap::refreshCacheForFile(const SGPath& path)
     try {
         readProperties(path, n);
     } catch (sg_exception& e) {
-        SG_LOG(SG_INPUT, SG_ALERT, "parse failure reading:" << path);
         simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::InputDeviceConfig,
                                "Failed to load input device configuration:" + e.getFormattedMessage(),
                                path);
