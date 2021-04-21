@@ -720,5 +720,21 @@ fgUntie(const char * name)
   }
 }
 
+void fgUntieIfDefined(const std::string& name)
+{
+    SGPropertyNode* node = globals->get_props()->getNode(name);
+    if (!node) {
+        return;
+    }
+
+    if (!node->isTied()) {
+        return;
+    }
+
+    if (!node->untie()) {
+        SG_LOG(SG_GENERAL, SG_WARN, "Failed to untie property " << name);
+    }
+}
+
 
 // end of fg_props.cxx
