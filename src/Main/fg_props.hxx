@@ -716,6 +716,10 @@ extern void fgSetWritable (const char * name, bool state = true);
  */
 extern void fgUntie (const char * name);
 
+/**
+ @brfief variant of the above which doesn't warn if the property does not exist
+ */
+void fgUntieIfDefined(const std::string& name);
 
 /**
  * Tie a property to a pair of simple functions.
