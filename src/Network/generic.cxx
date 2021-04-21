@@ -38,11 +38,12 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/math/SGMath.hxx>
 
-#include <Main/globals.hxx>
-#include <Main/fg_props.hxx>
-#include <Main/fg_os.hxx>
-#include <Main/util.hxx>
 #include "generic.hxx"
+#include <Main/fg_os.hxx>
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
+#include <Main/sentryIntegration.hxx>
+#include <Main/util.hxx>
 
 using simgear::strutils::unescape;
 
@@ -763,6 +764,7 @@ FGGeneric::reinit()
    
     SGPropertyNode root;
     try {
+        flightgear::SentryXMLErrorSupression xs;
         readProperties(path, &root);
     } catch (const sg_exception & ex) {
         SG_LOG(SG_NETWORK, SG_ALERT,
