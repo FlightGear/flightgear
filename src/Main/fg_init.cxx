@@ -296,9 +296,11 @@ public:
       SG_LOG(SG_GENERAL, SG_ALERT, "Unable to find -set file:" << _foundPath);
       return false;
     }
-    
+
+
     try {
-      readProperties(_foundPath, globals->get_props());
+        flightgear::SentryXMLErrorSupression xs;
+        readProperties(_foundPath, globals->get_props());
     } catch ( const sg_exception &e ) {
       SG_LOG(SG_INPUT, SG_ALERT,
              "Error reading aircraft: " << e.getFormattedMessage());
