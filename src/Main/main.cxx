@@ -34,21 +34,22 @@
 
 // Class references
 #include <simgear/canvas/VGInitOperation.hxx>
-#include <simgear/scene/model/modellib.hxx>
-#include <simgear/scene/material/matlib.hxx>
-#include <simgear/scene/material/Effect.hxx>
-#include <simgear/props/AtomicChangeListener.hxx>
-#include <simgear/props/props.hxx>
-#include <simgear/timing/sg_time.hxx>
+#include <simgear/debug/logdelta.hxx>
+#include <simgear/emesary/Emesary.hxx>
+#include <simgear/emesary/notifications.hxx>
 #include <simgear/io/raw_socket.hxx>
-#include <simgear/scene/tsync/terrasync.hxx>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/nasal/NasalEmesaryInterface.hxx>
+#include <simgear/props/AtomicChangeListener.hxx>
+#include <simgear/props/props.hxx>
+#include <simgear/scene/material/Effect.hxx>
+#include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/model/modellib.hxx>
+#include <simgear/scene/tsync/terrasync.hxx>
 #include <simgear/structure/commands.hxx>
-#include <simgear/emesary/Emesary.hxx>
-#include <simgear/emesary/notifications.hxx>
-#include <simgear/debug/logdelta.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <Add-ons/AddonManager.hxx>
 #include <GUI/MessageBox.hxx>
@@ -278,6 +279,10 @@ void registerMainLoop()
     frame_signal = fgGetNode("/sim/signals/frame", true);
     nasal_gc_threaded = fgGetNode("/sim/nasal-gc-threaded", true);
     nasal_gc_threaded_wait = fgGetNode("/sim/nasal-gc-threaded-wait", true);
+
+    // init the Emesary receiver for Nasal
+    nasal::initMainLoopRecipient();
+
     fgRegisterIdleHandler( fgMainLoop );
 }
 
