@@ -50,6 +50,7 @@
 #include <Navaids/navlist.hxx>
 
 #include <GUI/gui.h>
+#include <Main/sentryIntegration.hxx>
 #include <Viewer/viewmgr.hxx>
 
 #include <Scenery/scenery.hxx>
@@ -848,6 +849,7 @@ FGGlobals::loadUserSettings(SGPath userDataPath)
       SG_LOG(SG_INPUT, SG_INFO,
              "Reading user settings from " << autosaveFile);
       try {
+          flightgear::SentryXMLErrorSupression xs;
           readProperties(autosaveFile, &autosave, SGPropertyNode::USERARCHIVE);
       } catch (sg_exception& e) {
           SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
