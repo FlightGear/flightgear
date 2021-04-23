@@ -295,6 +295,11 @@ OpenGLStatus checkForWorkingOpenGL()
                 flightgear::addSentryBreadcrumb("Detected Intel < 2.1 renderer", "info");
                 result = OpenGLStatus::Intel14;
             }
+        } else if (simgear::strutils::starts_with(renderer, "S3 Graphics")) {
+            if (ctx.format().majorVersion() < 2) {
+                flightgear::addSentryBreadcrumb("Detected S2 < 2.1 renderer", "info");
+                result = OpenGLStatus::Unknown;
+            }
         }
 
         // ensure the context is no longer current on the offscreen
