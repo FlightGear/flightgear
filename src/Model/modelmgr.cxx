@@ -161,7 +161,7 @@ FGModelMgr::unbind ()
 {
     // work-around for FLIGHTGEAR-37D : crash when quitting during
     // early startup
-    if (!_listener) {
+    if (_listener) {
         _models->removeChangeListener(_listener.get());
     }
 
