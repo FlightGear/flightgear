@@ -312,7 +312,6 @@ void runForTime(double t)
 
     for (int t = 0; t < ticks; ++t) {
         globals->inc_sim_time_sec(tickDuration);
-        globals->get_time_params()->update(globals->get_view_position(), startTime, t * tickDuration);
         globals->get_subsystem_mgr()->update(tickDuration);
 
         if (nextLog == 0) {
@@ -328,6 +327,7 @@ void runForTime(double t)
             nextLog--;
         }
     }
+    globals->get_time_params()->update(globals->get_view_position(), startTime, t);
 }
 
 bool runForTimeWithCheck(double t, RunCheck check)
