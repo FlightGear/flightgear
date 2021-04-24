@@ -166,6 +166,7 @@ public:
    FGAIWaypoint* getPreviousWaypoint( void ) const;
    FGAIWaypoint* getCurrentWaypoint( void ) const;
    FGAIWaypoint* getNextWaypoint( void ) const;
+   int getNextTurnAngle( void ) const;
    void IncrementWaypoint( bool erase );
    void DecrementWaypoint();
 

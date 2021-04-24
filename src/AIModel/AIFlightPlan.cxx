@@ -357,6 +357,29 @@ FGAIWaypoint* FGAIFlightPlan::getNextWaypoint( void ) const
     }
 }
 
+int FGAIFlightPlan::getNextTurnAngle( void ) const
+{
+    if (wpt_iterator == waypoints.end())
+        return 0;
+    if (wpt_iterator+1 == waypoints.end())
+        return 0;
+    if (wpt_iterator+2 == waypoints.end())
+        return 0;
+    FGAIWaypoint* currentWP = *(wpt_iterator);
+    FGAIWaypoint* nextWP = *(wpt_iterator + 1);
+    FGAIWaypoint* afterNextWP = *(wpt_iterator + 2);
+    int currentBearing = this->getBearing(currentWP, nextWP);
+    int nextBearing = this->getBearing(nextWP, afterNextWP);
+
+    int turnAngle = nextBearing - currentBearing;
+    if (turnAngle>180) {
+      turnAngle -= 180;
+    }
+
+    return turnAngle;
+}
+
+
 void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
 {
     if (empty())
@@ -375,8 +398,9 @@ void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
             wpt_iterator++;
         }
     }
-    else
-        wpt_iterator++;
+    else {
+      wpt_iterator++;
+    }
 }
 
 void FGAIFlightPlan::DecrementWaypoint()
