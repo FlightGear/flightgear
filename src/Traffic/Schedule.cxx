@@ -596,10 +596,13 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
           //bool valid = true;
           counter++;
           if (!(*i)->isAvailable()) {
+            SG_LOG(SG_AI, SG_BULK, "" << (*i)->getCallSign() << "is no longer available");
+
                //cerr << (*i)->getCallSign() << "is no longer available" << endl;
                continue;
           }
           if (!((*i)->getRequirement() == req)) {
+            SG_LOG(SG_AI, SG_BULK, "" << (*i)->getCallSign() << " no requirement " << (*i)->getRequirement() << " " << req);
                continue;
           }
           if (!(((*i)->getArrivalAirport()) && ((*i)->getDepartureAirport()))) {
@@ -607,6 +610,7 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
           }
           if (!(currentDestination.empty())) {
               if (currentDestination != (*i)->getDepartureAirport()->getId()) {
+                  SG_LOG(SG_AI, SG_BULK, (*i)->getCallSign() << " not matching departure.");
                    //cerr << (*i)->getCallSign() << "Doesn't match destination" << endl;
                    //cerr << "Current Destination " << currentDestination << "Doesnt match flight's " <<
                    //          (*i)->getArrivalAirport()->getId() << endl;
@@ -618,7 +622,7 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
             time_t departure = (*i)->getDepartureTime();
             int groundTime = groundTimeFromRadius();
             if (departure < (arrival+(groundTime))) {
-              SG_LOG (SG_AI, SG_BULK, "Not flight candidate : " << (*i)->getCallSign() << " Arrival : " << arrival << " Planned Departure " << departure << " < " << (arrival+groundTime));
+              SG_LOG (SG_AI, SG_BULK, "Not flight candidate : " << (*i)->getCallSign() << " Arrival : " << arrival << " Planned Departure " << departure << " < " << (arrival+groundTime) << " Diff : " << (arrival+groundTime-departure));
               continue;
             } else {
               SG_LOG (SG_AI, SG_BULK, "Next flight candidate : " << (*i)->getCallSign() );

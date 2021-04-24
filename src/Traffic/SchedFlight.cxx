@@ -234,19 +234,21 @@ void FGScheduledFlight::update()
 
 void FGScheduledFlight::adjustTime(time_t now)
 {
-  SG_LOG( SG_AI, SG_BULK, "1: Adjusting schedule please wait: " << now << " " << arrivalTime << " " << (arrivalTime+repeatPeriod));
-  // Make sure that the arrival time is in between 
-  // the current time and the next repeat period.
-  while ((arrivalTime < now) || (arrivalTime > now + repeatPeriod)) {
-      if (arrivalTime < now) {
-          departureTime += repeatPeriod;
-          arrivalTime += repeatPeriod;
-      } else if (arrivalTime > now + repeatPeriod) {
-          departureTime -= repeatPeriod;
-          arrivalTime -= repeatPeriod;
-      }
-      SG_LOG( SG_AI, SG_BULK, "2: Adjusting schedule please wait: " << now << " " << arrivalTime << " " << (arrivalTime+repeatPeriod));
-  }
+    // Make sure that the arrival time is in between
+    // the current time and the next repeat period.
+    while ((arrivalTime < now) || (arrivalTime > now + repeatPeriod)) {
+        if (arrivalTime < now) {
+            departureTime += repeatPeriod;
+            arrivalTime += repeatPeriod;
+            SG_LOG(SG_AI, SG_BULK, "Adjusted schedule forward : " << callsign << " " << now << " " << departureTime << " " << arrivalTime);
+        } else if (arrivalTime > now + repeatPeriod) {
+            departureTime -= repeatPeriod;
+            arrivalTime -= repeatPeriod;
+            SG_LOG(SG_AI, SG_BULK, "Adjusted schedule backward : " << callsign << " " << now << " " << departureTime << " " << arrivalTime);
+        } else {
+            SG_LOG(SG_AI, SG_BULK, "Not Adjusted schedule : " << now);
+        }
+    }
 }
 
 
