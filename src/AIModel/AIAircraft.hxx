@@ -141,7 +141,7 @@ private:
     //subclasses to override specific behaviour
     bool fpExecutable(time_t now);
     void handleFirstWaypoint(void);
-    bool leadPointReached(FGAIWaypoint* curr);
+    bool leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int nextTurnAngle);
     bool handleAirportEndPoints(FGAIWaypoint* prev, time_t now);
     bool reachedEndOfCruise(double&);
     bool aiTrafficVisible(void);

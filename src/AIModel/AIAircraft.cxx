@@ -290,10 +290,13 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
     FGAIWaypoint* curr = 0;
     // the next plus 1
     FGAIWaypoint* next = 0;
+    /**The angle of the next turn.*/
+    int nextTurnAngle = 0;
 
     prev = fp->getPreviousWaypoint();
     curr = fp->getCurrentWaypoint();
     next = fp->getNextWaypoint();
+    nextTurnAngle = fp->getNextTurnAngle();
 
     dt_count += dt;
 
@@ -304,12 +307,13 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         handleFirstWaypoint();
         return;
     }                            // end of initialization
-    if (! fpExecutable(now))
-          return;
+    if (!fpExecutable(now)) {
+        return;
+    }
     dt_count = 0;
 
     double distanceToDescent;
-    if(reachedEndOfCruise(distanceToDescent)) {
+    if (reachedEndOfCruise(distanceToDescent)) {
         if (!loadNextLeg(distanceToDescent)) {
             setDie(true);
             return;
@@ -328,13 +332,11 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         return;
     }
 
-    if (! leadPointReached(curr)) {
+    if (!leadPointReached(curr, next, nextTurnAngle)) {
         controlHeading(curr);
         controlSpeed(curr, next);
-        
     } else {
-        if (curr->isFinished())      //end of the flight plan
-        {
+        if (curr->isFinished()) {     //end of the flight plan
             if (fp->getRepeat())
                 fp->restart();
             else
@@ -350,7 +352,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
 
         //TODO let the fp handle this (loading of next leg)
         fp->IncrementWaypoint( trafficRef != 0 );
-        if  ( ((!(fp->getNextWaypoint()))) && (trafficRef != 0) ) {
+        if (((!(fp->getNextWaypoint()))) && (trafficRef != 0) ) {
             if (!loadNextLeg()) {
                 setDie(true);
                 return;
@@ -358,12 +360,12 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         }
 
         prev = fp->getPreviousWaypoint();
-        SG_LOG(SG_AI, SG_BULK, "Previous WP \t" << prev->getName());
+        SG_LOG(SG_AI, SG_BULK, "Previous WP \t" << prev->getName() << "\t" << prev->getPos());
         curr = fp->getCurrentWaypoint();
-        SG_LOG(SG_AI, SG_BULK, "Current WP \t" << curr->getName());
+        SG_LOG(SG_AI, SG_BULK, "Current WP \t" << curr->getName() << "\t" << curr->getPos());
         next = fp->getNextWaypoint();
-        if( next ) {
-            SG_LOG(SG_AI, SG_BULK, "Next WP \t" << next->getName());
+        if(next) {
+            SG_LOG(SG_AI, SG_BULK, "Next WP \t" << next->getName() << "\t" << next->getPos());
         }
 
         // Now that we have incremented the waypoints, excute some traffic manager specific code
@@ -834,34 +836,48 @@ bool FGAIAircraft::fpExecutable(time_t now) {
 /**
  * Check to see if we've reached the lead point for our next turn
  *
- * @param curr
+ * @param curr the WP we are currently targeting at.
+ * @param next the WP that will follow. Used to detect passed WPs (heading diff curr/next > 120°) 
+ * @param nextTurnAngle to detect sharp corners
  * @return
  */
-bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
-    double dist_to_go = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
-
-    //cerr << "2" << endl;
+bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int nextTurnAngle) {
+    double dist_to_go_m = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
+    // Leaddistance should be ft
     double lead_dist = fp->getLeadDistance();
     // experimental: Use fabs, because speed can be negative (I hope) during push_back.
-    if ((dist_to_go < fabs(10.0* speed)) && (speed < 0) && (tgt_speed < 0) && fp->getCurrentWaypoint()->contains("PushBackPoint")) {
-          tgt_speed = -(dist_to_go / 10.0);
-          if (tgt_speed > -0.5) {
-                tgt_speed = -0.5;
-          }
+    if ((dist_to_go_m < fabs(10.0* speed)) && (speed < 0) && (tgt_speed < 0) && fp->getCurrentWaypoint()->contains("PushBackPoint")) {
+        tgt_speed = -(dist_to_go_m / 10.0);
+        if (tgt_speed > -0.5) {
+            tgt_speed = -0.5;
+        }
 
-          if (fp->getPreviousWaypoint()->getSpeed() < tgt_speed) {
-              fp->getPreviousWaypoint()->setSpeed(tgt_speed);
-          }
+        if (fp->getPreviousWaypoint()->getSpeed() < tgt_speed) {
+            fp->getPreviousWaypoint()->setSpeed(tgt_speed);
+        }
     }
     
     if (lead_dist < fabs(2*speed)) {
       //don't skip over the waypoint
-      lead_dist = fabs(2*speed);
+        lead_dist = fabs(2*speed);
     }
-
+    
     double bearing = 0;
     // don't do bearing calculations for ground traffic
     bearing = getBearing(fp->getBearing(pos, curr));
+    double nextBearing = bearing;
+    if (next) {
+        nextBearing = getBearing(fp->getBearing(pos, next));
+    }
+    double bearingDiff = fabs(bearing-nextBearing);
+    if (onGround() && nextTurnAngle > 30 && bearingDiff > 50) {
+        // Next turn is pretty sharp so we do a preturn
+        SG_LOG(SG_AI, SG_BULK, "Leadpoint reached due to excessive heading diff " << bearingDiff);
+        minBearing = 360;
+        speedFraction = 1.0;
+        prev_dist_to_go = HUGE_VAL;
+        return true;
+    }
     if (bearing < minBearing) {
         minBearing = bearing;
         if (minBearing < 10) {
@@ -872,16 +888,17 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
         } else {
             speedFraction = 1.0;
         }
-    } 
+    }
 
-    if ((dist_to_go < lead_dist) ||
-        ((dist_to_go > prev_dist_to_go) && (bearing > (minBearing * 1.1))) ) {
+    if ((dist_to_go_m < lead_dist) ||
+        ((dist_to_go_m > prev_dist_to_go) && (bearing > (minBearing * 1.1))) ) {
+        SG_LOG(SG_AI, SG_BULK, "Leadpoint reached " << bearing << "\t" << nextBearing);
         minBearing = 360;
         speedFraction = 1.0;
         prev_dist_to_go = HUGE_VAL;
         return true;
     } else {
-        prev_dist_to_go = dist_to_go;
+        prev_dist_to_go = dist_to_go_m;
         return false;
     }
 }
@@ -934,6 +951,7 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
     // This is the last taxi waypoint, and marks the the end of the flight plan
     // so, the schedule should update and wait for the next departure time.
     if (prev->contains("END")) {
+        //FIXME Heading Error should be reset
         time_t nextDeparture = trafficRef->getDepartureTime();
         // make sure to wait at least 20 minutes at parking to prevent "nervous" taxi behavior
         if (nextDeparture < (now+1200)) {
@@ -1102,6 +1120,8 @@ void FGAIAircraft::updateHeading(double dt) {
             }
 
             hdg += headingChangeRate * dt * sqrt(fabs(speed) / 15);
+            SG_NORMALIZE_RANGE(headingDiff, 0.0, 360.0);
+
             headingError = headingDiff;
             if (fabs(headingError) < 1.0) {
                 hdg = tgt_heading;
@@ -1158,7 +1178,6 @@ void FGAIAircraft::updateBankAngleTarget() {
         }
     }
 }
-
 
 void FGAIAircraft::updateVerticalSpeedTarget(double dt) {
     // adjust target Altitude, based on ground elevation when on ground
@@ -1265,7 +1284,6 @@ void FGAIAircraft::updateSecondaryTargetValues(double dt) {
     updateBankAngleTarget();
     updateVerticalSpeedTarget(dt);
     updatePitchAngleTarget();
-
     //TODO calculate wind correction angle (tgt_yaw)
 }
 
@@ -1296,7 +1314,8 @@ bool FGAIAircraft::reachedEndOfCruise(double &distance) {
         double descentTimeNeeded = verticalDistance / descentRate;
         double distanceCovered   = descentSpeed * descentTimeNeeded; 
 
-        if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
+        if (trafficRef->getCallSign() != "" && 
+            trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
             cerr << "Checking for end of cruise stage for :" << trafficRef->getCallSign() << endl;
             cerr << "Descent rate      : " << descentRate << endl;
             cerr << "Descent speed     : " << descentSpeed << endl;
@@ -1307,10 +1326,11 @@ bool FGAIAircraft::reachedEndOfCruise(double &distance) {
 
         distance = distanceCovered;
         if (dist < distanceCovered) {
-              if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
-                   //exit(1);
-              }
-              return true;
+            if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
+                //exit(1);
+            }
+            SG_LOG(SG_AI, SG_BULK, "End Of Cruise");
+            return true;
         } else {
               return false;
         }
@@ -1339,6 +1359,10 @@ void FGAIAircraft::resetPositionFromFlightPlan()
     setAltitude(prev->getAltitude());
     setSpeed(prev->getSpeed());
 }
+
+/**
+ * Returns a normalised bearing
+ */
 
 double FGAIAircraft::getBearing(double crse) 
 {
@@ -1435,10 +1459,13 @@ void FGAIAircraft::updateModelProperties(double dt)
 }
 
 void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
+    o << "Index\t";
     o << "Lat\t";
     o << "Lon\t";
     o << "heading change rate\t";
     o << "headingErr\t";
+    o << "hdg\t";
+    o << "tgt_heading\t";
     o << "minBearing\t";
     o << "speedFraction\t";
     o << "groundOffset\t";
@@ -1449,8 +1476,13 @@ void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
     o << "Bearing\t";
     o << "headingChangeRate\t";
     o << "headingError\t";
-    o << "Name\tWP Lat\tWP Lon\tDist\t";
-    o << "Leg\tNum WP\t";
+    o << "Name\t";
+    o << "WP Lat\t";
+    o << "WP Lon\t";
+    o << "Dist\t";
+    o << "Time\t";
+    o << "Leg\t";
+    o << "Num WP\t";
     o << endl;
 }
 
@@ -1460,6 +1492,8 @@ void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
     o << this->getGeodPos().getLongitudeDeg() << "\t";
     o << headingChangeRate << "\t";
     o << headingError << "\t";
+    o << hdg << "\t";
+    o << tgt_heading << "\t";
     o << minBearing << "\t";
     o << speedFraction << "\t";
     o << groundOffset << "\t";
