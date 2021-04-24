@@ -521,6 +521,30 @@ FGTaxiNodeVector FGGroundNetwork::findSegmentsFrom(const FGTaxiNodeRef &from) co
     return result;
 }
 
+FGTaxiSegment* FGGroundNetwork::findSegmentByHeading(const FGTaxiNode* from, const double heading) const {
+    if (from == 0) {
+        return NULL;
+    }
+
+    FGTaxiSegment* best = nullptr;
+
+  // completely boring linear search of segments. Can be improved if/when
+  // this ever becomes a hot-spot
+    for (auto seg : segments) {
+        if (seg->startNode != from) {
+            continue;
+        }
+
+        if( !best || fabs(best->getHeading()-heading) > fabs(seg->getHeading()-heading)) {
+            best = seg;
+        }
+    }
+
+    return best; // not found
+}
+
+
+
 const intVec& FGGroundNetwork::getTowerFrequencies() const
 {
     return freqTower;

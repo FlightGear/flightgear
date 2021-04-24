@@ -259,6 +259,8 @@ public:
      * segment originating at 'from' is acceptable.
      */
     FGTaxiSegment *findSegment(const FGTaxiNode* from, const FGTaxiNode* to) const;
+    /** Find the taxiway segment best matching the heading*/
+    FGTaxiSegment *findSegmentByHeading(const FGTaxiNode* from, const double heading) const;
     FGTaxiSegment *findSegment(unsigned int idx) const;
     /**
      * Find the segments connected to the node.
