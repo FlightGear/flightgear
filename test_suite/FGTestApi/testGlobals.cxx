@@ -1,6 +1,7 @@
 #include "config.h"
 
 #include "test_suite/dataStore.hxx"
+#include <ctime>
 
 #include "TestDataLogger.hxx"
 #include "testGlobals.hxx"
@@ -67,8 +68,7 @@ void initTestGlobals(const std::string& testName)
 
     fgSetDefaults();
 
-    std::unique_ptr<TimeManager> t;
-    t.reset(new TimeManager);
+    auto t = globals->add_new_subsystem<TimeManager>(SGSubsystemMgr::INIT);
     t->init(); // establish mag-var data
 
     /**
@@ -367,6 +367,15 @@ bool runForTimeWithCheck(double t, RunCheck check)
     }
     
     return false;
+}
+
+void adjustSimulationWorldTime(time_t desiredUnixTime)
+{
+    int timeOffset = desiredUnixTime - time(nullptr);
+    globals->get_props()->setIntValue("/sim/time/cur-time-override", 0);
+    globals->get_props()->setIntValue("/sim/time/warp", timeOffset);
+
+    globals->get_subsystem<TimeManager>()->update(0.0);
 }
 
 void writeFlightPlanToKML(flightgear::FlightPlanRef fp)
