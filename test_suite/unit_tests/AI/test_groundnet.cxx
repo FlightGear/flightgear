@@ -97,6 +97,10 @@ void GroundnetTests::testShortestRoute()
     CPPUNIT_ASSERT_EQUAL(25, route.size());
 }
 
+/**
+ * Tests various find methods.
+ */
+
 void GroundnetTests::testFind()
 {
     FGAirportRef ybbn = FGAirport::getByIdent("YBBN");
@@ -112,5 +116,7 @@ void GroundnetTests::testFind()
     CPPUNIT_ASSERT_EQUAL(2, (int)segmentList.size());
     CPPUNIT_ASSERT_EQUAL(1024, segmentList.front()->getIndex());
     CPPUNIT_ASSERT_EQUAL(1025, segmentList.back()->getIndex());
-    //1026, 1025    
+    FGTaxiSegment* pushForwardSegment = network->findSegmentByHeading(startParking, startParking->getHeading()); 
+    CPPUNIT_ASSERT(pushForwardSegment);
+    CPPUNIT_ASSERT_EQUAL(1025, pushForwardSegment->getEnd()->getIndex());
 }
