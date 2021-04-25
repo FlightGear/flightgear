@@ -17,9 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include "cockpitDisplayManager.hxx"
 
@@ -27,6 +25,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sg_inlines.h>
 #include <simgear/props/props_io.hxx>
+#include <simgear/debug/ErrorReportingCallback.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -58,13 +57,13 @@ void CockpitDisplayManager::init()
   SGPropertyNode_ptr config_props = new SGPropertyNode;
   SGPropertyNode* path_n = fgGetNode("/sim/instrumentation/path");
   if (!path_n) {
-    SG_LOG(SG_COCKPIT, SG_WARN, "No instrumentation model specified for this model!");
     return;
   }
 
   SGPath config = globals->resolve_aircraft_path(path_n->getStringValue());
   if (!config.exists()) {
-    SG_LOG(SG_COCKPIT, SG_DEV_ALERT, "CockpitDisplaysManager: Missing instrumentation file at:" << config);
+      simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::AircraftSystems,
+                             "CockpitDisplaysManager: Missing instrumentation file", config);
     return;
   }
 
@@ -78,8 +77,9 @@ void CockpitDisplayManager::init()
                     "system specification file.  See earlier errors for details.");
     }
   } catch (const sg_exception& e) {
-    SG_LOG(SG_COCKPIT, SG_ALERT, "Failed to load instrumentation system model: "
-                    << config << ":" << e.getFormattedMessage() );
+      simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::AircraftSystems,
+                             "Failed to load cockpit displays system:" + e.getFormattedMessage(),
+                             e.getLocation());
   }
 
   SGSubsystemGroup::init();

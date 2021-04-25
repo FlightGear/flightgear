@@ -18,9 +18,7 @@
 //
 //  $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <string.h>		// for strcmp()
 
@@ -30,6 +28,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/debug/ErrorReportingCallback.hxx>
 
 #include <istream>
 #include <fstream>
@@ -37,6 +36,7 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #include <GUI/gui.h>
 
@@ -571,7 +571,7 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
  * scaled automatically if the instrument is not at its preferred size.
  */
 static FGPanelInstrument *
-readInstrument (const SGPropertyNode * node)
+readInstrument (const SGPropertyNode * node, const SGPath& path)
 {
   const string name = node->getStringValue("name");
   int x = node->getIntValue("x", -1);
@@ -582,8 +582,8 @@ readInstrument (const SGPropertyNode * node)
   int h = node->getIntValue("h-base", -1);
 
   if (x == -1 || y == -1) {
-    SG_LOG( SG_COCKPIT, SG_ALERT,
-            "x and y positions must be specified and > 0" );
+      simgear::reportFailure(simgear::LoadFailure::Misconfigured, simgear::ErrorCode::AircraftSystems,
+                             "Panel x and y positions must be specified and > 0", path);
     return 0;
   }
 
@@ -650,7 +650,7 @@ readInstrument (const SGPropertyNode * node)
  * Construct the panel from a property tree.
  */
 FGPanel *
-readPanel (const SGPropertyNode * root)
+readPanel (const SGPropertyNode * root, const SGPath& path)
 {
   SG_LOG( SG_COCKPIT, SG_INFO, "Reading properties for panel " <<
           root->getStringValue("name", "[Unnamed Panel]") );
@@ -742,7 +742,7 @@ readPanel (const SGPropertyNode * root)
     for (int i = 0; i < nInstruments; i++) {
       const SGPropertyNode * node = instrument_group->getChild(i);
       if (!strcmp(node->getName(), "instrument")) {
-        FGPanelInstrument * instrument = readInstrument(node);
+        FGPanelInstrument * instrument = readInstrument(node, path);
         if (instrument != 0)
           panel->addInstrument(instrument);
       } else if (!strcmp(node->getName(), "special-instrument")) {
@@ -822,12 +822,13 @@ fgReadPanel (istream &input)
   SGPropertyNode root;
 
   try {
+      flightgear::SentryXMLErrorSupression xs;
     readProperties(input, &root);
   } catch (const sg_exception &e) {
     guiErrorMessage("Error reading panel: ", e);
     return 0;
   }
-  return readPanel(&root);
+    return readPanel(&root, SGPath{});
 }
 
 
@@ -844,18 +845,20 @@ fgReadPanel (const string &relative_path)
   SGPropertyNode root;
 
   if (!path.exists()) {
-      auto msg = string{"Missing panel file: "} + relative_path;
-      guiErrorMessage(msg.c_str());
+      simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::AircraftSystems,
+                             "Missing panel file:" + relative_path, path);
       return nullptr;
   }
 
   try {
+      flightgear::SentryXMLErrorSupression xs;
     readProperties(path, &root);
   } catch (const sg_exception &e) {
-    guiErrorMessage("Error reading panel: ", e);
+      simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::AircraftSystems,
+                             "Error parsing panel file:" + e.getFormattedMessage(), path);
     return 0;
   }
-  return readPanel(&root);
+  return readPanel(&root, path);
 }
 
 

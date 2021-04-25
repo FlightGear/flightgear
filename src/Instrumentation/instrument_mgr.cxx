@@ -3,9 +3,7 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <iostream>
 #include <string>
@@ -15,6 +13,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sg_inlines.h>
 #include <simgear/props/props_io.hxx>
+#include <simgear/debug/ErrorReportingCallback.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -68,13 +67,15 @@ void FGInstrumentMgr::init()
   SGPropertyNode_ptr config_props = new SGPropertyNode;
   SGPropertyNode* path_n = fgGetNode("/sim/instrumentation/path");
   if (!path_n) {
-    SG_LOG(SG_COCKPIT, SG_WARN, "No instrumentation model specified for this model!");
+    SG_LOG(SG_COCKPIT, SG_DEV_WARN, "No instrumentation model specified for this model!");
     return;
   }
 
   SGPath config = globals->resolve_aircraft_path(path_n->getStringValue());
   if (!config.exists()) {
     SG_LOG(SG_COCKPIT, SG_DEV_ALERT, "Missing instrumentation file at:" << config);
+      simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::AircraftSystems,
+                             "FGInstrumentMgr: Missing instrumentation file", config);
     return;
   }
 
@@ -82,14 +83,15 @@ void FGInstrumentMgr::init()
 
   try {
     readProperties( config, config_props );
-    if (!build(config_props)) {
+    if (!build(config_props, config)) {
       throw sg_exception(
                     "Detected an internal inconsistency in the instrumentation\n"
                     "system specification file.  See earlier errors for details.");
     }
   } catch (const sg_exception& e) {
-    SG_LOG(SG_COCKPIT, SG_ALERT, "Failed to load instrumentation system model: "
-                    << config << ":" << e.getFormattedMessage() );
+      simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::AircraftSystems,
+                             "Failed to load instrumentation system:" + e.getFormattedMessage(),
+                             e.getLocation());
   }
 
 
@@ -105,7 +107,7 @@ void FGInstrumentMgr::init()
   SGSubsystemGroup::init();
 }
 
-bool FGInstrumentMgr::build (SGPropertyNode* config_props)
+bool FGInstrumentMgr::build (SGPropertyNode* config_props, const SGPath& path)
 {
     for ( int i = 0; i < config_props->nChildren(); ++i ) {
         SGPropertyNode *node = config_props->getChild(i);
@@ -220,8 +222,9 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new TCAS( node ), 0.2);
             
         } else {
-            SG_LOG( SG_INSTR, SG_ALERT,
-                     "Unknown top level section in instrumentation: " << name );
+            simgear::reportFailure(simgear::LoadFailure::Misconfigured, simgear::ErrorCode::AircraftSystems,
+                                   "Unknown top level section in instrumentation:" + name,
+                                   path);
             continue;
         }
       

@@ -7,14 +7,6 @@
 #ifndef __INSTRUMENT_MGR_HXX
 #define __INSTRUMENT_MGR_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
 
@@ -39,9 +31,9 @@ public:
     static const char* staticSubsystemClassId() { return "instrumentation"; }
 
 private:
-    bool build (SGPropertyNode* config_props);
+    bool build (SGPropertyNode* config_props, const SGPath& path);
 
-    bool _explicitGps;
+    bool _explicitGps = false;
 
     std::vector<std::string> _instruments;
 };
