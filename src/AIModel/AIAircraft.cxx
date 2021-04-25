@@ -115,9 +115,15 @@ FGAIAircraft::FGAIAircraft(FGAISchedule* ref) : /* HOT must be disabled for AI A
 }
 
 
-FGAIAircraft::~FGAIAircraft() {
-    if (controller)
-        controller->signOff(getID());
+FGAIAircraft::~FGAIAircraft()
+{
+    assert(!controller);
+    if (controller) {
+        // we no longer signOff from controller here, controller should
+        // have been cleared using clearATCCOntrollers
+        // see FLIGHTGEAR-15 on Sentry
+        SG_LOG(SG_AI, SG_ALERT, "Destruction of AIAircraft which was not unbound");
+    }
 }
 
 
@@ -419,6 +425,10 @@ double FGAIAircraft::calcVerticalSpeed(double vert_ft, double dist_m, double spe
 
 void FGAIAircraft::clearATCController()
 {
+    if (controller) {
+        controller->signOff(getID());
+    }
+
     controller = 0;
     prevController = 0;
     towerController = 0;
