@@ -185,7 +185,7 @@ void TimeManagerTests::testETCTimeZones()
     const auto testDate = 314611200L;
     fgSetInt("/sim/time/cur-time-override", testDate);
 
-    globals->add_subsystem("time", timeManager);
+    globals->add_subsystem("time", timeManager, SGSubsystemMgr::INIT);
 
     FGTestApi::setPositionAndStabilise(phto->geod());
     timeManager->reposition();

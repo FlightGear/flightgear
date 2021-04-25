@@ -34,7 +34,7 @@ void FPNasalTests::setUp()
     }
     
     // flightplan() acces needs the route manager
-    globals->add_new_subsystem<FGRouteMgr>();
+    globals->add_new_subsystem<FGRouteMgr>(SGSubsystemMgr::GENERAL);
 
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();

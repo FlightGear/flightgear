@@ -60,11 +60,11 @@ void PosInitTests::setUp()
 
 
     apt->testSuiteInjectGroundnetXML(SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "EDDF.groundnet.xml");
-    
-    globals->add_new_subsystem<flightgear::AirportDynamicsManager>();
-    globals->add_new_subsystem<PerformanceDB>();
-    globals->add_new_subsystem<FGATCManager>();
-    globals->add_new_subsystem<FGAIManager>();
+
+    globals->add_new_subsystem<flightgear::AirportDynamicsManager>(SGSubsystemMgr::GENERAL);
+    globals->add_new_subsystem<PerformanceDB>(SGSubsystemMgr::GENERAL);
+    globals->add_new_subsystem<FGATCManager>(SGSubsystemMgr::GENERAL);
+    globals->add_new_subsystem<FGAIManager>(SGSubsystemMgr::GENERAL);
 }
 
 

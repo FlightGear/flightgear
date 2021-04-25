@@ -134,7 +134,10 @@ void RNAVProcedureTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("rnav-procedures");
     FGTestApi::setUp::initNavDataCache();
-    
+
+    globals->get_subsystem_mgr()->bind();
+    globals->get_subsystem_mgr()->init();
+
     SGPath proceduresPath = SGPath::fromEnv("FG_PROCEDURES_PATH");
     if (proceduresPath.exists()) {
         globals->append_fg_scenery(proceduresPath);
@@ -173,7 +176,7 @@ GPS* RNAVProcedureTests::setupStandardGPS(SGPropertyNode_ptr config,
 
 void RNAVProcedureTests::setupRouteManager()
 {
-    auto rm = globals->add_new_subsystem<FGRouteMgr>();
+    auto rm = globals->add_new_subsystem<FGRouteMgr>(SGSubsystemMgr::GENERAL);
     rm->bind();
     rm->init();
     rm->postinit();

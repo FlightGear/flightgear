@@ -47,11 +47,11 @@ void RouteManagerTests::setUp()
         static_haveProcedures = true;
         globals->append_fg_scenery(proceduresPath);
     }
-    
-    globals->add_new_subsystem<FGRouteMgr>();
-    
-// setup the default GPS, which is needed for waypoint
-// sequencing to work
+
+    globals->add_new_subsystem<FGRouteMgr>(SGSubsystemMgr::FDM);
+
+    // setup the default GPS, which is needed for waypoint
+    // sequencing to work
     SGPropertyNode_ptr configNode(new SGPropertyNode);
     configNode->setStringValue("name", "gps");
     configNode->setIntValue("number", 0);

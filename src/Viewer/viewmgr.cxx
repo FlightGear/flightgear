@@ -177,17 +177,13 @@ FGViewMgr::update (double dt)
 
 // update the camera now
     osg::ref_ptr<flightgear::CameraGroup> cameraGroup = flightgear::CameraGroup::getDefault();
-    if (!cameraGroup) {
-        // attempting to diagnose the cause of FLIGHTGEAR-H9F
-        throw sg_exception("FGViewMgr::update: no camera group exists");
-    }
-
     if (cameraGroup) {
         cameraGroup->setCameraParameters(currentView->get_v_fov(),
                                          cameraGroup->getMasterAspectRatio());
         cameraGroup->update(toOsg(currentView->getViewPosition()),
                             toOsg(currentView->getViewOrientation()));
     }
+
     SviewUpdate(dt);
 }
 

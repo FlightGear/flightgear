@@ -86,7 +86,7 @@ void PidControllerTests::test()
 
     auto ap = new FGXMLAutopilot::Autopilot(globals->get_props(), config);
 
-    globals->add_subsystem("ap", ap);
+    globals->add_subsystem("ap", ap, SGSubsystemMgr::FDM);
     ap->bind();
     ap->init();
 

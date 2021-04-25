@@ -49,8 +49,8 @@ void SubmodelsTests::setUp()
     props->setBoolValue("sim/ai/enabled", true);
     props->setStringValue("sim/submodels/path", "Aircraft/Test/submodels.xml");
 
-    globals->add_new_subsystem<FGAIManager>();
-    globals->add_new_subsystem<FGSubmodelMgr>();
+    globals->add_new_subsystem<FGAIManager>(SGSubsystemMgr::GENERAL);
+    globals->add_new_subsystem<FGSubmodelMgr>(SGSubsystemMgr::GENERAL);
 
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();

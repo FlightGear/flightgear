@@ -61,10 +61,10 @@ void TrafficTests::setUp()
     egph->testSuiteInjectGroundnetXML(SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "EGPH.groundnet.xml");
 
 
-    globals->add_new_subsystem<PerformanceDB>();
-    globals->add_new_subsystem<FGATCManager>();
-    globals->add_new_subsystem<FGAIManager>();
-    globals->add_new_subsystem<flightgear::AirportDynamicsManager>();
+    globals->add_new_subsystem<PerformanceDB>(SGSubsystemMgr::GENERAL);
+    globals->add_new_subsystem<FGATCManager>(SGSubsystemMgr::GENERAL);
+    globals->add_new_subsystem<FGAIManager>(SGSubsystemMgr::GENERAL);
+    globals->add_new_subsystem<flightgear::AirportDynamicsManager>(SGSubsystemMgr::GENERAL);
 
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
@@ -135,7 +135,7 @@ void TrafficTests::testTrafficManager()
     fgSetBool("/sim/traffic-manager/active", true);
     fgSetBool("/sim/terrasync/ai-data-update-now", false);
 
-    auto tfc = globals->add_new_subsystem<FGTrafficManager>();
+    auto tfc = globals->add_new_subsystem<FGTrafficManager>(SGSubsystemMgr::GENERAL);
 
 
     // specify traffic files to read

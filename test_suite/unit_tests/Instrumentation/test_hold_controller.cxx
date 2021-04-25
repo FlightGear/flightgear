@@ -72,7 +72,10 @@ void HoldControllerTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("hold-ctl");
     FGTestApi::setUp::initNavDataCache();
-    
+
+    globals->get_subsystem_mgr()->bind();
+    globals->get_subsystem_mgr()->init();
+
     setupRouteManager();
 }
 
@@ -114,7 +117,7 @@ GPS* HoldControllerTests::setupStandardGPS(SGPropertyNode_ptr config,
 
 void HoldControllerTests::setupRouteManager()
 {
-    auto rm = globals->add_new_subsystem<FGRouteMgr>();
+    auto rm = globals->add_new_subsystem<FGRouteMgr>(SGSubsystemMgr::GENERAL);
     rm->bind();
     rm->init();
     rm->postinit();
