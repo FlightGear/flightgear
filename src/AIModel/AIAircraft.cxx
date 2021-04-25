@@ -1314,7 +1314,8 @@ bool FGAIAircraft::reachedEndOfCruise(double &distance) {
         double descentTimeNeeded = verticalDistance / descentRate;
         double distanceCovered   = descentSpeed * descentTimeNeeded; 
 
-        if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
+        if (trafficRef->getCallSign() != "" && 
+            trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
             cerr << "Checking for end of cruise stage for :" << trafficRef->getCallSign() << endl;
             cerr << "Descent rate      : " << descentRate << endl;
             cerr << "Descent speed     : " << descentSpeed << endl;
