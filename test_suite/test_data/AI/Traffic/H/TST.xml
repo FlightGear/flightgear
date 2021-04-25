@@ -30,7 +30,7 @@
 		<heavy>false</heavy>
 	</aircraft>
 	<flight>
-		<callsign>Test YBBN_1001</callsign>
+		<callsign>Test_0001</callsign>
 		<required-aircraft>TST_BN_2</required-aircraft>
 		<fltrules>VFR</fltrules>
 		<departure>
@@ -55,7 +55,22 @@
 		<cruise-alt>50</cruise-alt>
 		<arrival>
 			<port>YBBN</port>
-			<time>00:10:00</time>
+			<time>00:20:00</time>
+		</arrival>
+		<repeat>02Hr</repeat>
+	</flight>
+	<flight>
+		<callsign>Test_1001</callsign>
+		<required-aircraft>TST_BN_2</required-aircraft>
+		<fltrules>VFR</fltrules>
+		<departure>
+			<port>YSSY</port>
+			<time>00:05:00</time>
+		</departure>
+		<cruise-alt>50</cruise-alt>
+		<arrival>
+			<port>YBBN</port>
+			<time>00:25:00</time>
 		</arrival>
 		<repeat>02Hr</repeat>
 	</flight>
@@ -70,11 +85,26 @@
 		<cruise-alt>50</cruise-alt>
 		<arrival>
 			<port>YBBN</port>
-			<time>00:20:00</time>
+			<time>00:30:00</time>
 		</arrival>
 		<repeat>02Hr</repeat>
 	</flight>
-		<flight>
+	<flight>
+		<callsign>Test_1002</callsign>
+		<required-aircraft>TST_BN_2</required-aircraft>
+		<fltrules>VFR</fltrules>
+		<departure>
+			<port>YSSY</port>
+			<time>00:15:00</time>
+		</departure>
+		<cruise-alt>50</cruise-alt>
+		<arrival>
+			<port>YBBN</port>
+			<time>00:35:00</time>
+		</arrival>
+		<repeat>02Hr</repeat>
+	</flight>
+	<flight>
 		<callsign>Test_1003</callsign>
 		<required-aircraft>TST_BN_2</required-aircraft>
 		<fltrules>VFR</fltrules>
@@ -85,7 +115,22 @@
 		<cruise-alt>50</cruise-alt>
 		<arrival>
 			<port>YBBN</port>
-			<time>00:30:00</time>
+			<time>00:40:00</time>
+		</arrival>
+		<repeat>02Hr</repeat>
+	</flight>
+	<flight>
+		<callsign>Test_1003</callsign>
+		<required-aircraft>TST_BN_2</required-aircraft>
+		<fltrules>VFR</fltrules>
+		<departure>
+			<port>YSSY</port>
+			<time>00:25:00</time>
+		</departure>
+		<cruise-alt>50</cruise-alt>
+		<arrival>
+			<port>YBBN</port>
+			<time>00:45:00</time>
 		</arrival>
 		<repeat>02Hr</repeat>
 	</flight>
@@ -100,7 +145,22 @@
 		<cruise-alt>50</cruise-alt>
 		<arrival>
 			<port>YBBN</port>
-			<time>00:40:00</time>
+			<time>00:50:00</time>
+		</arrival>
+		<repeat>02Hr</repeat>
+	</flight>
+	<flight>
+		<callsign>Test_1004</callsign>
+		<required-aircraft>TST_BN_2</required-aircraft>
+		<fltrules>VFR</fltrules>
+		<departure>
+			<port>YSSY</port>
+			<time>00:35:00</time>
+		</departure>
+		<cruise-alt>50</cruise-alt>
+		<arrival>
+			<port>YBBN</port>
+			<time>00:55:00</time>
 		</arrival>
 		<repeat>02Hr</repeat>
 	</flight>
@@ -115,7 +175,22 @@
 		<cruise-alt>50</cruise-alt>
 		<arrival>
 			<port>YBBN</port>
-			<time>00:50:00</time>
+			<time>01:00:00</time>
+		</arrival>
+		<repeat>02Hr</repeat>
+	</flight>
+	<flight>
+		<callsign>Test_1005</callsign>
+		<required-aircraft>TST_BN_2</required-aircraft>
+		<fltrules>VFR</fltrules>
+		<departure>
+			<port>YSSY</port>
+			<time>00:45:00</time>
+		</departure>
+		<cruise-alt>50</cruise-alt>
+		<arrival>
+			<port>YBBN</port>
+			<time>01:05:00</time>
 		</arrival>
 		<repeat>02Hr</repeat>
 	</flight>
@@ -130,22 +205,22 @@
 		<cruise-alt>50</cruise-alt>
 		<arrival>
 			<port>YBBN</port>
-			<time>01:00:00</time>
+			<time>01:10:00</time>
 		</arrival>
 		<repeat>02Hr</repeat>
 	</flight>
 	<flight>
-		<callsign>Test_1007</callsign>
+		<callsign>Test_1006</callsign>
 		<required-aircraft>TST_BN_2</required-aircraft>
 		<fltrules>VFR</fltrules>
 		<departure>
 			<port>YSSY</port>
-			<time>01:00:00</time>
+			<time>00:55:00</time>
 		</departure>
 		<cruise-alt>50</cruise-alt>
 		<arrival>
 			<port>YBBN</port>
-			<time>01:10:00</time>
+			<time>01:15:00</time>
 		</arrival>
 		<repeat>02Hr</repeat>
 	</flight>
@@ -155,7 +230,7 @@
 		<fltrules>VFR</fltrules>
 		<departure>
 			<port>YSSY</port>
-			<time>01:10:00</time>
+			<time>01:00:00</time>
 		</departure>
 		<cruise-alt>50</cruise-alt>
 		<arrival>
@@ -165,7 +240,22 @@
 		<repeat>02Hr</repeat>
 	</flight>
 	<flight>
-		<callsign>Test_1007</callsign>
+		<callsign>Test_1008</callsign>
+		<required-aircraft>TST_BN_2</required-aircraft>
+		<fltrules>VFR</fltrules>
+		<departure>
+			<port>YSSY</port>
+			<time>01:10:00</time>
+		</departure>
+		<cruise-alt>50</cruise-alt>
+		<arrival>
+			<port>YBBN</port>
+			<time>01:30:00</time>
+		</arrival>
+		<repeat>02Hr</repeat>
+	</flight>
+	<flight>
+		<callsign>Test_1009</callsign>
 		<required-aircraft>TST_BN_2</required-aircraft>
 		<fltrules>VFR</fltrules>
 		<departure>
@@ -175,12 +265,12 @@
 		<cruise-alt>50</cruise-alt>
 		<arrival>
 			<port>YBBN</port>
-			<time>01:30:00</time>
+			<time>01:40:00</time>
 		</arrival>
 		<repeat>02Hr</repeat>
 	</flight>
 	<flight>
-		<callsign>Test_1007</callsign>
+		<callsign>Test_1010</callsign>
 		<required-aircraft>TST_BN_2</required-aircraft>
 		<fltrules>VFR</fltrules>
 		<departure>
@@ -190,32 +280,17 @@
 		<cruise-alt>50</cruise-alt>
 		<arrival>
 			<port>YBBN</port>
-			<time>01:40:00</time>
-		</arrival>
-		<repeat>02Hr</repeat>
-	</flight>
-	<flight>
-		<callsign>Test_1007</callsign>
-		<required-aircraft>TST_BN_2</required-aircraft>
-		<fltrules>VFR</fltrules>
-		<departure>
-			<port>YSSY</port>
-			<time>01:40:00</time>
-		</departure>
-		<cruise-alt>50</cruise-alt>
-		<arrival>
-			<port>YBBN</port>
 			<time>01:50:00</time>
 		</arrival>
 		<repeat>02Hr</repeat>
 	</flight>
 	<flight>
-		<callsign>Test_1007</callsign>
+		<callsign>Test_1011</callsign>
 		<required-aircraft>TST_BN_2</required-aircraft>
 		<fltrules>VFR</fltrules>
 		<departure>
 			<port>YSSY</port>
-			<time>01:50:00</time>
+			<time>01:40:00</time>
 		</departure>
 		<cruise-alt>50</cruise-alt>
 		<arrival>
@@ -224,5 +299,19 @@
 		</arrival>
 		<repeat>02Hr</repeat>
 	</flight>
-
+	<flight>
+		<callsign>Test_1012</callsign>
+		<required-aircraft>TST_BN_2</required-aircraft>
+		<fltrules>VFR</fltrules>
+		<departure>
+			<port>YSSY</port>
+			<time>01:50:00</time>
+		</departure>
+		<cruise-alt>50</cruise-alt>
+		<arrival>
+			<port>YBBN</port>
+			<time>02:10:00</time>
+		</arrival>
+		<repeat>02Hr</repeat>
+	</flight>
 </trafficlist>
