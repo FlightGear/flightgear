@@ -59,9 +59,12 @@ namespace {
 
 void clearTrafficControllers(TrafficVector& vec)
 {
-    TrafficVectorIterator it = vec.begin();
-    for (; it != vec.end(); ++it) {
-        it->getAircraft()->clearATCController();
+    for (const auto& traffic : vec) {
+        if (!traffic.getAircraft()) {
+            continue;
+        }
+
+        traffic.getAircraft()->clearATCController();
     }
 }
 

@@ -319,7 +319,14 @@ FGAIManager::shutdown()
 
     ai_list.clear();
     _environmentVisiblity.clear();
-    _userAircraft.clear();
+
+    if (_userAircraft) {
+        _userAircraft->setDie(true);
+        // we can't unbind() but we do need to clear these
+        _userAircraft->clearATCController();
+        _userAircraft.clear();
+    }
+
     static_haveRegisteredScenarios = false;
     
     globals->get_commands()->removeCommand("load-scenario");

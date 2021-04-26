@@ -120,7 +120,7 @@ FGAIAircraft::~FGAIAircraft()
     assert(!controller);
     if (controller) {
         // we no longer signOff from controller here, controller should
-        // have been cleared using clearATCCOntrollers
+        // have been cleared using clearATCControllers
         // see FLIGHTGEAR-15 on Sentry
         SG_LOG(SG_AI, SG_ALERT, "Destruction of AIAircraft which was not unbound");
     }
