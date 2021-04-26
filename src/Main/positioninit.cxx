@@ -366,8 +366,6 @@ static InitPosResult setInitialPosFromCarrier( const string& carrier )
     {
         std::string cpos = simgear::strutils::lowercase(carrierpos);
 
-        const bool    inair = (cpos == "flols") || (cpos == "abeam");
-
         if (cpos == "flols" || cpos == "abeam")
             fgSetInt("/sim/presets/carrier-course", 3);// base=1, launch=2, recovery=3
         else if (parkpos.find("cat") != std::string::npos)

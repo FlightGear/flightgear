@@ -233,7 +233,7 @@ public:
 
     using AggregateErrors = std::vector<AggregateReport>;
     AggregateErrors _aggregated;
-    int _activeReportIndex = -1;
+    long unsigned int _activeReportIndex = -1;
     string_list _significantProperties; ///< properties we want to include in reports, for debugging
 
     /**
