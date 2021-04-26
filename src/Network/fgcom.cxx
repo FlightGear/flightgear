@@ -178,12 +178,24 @@ void FGCom::bind()
   _ptt_node->addChangeListener(this);
   _selected_comm_node->addChangeListener(this);
   _test_node->addChangeListener(this);
+  // if you listen to more properties, be sure to remove
+  // the listener in unbind() as well
 }
 
 
 
 void FGCom::unbind()
 {
+    _selectedOutput_node->removeChangeListener(this);
+    _selectedInput_node->removeChangeListener(this);
+    _speakerLevel_node->removeChangeListener(this);
+    _silenceThd_node->removeChangeListener(this);
+    _micBoost_node->removeChangeListener(this);
+    _micLevel_node->removeChangeListener(this);
+    _enabled_node->removeChangeListener(this);
+    _ptt_node->removeChangeListener(this);
+    _selected_comm_node->removeChangeListener(this);
+    _test_node->removeChangeListener(this);
 }
 
 
@@ -490,6 +502,12 @@ void FGCom::valueChanged(SGPropertyNode *prop)
       shutdown();
     }
     return;
+  }
+
+  // avoid crash when properties change before FGCom::postinit
+  // https://sourceforge.net/p/flightgear/codetickets/2574/
+  if (!_initialized) {
+      return;
   }
 
   if (prop == _commVolumeNode && _enabled) {
