@@ -22,6 +22,7 @@ class AddOnsController : public QObject
     Q_PROPERTY(AddonsModel* modules READ modules NOTIFY modulesChanged)
     Q_PROPERTY(bool isOfficialHangarRegistered READ isOfficialHangarRegistered NOTIFY isOfficialHangarRegisteredChanged)
     Q_PROPERTY(bool showNoOfficialHangar READ showNoOfficialHangar NOTIFY showNoOfficialHangarChanged)
+    Q_PROPERTY(bool havePathsFromCommandLine READ havePathsFromCommandLine CONSTANT)
 
 public:
     explicit AddOnsController(LauncherMainWindow *parent, LaunchConfig* config);
@@ -51,6 +52,7 @@ public:
 
     Q_INVOKABLE void officialCatalogAction(QString s);
 
+    bool havePathsFromCommandLine() const;
 signals:
     void modulePathsChanged(QStringList modulePaths);
     void modulesChanged();
@@ -66,6 +68,7 @@ public slots:
     void collectArgs();
 
 private:
+    void setLocalAircraftPaths();
     bool shouldShowOfficialCatalogMessage() const;
     void onCatalogsChanged();
 

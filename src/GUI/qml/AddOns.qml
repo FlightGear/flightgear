@@ -276,6 +276,21 @@ Item {
                 }
             }
 
+           Item {
+                // spacing item
+                width: parent.width
+                height: Style.margin * 2
+                visible: commandLineDirsWarning.visible
+            }
+
+            StyledText {
+                id: commandLineDirsWarning
+                width: parent.width
+                visible: _addOns.havePathsFromCommandLine
+                color: Style.destructiveActionColor
+                text: qsTr("Additional aircraft or scenery folders were specified on the command-line. These are not listed here, but will be used when starting the simulator.")
+            }
+
             Item {
                 width: parent.width
                 height: Math.max(installTarballText.implicitHeight, installTarballButton.height)
