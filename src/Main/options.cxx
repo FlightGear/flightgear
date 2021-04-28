@@ -2002,7 +2002,7 @@ struct OptionDesc {
     {"jsbsim-output-directive-file", true,  OPTION_STRING, "/sim/jsbsim/output-directive-file", false, "", nullptr },
     {"disable-gui",                  false, OPTION_FUNC, "", false, "", fgOptDisableGUI },
     {"graphics-preset", true, OPTION_STRING, "/sim/rendering/preset", false, "", nullptr},
-    {"composite-viewer",             true,  OPTION_INT,    "/sim/rendering/composite-viewer-enabled", "", "", nullptr},
+    {"composite-viewer",             true,  OPTION_INT,    "/sim/rendering/composite-viewer-enabled", false, "", nullptr},
     {nullptr,                        false, 0,             nullptr, false, nullptr, nullptr}
 };
 
