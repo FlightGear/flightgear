@@ -107,59 +107,7 @@ Item {
                 }
             }
 
-    //////////////////////////////////////////////////////////////////
-
-            Item {
-                // spacing item
-                width: parent.width
-                height: Style.margin * 2
-            }
-
-            AddOnsHeader {
-                id: aircraftHeader
-                title: qsTr("Additional aircraft folders")
-                description: qsTr("To use aircraft you download yourself, FlightGear needs to " +
-                                  "know the folder(s) containing the aircraft data.")
-                showAddButton: true
-                onAdd: _addOns.addAircraftPath();
-            }
-
-            Rectangle {
-                width: parent.width
-                height: aircraftPathsColumn.childrenRect.height + 1
-                border.width: 1
-                border.color: Style.frameColor
-                clip: true
-                color: Style.panelBackground
-
-                Column {
-                    id: aircraftPathsColumn
-                    width: parent.width - Style.margin * 2
-                    x: Style.margin
-
-                    Repeater {
-                        id: aircraftPathsRepeater
-                        model: _addOns.aircraftPaths
-                        delegate: PathListDelegate {
-                            width: aircraftPathsColumn.width
-                            deletePromptText: qsTr("Remove the aircraft folder: '%1' from the list? (The folder contents will not be changed)").arg(model.path);
-                            modelCount: _addOns.aircraftPaths.count
-                            onPerformDelete: _addOns.aircraftPaths.removePath(model.index)
-                            onPerformMove: _addOns.aircraftPaths.swapIndices(model.index, newIndex);
-                        }
-                    }
-
-                    StyledText {
-                        visible: (aircraftPathsRepeater.count == 0)
-                        width: parent.width
-                        text : qsTr("No custom aircraft paths are configured.");
-                    }
-                }
-
-
-            }
-
-    //////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////
 
             Item {
                 // spacing item
@@ -225,6 +173,73 @@ Item {
                         visible: (addonModulesPathsRepeater.count == 0)
                         width: parent.width
                         text : qsTr("No custom add-on module paths are configured.");
+                    }
+                }
+
+
+            }
+
+    //////////////////////////////////////////////////////////////////
+
+            Item {
+                // spacing item
+                width: parent.width
+                height: Style.margin * 2
+            }
+
+            StyledText {
+                id: commandLineDirsWarning
+                width: parent.width
+                visible: _addOns.havePathsFromCommandLine
+                color: Style.destructiveActionColor
+                text: qsTr("Additional aircraft or scenery folders were specified on the command-line. These are not listed here, but will be used when starting the simulator.")
+            }
+
+            Item {
+                // spacing item
+                width: parent.width
+                height: Style.margin * 2
+                visible: commandLineDirsWarning.visible
+            }
+
+            AddOnsHeader {
+                id: aircraftHeader
+                title: qsTr("Additional aircraft folders")
+                description: qsTr("To use aircraft you download yourself, FlightGear needs to " +
+                                  "know the folder(s) containing the aircraft data.")
+                showAddButton: true
+                onAdd: _addOns.addAircraftPath();
+            }
+
+            Rectangle {
+                width: parent.width
+                height: aircraftPathsColumn.childrenRect.height + 1
+                border.width: 1
+                border.color: Style.frameColor
+                clip: true
+                color: Style.panelBackground
+
+                Column {
+                    id: aircraftPathsColumn
+                    width: parent.width - Style.margin * 2
+                    x: Style.margin
+
+                    Repeater {
+                        id: aircraftPathsRepeater
+                        model: _addOns.aircraftPaths
+                        delegate: PathListDelegate {
+                            width: aircraftPathsColumn.width
+                            deletePromptText: qsTr("Remove the aircraft folder: '%1' from the list? (The folder contents will not be changed)").arg(model.path);
+                            modelCount: _addOns.aircraftPaths.count
+                            onPerformDelete: _addOns.aircraftPaths.removePath(model.index)
+                            onPerformMove: _addOns.aircraftPaths.swapIndices(model.index, newIndex);
+                        }
+                    }
+
+                    StyledText {
+                        visible: (aircraftPathsRepeater.count == 0)
+                        width: parent.width
+                        text : qsTr("No custom aircraft paths are configured.");
                     }
                 }
 

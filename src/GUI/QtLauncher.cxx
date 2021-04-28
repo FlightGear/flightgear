@@ -554,6 +554,13 @@ void launcherSetSceneryPaths()
 {
     globals->clear_fg_scenery();
 
+    // process path sthe user supplied on the existing command line
+    const auto commandLineSceneryPaths = flightgear::Options::sharedInstance()->valuesForOption("fg-scenery");
+    for (const auto& arg : commandLineSceneryPaths) {
+        // each arg can be multiple paths
+        globals->append_fg_scenery(SGPath::pathsFromUtf8(arg));
+    }
+
 // mimic what options.cxx does, so we can find airport data for parking
 // positions
     QSettings settings;

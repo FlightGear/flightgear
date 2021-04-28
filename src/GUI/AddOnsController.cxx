@@ -12,6 +12,7 @@
 #include <simgear/package/Catalog.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/options.hxx>
 #include <Main/sentryIntegration.hxx>
 #include <Network/HTTPClient.hxx>
 
@@ -54,17 +55,12 @@ AddOnsController::AddOnsController(LauncherMainWindow *parent, LaunchConfig* con
     m_aircraftPaths->loadFromSettings("aircraft-paths-v2");
 
     // sync up the aircraft cache now
-    auto aircraftCache = LocalAircraftCache::instance();
-    aircraftCache->setPaths(m_aircraftPaths->enabledPaths());
-    aircraftCache->scanDirs();
+    setLocalAircraftPaths();
 
     // watch for future changes
     connect(m_aircraftPaths, &PathListModel::enabledPathsChanged, [this] () {
         m_aircraftPaths->saveToSettings("aircraft-paths-v2");
-
-        auto aircraftCache = LocalAircraftCache::instance();
-        aircraftCache->setPaths(m_aircraftPaths->enabledPaths());
-        aircraftCache->scanDirs();
+        setLocalAircraftPaths();
     });
 
     QSettings settings;
@@ -100,6 +96,25 @@ AddOnsController::AddOnsController(LauncherMainWindow *parent, LaunchConfig* con
 
     connect(m_config, &LaunchConfig::collect,
             this, &AddOnsController::collectArgs);
+}
+
+void AddOnsController::setLocalAircraftPaths()
+{
+    auto aircraftCache = LocalAircraftCache::instance();
+
+    QStringList paths;
+
+    const auto commandLineAircraftPaths = flightgear::Options::sharedInstance()->valuesForOption("fg-aircraft");
+    for (const auto& arg : commandLineAircraftPaths) {
+        // inner loop becuase a single arg can define multiple paths
+        for (const auto& p : SGPath::pathsFromUtf8(arg)) {
+            paths.append(QString::fromStdString(p.utf8Str()));
+        }
+    }
+
+    paths.append(m_aircraftPaths->enabledPaths());
+    aircraftCache->setPaths(paths);
+    aircraftCache->scanDirs();
 }
 
 PathListModel* AddOnsController::aircraftPaths() const
@@ -383,4 +398,10 @@ void AddOnsController::collectArgs()
         }
     }
     settings.endArray();
+}
+
+bool AddOnsController::havePathsFromCommandLine() const
+{
+    const auto options = flightgear::Options::sharedInstance();
+    return options->isOptionSet("fg-scenery") || options->isOptionSet("fg-aircraft");
 }
