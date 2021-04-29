@@ -816,6 +816,15 @@ CameraGroup* CameraGroup::buildCameraGroup(osgViewer::View* view,
     return cgroup;
 }
 
+void CameraGroup::setCameraCullMasks(osg::Node::NodeMask nm)
+{
+    for (auto& info : _cameras) {
+        if (info->flags & CameraInfo::GUI)
+            continue;
+        info->compositor->setCullMask(nm);
+    }
+}
+
 void CameraGroup::resized()
 {
     for (const auto &info : _cameras)

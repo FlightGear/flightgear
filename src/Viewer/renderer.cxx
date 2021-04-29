@@ -854,15 +854,14 @@ FGRenderer::update( ) {
                                  l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
         _updateVisitor->setVisibility(actual_visibility);
         simgear::GroundLightManager::instance()->update(_updateVisitor.get());
-        osg::Node::NodeMask cullMask = ~simgear::LIGHTS_BITS & ~simgear::PICK_BIT;
-        cullMask |= simgear::GroundLightManager::instance()
-            ->getLightNodeMask(_updateVisitor.get());
-        if (_panel_hotspots->getBoolValue())
-            cullMask |= simgear::PICK_BIT;
-        camera->setCullMask(cullMask);
-        camera->setCullMaskLeft(cullMask);
-        camera->setCullMaskRight(cullMask);
     }
+
+    osg::Node::NodeMask cullMask = ~simgear::LIGHTS_BITS & ~simgear::PICK_BIT;
+    cullMask |= simgear::GroundLightManager::instance()
+        ->getLightNodeMask(_updateVisitor.get());
+    if (_panel_hotspots->getBoolValue())
+        cullMask |= simgear::PICK_BIT;
+    CameraGroup::getDefault()->setCameraCullMasks(cullMask);
 }
 
 void
