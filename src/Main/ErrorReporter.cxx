@@ -175,6 +175,7 @@ public:
     bool _reportsDirty = false;
     std::mutex _lock;
     SGTimeStamp _nextShowTimeout;
+    bool _haveDonePostInit = false;
 
     SGPropertyNode_ptr _enabledNode;
     SGPropertyNode_ptr _displayNode;
@@ -233,7 +234,7 @@ public:
 
     using AggregateErrors = std::vector<AggregateReport>;
     AggregateErrors _aggregated;
-    long unsigned int _activeReportIndex = -1;
+    int _activeReportIndex = -1;
     string_list _significantProperties; ///< properties we want to include in reports, for debugging
 
     /**
@@ -271,12 +272,18 @@ public:
 
         const auto ty = it->type;
         // decide if it's a critical error or not
-        if ((ty == Aggregation::OutOfMemory) || (ty == Aggregation::MainAircraft) || (ty == Aggregation::InputDevice)) {
+        if ((ty == Aggregation::OutOfMemory) || (ty == Aggregation::InputDevice)) {
+            it->isCritical = true;
+        }
+
+        // aircraft errors are critical if they occur during initial
+        // aircraft load, otherwise we just show the warning
+        if (!_haveDonePostInit && (ty == Aggregation::MainAircraft)) {
             it->isCritical = true;
         }
 
         if (code == simgear::ErrorCode::LoadEffectsShaders) {
-            //   it->isCritical = true;
+            it->isCritical = true;
         }
     }
 
@@ -348,8 +355,10 @@ public:
             return report.parameter.empty() ? true : report.parameter == a.parameter;
         });
         assert(it != _aggregated.end());
-        _activeReportIndex = std::distance(_aggregated.begin(), it);
+        _activeReportIndex = static_cast<int>(std::distance(_aggregated.begin(), it));
+        _displayNode->setBoolValue("index", _activeReportIndex);
         _displayNode->setBoolValue("have-next", _activeReportIndex < (_aggregated.size() - 1));
+        _displayNode->setBoolValue("have-previous", _activeReportIndex > 0);
     }
 
     void sendReportToSentry(AggregateReport& report)
@@ -566,14 +575,20 @@ bool ErrorReporter::ErrorReporterPrivate::showErrorReportCommand(const SGPropert
         return false;
     }
 
+    const auto numAggregates = static_cast<int>(_aggregated.size());
     if (args->getBoolValue("next")) {
         _activeReportIndex++;
-        if (_activeReportIndex >= _aggregated.size()) {
+        if (_activeReportIndex >= numAggregates) {
             return false;
         }
+    } else if (args->getBoolValue("previous")) {
+        if (_activeReportIndex < 1) {
+            return false;
+        }
+        _activeReportIndex--;
     } else if (args->hasChild("index")) {
         _activeReportIndex = args->getIntValue("index");
-        if ((_activeReportIndex < 0) || (_activeReportIndex >= _aggregated.size())) {
+        if ((_activeReportIndex < 0) || (_activeReportIndex >= numAggregates)) {
             return false;
         }
     } else {
@@ -731,8 +746,14 @@ void ErrorReporter::preinit()
 
 void ErrorReporter::init()
 {
-    const auto developerMode = false; // fgGetBool("sim/developer-mode");
-    if (developerMode || !d->_enabledNode) {
+    // we want to disable errors in developer mode, but since self-compiled
+    // builds default to developer-mode=true, need an override so people
+    // can see errors if they want
+    const auto developerMode = fgGetBool("sim/developer-mode");
+    const auto disableInDeveloperMode = !d->_enabledNode->getParent()->getBoolValue("enable-in-developer-mode");
+    const auto dd = developerMode && disableInDeveloperMode;
+
+    if (dd || !d->_enabledNode) {
         SG_LOG(SG_GENERAL, SG_INFO, "Error reporting disabled");
         simgear::setFailureCallback(simgear::FailureCallback());
         simgear::setErrorContextCallback(simgear::ContextCallback());
@@ -762,6 +783,10 @@ void ErrorReporter::update(double dt)
         if (!d->_enabledNode->getBoolValue()) {
             return;
         }
+
+        // we are into the update phase (postinit has ocurred). We treat errors
+        // after this point with lower severity, to avoid popups into a flight
+        d->_haveDonePostInit = true;
 
         SGTimeStamp n = SGTimeStamp::now();
 
@@ -837,6 +862,7 @@ void ErrorReporter::update(double dt)
 #endif
     } else if (showPopup) {
         SGPropertyNode_ptr popupArgs(new SGPropertyNode);
+        popupArgs->setIntValue("index", d->_activeReportIndex);
         globals->get_commands()->execute("show-error-notification-popup", popupArgs, nullptr);
     }
 }
