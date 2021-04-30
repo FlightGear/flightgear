@@ -375,12 +375,12 @@ void FGEnvironmentMgr::updateClosestAirport()
         towerViewPositionLatDegNode = towerViewPositionLonDegNode = towerViewPositionAltFtNode = nullptr;
     }
     else {
-        SG_LOG(SG_ENVIRONMENT, SG_WARN, "FGEnvironmentMgr::update: No airport within 100NM range");
+        SG_LOG(SG_ENVIRONMENT, SG_INFO, "FGEnvironmentMgr::update: No airport within 100NM range");
     }
     auto nctn = SGSharedPtr< NearestCarrierToNotification> (new NearestCarrierToNotification(pos));
     if (simgear::Emesary::ReceiptStatus::OK == simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(nctn)) {
-        SG_LOG(SG_ENVIRONMENT, SG_INFO, "Nearest carrier " << nctn->GetCarrierIdent() << " at a distance of " << nctn->GetDistanceMeters());
         if (nearestCarrier != nctn->GetCarrier()) {
+            SG_LOG(SG_ENVIRONMENT, SG_INFO, "Nearest carrier " << nctn->GetCarrierIdent() << " at a distance of " << nctn->GetDistanceMeters());
             nearestCarrier = nctn->GetCarrier();
             fgSetString("/sim/airport/nearest-carrier", nctn->GetCarrierIdent());
         }
@@ -429,7 +429,7 @@ void FGEnvironmentMgr::updateClosestAirport()
 
 
     if (fgGetString("/sim/airport/nearest-tower-ident") != nearestIdent) {
-        SG_LOG(SG_ENVIRONMENT, SG_ALERT, "Nearest airport tower now " << nearestIdent);
+        SG_LOG(SG_ENVIRONMENT, SG_INFO, "Nearest airport tower now " << nearestIdent);
         fgSetString("/sim/airport/nearest-tower-ident", nearestIdent);
     }
     if (automaticTowerActive) {
