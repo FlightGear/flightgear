@@ -140,7 +140,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
             // there aren't any routes for this parking, so create a simple segment straight ahead for 2 meters based on the parking heading
             SG_LOG(SG_AI, SG_DEV_WARN, "Gate " << parking->ident() << "/" << parking->getName()
                  << " at " << dep->getId()
-                 << " doesn't seem to have routes associated with it.");
+                 << " doesn't seem to have pushforward routes associated with it.");
 
             FGAIWaypoint *wpt = createOnGround(ac, string("park"), dep->geod(), dep->getElevation(), vTaxiReduced);
             pushBackWaypoint(wpt);
@@ -159,7 +159,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 
         SG_LOG(SG_AI, SG_BULK, "Creating Pushforward : \t" << pushForwardSegment->getEnd()->getIndex() << " Length : \t" << distance);
 
-        int numSegments = distance/3.0;
+        int numSegments = distance/2.0;
         for (int i = 1; i < numSegments; i++) {
             SGGeod pushForwardPt;
             SGGeodesy::direct(parking->geod(), parkingHeading,
@@ -167,13 +167,12 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
             char buffer[16];
             snprintf(buffer, 16, "pushforward-%02d", i);
             FGAIWaypoint *wpt = createOnGround(ac, string(buffer), pushForwardPt, dep->getElevation(), vTaxiReduced);
-            SG_LOG(SG_AI, SG_BULK, "Created WP : \t" << wpt->getName() << "\t" << wpt->getPos());
 
             wpt->setRouteIndex(pushForwardSegment->getIndex());
             pushBackWaypoint(wpt);
         }
 
-        waypoints.back()->setName(string("PushBackPoint"));
+        waypoints.back()->setName(string("PushBackPoint-pushforward"));
         // cerr << "Done assinging new name" << endl;
     }
 
