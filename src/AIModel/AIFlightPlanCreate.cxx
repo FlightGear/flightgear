@@ -68,20 +68,16 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
                             const string & aircraftType,
                             const string & airline, double distance)
 {
+    SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " Departure Airport : " << dep->getId());
     bool retVal = true;
     int currWpt = wpt_iterator - waypoints.begin();
     switch (legNr) {
     case 1:
         retVal = createPushBack(ac, firstFlight, dep,
                                 radius, fltType, aircraftType, airline);
-        // Pregenerate the taxi leg.
-        //if (retVal) {
-        //    waypoints.back()->setName( waypoints.back()->getName() + string("legend")); 
-        //    retVal = createTakeoffTaxi(ac, false, dep, radius, fltType, aircraftType, airline);
-        //}
         break;
     case 2:
-        retVal =  createTakeoffTaxi(ac, firstFlight, dep, radius, fltType,
+        retVal = createTakeoffTaxi(ac, firstFlight, dep, radius, fltType,
                           aircraftType, airline);
         break;
     case 3:
@@ -105,7 +101,7 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
         retVal = createLandingTaxi(ac, arr, radius, fltType, aircraftType, airline);
         break;
     case 9:
-        retVal = createParking(ac, arr, radius);
+        retVal = createParking(ac, arr, radius);        
         break;
     default:
         //exit(1);
@@ -117,13 +113,10 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
     wpt_iterator = waypoints.begin() + currWpt;
     //don't  increment leg right away, but only once we pass the actual last waypoint that was created.
     // to do so, mark the last waypoint with a special status flag
-   if (retVal) {
+    if (retVal) {
         waypoints.back()->setName( waypoints.back()->getName() + string("legend")); 
         // "It's pronounced Leg-end" (Roger Glover (Deep Purple): come Hell or High Water DvD, 1993)
-   }
-
-
-    //leg++;
+    }
     return retVal;
 }
 
@@ -280,6 +273,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
                                             depHeading);
     }
     FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
+    SG_LOG(SG_AI, SG_BULK, "Taxi to " << apt->getId() << "/" << activeRunway);
     assert( rwy != NULL );
     SGGeod runwayTakeoff = rwy->pointOnCenterline(5.0);
 
@@ -369,12 +363,12 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         if (taxiRoute.nodesLeft() == 1) {
             // Note that we actually have hold points in the ground network, but this is just an initial test.
             //cerr << "Setting departurehold point: " << endl;
-            wpt->setName( wpt->getName() + string("DepartureHold"));
+            wpt->setName( wpt->getName() + string("_DepartureHold"));
             wpt->setFlaps(0.5f);
             wpt->setTakeOffLights();
         }
         if (taxiRoute.nodesLeft() == 0) {
-            wpt->setName(wpt->getName() + string("Accel"));
+            wpt->setName(wpt->getName() + string("_Accel"));
             wpt->setTakeOffLights();
             wpt->setFlaps(0.5f);
         }
@@ -423,8 +417,7 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
 {
     int route;
     gate = apt->getDynamics()->getAvailableParking(radius, fltType,
-                                            acType, airline);
-
+                                            acType, airline);    
     SGGeod lastWptPos = waypoints.back()->getPos();
     FGGroundNetwork *gn = apt->groundNetwork();
 
@@ -470,6 +463,8 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
         wpt->setRouteIndex(route);
         pushBackWaypoint(wpt);
     }
+    SG_LOG(SG_AI, SG_BULK, "Created taxi to " << gate.parking()->ident() << " at " << apt->getId());
+
     return true;
 }
 
@@ -504,6 +499,7 @@ bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
                                    FGAirport * apt, double speed,
                                    const string & fltType)
 {
+    SG_LOG(SG_AI, SG_BULK, "createTakeOff " << apt->getId() << "/" << activeRunway);
     const double ACCEL_POINT = 105.0;
   // climb-out angle in degrees. could move this to the perf-db but this
   // value is pretty sane
@@ -538,6 +534,7 @@ bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
         SG_LOG(SG_AI, SG_WARN, "FGAIFlightPlan::createTakeOff: invalid active runway:" << activeRunway);
         return false;
     }
+    SG_LOG(SG_AI, SG_BULK, "Takeoff from airport " << apt->getId() << "/" << activeRunway);
   
     FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
     if (!rwy)
@@ -931,6 +928,7 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
         //cerr << "Repositioning to waypoint " << (*waypoints.begin())->name << endl;
         ac->resetPositionFromFlightPlan();
     }
+    SG_LOG(SG_AI, SG_BULK, "Setting Node " << waypoints[1]->getName() << " to a leg end");
     waypoints[1]->setName( (waypoints[1]->getName() + string("legend"))); 
     return true;
 }
@@ -1081,7 +1079,7 @@ bool FGAIFlightPlan::createParking(FGAIAircraft * ac, FGAirport * apt,
       pushBackWaypoint(wpt);
       return true;
     }
-  
+    
     FGParking* parking = gate.parking();
     double heading = SGMiscd::normalizePeriodic(0, 360, parking->getHeading() + 180.0);
     double az; // unused

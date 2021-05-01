@@ -188,7 +188,10 @@ public:
   bool createPushBack(FGAIAircraft *, bool, FGAirport*, double radius, const std::string&, const std::string&, const std::string&);
   bool createTakeOff(FGAIAircraft *, bool, FGAirport *, double, const std::string&);
 
-  void setLeg(int val) { leg = val;}
+  void setLeg(int val) { 
+    SG_LOG(SG_AI, SG_BULK, "Set Leg " << leg);
+    leg = val;
+  }
   void setTime(time_t st) { start_time = st; }
 
 
@@ -205,7 +208,10 @@ public:
   const std::string& getRunway() { return activeRunway; }
   bool isActive(time_t time) {return time >= this->getStartTime();}
 
-  void incrementLeg() { leg++;};
+  void incrementLeg() {
+    SG_LOG(SG_AI, SG_BULK, "Increment Leg " << leg); 
+    leg++;
+  };
 
   void setRunway(const std::string& rwy) { activeRunway = rwy; };
   const char* getRunwayClassFromTrafficType(const std::string& fltType);

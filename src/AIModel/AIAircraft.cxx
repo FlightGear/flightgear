@@ -519,7 +519,7 @@ const char * FGAIAircraft::_getTransponderCode() const {
 bool FGAIAircraft::loadNextLeg(double distance) {
 
     int leg;
-    if ((leg = fp->getLeg())  == 9) {
+    if ((leg = fp->getLeg()) == 9) {
         if (!trafficRef->next()) {
             //FIXME I'm on leg 9 and don't even reach parking.
             return false;
@@ -1466,6 +1466,7 @@ void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
     o << "headingErr\t";
     o << "hdg\t";
     o << "tgt_heading\t";
+    o << "tgt_speed\t";
     o << "minBearing\t";
     o << "speedFraction\t";
     o << "groundOffset\t";
@@ -1494,6 +1495,7 @@ void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
     o << headingError << "\t";
     o << hdg << "\t";
     o << tgt_heading << "\t";
+    o << tgt_speed << "\t";
     o << minBearing << "\t";
     o << speedFraction << "\t";
     o << groundOffset << "\t";

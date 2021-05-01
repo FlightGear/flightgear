@@ -535,6 +535,7 @@ void FGAIFlightPlan::pushBackWaypoint(FGAIWaypoint *wpt)
   size_t pos = wpt_iterator - waypoints.begin();
   waypoints.push_back(wpt);
   wpt_iterator = waypoints.begin() + pos;
+  SG_LOG(SG_AI, SG_BULK, "Added WP : \t" << wpt->getName() << "\t" << wpt->getPos());
 }
 
 // Start flightplan over from the beginning
