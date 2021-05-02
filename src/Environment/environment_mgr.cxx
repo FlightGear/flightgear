@@ -395,8 +395,7 @@ void FGEnvironmentMgr::updateClosestAirport()
     }
 
     // figure out if the carrier's tower is closer
-    if (!nearestTowerPositionValid || (nearestCarrier != nullptr && nctn->GetDistanceMeters() < towerDistance)) {
-        SGGeod carrierGeod(*nctn->GetPosition());
+    if (nearestCarrier && (nctn->GetDistanceMeters() < towerDistance)) {
         nearestIdent = nctn->GetCarrierIdent();
         nearestTowerPositionValid = true;
 
@@ -412,8 +411,7 @@ void FGEnvironmentMgr::updateClosestAirport()
         fgSetDouble("/sim/airport/nearest-carrier-longitude-deg", nctn->GetPosition()->getLongitudeDeg());
         fgSetDouble("/sim/airport/nearest-carrier-altitude-ft", nctn->GetPosition()->getElevationFt());
         fgSetDouble("/sim/airport/nearest-carrier-deck-height", nctn->GetDeckheight());
-    }
-    else {
+    } else {
         if (nearestAirport != nullptr) {
             std::string   path = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)/sim/tower/");
             fgSetString(path + "airport-id", nearestAirport->getId());
