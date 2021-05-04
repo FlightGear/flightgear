@@ -27,6 +27,11 @@ class FGGroundNetXMLLoader : public XMLVisitor {
 public:
     FGGroundNetXMLLoader(FGGroundNetwork* gn);
 
+    bool hasErrors() const
+    {
+        return _hasErrors;
+    }
+
 protected:
     virtual void startXML (); 
     virtual void endXML   ();
@@ -43,7 +48,10 @@ private:
     void startArc(const XMLAttributes &atts);
   
     FGGroundNetwork* _groundNetwork;
-    
+
+    // we set this flag if the ground-network has any problems
+    bool _hasErrors = false;
+
     std::string value;
   
     // map from local (groundnet.xml) ids to parking instances
