@@ -72,12 +72,17 @@ void  FGGroundNetXMLLoader::endXML ()
   for (it = _parkingPushbacks.begin(); it != _parkingPushbacks.end(); ++it) {
     NodeIndexMap::const_iterator j = _indexMap.find(it->second);
     if (j == _indexMap.end()) {
-      SG_LOG(SG_NAVAID, SG_DEV_WARN, "bad groundnet, no node for index:" << it->first);
-      continue;
+        _hasErrors = true;
+        SG_LOG(SG_NAVAID, SG_DEV_WARN, "bad groundnet, no node for index:" << it->first);
+        continue;
     }
 
     it->first->setPushBackPoint(j->second);
 
+  }
+
+  if (!_unreferencedNodes.empty()) {
+      _hasErrors = true;
   }
 
   for (const FGTaxiNodeRef& node: _unreferencedNodes) {
@@ -137,6 +142,7 @@ void FGGroundNetXMLLoader::startParking(const XMLAttributes &atts)
         SG_LOG(SG_NAVAID, SG_DEV_WARN,
                getPath() << ":" << getLine() << ": " <<
                "invalid value for 'pushBackRoute': " << e.what());
+        _hasErrors = true;
         pushBackRoute = -2;
       }
     }
@@ -192,6 +198,7 @@ void FGGroundNetXMLLoader::startNode(const XMLAttributes &atts)
 
   if (_indexMap.find(index) != _indexMap.end()) {
     SG_LOG(SG_NAVAID, SG_DEV_WARN, "duplicate ground-net index:" << index);
+    _hasErrors = true;
   }
 
   SGGeod pos(SGGeod::fromDeg(processPosition(lon), processPosition(lat)));
@@ -219,6 +226,7 @@ void FGGroundNetXMLLoader::startArc(const XMLAttributes &atts)
   IntPair e(begin, end);
   if (_arcSet.find(e) != _arcSet.end()) {
     SG_LOG(SG_NAVAID, SG_DEV_WARN, _groundNetwork->airport()->ident() << " ground-net: skipping duplicate edge:" << begin << "->" << end);
+    _hasErrors = true;
     return;
   }
 
@@ -227,6 +235,7 @@ void FGGroundNetXMLLoader::startArc(const XMLAttributes &atts)
   it = _indexMap.find(begin);
   if (it == _indexMap.end()) {
       SG_LOG(SG_NAVAID, SG_DEV_WARN, "ground-net: bad edge:" << begin << "->" << end << ", begin index unknown");
+      _hasErrors = true;
       return;
   } else {
       _unreferencedNodes.erase(it->second);
@@ -236,6 +245,7 @@ void FGGroundNetXMLLoader::startArc(const XMLAttributes &atts)
   it = _indexMap.find(end);
   if (it == _indexMap.end()) {
       SG_LOG(SG_NAVAID, SG_DEV_WARN, "ground-net: bad edge:" << begin << "->" << end << ", end index unknown");
+      _hasErrors = true;
       return;
   } else {
       _unreferencedNodes.erase(it->second);
@@ -294,9 +304,9 @@ void  FGGroundNetXMLLoader::pi (const char * target, const char * data) {
 }
 
 void  FGGroundNetXMLLoader::warning (const char * message, int line, int column) {
-  SG_LOG(SG_IO, SG_WARN, "Warning: " << message << " (" << line << ',' << column << ')');
+    SG_LOG(SG_IO, SG_DEV_WARN, "Warning: " << message << " (" << line << ',' << column << ')');
 }
 
 void  FGGroundNetXMLLoader::error (const char * message, int line, int column) {
-  SG_LOG(SG_IO, SG_ALERT, "Error: " << message << " (" << line << ',' << column << ')');
+    SG_LOG(SG_IO, SG_DEV_ALERT, "Error: " << message << " (" << line << ',' << column << ')');
 }

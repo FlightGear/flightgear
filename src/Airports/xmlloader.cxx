@@ -54,39 +54,47 @@ void XMLLoader::load(FGGroundNetwork* net)
   SGTimeStamp t;
   t.stamp();
   try {
-      flightgear::sentryThreadReportXMLErrors(false);
+      flightgear::SentryXMLErrorSupression xs;
       FGGroundNetXMLLoader visitor(net);
       readXML(path, visitor);
+
+      if (visitor.hasErrors()) {
+          flightgear::sentryReportException("Ground-net load error", path.utf8Str());
+      }
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVAID, SG_DEV_WARN, "parsing groundnet XML failed:" << e.getFormattedMessage());
   }
 
-  flightgear::sentryThreadReportXMLErrors(true);
   SG_LOG(SG_NAVAID, SG_DEBUG, "parsing groundnet XML took " << t.elapsedMSec());
 }
 
 void XMLLoader::loadFromStream(FGGroundNetwork* net, std::istream& inData)
 {
   try {
-      flightgear::sentryThreadReportXMLErrors(false);
+      flightgear::SentryXMLErrorSupression xs;
       FGGroundNetXMLLoader visitor(net);
       readXML(inData, visitor);
+
+      if (visitor.hasErrors()) {
+          flightgear::sentryReportException("Ground-net load error", {});
+      }
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVAID, SG_DEV_WARN, "parsing groundnet XML failed:" << e.getFormattedMessage());
   }
-  flightgear::sentryThreadReportXMLErrors(true);
 }
 
 void XMLLoader::loadFromPath(FGGroundNetwork* net, const SGPath& path)
 {
   try {
-      flightgear::sentryThreadReportXMLErrors(false);
+      flightgear::SentryXMLErrorSupression xs;
       FGGroundNetXMLLoader visitor(net);
       readXML(path, visitor);
+      if (visitor.hasErrors()) {
+          flightgear::sentryReportException("Ground-net load error", path.utf8Str());
+      }
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVAID, SG_DEV_WARN, "parsing groundnet XML failed:" << e.getFormattedMessage());
   }
-  flightgear::sentryThreadReportXMLErrors(true);
 }
 
 void XMLLoader::load(FGRunwayPreference* p) {
