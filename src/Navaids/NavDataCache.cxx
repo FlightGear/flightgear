@@ -188,12 +188,14 @@ public:
   {
     SGTimeStamp st;
     st.stamp();
+    flightgear::addSentryBreadcrumb("Rebuild thread running", "info");
     _cache->doRebuild();
     SG_LOG(SG_NAVCACHE, SG_INFO, "cache rebuild took:" << st.elapsedMSec() << "msec");
 
     std::lock_guard<std::mutex> g(_lock);
     _isFinished = true;
     _phase = NavDataCache::REBUILD_DONE;
+    flightgear::addSentryBreadcrumb("Rebuild thread done", "info");
   }
 
     NavDataCache::RebuildPhase currentPhase() const
@@ -1486,6 +1488,7 @@ NavDataCache::RebuildPhase NavDataCache::rebuild()
                                                 "Failed to initialise NavCache rebuild protection");
         }
 
+        flightgear::addSentryBreadcrumb("NavCache accquired rebuild lock", "info");
         d->rebuilder.reset(new RebuildThread(this));
         d->rebuilder->start();
     }
@@ -1495,6 +1498,7 @@ NavDataCache::RebuildPhase NavDataCache::rebuild()
     if (phase == REBUILD_DONE) {
         d->rebuilder.reset(); // all done!
         releaseRebuildLock();
+        flightgear::addSentryBreadcrumb("NavCache released rebuild lock", "info");
     }
     return phase;
 }
@@ -1613,6 +1617,7 @@ void NavDataCache::doRebuild()
   rebuildInProgress = true;
 
   try {
+    flightgear::addSentryBreadcrumb("NavDataCache::doRebuild starts", "info");
     d->close(); // completely close the sqlite object
     d->path.remove(); // remove the file on disk
     d->init(); // start again from scratch
@@ -1695,6 +1700,7 @@ void NavDataCache::doRebuild()
 
       }
 
+      flightgear::addSentryBreadcrumb("NavDataCache::doRebuild ends", "info");
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVCACHE, SG_ALERT, "caught exception rebuilding navCache:" << e.what());
   }
