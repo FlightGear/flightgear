@@ -66,7 +66,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 
   // establish the parking position / gate if required
     if (firstFlight) {
-        // if the airprot has no parking positions defined, don't log
+        // if the airport has no parking positions defined, don't log
         // the warning below.
         if (!dep->getDynamics()->hasParkings()) {
             return false;
@@ -127,6 +127,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
             //previous = node;
         }
         // some special considerations for the last point:
+        // This will trigger the release of parking
         waypoints.back()->setName(string("PushBackPoint"));
         waypoints.back()->setSpeed(vTaxi);
         ac->setTaxiClearanceRequest(true);
@@ -138,8 +139,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 
         if (!pushForwardSegment) {
             // there aren't any routes for this parking, so create a simple segment straight ahead for 2 meters based on the parking heading
-            SG_LOG(SG_AI, SG_DEV_WARN, "Gate " << parking->ident() << "/" << parking->getName()
-                 << " at " << dep->getId()
+            SG_LOG(SG_AI, SG_DEV_WARN, "Gate " << parking->ident() << " at " << dep->getId()
                  << " doesn't seem to have pushforward routes associated with it.");
 
             FGAIWaypoint *wpt = createOnGround(ac, string("park"), dep->geod(), dep->getElevation(), vTaxiReduced);
@@ -172,8 +172,8 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
             pushBackWaypoint(wpt);
         }
 
+        // This will trigger the release of parking
         waypoints.back()->setName(string("PushBackPoint-pushforward"));
-        // cerr << "Done assinging new name" << endl;
     }
 
     return true;

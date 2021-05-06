@@ -68,7 +68,7 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
                             const string & aircraftType,
                             const string & airline, double distance)
 {
-    SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() );
+    SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " Departure Airport : " << dep->getId());
     bool retVal = true;
     int currWpt = wpt_iterator - waypoints.begin();
     switch (legNr) {
@@ -417,8 +417,7 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
 {
     int route;
     gate = apt->getDynamics()->getAvailableParking(radius, fltType,
-                                            acType, airline);
-
+                                            acType, airline);    
     SGGeod lastWptPos = waypoints.back()->getPos();
     FGGroundNetwork *gn = apt->groundNetwork();
 
@@ -464,6 +463,8 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
         wpt->setRouteIndex(route);
         pushBackWaypoint(wpt);
     }
+    SG_LOG(SG_AI, SG_BULK, "Created taxi to " << gate.parking()->ident() << " at " << apt->getId());
+
     return true;
 }
 
@@ -1078,7 +1079,7 @@ bool FGAIFlightPlan::createParking(FGAIAircraft * ac, FGAirport * apt,
       pushBackWaypoint(wpt);
       return true;
     }
-  
+    
     FGParking* parking = gate.parking();
     double heading = SGMiscd::normalizePeriodic(0, 360, parking->getHeading() + 180.0);
     double az; // unused
