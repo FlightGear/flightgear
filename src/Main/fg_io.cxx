@@ -181,13 +181,13 @@ FGIO::parse_port_config( const string_list& tokens )
 
             // multiplay used to be handled by an FGProtocol, but no longer. This code
             // retains compatibility with existing command-line syntax
-            fgSetInt("/sim/multiplay/tx-rate-hz", rate);
             if (dir == "in") {
                 fgSetInt("/sim/multiplay/rxport", port);
                 fgSetString("/sim/multiplay/rxhost", host.c_str());
             } else if (dir == "out") {
                 fgSetInt("/sim/multiplay/txport", port);
                 fgSetString("/sim/multiplay/txhost", host.c_str());
+                fgSetInt("/sim/multiplay/tx-rate-hz", rate);
             }
 
             return NULL;
