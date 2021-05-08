@@ -201,7 +201,7 @@ void FGPropeller::ResetToIC(void)
 
 double FGPropeller::Calculate(double EnginePower)
 {
-  FGColumnVector3 vDXYZ = MassBalance->StructuralToBody(vActingXYZn);
+  FGColumnVector3 vDXYZ = MassBalance->StructuralToBody(vXYZn);
   const FGMatrix33& mT = Transform();
   // Local air velocity is obtained from Stevens & Lewis' "Aircraft Control and
   // Simualtion (3rd edition)" eqn 8.2-1

@@ -521,7 +521,9 @@ void FGPiston::Calculate(void)
   // Filters out negative powers.
   // TODO: static_friction_HP should not be taken into account while the engine
   // is not started.
-  Thruster->Calculate(max(HP * hptoftlbssec, 0.));
+  double power = HP * hptoftlbssec;
+  if (RPM <= 0.1) power = max(power, 0.0);
+  Thruster->Calculate(power);
 
   RunPostFunctions();
 }
