@@ -41,7 +41,8 @@ class TrafficTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testPushforward);
     CPPUNIT_TEST(testPushforwardSpeedy);
     CPPUNIT_TEST(testPushforwardParkYBBN);
-    CPPUNIT_TEST(testPushforwardParkYBBNRepeat);
+    CPPUNIT_TEST(testPushforwardParkYBBNRepeatGa);
+    CPPUNIT_TEST(testPushforwardParkYBBNRepeatGate);
     CPPUNIT_TEST_SUITE_END();
 public:
     // Set up function for each test.
@@ -58,7 +59,8 @@ public:
     void testPushforward();
     void testPushforwardSpeedy();
     void testPushforwardParkYBBN();
-    void testPushforwardParkYBBNRepeat();
+    void testPushforwardParkYBBNRepeatGa();
+    void testPushforwardParkYBBNRepeatGate();
 private:
     std::string getTimeString(int timeOffset);
     FGAIAircraft * flyAI(FGAIAircraft * aiAircraft, std::string fName);
