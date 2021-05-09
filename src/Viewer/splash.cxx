@@ -211,6 +211,12 @@ void SplashScreen::createNodes()
                 osgText::Text::CENTER_CENTER,
                 nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
     }
+    #ifndef NDEBUG
+    addText(geode, osg::Vec2(0.5f, 0.75f), 0.03,
+            "Debug build",
+            osgText::Text::CENTER_CENTER,
+            nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
+    #endif
 
     ///////////
 
