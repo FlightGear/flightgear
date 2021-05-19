@@ -21,6 +21,8 @@
 #include <simgear/compiler.h>
 #include <atomic>
 
+#include <QOpenGLContext>
+
 #include "QQuickDrawable.hxx"
 
 #include <QQmlComponent>
@@ -30,7 +32,6 @@
 
 #include <QTimer>
 #include <QCoreApplication>
-#include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QQuickItem>
 #include <QQuickWindow>

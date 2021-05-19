@@ -16,11 +16,12 @@
 
 #include "config.h"
 
+#include <QOpenGLContext>
+
 #include "OSGQtAdaption.hxx"
 
 #include <memory>
 
-#include <QOpenGLContext>
 #include <QWindow>
 #include <QThread>
 
