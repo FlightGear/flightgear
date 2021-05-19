@@ -241,11 +241,10 @@ FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false), initOk(false),
 
     string config = tokens[ configToken ];
     file_name = config+".xml";
-    direction = tokens[2];
+    set_direction(tokens[2]);
 
-    if (direction != "in" && direction != "out" && direction != "bi") {
-        SG_LOG(SG_NETWORK, SG_ALERT, "Unsuported protocol direction: "
-               << direction);
+    if (get_direction() == SG_IO_NONE) {
+        SG_LOG(SG_NETWORK, SG_ALERT, "Unsuported protocol direction: " << tokens[2]);
         return;
     }
 
@@ -772,7 +771,8 @@ FGGeneric::reinit()
          return;
     }
 
-    if (direction == "out") {
+    const auto dir = get_direction();
+    if ((dir == SG_IO_OUT) || (dir == SG_IO_BI)) {
         SGPropertyNode *output = root.getNode("generic/output");
         if (output) {
             _out_message.clear();
@@ -782,7 +782,9 @@ FGGeneric::reinit()
                 return;
             }
         }
-    } else if (direction == "in") {
+    }
+
+    if ((dir == SG_IO_IN) || (dir == SG_IO_BI)) {
         SGPropertyNode *input = root.getNode("generic/input");
         if (input) {
             _in_message.clear();
