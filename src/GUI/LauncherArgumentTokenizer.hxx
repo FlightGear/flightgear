@@ -7,6 +7,7 @@
 #include <QList>
 #include <QObject>
 #include <QJSValue>
+#include <QVariant>
 
 class ArgumentToken
 {
