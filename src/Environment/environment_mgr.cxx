@@ -86,10 +86,10 @@ void FG3DCloudsListener::valueChanged( SGPropertyNode * node )
 
 FGEnvironmentMgr::FGEnvironmentMgr () :
   _environment(new FGEnvironment()),
-    _multiplayerListener(nullptr),
-    nearestAirport(nullptr),
-    nearestCarrier(nullptr),
-  _sky(globals->get_renderer()->getSky())
+  _multiplayerListener(nullptr),
+  _sky(globals->get_renderer()->getSky()),
+  nearestCarrier(nullptr),
+  nearestAirport(nullptr)
 {
   fgClouds = new FGClouds;
   _3dCloudsEnableListener = new FG3DCloudsListener(fgClouds);

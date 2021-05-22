@@ -28,11 +28,11 @@ class NearestCarrierToNotification : public simgear::Emesary::INotification
 public:
     NearestCarrierToNotification(SGGeod _comparisonPosition) : position(),
                                                                comparisonPosition(_comparisonPosition),
-                                                               distanceMeters(std::numeric_limits<double>::max()),
-                                                               carrier(0),
-                                                               deckheight(0),
                                                                heading(0),
-                                                               vckts(0)
+                                                               vckts(0),
+                                                               deckheight(0),
+                                                               distanceMeters(std::numeric_limits<double>::max()),
+                                                               carrier(0)
     {
     }
 
