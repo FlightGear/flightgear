@@ -617,6 +617,13 @@ int fgMainInit( int argc, char **argv )
         }
     }
     
+    {
+        SGPropertyNode* active = globals->get_props()->getNode("/sim/property-locking", true /*create*/);
+        SGPropertyNode* verbose = globals->get_props()->getNode("/sim/property-locking-verbose", true /*create*/);
+        SGPropertyNode* timing = globals->get_props()->getNode("/sim/property-locking-timing", true /*create*/);
+        SGPropertyLockControl(active, verbose, timing);
+    }
+    
     const bool readOnlyFGHome = fgGetBool("/sim/fghome-readonly");
     if (!readOnlyFGHome) {
         // now home is initialised, we can log to a file inside it
