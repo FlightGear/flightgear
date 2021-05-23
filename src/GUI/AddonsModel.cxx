@@ -51,7 +51,7 @@ AddonsModel::~AddonsModel()
 void AddonsModel::resetData(const QStringList& ndata)
 {
     beginResetModel();
-    QSet<QString> newSet = QSet<QString>::fromList(ndata);
+    QSet<QString> newSet = QSet<QString>{ndata.begin(), ndata.end()};
 
     for(const auto& path : m_addonsList) {
         if (!newSet.contains(path)) {
