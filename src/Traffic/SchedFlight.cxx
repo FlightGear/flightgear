@@ -232,6 +232,10 @@ void FGScheduledFlight::update()
   arrivalTime  += repeatPeriod;
 }
 
+/**
+ * //FIXME Doesn't have to be an iteration / when sitting at departure why adjust based on arrival
+ */ 
+
 void FGScheduledFlight::adjustTime(time_t now)
 {
     // Make sure that the arrival time is in between
