@@ -51,8 +51,11 @@ AddonsModel::~AddonsModel()
 void AddonsModel::resetData(const QStringList& ndata)
 {
     beginResetModel();
-    QSet<QString> newSet = QSet<QString>{ndata.begin(), ndata.end()};
-
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+    const auto newSet = QSet<QString>{ndata.begin(), ndata.end()};
+#else
+    const auto newSet = QSet<QString>::fromList(ndata);
+#endif
     for(const auto& path : m_addonsList) {
         if (!newSet.contains(path)) {
             m_addonsMap.remove(path);
