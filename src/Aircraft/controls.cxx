@@ -1831,7 +1831,7 @@ void FGControls::fireEngineValueChanged(int index, simgear::PropertyList& props)
         std::for_each(props.begin(), props.end(), [](const SGPropertyNode_ptr &p) {
             p->fireValueChanged();
         });
-    } else {
+    } else if ((index >= 0) && (index < MAX_ENGINES)) {
         props.at(index)->fireValueChanged();
     }
 }
