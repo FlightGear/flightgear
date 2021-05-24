@@ -579,7 +579,7 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
     fltEnd   = tmgr->getLastFlight(req);
 
 
-    SG_LOG (SG_AI, SG_BULK, "Finding available flight for " << req);
+    SG_LOG (SG_AI, SG_BULK, "Finding available flight for " << req << " at " << now);
      // For Now:
      // Traverse every registered flight
     if (fltBegin == fltEnd) {
@@ -622,7 +622,7 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
             time_t departure = (*i)->getDepartureTime();
             int groundTime = groundTimeFromRadius();
             if (departure < (arrival+(groundTime))) {
-              SG_LOG (SG_AI, SG_BULK, "Not flight candidate : " << (*i)->getCallSign() << " Arrival : " << arrival << " Planned Departure " << departure << " < " << (arrival+groundTime) << " Diff : " << (arrival+groundTime-departure));
+              SG_LOG (SG_AI, SG_BULK, "Not flight candidate : " << (*i)->getCallSign() << " Flight Arrival : " << arrival << " Planned Departure : " << departure << " < " << (arrival+groundTime) << " Diff between arrival + groundtime and departure  : " << (arrival+groundTime-departure) << " Groundtime : " << groundTime);
               continue;
             } else {
               SG_LOG (SG_AI, SG_BULK, "Next flight candidate : " << (*i)->getCallSign() );

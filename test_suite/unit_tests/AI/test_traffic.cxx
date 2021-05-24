@@ -41,7 +41,9 @@
 #include <Scenery/scenery.hxx>
 #include <Time/TimeManager.hxx>
 #include <Traffic/TrafficMgr.hxx>
+
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/debug/logstream.hxx>
 
 #include <simgear/timing/sg_time.hxx>
 
@@ -50,11 +52,17 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
+
 /////////////////////////////////////////////////////////////////////////////
 
 // Set up function for each test.
 void TrafficTests::setUp()
 {
+    time_t t = time(0);   // get time now
+
+    time_t lastDay = t - t%86400 + 86400 + 9 * 60; 
+
+
     FGTestApi::setUp::initTestGlobals("Traffic");
     FGTestApi::setUp::initNavDataCache();
 
@@ -77,6 +85,7 @@ void TrafficTests::setUp()
     FGAirportRef ybbn = FGAirport::getByIdent("YBBN");
     ybbn->testSuiteInjectGroundnetXML(SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "YBBN.groundnet.xml");
 
+    globals->add_new_subsystem<TimeManager>(SGSubsystemMgr::GENERAL);
     globals->add_new_subsystem<PerformanceDB>(SGSubsystemMgr::GENERAL);
     globals->add_new_subsystem<FGATCManager>(SGSubsystemMgr::GENERAL);
     globals->add_new_subsystem<FGAIManager>(SGSubsystemMgr::GENERAL);
@@ -86,6 +95,8 @@ void TrafficTests::setUp()
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
     globals->get_subsystem_mgr()->postinit();
+    // This means time is always 00:09 
+    globals->get_subsystem<TimeManager>()->setTimeOffset("system", lastDay);
 }
 
 // Clean up after each test.
@@ -133,9 +144,8 @@ void TrafficTests::testPushback()
     const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
-    time_t departureTime;
-    time(&departureTime); // now
-    departureTime = departureTime - 50;
+    time_t departureTime = globals->get_time_params()->get_cur_time();
+    departureTime = departureTime - 90;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -191,9 +201,8 @@ void TrafficTests::testPushbackCargo()
     const int cruiseSpeedKnots = 80;
 
     const double crs = SGGeodesy::courseDeg(egph->geod(), egpf->geod()); // direct course
-    time_t departureTime;
-    time(&departureTime); // now
-    departureTime = departureTime - 50;
+    time_t departureTime = globals->get_time_params()->get_cur_time();
+    departureTime = departureTime - 90;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -251,9 +260,8 @@ void TrafficTests::testChangeRunway()
     const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
-    time_t departureTime;
-    time(&departureTime); // now
-    departureTime = departureTime - 50;
+    time_t departureTime = globals->get_time_params()->get_cur_time();
+    departureTime = departureTime - 90;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -309,9 +317,8 @@ void TrafficTests::testPushforward()
     const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
-    time_t departureTime;
-    time(&departureTime); // now
-    departureTime = departureTime - 50;
+    time_t departureTime = globals->get_time_params()->get_cur_time();
+    departureTime = departureTime - 90;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -366,9 +373,8 @@ void TrafficTests::testPushforwardSpeedy()
     const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
-    time_t departureTime;
-    time(&departureTime); // now
-    departureTime = departureTime - 50;
+    time_t departureTime = globals->get_time_params()->get_cur_time();
+    departureTime = departureTime - 90;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -424,9 +430,8 @@ void TrafficTests::testPushforwardParkYBBN()
     const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
-    time_t departureTime;
-    time(&departureTime); // now
-    departureTime = departureTime - 50;
+    time_t departureTime = globals->get_time_params()->get_cur_time();
+    departureTime = departureTime - 90;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -472,7 +477,7 @@ void TrafficTests::testPushforwardParkYBBNRepeatGa()
     fgSetString("/sim/presets/airport-id", arrivalAirport->getId());
 
     // Time to depart
-    std::string dep = getTimeString(60);
+    std::string dep = getTimeString(120);
     // Time to arrive
     std::string arr = getTimeString(3260);
     // Time to arrive back
@@ -484,11 +489,11 @@ void TrafficTests::testPushforwardParkYBBNRepeatGa()
     const char* flighttype = "ga";
 
     FGAISchedule* schedule = new FGAISchedule(
-        "B737", "KLM", departureAirport->getId(), "G-BLA", "TST_BN_2", false, "B737", "KLM", "N", flighttype, radius, 8);
-    FGScheduledFlight* flight = new FGScheduledFlight("gaParkYSSY", "VFR", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "TST_BN_2");
+        "B737", "KLM", departureAirport->getId(), "G-BLA", "TST_BN_1", false, "B737", "KLM", "N", flighttype, radius, 8);
+    FGScheduledFlight* flight = new FGScheduledFlight("gaParkYSSY", "VFR", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "TST_BN_1");
     schedule->assign(flight);
 
-    FGScheduledFlight* returnFlight = new FGScheduledFlight("gaParkYSSY", "", arrivalAirport->getId(), departureAirport->getId(), 24, arr, ret, "WEEK", "TST_BN_2");
+    FGScheduledFlight* returnFlight = new FGScheduledFlight("gaParkYSSY", "", arrivalAirport->getId(), departureAirport->getId(), 24, arr, ret, "WEEK", "TST_BN_1");
     schedule->assign(returnFlight);
 
     FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
@@ -505,9 +510,8 @@ void TrafficTests::testPushforwardParkYBBNRepeatGa()
     const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
-    time_t departureTime;
-    time(&departureTime); // now
-    departureTime = departureTime - 50;
+    time_t departureTime = globals->get_time_params()->get_cur_time();
+    departureTime = departureTime - 90;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -550,7 +554,7 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
     fgSetString("/sim/presets/airport-id", arrivalAirport->getId());
 
     // Time to depart
-    std::string dep = getTimeString(60);
+    std::string dep = getTimeString(10);
     // Time to arrive
     std::string arr = getTimeString(3260);
     // Time to arrive back
@@ -563,16 +567,16 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
 
     FGAISchedule* schedule = new FGAISchedule(
         "B737", "KLM", departureAirport->getId(), "G-BLA", "TST_BN_2", false, "B737", "KLM", "N", flighttype, radius, 8);
-    FGScheduledFlight* flight = new FGScheduledFlight("gaParkYSSY", "VFR", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "TST_BN_2");
+    FGScheduledFlight* flight = new FGScheduledFlight("gateParkYSSY", "VFR", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "TST_BN_1");
     schedule->assign(flight);
 
-    FGScheduledFlight* returnFlight = new FGScheduledFlight("gaParkYSSY", "", arrivalAirport->getId(), departureAirport->getId(), 24, arr, ret, "WEEK", "TST_BN_2");
+    FGScheduledFlight* returnFlight = new FGScheduledFlight("gateParkYSSY", "", arrivalAirport->getId(), departureAirport->getId(), 24, arr, ret, "WEEK", "TST_BN_1");
     schedule->assign(returnFlight);
-
-    FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
 
     const SGGeod position = departureAirport->geod();
     FGTestApi::setPositionAndStabilise(position);
+
+    FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
 
     aiAircraft->setPerformance("gate", "");
     aiAircraft->setCompany("KLM");
@@ -583,9 +587,8 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
     const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
-    time_t departureTime;
-    time(&departureTime); // now
-    departureTime = departureTime - 50;
+    time_t departureTime = globals->get_time_params()->get_cur_time();
+    departureTime = departureTime - 90;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -599,6 +602,8 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
     CPPUNIT_ASSERT_EQUAL(fp->isValidPlan(), true);
     aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
     globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
+
+    CPPUNIT_ASSERT_EQUAL(aiAircraft->GetFlightPlan()->isValidPlan(), true);
 
     aiAircraft = flyAI(aiAircraft, "flight_gate_YSSY_YBBN_park_repeat" + std::to_string(departureTime));
 
@@ -627,37 +632,43 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
 
 FGAIAircraft * TrafficTests::flyAI(FGAIAircraft * aiAircraft, std::string fName) {
     int lineIndex = 0;
-    time_t t = time(0);   // get time now
 
-    time_t lastTenMinutes = t%600;
-
-    // We move to stable time
-    int timeDiff = 900 - (t - lastTenMinutes);
-    globals->inc_sim_time_sec(timeDiff);
-
-    const long t2 = (long)globals->get_sim_time_sec();
-    tm* startTime = localtime(&t2);
-    cout << "Start Time " << sgTimeFormatTime(startTime) << endl; 
+    CPPUNIT_ASSERT_EQUAL(aiAircraft->GetFlightPlan()->isValidPlan(), true);
 
 
+    time_t now = globals->get_time_params()->get_cur_time();
+    tm* startTime = localtime(&now);
+    time_t departureTime = aiAircraft->GetFlightPlan()->getStartTime();
+
+    char buffer[50];
+    char buffer2[50];
+
+    strftime (buffer,50,"%FT%TZ",startTime);
+    strftime (buffer2,50,"%FT%TZ", localtime(&departureTime));
+ 
+    SG_LOG(SG_AI, SG_DEBUG, "Start Time " << buffer << " First Departure " << buffer2);
+    
     char fname [160];
+    time_t t = time(0);   // get time now
     sprintf (fname, "./LOGS/flightgear_%ld.csv", t);
     std::ofstream csvFile (fname, ios::trunc | ios::out);
     if(!csvFile.is_open()) {
-      std::cerr << "File couldn't be opened" << endl;
+        std::cerr << "File couldn't be opened" << endl;
     }
-    aiAircraft->dumpCSVHeader(csvFile);
-    
     if (sglog().get_log_priority() <= SG_DEBUG) {
-       FGTestApi::setUp::logLinestringsToKML(fName);
+        aiAircraft->dumpCSVHeader(csvFile);
+        FGTestApi::setUp::logLinestringsToKML(fName);
     }
     flightgear::SGGeodVec geods = flightgear::SGGeodVec();
-    char buffer[50];
     int iteration = 1;
     int lastLeg = -1;
     double lastHeading = -500;
     double headingSum = 0;
+    int startSpeed = aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getSpeed();
+    aiAircraft->AccelTo(startSpeed);
+    int timeOffset = 0;
     for (size_t i = 0; i < 12000000 && !(aiAircraft->getDie()) && aiAircraft->GetFlightPlan()->getLeg() < 10; i++) {
+        CPPUNIT_ASSERT_EQUAL(aiAircraft->GetFlightPlan()->isValidPlan(), true);
         if (!aiAircraft->getDie()) {
             // collect position
             if (geods.empty() ||
@@ -697,12 +708,21 @@ FGAIAircraft * TrafficTests::flyAI(FGAIAircraft * aiAircraft, std::string fName)
         // A flight without loops should never reach 400°
         CPPUNIT_ASSERT_LESSEQUAL(400.0, headingSum);
         CPPUNIT_ASSERT_LESSEQUAL(10, aiAircraft->GetFlightPlan()->getLeg());
-        CPPUNIT_ASSERT_MESSAGE( "Aircraft has not completed test in time.", i < 30000);
-        time_t now = globals->get_time_params()->get_cur_time();
+        CPPUNIT_ASSERT_MESSAGE( "Aircraft has not completed test in time.", i < 3000000);
+        if (iteration > 1  
+        && aiAircraft->GetFlightPlan()->getLeg() == 1 
+        && aiAircraft->getSpeed() == 0 ) {
+            // Arrived at a parking
+            int beforeNextDepTime = aiAircraft->getTrafficRef()->getDepartureTime() - 30;
+            int seconds = beforeNextDepTime - globals->get_time_params()->get_cur_time();
+            if (seconds > 0) {
+                // Next departure 
+                timeOffset += seconds;
+                globals->get_time_params()->update(globals->get_view_position(), globals->get_time_params()->get_cur_time(), seconds);
+                SG_LOG(SG_AI, SG_BULK, "time leap " << seconds );
+            }
+        }
         FGTestApi::runForTime(1);
-        time_t after = globals->get_time_params()->get_cur_time();
-        // Make sure time is progressing
-        CPPUNIT_ASSERT_LESS(after, now);        
     }
     lastLeg = aiAircraft->GetFlightPlan()->getLeg();
     sprintf(buffer, "AI Leg %d Callsign %s Iteration %d", lastLeg, aiAircraft->getCallSign().c_str(), iteration);
@@ -717,8 +737,7 @@ FGAIAircraft * TrafficTests::flyAI(FGAIAircraft * aiAircraft, std::string fName)
 std::string TrafficTests::getTimeString(int timeOffset)
 {
     char ret[11];
-    time_t rawtime;
-    time (&rawtime);
+    time_t rawtime = globals->get_time_params()->get_cur_time();
     rawtime = rawtime + timeOffset;
     tm* timeinfo = gmtime(&rawtime);
     strftime(ret, 11, "%w/%H:%M:%S", timeinfo);
