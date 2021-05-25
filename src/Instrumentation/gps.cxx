@@ -28,7 +28,7 @@
 #include "Airports/runways.hxx"
 #include "Autopilot/route_mgr.hxx"
 
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>

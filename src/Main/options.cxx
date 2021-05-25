@@ -44,7 +44,7 @@
 
 #include <simgear/io/HTTPClient.hxx>
 #include <simgear/io/HTTPFileRequest.hxx>
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>

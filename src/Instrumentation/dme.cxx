@@ -10,7 +10,7 @@
 #include <simgear/compiler.h>
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 #include <simgear/sound/sample_group.hxx>
 
 #include <Main/fg_props.hxx>

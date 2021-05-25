@@ -10,7 +10,7 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 
 #include "gyro.hxx"
 

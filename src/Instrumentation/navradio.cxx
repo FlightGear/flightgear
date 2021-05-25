@@ -29,7 +29,7 @@
 
 #include <simgear/sg_inlines.h>
 #include <simgear/timing/sg_time.hxx>
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>

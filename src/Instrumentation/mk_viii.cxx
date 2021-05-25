@@ -68,7 +68,7 @@
 #include <simgear/math/SGLimits.hxx>
 #include <simgear/math/SGGeometryFwd.hxx>
 #include <simgear/math/SGGeodesy.hxx>
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 #include <simgear/math/SGLineSegment.hxx>
 #include <simgear/math/SGIntersect.hxx>
 #include <simgear/misc/sg_path.hxx>

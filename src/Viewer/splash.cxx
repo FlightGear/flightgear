@@ -43,7 +43,7 @@
 #include <simgear/compiler.h>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>

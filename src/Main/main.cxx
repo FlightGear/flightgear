@@ -39,7 +39,7 @@
 #include <simgear/emesary/notifications.hxx>
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/math/SGMath.hxx>
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/nasal/NasalEmesaryInterface.hxx>
 #include <simgear/props/AtomicChangeListener.hxx>

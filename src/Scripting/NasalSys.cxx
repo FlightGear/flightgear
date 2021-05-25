@@ -37,7 +37,7 @@
 #include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 #include <simgear/misc/SimpleMarkdown.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/sg_path.hxx>

@@ -28,7 +28,7 @@
 
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 
 #include <cmath>
 #include <Main/util.hxx>

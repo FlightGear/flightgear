@@ -36,7 +36,7 @@
 #include <config.h>
 #endif
 
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/timing/lowleveltime.h>
 

@@ -81,7 +81,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 
 #include <Time/light.hxx>
 #include <Time/light.hxx>

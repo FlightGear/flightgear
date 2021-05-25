@@ -14,7 +14,7 @@
 #include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/sg_inlines.h>

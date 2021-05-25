@@ -33,7 +33,7 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/sg_time.hxx>
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <Scenery/scenery.hxx>

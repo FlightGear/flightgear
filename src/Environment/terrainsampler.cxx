@@ -25,7 +25,7 @@
 #endif
 
 #include <Main/fg_props.hxx>
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 #include <Scenery/scenery.hxx>
 #include <deque>
 
