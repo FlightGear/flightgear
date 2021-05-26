@@ -290,10 +290,6 @@ public:
           throw sg_exception("Nav-cache file is not writeable");
       }
 
-      if (outer->isAnotherProcessRebuilding()) {
-          SG_LOG(SG_NAVCACHE, SG_ALERT, "NavDataCache: init() while another processing is rebuilding the DB");
-      }
-
       int openFlags = readOnly ? SQLITE_OPEN_READONLY :
         (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
       std::string pathUtf8 = path.utf8Str();
@@ -1524,6 +1520,7 @@ bool NavDataCache::isAnotherProcessRebuilding()
         // (there could be multiple read-only copies in this situation)
         ReleaseMutex(static_fgNavCacheRebuildMutex);
         CloseHandle(static_fgNavCacheRebuildMutex);
+		static_fgNavCacheRebuildMutex = nullptr;
         return false;
     }
 
