@@ -158,7 +158,6 @@ void LauncherNotificationsController::postNotification(QString id, QUrl source, 
         settings.beginGroup("dismissed-notifications");
         bool alreadyDimissed = settings.value(id).toBool();
         if (alreadyDimissed) {
-            qWarning() << "Skipping notification" << id << ", was previousl dimissed by user";
             return;
         }
     }
