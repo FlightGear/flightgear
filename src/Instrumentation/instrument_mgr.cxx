@@ -19,6 +19,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #include "instrument_mgr.hxx"
 #include "adf.hxx"
@@ -81,6 +82,7 @@ void FGInstrumentMgr::init()
   SG_LOG( SG_COCKPIT, SG_INFO, "Reading instruments from " << config );
 
   try {
+    flightgear::SentryXMLErrorSupression xs;
     readProperties( config, config_props );
     if (!build(config_props)) {
       throw sg_exception(

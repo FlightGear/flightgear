@@ -37,6 +37,7 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #include <GUI/gui.h>
 
@@ -822,6 +823,7 @@ fgReadPanel (istream &input)
   SGPropertyNode root;
 
   try {
+    flightgear::SentryXMLErrorSupression xs;
     readProperties(input, &root);
   } catch (const sg_exception &e) {
     guiErrorMessage("Error reading panel: ", e);
@@ -850,6 +852,7 @@ fgReadPanel (const string &relative_path)
   }
 
   try {
+    flightgear::SentryXMLErrorSupression xs;
     readProperties(path, &root);
   } catch (const sg_exception &e) {
     guiErrorMessage("Error reading panel: ", e);
