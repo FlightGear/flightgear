@@ -59,6 +59,7 @@ void XMLLoader::load(FGGroundNetwork* net)
       readXML(path, visitor);
 
       if (visitor.hasErrors()) {
+          flightgear::addSentryTag("ground-net", net->airport()->ident());
           flightgear::sentryReportException("Ground-net load error", path.utf8Str());
       }
   } catch (sg_exception& e) {
@@ -90,6 +91,7 @@ void XMLLoader::loadFromPath(FGGroundNetwork* net, const SGPath& path)
       FGGroundNetXMLLoader visitor(net);
       readXML(path, visitor);
       if (visitor.hasErrors()) {
+          flightgear::addSentryTag("ground-net", net->airport()->ident());
           flightgear::sentryReportException("Ground-net load error", path.utf8Str());
       }
   } catch (sg_exception& e) {
