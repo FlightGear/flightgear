@@ -674,6 +674,7 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
     for (const std::string& n : mat->get_names())
       naVec_append(names, stringToNasal(c, n));
 
+    HASHSET("region", 6, stringToNasal(c, mat->get_region_name()));
     HASHSET("names", 5, names);
     HASHSET("solid", 5, naNum(mat->get_solid()));
     HASHSET("friction_factor", 15, naNum(mat->get_friction_factor()));
