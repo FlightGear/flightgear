@@ -10,7 +10,7 @@
 #include <Main/globals.hxx>
 
 
-#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_random.hxx>
 #include <simgear/props/props_io.hxx>
 
 #include <unistd.h>
