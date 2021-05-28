@@ -59,20 +59,20 @@
 FGInput::FGInput ()
 {
   if( fgGetBool("/sim/input/no-mouse-input",false) ) {
-    SG_LOG(SG_INPUT,SG_ALERT,"Mouse input disabled!");
+    SG_LOG(SG_INPUT,SG_MANDATORY_INFO,"Mouse input disabled!");
   } else {
     set_subsystem( FGMouseInput::staticSubsystemClassId(), new FGMouseInput() );
   }
 
   if( fgGetBool("/sim/input/no-keyboard-input",false) ) {
-    SG_LOG(SG_INPUT,SG_ALERT,"Keyboard input disabled!");
+    SG_LOG(SG_INPUT,SG_MANDATORY_INFO,"Keyboard input disabled!");
   } else {
     set_subsystem( "input-keyboard", new FGKeyboardInput() );
   }
 
 #if defined(ENABLE_PLIB_JOYSTICK)
   if( fgGetBool("/sim/input/no-joystick-input",false) ) {
-    SG_LOG(SG_INPUT,SG_ALERT,"Joystick input disabled!");
+    SG_LOG(SG_INPUT,SG_MANDATORY_INFO,"Joystick input disabled!");
   } else {
     set_subsystem( "input-joystick", new FGJoystickInput() );
   }
@@ -80,7 +80,7 @@ FGInput::FGInput ()
 
 #ifdef INPUTEVENT_CLASS
   if( fgGetBool("/sim/input/no-event-input",false) ) {
-    SG_LOG(SG_INPUT,SG_ALERT,"Event input disabled!");
+    SG_LOG(SG_INPUT,SG_MANDATORY_INFO,"Event input disabled!");
   } else {
     set_subsystem( "input-event", new INPUTEVENT_CLASS() );
   }
@@ -88,7 +88,7 @@ FGInput::FGInput ()
 
 #if defined(ENABLE_HID_INPUT) && defined(WITH_EVENTINPUT)
   if (fgGetBool("/sim/input/no-hid-input", false)) {
-    SG_LOG(SG_INPUT, SG_WARN, "HID-based event input disabled");
+    SG_LOG(SG_INPUT, SG_MANDATORY_INFO, "HID-based event input disabled");
   } else {
     set_subsystem( "input-event-hid", new FGHIDEventInput() );
   }
