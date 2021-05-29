@@ -161,9 +161,15 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
   property_name = base_property_name + "/constant-speed-mode";
   PropertyManager->Tie( property_name.c_str(), this, &FGPropeller::GetConstantSpeed,
                       &FGPropeller::SetConstantSpeed );
-  property_name = base_property_name + "/prop-induced-velocity_fps";
+  property_name = base_property_name + "/prop-induced-velocity_fps"; // [ft/sec]
   PropertyManager->Tie( property_name.c_str(), this, &FGPropeller::GetInducedVelocity,
                       &FGPropeller::SetInducedVelocity );
+  property_name = base_property_name + "/propeller-power-ftlbps"; // [ft-lbs/sec]
+  PropertyManager->Tie( property_name.c_str(), &PowerRequired );
+  property_name = base_property_name + "/propeller-torque-ftlb"; // [ft-lbs]
+  PropertyManager->Tie( property_name.c_str(), this, &FGPropeller::GetTorque);
+  property_name = base_property_name + "/propeller-sense";
+  PropertyManager->Tie( property_name.c_str(), &Sense );
 
   Debug(0);
 }
@@ -219,7 +225,7 @@ double FGPropeller::Calculate(double EnginePower)
   double Vtip = RPS * Diameter * M_PI;
   HelicalTipMach = sqrt(Vtip*Vtip + Vel*Vel) / in.Soundspeed;
 
-  if (RPS > 0.0) J = Vel / (Diameter * RPS); // Calculate J normally
+  if (RPS > 0.01) J = Vel / (Diameter * RPS); // Calculate J normally
   else           J = Vel / Diameter;
 
   PowerAvailable = EnginePower - GetPowerRequired();
@@ -278,7 +284,7 @@ double FGPropeller::Calculate(double EnginePower)
 
   FGColumnVector3 vH(Ixx*omega*Sense*Sense_multiplier, 0.0, 0.0);
 
-  if (omega > 0.0) ExcessTorque = PowerAvailable / omega;
+  if (omega > 0.01) ExcessTorque = PowerAvailable / omega;
   else             ExcessTorque = PowerAvailable / 1.0;
 
   RPM = (RPS + ((ExcessTorque / Ixx) / (2.0 * M_PI)) * in.TotalDeltaT) * 60.0;
