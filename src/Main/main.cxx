@@ -617,6 +617,8 @@ int fgMainInit( int argc, char **argv )
         }
     }
     
+    globals->get_props()->getNode("/sim", true /*create*/)->setAttribute(SGPropertyNode::VALUE_CHANGED_DOWN, true);
+    
     {
         SGPropertyNode* active = globals->get_props()->getNode("/sim/property-locking/active", true /*create*/);
         SGPropertyNode* verbose = globals->get_props()->getNode("/sim/property-locking/verbose", true /*create*/);
