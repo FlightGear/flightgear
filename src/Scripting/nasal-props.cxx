@@ -189,7 +189,10 @@ static naRef f_getAttribute(naContext c, naRef me, int argc, naRef* args)
     else if(!strcmp(a, "trace-write")) attr = SGPropertyNode::TRACE_WRITE;
     else if(!strcmp(a, "userarchive")) attr = SGPropertyNode::USERARCHIVE;
     else if(!strcmp(a, "preserve"))    attr = SGPropertyNode::PRESERVE;
-    else if(!strcmp(a, "protected"))    attr = SGPropertyNode::PROTECTED;
+    else if(!strcmp(a, "protected"))   attr = SGPropertyNode::PROTECTED;
+    else if(!strcmp(a, "listener-safe"))        attr = SGPropertyNode::LISTENER_SAFE;
+    else if(!strcmp(a, "value-changed-up"))     attr = SGPropertyNode::VALUE_CHANGED_UP;
+    else if(!strcmp(a, "value-changed-down"))   attr = SGPropertyNode::VALUE_CHANGED_DOWN;
 
     else {
         naRuntimeError(c, "props.getAttribute() with invalid attribute");
