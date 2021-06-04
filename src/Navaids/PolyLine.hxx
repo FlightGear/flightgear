@@ -38,7 +38,6 @@ typedef std::vector<SGGeod> SGGeodVec;
 class PolyLine;
     
 typedef SGSharedPtr<PolyLine> PolyLineRef;
-
 typedef std::vector<PolyLineRef> PolyLineList;
     
 /**

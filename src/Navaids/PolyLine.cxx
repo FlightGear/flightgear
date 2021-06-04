@@ -103,17 +103,15 @@ PolyLineRef PolyLine::create(PolyLine::Type aTy, const SGGeodVec &aRawPoints)
 void PolyLine::bulkAddToSpatialIndex(PolyLineList::const_iterator begin,
                                      PolyLineList::const_iterator end)
 {
-    NavDataCache::Transaction txn( NavDataCache::instance());
     flightgear::PolyLineList::const_iterator it;
     for (it=begin; it != end; ++it) {
         (*it)->addToSpatialIndex();
     }
-    txn.commit();
 }
 
 void PolyLine::addToSpatialIndex() const
 {
-    Octree::Node* node = Octree::global_spatialOctree->findNodeForBox(cartesianBox());
+    Octree::Node* node = Octree::globalTransientOctree()->findNodeForBox(cartesianBox());
     node->addPolyLine(const_cast<PolyLine*>(this));
 }
 
@@ -155,7 +153,7 @@ PolyLineList PolyLine::linesNearPos(const SGGeod& aPos, double aRangeNm, const T
     SGVec3d cart = SGVec3d::fromGeod(aPos);
     double cutoffM = aRangeNm * SG_NM_TO_METER;
     Octree::FindLinesDeque deque;
-    deque.push_back(Octree::global_spatialOctree);
+    deque.push_back(Octree::globalTransientOctree());
 
     while (!deque.empty()) {
         Octree::Node* nd = deque.front();
