@@ -125,14 +125,9 @@ public:
         currNode = nodes.begin();
         currRoute = routes.begin();
     };
-  
-    FGTaxiRoute(const FGTaxiNodeVector& nds, intVec rts,  double dist, int dpth) {
-        nodes = nds;
-        routes = rts;
-        distance = dist;
-        currNode = nodes.begin();
-        currRoute = routes.begin();
-    };
+
+    FGTaxiRoute(const FGTaxiNodeVector& nds, const intVec& rts, double dist, int dpth);
+
 
     FGTaxiRoute& operator= (const FGTaxiRoute &other) {
         nodes = other.nodes;
