@@ -130,16 +130,35 @@ void FGTaxiSegment::unblock(time_t now)
 /***************************************************************************
  * FGTaxiRoute
  **************************************************************************/
-bool FGTaxiRoute::next(FGTaxiNodeRef& node, int *rte)
+
+FGTaxiRoute::FGTaxiRoute(const FGTaxiNodeVector& nds, const intVec& rts, double dist, int /* dpth */) : nodes(nds),
+                                                                                                        routes(rts),
+                                                                                                        distance(dist)
 {
+    currNode = nodes.begin();
+    currRoute = routes.begin();
+
     if (nodes.size() != (routes.size()) + 1) {
         SG_LOG(SG_GENERAL, SG_ALERT, "ALERT: Misconfigured TaxiRoute : " << nodes.size() << " " << routes.size());
+    }
+};
+
+bool FGTaxiRoute::next(FGTaxiNodeRef& node, int* rte)
+{
+    if (nodes.size() != (routes.size()) + 1) {
         throw sg_range_exception("Misconfigured taxi route");
     }
+
     if (currNode == nodes.end())
         return false;
     node = *(currNode);
     if (currNode != nodes.begin()) {
+        // work-around for FLIGHTGEAR-NJN: throw an exception here
+        // instead of crashing, to aid debugging
+        if (currRoute == routes.end()) {
+            throw sg_range_exception("Misconfigured taxi route");
+        }
+
         *rte = *(currRoute);
         currRoute++;
     } else {
