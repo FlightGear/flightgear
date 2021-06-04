@@ -218,21 +218,9 @@ private:
         if (m_abandoned)
             return;
 
-        flightgear::PolyLineList::const_iterator begin = m_parsedLines.begin() + m_lineInsertCount;
 
-        // add lines in batches of 100; this is a tradeoff to ensure we don't lock
-        // the database for too long. (Which triggers SQLITE_BUSY)
-        const int lineInsertBatchSize = 100U;
-        unsigned int numToAdd = std::min<unsigned int>(100U, static_cast<unsigned int>(m_parsedLines.size()) - m_lineInsertCount);
-        flightgear::PolyLineList::const_iterator end = begin + numToAdd;
-        flightgear::PolyLine::bulkAddToSpatialIndex(begin, end);
-
-        if (end == m_parsedLines.end()) {
-            deleteLater(); // commit suicide
-        } else {
-            m_lineInsertCount += lineInsertBatchSize;
-            QTimer::singleShot(50, this, SLOT(onFinished()));
-        }
+        flightgear::PolyLine::bulkAddToSpatialIndex(m_parsedLines.begin(), m_parsedLines.end());
+        deleteLater(); // commit suicide
     }
 
     void loadNaturalEarthFile(const std::string& aFileName,
@@ -245,7 +233,6 @@ private:
         if (!path.exists())
             return; // silently fail for now
 
-        flightgear::PolyLineList lines;
         flightgear::SHPParser::parsePolyLines(path, aType, m_parsedLines, areClosed);
     }
 

@@ -21,9 +21,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+#include "config.h"
 
 #include "PositionedOctree.hxx"
 #include "positioned.hxx"
@@ -37,14 +35,48 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/timing/timestamp.hxx>
 
+#include "PolyLine.hxx"
+
 namespace flightgear
 {
 
 namespace Octree
 {
 
-Node* global_spatialOctree = NULL;
+std::unique_ptr<Node> global_spatialOctree;
+std::unique_ptr<Node> global_transientOctree;
 
+double RADIUS_EARTH_M = 7000 * 1000.0; // 7000km is plenty
+
+Node* globalTransientOctree()
+{
+    if (!global_transientOctree) {
+        SGVec3d earthExtent(RADIUS_EARTH_M, RADIUS_EARTH_M, RADIUS_EARTH_M);
+        global_transientOctree.reset(new Octree::Branch(SGBox<double>(-earthExtent, earthExtent), 1, false));
+    }
+
+    return global_transientOctree.get();
+}
+
+Node* globalPersistentOctree()
+{
+    if (!global_spatialOctree) {
+        SGVec3d earthExtent(RADIUS_EARTH_M, RADIUS_EARTH_M, RADIUS_EARTH_M);
+        global_spatialOctree.reset(new Octree::Branch(SGBox<double>(-earthExtent, earthExtent), 1, true));
+    }
+
+    return global_spatialOctree.get();
+}
+
+Node::Node(const SGBoxd& aBox, int64_t aIdent, bool persistent) : _ident(aIdent),
+                                                                  _persistent(persistent),
+                                                                  _box(aBox)
+{
+}
+
+Node::~Node()
+{
+}
 
 void Node::addPolyLine(const PolyLineRef& aLine)
 {
@@ -66,9 +98,8 @@ Node *Node::findNodeForBox(const SGBoxd&) const
     return const_cast<Node*>(this);
 }
 
-Leaf::Leaf(const SGBoxd& aBox, int64_t aIdent) :
-  Node(aBox, aIdent),
-  childrenLoaded(false)
+Leaf::Leaf(const SGBoxd& aBox, int64_t aIdent, bool persistent) : Node(aBox, aIdent, persistent),
+                                                                  childrenLoaded(false)
 {
 }
 
@@ -136,9 +167,8 @@ void Leaf::loadChildren()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Branch::Branch(const SGBoxd& aBox, int64_t aIdent) :
-  Node(aBox, aIdent),
-  childrenLoaded(false)
+Branch::Branch(const SGBoxd& aBox, int64_t aIdent, bool persistent) : Node(aBox, aIdent, persistent),
+                                                                      childrenLoaded(false)
 {
   memset(children, 0, sizeof(Node*) * 8);
 }
@@ -249,18 +279,18 @@ Node* Branch::childAtIndex(int childIndex) const
 
     if (d2 < LEAF_SIZE_SQR) {
       // REVIEW: Memory Leak - 480 bytes in 3 blocks are still reachable
-      child = new Leaf(cb, childIdent);
+      child = new Leaf(cb, childIdent, _persistent);
     } else {
       // REVIEW: Memory Leak - 9,152 bytes in 52 blocks are still reachable
-      child = new Branch(cb, childIdent);
+      child = new Branch(cb, childIdent, _persistent);
     }
 
     children[childIndex] = child;
 
-    if (childrenLoaded) {
-    // childrenLoad is done, so we're defining a new node - add it to the
-    // cache too.
-      NavDataCache::instance()->defineOctreeNode(const_cast<Branch*>(this), child);
+    if (_persistent && childrenLoaded) {
+        // childrenLoad is done, so we're defining a new node - add it to the
+        // cache too.
+        NavDataCache::instance()->defineOctreeNode(const_cast<Branch*>(this), child);
     }
   }
 
@@ -271,6 +301,10 @@ void Branch::loadChildren() const
 {
   if (childrenLoaded) {
     return;
+  }
+
+  if (!_persistent) {
+      childrenLoaded = true;
   }
 
   int childrenMask = NavDataCache::instance()->getOctreeBranchChildren(guid());
@@ -302,7 +336,7 @@ bool findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPosit
   aResults.clear();
   FindNearestPQueue pq;
   FindNearestResults results;
-  pq.push(Ordered<Node*>(global_spatialOctree, 0));
+  pq.push(Ordered<Node*>(globalPersistentOctree(), 0));
   double cut = aCutoffM;
 
   SGTimeStamp tm;
@@ -343,7 +377,7 @@ bool findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filte
   aResults.clear();
   FindNearestPQueue pq;
   FindNearestResults results;
-  pq.push(Ordered<Node*>(global_spatialOctree, 0));
+  pq.push(Ordered<Node*>(globalPersistentOctree(), 0));
   double rng = aRangeM;
 
   SGTimeStamp tm;

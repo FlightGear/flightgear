@@ -37,10 +37,15 @@
 
 #include <Navaids/positioned.hxx>
 #include <Navaids/NavDataCache.hxx>
-#include <Navaids/PolyLine.hxx>
 
 namespace flightgear
 {
+
+// forward decls
+class PolyLine;
+typedef SGSharedPtr<PolyLine> PolyLineRef;
+typedef std::vector<PolyLineRef> PolyLineList;
+
 
 namespace Octree
 {
@@ -117,7 +122,9 @@ namespace Octree
   // we're always grabbing all the lines in an area
   typedef std::deque<Node*> FindLinesDeque;
 
-  extern Node* global_spatialOctree;
+  Node* globalPersistentOctree();
+
+  Node* globalTransientOctree();
 
   class Leaf;
 
@@ -156,34 +163,32 @@ namespace Octree
 
     virtual Node* findNodeForBox(const SGBoxd& box) const;
 
-    virtual ~Node() {}
+    virtual ~Node();
 
     void addPolyLine(const PolyLineRef&);
   protected:
-    Node(const SGBoxd &aBox, int64_t aIdent) :
-    _ident(aIdent),
-    _box(aBox)
-    {
-    }
+      Node(const SGBoxd& aBox, int64_t aIdent, bool persistent);
 
-    const int64_t _ident;
-    const SGBoxd _box;
 
-    PolyLineList lines;
+      const int64_t _ident;
+      const bool _persistent = false;
+      const SGBoxd _box;
+
+      PolyLineList lines;
   };
 
   class Leaf : public Node
   {
   public:
-    Leaf(const SGBoxd& aBox, int64_t aIdent);
+      Leaf(const SGBoxd& aBox, int64_t aIdent, bool persistent);
 
-    virtual void visit(const SGVec3d& aPos, double aCutoff,
-                       FGPositioned::Filter* aFilter,
-                       FindNearestResults& aResults, FindNearestPQueue&);
+      virtual void visit(const SGVec3d& aPos, double aCutoff,
+                         FGPositioned::Filter* aFilter,
+                         FindNearestResults& aResults, FindNearestPQueue&);
 
-    virtual Leaf* findLeafForPos(const SGVec3d&) const
-    {
-      return const_cast<Leaf*>(this);
+      virtual Leaf* findLeafForPos(const SGVec3d&) const
+      {
+          return const_cast<Leaf*>(this);
     }
 
     void insertChild(FGPositioned::Type ty, PositionedID id);
@@ -200,16 +205,16 @@ namespace Octree
   class Branch : public Node
   {
   public:
-    Branch(const SGBoxd& aBox, int64_t aIdent);
+      Branch(const SGBoxd& aBox, int64_t aIdent, bool persistent);
 
-    virtual void visit(const SGVec3d& aPos, double aCutoff,
-                       FGPositioned::Filter*,
-                       FindNearestResults&, FindNearestPQueue& aQ);
+      virtual void visit(const SGVec3d& aPos, double aCutoff,
+                         FGPositioned::Filter*,
+                         FindNearestResults&, FindNearestPQueue& aQ);
 
-    virtual Leaf* findLeafForPos(const SGVec3d& aPos) const
-    {
-      loadChildren();
-      return childForPos(aPos)->findLeafForPos(aPos);
+      virtual Leaf* findLeafForPos(const SGVec3d& aPos) const
+      {
+          loadChildren();
+          return childForPos(aPos)->findLeafForPos(aPos);
     }
 
     int childMask() const;

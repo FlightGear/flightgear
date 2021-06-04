@@ -796,9 +796,9 @@ public:
     sqlite3_bind_double(insertPositionedQuery, 7, pos.getElevationM());
 
     if (spatialIndex) {
-      Octree::Leaf* octreeLeaf = Octree::global_spatialOctree->findLeafForPos(cartPos);
-      assert(intersects(octreeLeaf->bbox(), cartPos));
-      sqlite3_bind_int64(insertPositionedQuery, 8, octreeLeaf->guid());
+        Octree::Leaf* octreeLeaf = Octree::globalPersistentOctree()->findLeafForPos(cartPos);
+        assert(intersects(octreeLeaf->bbox(), cartPos));
+        sqlite3_bind_int64(insertPositionedQuery, 8, octreeLeaf->guid());
     } else {
       sqlite3_bind_null(insertPositionedQuery, 8);
     }
@@ -1291,11 +1291,6 @@ NavDataCache::NavDataCache()
             }
         }
     } // of retry loop
-
-    double RADIUS_EARTH_M = 7000 * 1000.0; // 7000km is plenty
-    SGVec3d earthExtent(RADIUS_EARTH_M, RADIUS_EARTH_M, RADIUS_EARTH_M);
-    Octree::global_spatialOctree =
-    new Octree::Branch(SGBox<double>(-earthExtent, earthExtent), 1);
 
     // Update d->aptDatFilesInfo, d->metarDatPath, d->navDatPath, etc.
     updateListsOfDatFiles();
@@ -1995,7 +1990,7 @@ void NavDataCache::updatePosition(PositionedID item, const SGGeod &pos)
 // structures alone. This is fine providing items do no move very far, since
 // all the spatial searches ultimately use the items' real cartesian position,
 // which was updated above.
-  Octree::Leaf* octreeLeaf = Octree::global_spatialOctree->findLeafForPos(cartPos);
+  Octree::Leaf* octreeLeaf = Octree::globalPersistentOctree()->findLeafForPos(cartPos);
   sqlite3_bind_int64(d->setAirportPos, 5, octreeLeaf->guid());
 
   sqlite3_bind_double(d->setAirportPos, 6, cartPos.x());
