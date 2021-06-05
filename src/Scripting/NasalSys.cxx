@@ -1341,12 +1341,13 @@ void FGNasalSys::addModule(string moduleName, simgear::PathList scripts)
             SGPropertyNode* node = module_node->getChild("enabled",0,true);
             node->setBoolValue(false);
             node->setAttribute(SGPropertyNode::USERARCHIVE,false);
-            SG_LOG(SG_NASAL, SG_ALERT, "Nasal module " <<
-            moduleName <<
-            " present in FGDATA/Nasal but not configured in defaults.xml. " <<
-            " Please add an entry to defaults.xml, and set "
-            << node->getPath() <<
-            "=true to load the module on-demand at runtime when required.");
+            #ifndef BUILDING_TESTSUITE
+                SG_LOG(SG_NASAL, SG_ALERT, "Nasal module " << moduleName
+                        << " present in FGDATA/Nasal but not configured in defaults.xml. "
+                        << " Please add an entry to defaults.xml, and set " << node->getPath()
+                        << "=true to load the module on-demand at runtime when required."
+                        );
+            #endif
         }
     }
 }
