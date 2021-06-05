@@ -40,12 +40,12 @@ bool FGSwiftAircraftManager::isInitialized() const
 bool FGSwiftAircraftManager::addPlane(const std::string& callsign, const std::string& modelString)
 {
     this->removePlane(callsign); // Remove plane if already exists e.g. when rematching is done.
-    auto curAircraft = new FGAISwiftAircraft(callsign, modelString);
+    auto curAircraft = FGAISwiftAircraftPtr(new FGAISwiftAircraft(callsign, modelString));
     globals->get_subsystem<FGAIManager>()->attach(curAircraft);
     // Init props after prop-root is assigned
     curAircraft->initProps();
 
-    aircraftByCallsign.insert(std::pair<std::string, FGAISwiftAircraft*>(callsign, curAircraft));
+    aircraftByCallsign.insert(std::pair<std::string, FGAISwiftAircraftPtr>(callsign, curAircraft));
     return true;
 }
 

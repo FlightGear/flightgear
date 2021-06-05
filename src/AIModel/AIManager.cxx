@@ -419,7 +419,7 @@ FGAIManager::updateLOD(SGPropertyNode* node)
 }
 
 void
-FGAIManager::attach(FGAIBase *model)
+FGAIManager::attach(const SGSharedPtr<FGAIBase> &model)
 {
     const char* typeString = model->getTypeString();
     SGPropertyNode* root = globals->get_props()->getNode("ai/models", true);
