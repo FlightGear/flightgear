@@ -54,7 +54,7 @@ public:
     static const char* staticSubsystemClassId() { return "ai-model"; }
 
     void updateLOD(SGPropertyNode* node);
-    void attach(FGAIBase *model);
+    void attach(const SGSharedPtr<FGAIBase> &model);
 
     const FGAIBase *calcCollision(double alt, double lat, double lon, double fuse_range);
 

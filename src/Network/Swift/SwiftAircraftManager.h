@@ -29,6 +29,8 @@
 
 class FGSwiftAircraftManager
 {
+    using FGAISwiftAircraftPtr = SGSharedPtr<FGAISwiftAircraft>;
+
 public:
     FGSwiftAircraftManager();
     ~FGSwiftAircraftManager();
@@ -42,7 +44,7 @@ public:
     bool                                                isInitialized() const;
 
 private:
-    std::unordered_map<std::string, FGAISwiftAircraft*> aircraftByCallsign;
+    std::unordered_map<std::string, FGAISwiftAircraftPtr> aircraftByCallsign;
     bool m_initialized = false;
 
 };
