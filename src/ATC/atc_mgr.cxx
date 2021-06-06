@@ -300,7 +300,7 @@ update its state.
 update.  On first update, delta time will be 0.
 */
 void FGATCManager::update ( double time ) {
-    SG_LOG(SG_ATC, SG_BULK, "ATC update code is running at time: " << time);
+    // SG_LOG(SG_ATC, SG_BULK, "ATC update code is running at time: " << time);
     
     // Test code: let my virtual co-pilot handle ATC
     FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();

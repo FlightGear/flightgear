@@ -224,8 +224,9 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
 
 void FGAIAircraft::AccelTo(double speed) {
     tgt_speed = speed;
-    if (!isStationary())
+    if (!isStationary()) {
         _needsGroundElevation = true;
+    }
 }
 
 
@@ -853,6 +854,7 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int 
         }
 
         if (fp->getPreviousWaypoint()->getSpeed() < tgt_speed) {
+            SG_LOG(SG_AI, SG_BULK, "Set speed of WP from " << fp->getPreviousWaypoint()->getSpeed() << " to  " << tgt_speed);
             fp->getPreviousWaypoint()->setSpeed(tgt_speed);
         }
     }
@@ -1236,6 +1238,14 @@ const string& FGAIAircraft::atGate()
 
 void FGAIAircraft::handleATCRequests(double dt)
 {
+    time_t startTime = this->getTrafficRef()->getDepartureTime();
+    time_t now = globals->get_time_params()->get_cur_time();
+
+    if ((startTime-now)>0) {
+        SG_LOG(SG_AI, SG_BULK, this->getCallSign()
+            << " is scheduled to depart in " << startTime-now << " seconds.");
+    }
+
     //TODO implement NullController for having no ATC to save the conditionals
     if (controller) {
         controller->updateAircraftInformation(getID(),
@@ -1462,6 +1472,7 @@ void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
     o << "Index\t";
     o << "Lat\t";
     o << "Lon\t";
+    o << "Callsign\t";
     o << "heading change rate\t";
     o << "headingErr\t";
     o << "hdg\t";
@@ -1477,13 +1488,16 @@ void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
     o << "Bearing\t";
     o << "headingChangeRate\t";
     o << "headingError\t";
+
     o << "Name\t";
     o << "WP Lat\t";
     o << "WP Lon\t";
     o << "Dist\t";
+    o << "Departuretime\t";
     o << "Time\t";
     o << "Leg\t";
     o << "Num WP\t";
+    o << "Leaddistance\t";
     o << endl;
 }
 
@@ -1491,6 +1505,7 @@ void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
     o << lineIndex << "\t";
     o << this->getGeodPos().getLatitudeDeg() << "\t";
     o << this->getGeodPos().getLongitudeDeg() << "\t";
+    o << this->getCallSign() << "\t";
     o << headingChangeRate << "\t";
     o << headingError << "\t";
     o << hdg << "\t";
@@ -1504,23 +1519,26 @@ void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
     o << groundTargetSpeed  << "\t";
     o  << round(this->getVerticalSpeedFPM()) << "\t";
     o << this->getTrueHeadingDeg() << "\t";
-    o << this->GetFlightPlan()->getBearing(this->getGeodPos(), this->GetFlightPlan()->getCurrentWaypoint()) << "\t";
+    FGAIFlightPlan* fp = this->GetFlightPlan();
     o << headingChangeRate << "\t";
     o  << headingError << "\t";
     FGAIWaypoint* currentWP = this->GetFlightPlan()->getCurrentWaypoint();
     if (currentWP) {
+        o << this->GetFlightPlan()->getBearing(this->getGeodPos(), this->GetFlightPlan()->getCurrentWaypoint()) << "\t";
         o << currentWP->getName() << "\t";
         o << this->GetFlightPlan()->getCurrentWaypoint()->getPos().getLatitudeDeg() << "\t";
         o << this->GetFlightPlan()->getCurrentWaypoint()->getPos().getLongitudeDeg() << "\t";
         o << SGGeodesy::distanceM(this->getGeodPos(), currentWP->getPos()) << "\t";
         o << this->GetFlightPlan()->getStartTime() << "\t";
+        o << globals->get_time_params()->get_cur_time() << "\t";
+        o << this->GetFlightPlan()->getStartTime() - globals->get_time_params()->get_cur_time() << "\t";
     } else {
-        o << "\t\t\t\t";
+        o << "\t\t\t\t\t\t\t";
     }
-    FGAIFlightPlan* fp = this->GetFlightPlan();
     if (fp->isValidPlan()) {
         o << fp->getLeg() << "\t";
         o << fp->getNrOfWayPoints() << "\t";
+        o << fp->getLeadDistance() << "\t";
     } else {
         o << "NotValid\t\t";
     }

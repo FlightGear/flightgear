@@ -435,6 +435,7 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
   // At a turn rate of 30 degrees per second, it takes 12 seconds to do a full 360 degree turn
   // So, to get an estimate of the turn radius, calculate the cicumference of the circle
   // we travel on. Get the turn radius by dividing by PI (*2).
+  // FIXME Why when going backwards? No fabs
   if (speed < 0.5) {
         lead_distance = 0.5;
         return;
@@ -535,7 +536,7 @@ void FGAIFlightPlan::pushBackWaypoint(FGAIWaypoint *wpt)
   size_t pos = wpt_iterator - waypoints.begin();
   waypoints.push_back(wpt);
   wpt_iterator = waypoints.begin() + pos;
-  SG_LOG(SG_AI, SG_BULK, "Added WP : \t" << wpt->getName() << "\t" << wpt->getPos());
+  SG_LOG(SG_AI, SG_BULK, "Added WP : \t" << wpt->getName() << "\t" << wpt->getPos() << "\t" << wpt->getSpeed());
 }
 
 // Start flightplan over from the beginning
