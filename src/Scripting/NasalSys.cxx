@@ -1580,6 +1580,28 @@ naRef FGNasalSys::parse(naContext ctx, const char* filename,
             " in "<< filename <<", line " << errLine;
         errors = errorMessageStream.str();
         SG_LOG(SG_NASAL, SG_ALERT, errors);
+        
+        // Show the line, in case <filename> isn't a real file, e.g. nasal code
+        // is in an .xml file.
+        const char* line_begin = buf;
+        const char* line_end = nullptr;
+        int line_num = 1;
+        for(;;) {
+            line_end = strchr(line_begin, '\n');
+            if (!line_end) {
+                line_end = line_begin + strlen(line_begin);
+                break;
+            }
+            if (line_num == errLine) break;
+            line_begin = line_end + 1;
+            line_num += 1;
+        }
+        if (line_num == errLine) {
+            SG_LOG(SG_NASAL, SG_ALERT, std::string(line_begin, line_end) << "\n");
+        }
+        else {
+            SG_LOG(SG_NASAL, SG_ALERT, "[Could not find line " << errLine << " - only " << line_num << " lines.");
+        }
 
         return naNil();
     }
