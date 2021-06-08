@@ -15,6 +15,7 @@
 #include <Main/options.hxx>
 #include <Main/util.hxx>
 #include <Main/FGInterpolator.hxx>
+#include <Main/locale.hxx>
 
 #include <Time/TimeManager.hxx>
 
@@ -78,6 +79,9 @@ void initTestGlobals(const std::string& testName)
      * destroyed via the subsystem manager.
      */
     globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
+    
+    // necessary to avoid asserts: mark FGLocale as initialized
+    globals->get_locale()->selectLanguage({});
 }
     
 bool logPositionToKML(const std::string& testName)

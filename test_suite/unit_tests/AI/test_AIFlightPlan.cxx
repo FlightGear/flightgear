@@ -49,7 +49,7 @@ void AIFlightPlanTests::setUp()
     FGTestApi::setUp::initTestGlobals("AI");
     FGTestApi::setUp::initNavDataCache();
 
-    globals->add_new_subsystem<FGAIManager>();
+    globals->add_new_subsystem<FGAIManager>(SGSubsystemMgr::GENERAL);
 
     auto props = globals->get_props();
     props->setBoolValue("sim/ai/enabled", true);
@@ -276,7 +276,7 @@ void AIFlightPlanTests::testAIFlightPlanLeftCircle()
         course += 10;
         const auto g1 = SGGeodesy::direct(lastWp->getPos(), course, SG_NM_TO_METER * 5.0);
         wp->setPos(g1);
-        wp->setName("testWp_" + i);
+        wp->setName("testWp_" + std::to_string(i));
         wp->setOn_ground(true);
         wp->setGear_down(true);
         wp->setSpeed(10);
