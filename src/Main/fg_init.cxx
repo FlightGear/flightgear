@@ -238,6 +238,7 @@ public:
         } catch ( const sg_exception &e ) {
             SG_LOG(SG_IO, SG_ALERT,
                    "Error reading aircraft: " << e.getFormattedMessage());
+            flightgear::addSentryBreadcrumb("Aircraft-dir=" + aircraftDir, "error");
             SG_LOG(SG_IO, SG_ALERT, "aircraft dir is:" << aircraftDir);
             flightgear::fatalMessageBoxWithoutExit(
                 "Error reading aircraft",
@@ -254,11 +255,13 @@ public:
       } else {
         SG_LOG(SG_GENERAL, SG_ALERT, "aircraft '" << _searchAircraft << 
                "' not found in specified dir:" << aircraftDir);
+        flightgear::addSentryBreadcrumb("Aircraft-dir=" + aircraftDir, "error");
         flightgear::fatalMessageBoxWithoutExit(
-          "Aircraft not found",
-          "The requested aircraft (" + aircraft + ") could not be found "
-          "in the specified location.",
-          aircraftDir);
+            "Aircraft not found",
+            "The requested aircraft (" + aircraft + ") could not be found "
+                                                    "in the specified location. (" +
+                aircraftDir + ")",
+            aircraftDir);
         return false;
       }
     }
@@ -282,12 +285,20 @@ public:
       SG_LOG(SG_GENERAL, SG_ALERT,
              "Cannot find the specified aircraft: '" << aircraft << "'");
 
+      flightgear::addSentryBreadcrumb("Aircraft paths: " + SGPath::join(globals->get_aircraft_paths(), ";"), "error");
+
       SG_LOG(SG_GENERAL, SG_ALERT, "\tin paths:" << SGPath::join(globals->get_aircraft_paths(), ";"));
 
+      std::string notFoundMessage;
+      if (globals->get_aircraft_paths().empty()) {
+          notFoundMessage = "The requested aircraft (" + aircraft + ") could not be found. No aircraft paths are configured.";
+      } else {
+          notFoundMessage = "The requested aircraft (" + aircraft + ") could not be found in any of the search paths.";
+      }
+
       flightgear::fatalMessageBoxWithoutExit(
-        "Aircraft not found",
-        "The requested aircraft (" + aircraft + ") could not be found "
-        "in any of the search paths.");
+          "Aircraft not found",
+          notFoundMessage);
       return false;
     }
     
