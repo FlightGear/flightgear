@@ -88,6 +88,13 @@ void FGCom::iaxTextEvent(struct iaxc_ev_text text)
   {
     _text_node->setStringValue(text.message);
   }
+
+  auto level = SG_INFO;
+  if ((text.type == IAXC_TEXT_TYPE_ERROR) || (text.type == IAXC_TEXT_TYPE_FATALERROR)) {
+      level = SG_ALERT;
+  }
+
+  SG_LOG(SG_SOUND, level, std::string{"FCCom IAX:"} + text.message);
 }
 
 
