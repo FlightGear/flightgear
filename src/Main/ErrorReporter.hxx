@@ -30,6 +30,7 @@ class ErrorReporter : public SGSubsystem
 {
 public:
     ErrorReporter();
+    ~ErrorReporter();
 
     void preinit();
 

@@ -213,6 +213,7 @@ public:
     using OccurrenceVec = std::vector<ErrorOcurrence>;
 
     std::unique_ptr<RecentLogCallback> _logCallback;
+    bool _logCallbackRegistered = false;
 
     string _terrasyncPathPrefix;
     string _fgdataPathPrefix;
@@ -709,6 +710,15 @@ ErrorReporter::ErrorReporter() : d(new ErrorReporterPrivate)
         "/scenery/use-vpb"};
 }
 
+ErrorReporter::~ErrorReporter()
+{
+    // if we are deleted withut being shutdown(), ensure we clean
+    // up our logging callback
+    if (d->_logCallbackRegistered) {
+        sglog().removeCallback(d->_logCallback.get());
+    }
+}
+
 void ErrorReporter::bind()
 {
     SGPropertyNode_ptr n = fgGetNode("/sim/error-report", true);
@@ -742,6 +752,7 @@ void ErrorReporter::preinit()
     });
 
     sglog().addCallback(d->_logCallback.get());
+    d->_logCallbackRegistered = true;
 }
 
 void ErrorReporter::init()
@@ -758,6 +769,7 @@ void ErrorReporter::init()
         simgear::setFailureCallback(simgear::FailureCallback());
         simgear::setErrorContextCallback(simgear::ContextCallback());
         sglog().removeCallback(d->_logCallback.get());
+        d->_logCallbackRegistered = false;
         return;
     }
 
@@ -874,6 +886,7 @@ void ErrorReporter::shutdown()
         globals->get_commands()->removeCommand("save-error-report-data");
         globals->get_commands()->removeCommand("show-error-report");
         sglog().removeCallback(d->_logCallback.get());
+        d->_logCallbackRegistered = false;
     }
 }
 
