@@ -103,6 +103,7 @@ void TimeManager::init()
   _warp->addChangeListener(this);
   _maxFrameRate  = fgGetNode("/sim/frame-rate-throttle-hz", true);
   _localTimeStringNode = fgGetNode("/sim/time/local-time-string", true);
+  _localTimeZoneNode = fgGetNode("/sim/time/local-timezone", true);
   _warpDelta = fgGetNode("/sim/time/warp-delta", true);
   
   SGPath zone(globals->get_fg_root());
@@ -624,7 +625,10 @@ void TimeManager::updateLocalTimeString()
         _localTimeStringNode->setStringValue(buf);
     }
 
-    fgSetString("/sim/time/local-timezone", _impl->get_description());
+    const char* zs = _localTimeZoneNode->getStringValue();
+    if (strcmp(zs, _impl->get_description()) != 0) {
+        _localTimeZoneNode->setStringValue(_impl->get_description());
+    }
 }
 
 void TimeManager::initTimeOffset()
@@ -696,8 +700,7 @@ void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
     _warp->setIntValue( orig_warp + warp );
   }
 
-  SG_LOG( SG_GENERAL, SG_INFO, "After TimeManager::setTimeOffset(): warp = " 
-            << _warp->getIntValue() );
+  SG_LOG(SG_GENERAL, SG_INFO, "After TimeManager::setTimeOffset(): " << offset_type << ", warp = " << _warp->getIntValue());
 }
 
 double TimeManager::getSimSpeedUpFactor() const
