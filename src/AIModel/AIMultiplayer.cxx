@@ -238,13 +238,6 @@ void FGAIMultiplayer::FGAIMultiplayerInterpolate(
             ++nextPropIt;
         }
     }
-
-    // Now throw away too old data
-    if (prevIt != mMotionInfo.begin())
-    {
-        --prevIt;
-        mMotionInfo.erase(mMotionInfo.begin(), prevIt);
-    }
 }
 
 void FGAIMultiplayer::FGAIMultiplayerExtrapolate(
@@ -645,6 +638,7 @@ void FGAIMultiplayer::update(double dt)
         else if (nextIt == mMotionInfo.begin())
         {
             // Leave prevIt and nextIt pointing at same item.
+            SG_LOG(SG_GENERAL, SG_DEBUG, "Only one frame for interpolation: " << _callsign);
         }
         else
         {
@@ -758,18 +752,6 @@ FGAIMultiplayer::addMotionInfo(FGExternalMotionData& motionInfo,
 {
     mLastTimestamp = stamp;
 
-    if (!mMotionInfo.empty()) {
-        double diff = motionInfo.time - mMotionInfo.rbegin()->first;
-
-        // packet is very old -- MP has probably reset (incl. his timebase)
-        if (diff < -10.0)
-            mMotionInfo.clear();
-
-        // drop packets arriving out of order
-        else if (diff < 0.0)
-            return;
-    }
-  
     if (m_simple_time_enabled->getBoolValue()) {
         // Update simple-time stats and set m_simple_time_compensation.
         //
