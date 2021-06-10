@@ -57,7 +57,9 @@ private:
 
     std::unique_ptr<FGAISchedule> userAircraftTrafficRef;
     std::unique_ptr<FGScheduledFlight> userAircraftScheduledFlight;
-    
+
+    SGPropertyNode_ptr _routeManagerDestinationAirportNode;
+
 public:
     FGATCManager();
     virtual ~FGATCManager();

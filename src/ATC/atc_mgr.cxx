@@ -78,8 +78,10 @@ void FGATCManager::postinit()
     string runway  = fgGetString("/sim/atc/runway");
     string curAirport = fgGetString("/sim/presets/airport-id");
     string parking = fgGetString("/sim/presets/parkpos");
-    destination = fgGetString("/autopilot/route-manager/destination/airport");
-    
+
+    _routeManagerDestinationAirportNode = globals->get_props()->getNode("/autopilot/route-manager/destination/airport", true);
+    destination = _routeManagerDestinationAirportNode->getStringValue();
+
     FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
     auto userAircraft = aiManager->getUserAircraft();
     string callsign = userAircraft->getCallSign();
@@ -87,7 +89,7 @@ void FGATCManager::postinit()
     double aircraftRadius = 40; // note that this is currently hardcoded to a one-size-fits all JumboJet value. Should change later.
     
     // In case a destination is not set yet, make it equal to the current airport
-    if (destination == "") {
+    if (destination.empty()) {
         destination = curAirport;
     }
 
@@ -106,8 +108,8 @@ void FGATCManager::postinit()
     userAircraftTrafficRef->assign(userAircraftScheduledFlight.get());
     std::unique_ptr<FGAIFlightPlan> fp ;
     userAircraft->setTrafficRef(userAircraftTrafficRef.get());
-    
-    string flightPlanName = curAirport + "-" + destination + ".xml";
+
+    string flightPlanName = curAirport + "-" + _routeManagerDestinationAirportNode->getStringValue() + ".xml";
     //double cruiseAlt = 100; // Doesn't really matter right now.
     //double courseToDest = 180; // Just use something neutral; this value might affect the runway that is used though...
     //time_t deptime = 0;        // just make sure how flightplan processing is affected by this...
@@ -246,6 +248,7 @@ void FGATCManager::shutdown()
     activeStations.clear();
     userAircraftTrafficRef.reset();
     userAircraftScheduledFlight.reset();
+    _routeManagerDestinationAirportNode.clear();
 }
 
 void FGATCManager::reposition()
@@ -305,7 +308,8 @@ void FGATCManager::update ( double time ) {
     FGAIFlightPlan *fp = user_ai_ac->GetFlightPlan();
     
     // Update destination
-    string result = fgGetString("/autopilot/route-manager/destination/airport");
+    string result = _routeManagerDestinationAirportNode->getStringValue();
+
     if (destination != result && result != "") {
         destination = result;
         userAircraftScheduledFlight->setArrivalAirport(destination);
