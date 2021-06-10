@@ -763,6 +763,8 @@ void FGAIBase::bind() {
 
     props->setStringValue("sim/model/path", model_path);
 
+    // note: AIAircraft creates real SGPropertyNodes for these, we don't do
+    // that here because it would bloat AIBase slightly
     props->setBoolValue("controls/glide-path", true);
 
     props->setStringValue("controls/flight/lateral-mode", "roll");

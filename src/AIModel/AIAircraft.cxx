@@ -114,6 +114,16 @@ FGAIAircraft::FGAIAircraft(FGAISchedule* ref) : /* HOT must be disabled for AI A
     _searchOrder = PREFER_AI;
 }
 
+void FGAIAircraft::lazyInitControlsNodes()
+{
+    _controlsLateralModeNode = props->getNode("controls/flight/lateral-mode", true);
+    _controlsVerticalModeNode = props->getNode("controls/flight/vertical-mode", true);
+    _controlsTargetHeadingNode = props->getNode("controls/flight/target-hdg", true);
+    _controlsTargetRollNode = props->getNode("controls/flight/target-roll", true);
+    _controlsTargetAltitude = props->getNode("controls/flight/target-alt", true);
+    _controlsTargetPitch = props->getNode("controls/flight/target-pitch", true);
+    _controlsTargetSpeed = props->getNode("controls/flight/target-spd", true);
+}
 
 FGAIAircraft::~FGAIAircraft()
 {
@@ -175,12 +185,23 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
 
  void FGAIAircraft::Run(double dt)
 {
-     bool outOfSight = false,
-     flightplanActive = true;
-     updatePrimaryTargetValues(dt, flightplanActive, outOfSight); // target hdg, alt, speed
-     if (outOfSight) {
-        return;
-     }
+    // We currently have one situation in which an AIAircraft object is used that is not attached to the
+    // AI manager. In this particular case, the AIAircraft is used to shadow the user's aircraft's behavior in the AI world.
+    // Since we perhaps don't want a radar entry of our own aircraft, the following conditional should probably be adequate
+    // enough
+    const bool isUserAircraft = (manager == nullptr);
+
+    bool outOfSight = false,
+         flightplanActive = true;
+
+    // user aircraft speed, heading and position are synchronzied in
+    // FGAIManager::fetchUserState()
+    if (!isUserAircraft) {
+        updatePrimaryTargetValues(dt, flightplanActive, outOfSight); // target hdg, alt, speed
+        if (outOfSight) {
+            return;
+        }
+    }
 
      if (!flightplanActive) {
         groundTargetSpeed = 0;
@@ -191,14 +212,11 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
      updateActualState(dt);
 
      updateModelProperties(dt);
-   
-    // We currently have one situation in which an AIAircraft object is used that is not attached to the
-    // AI manager. In this particular case, the AIAircraft is used to shadow the user's aircraft's behavior in the AI world.
-    // Since we perhaps don't want a radar entry of our own aircraft, the following conditional should probably be adequate
-    // enough
-     if (manager){
-        UpdateRadar(manager);
-        invisible = !manager->isVisible(pos);
+
+
+     if (!isUserAircraft) {
+         UpdateRadar(manager);
+         invisible = !manager->isVisible(pos);
      }
   }
 
@@ -993,29 +1011,31 @@ void FGAIAircraft::updatePrimaryTargetValues(double dt, bool& flightplanActive, 
         // from control properties.  These default to the initial
         // settings in the config file, but can be changed "on the
         // fly".
-        const string& lat_mode = props->getStringValue("controls/flight/lateral-mode");
+
+        if (!_controlsLateralModeNode) {
+            lazyInitControlsNodes();
+        }
+
+
+        const string& lat_mode = _controlsLateralModeNode->getStringValue();
         if ( lat_mode == "roll" ) {
-            double angle
-            = props->getDoubleValue("controls/flight/target-roll" );
+            const double angle = _controlsTargetRollNode->getDoubleValue();
             RollTo( angle );
         } else {
-            double angle
-            = props->getDoubleValue("controls/flight/target-hdg" );
+            const double angle = _controlsTargetHeadingNode->getDoubleValue();
             TurnTo( angle );
         }
 
-        string lon_mode
-        = props->getStringValue("controls/flight/vertical-mode");
-        if ( lon_mode == "alt" ) {
-            double alt = props->getDoubleValue("controls/flight/target-alt" );
+        string vert_mode = _controlsVerticalModeNode->getStringValue();
+        if (vert_mode == "alt") {
+            const double alt = _controlsTargetAltitude->getDoubleValue();
             ClimbTo( alt );
         } else {
-            double angle
-            = props->getDoubleValue("controls/flight/target-pitch" );
+            const double angle = _controlsTargetPitch->getDoubleValue();
             PitchTo( angle );
         }
 
-        AccelTo( props->getDoubleValue("controls/flight/target-spd" ) );
+        AccelTo(_controlsTargetSpeed->getDoubleValue());
     }
 }
 

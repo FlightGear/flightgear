@@ -161,6 +161,8 @@ private:
 
     double sign(double x);
 
+    void lazyInitControlsNodes();
+
     std::string acType;
     std::string company;
     std::string transponderCode;
@@ -188,6 +190,15 @@ private:
        std::string startWptName;
        std::string finalWptName;
    } trackCache;
+
+   // these are init-ed on first se by lazyInitControlsNodes()
+   SGPropertyNode_ptr _controlsLateralModeNode,
+       _controlsVerticalModeNode,
+       _controlsTargetHeadingNode,
+       _controlsTargetRollNode,
+       _controlsTargetAltitude,
+       _controlsTargetPitch,
+       _controlsTargetSpeed;
 };
 
 #endif  // _FG_AIAircraft_HXX
