@@ -448,6 +448,10 @@ public:
     virtual void update(double) = 0;
 
 
+protected:
+    // guard variable to avoid modifying state during destruction
+    bool _isDestroying = false;
+
 private:
 
     AtcMsgDir lastTransmissionDirection;

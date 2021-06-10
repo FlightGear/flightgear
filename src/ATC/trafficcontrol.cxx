@@ -905,10 +905,7 @@ FGTowerController::FGTowerController(FGAirportDynamics *par) :
 
 FGTowerController::~FGTowerController()
 {
-    // to avoid the exception described in:
-    // https://sourceforge.net/p/flightgear/codetickets/1864/
-    // we want to ensure AI aircraft signing-off is a no-op now
-
+    _isDestroying = true;
     clearTrafficControllers(activeTraffic);
 }
 
@@ -1046,6 +1043,10 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
 
 void FGTowerController::signOff(int id)
 {
+    // ensure we don't modify activeTraffic during destruction
+    if (_isDestroying)
+        return;
+
     // Search activeTraffic for a record matching our id
     TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
     if (i == activeTraffic.end() || (activeTraffic.empty())) {
@@ -1136,6 +1137,7 @@ FGStartupController::FGStartupController(FGAirportDynamics *par):
 
 FGStartupController::~FGStartupController()
 {
+    _isDestroying = true;
     clearTrafficControllers(activeTraffic);
 }
 
@@ -1208,6 +1210,10 @@ FGATCInstruction FGStartupController::getInstruction(int id)
 
 void FGStartupController::signOff(int id)
 {
+    // ensure we don't modify activeTraffic during destruction
+    if (_isDestroying)
+        return;
+
     // Search activeTraffic for a record matching our id
     TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
     
@@ -1563,6 +1569,7 @@ FGApproachController::FGApproachController(FGAirportDynamics *par):
 
 FGApproachController::~FGApproachController()
 {
+    _isDestroying = true;
     clearTrafficControllers(activeTraffic);
 }
 
@@ -1642,7 +1649,11 @@ void FGApproachController::updateAircraftInformation(int id, double lat, double 
 /* Search for and erase traffic record with a specific id */
 void FGApproachController::signOff(int id)
 {
-   // Search activeTraffic for a record matching our id
+    // ensure we don't modify activeTraffic during destruction
+    if (_isDestroying)
+        return;
+
+    // Search activeTraffic for a record matching our id
     TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
     
     if (i == activeTraffic.end() || activeTraffic.empty()) {
