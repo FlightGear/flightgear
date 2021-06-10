@@ -224,6 +224,9 @@ void FGTileMgr::reinit()
         scenerySuffixes = {"Objects", "Terrain"}; // defaut values
     }
 
+    if (terraSync) {
+        terraSync->setSceneryPathSuffixes(scenerySuffixes);
+    }
     _options->setSceneryPathSuffixes(scenerySuffixes);
 
     if (state != Start)
