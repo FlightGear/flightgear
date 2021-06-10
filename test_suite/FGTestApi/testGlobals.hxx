@@ -48,6 +48,11 @@ void setPositionAndStabilise(const SGGeod& g);
     
 void runForTime(double t);
 
+/**
+ @brief set the simulation date/time clock to 'time' 
+ */
+void adjustSimulationWorldTime(time_t time);
+
 using RunCheck = std::function<bool(void)>;
     
 bool runForTimeWithCheck(double t, RunCheck check);
