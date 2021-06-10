@@ -85,7 +85,6 @@ void TrafficTests::setUp()
     FGAirportRef ybbn = FGAirport::getByIdent("YBBN");
     ybbn->testSuiteInjectGroundnetXML(SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "YBBN.groundnet.xml");
 
-    globals->add_new_subsystem<TimeManager>(SGSubsystemMgr::GENERAL);
     globals->add_new_subsystem<PerformanceDB>(SGSubsystemMgr::GENERAL);
     globals->add_new_subsystem<FGATCManager>(SGSubsystemMgr::GENERAL);
     globals->add_new_subsystem<FGAIManager>(SGSubsystemMgr::GENERAL);
@@ -127,7 +126,7 @@ void TrafficTests::testPushback()
     FGScheduledFlight* flight = new FGScheduledFlight("", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
     schedule->assign(flight);
 
-    FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
+    SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
 
     const SGGeod position = departureAirport->geod();
 
@@ -182,7 +181,7 @@ void TrafficTests::testPushbackCargo()
     FGScheduledFlight* flight = new FGScheduledFlight("", "", "EGPH", "EGPF", 24, dep, arr, "WEEK", "HBR_BN_2");
     schedule->assign(flight);
 
-    FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
+    SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
 
     const SGGeod position = egph->geod();
     ParkingAssignment parking = egph->getDynamics()->getParkingByName("north-cargo208");
@@ -246,7 +245,7 @@ void TrafficTests::testChangeRunway()
     FGScheduledFlight* flight = new FGScheduledFlight("", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
     schedule->assign(flight);
 
-    FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
+    SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
 
     const SGGeod position = departureAirport->geod();
     FGTestApi::setPositionAndStabilise(position);
@@ -303,7 +302,7 @@ void TrafficTests::testPushforward()
     FGScheduledFlight* flight = new FGScheduledFlight("", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
     schedule->assign(flight);
 
-    FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
+    SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
 
     const SGGeod position = departureAirport->geod();
     FGTestApi::setPositionAndStabilise(position);
@@ -359,7 +358,7 @@ void TrafficTests::testPushforwardSpeedy()
     FGScheduledFlight* flight = new FGScheduledFlight("", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
     schedule->assign(flight);
 
-    FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
+    SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
 
     const SGGeod position = departureAirport->geod();
     FGTestApi::setPositionAndStabilise(position);
@@ -416,7 +415,7 @@ void TrafficTests::testPushforwardParkYBBN()
     FGScheduledFlight* flight = new FGScheduledFlight("gaParkYSSY", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
     schedule->assign(flight);
 
-    FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
+    SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
 
     const SGGeod position = departureAirport->geod();
     FGTestApi::setPositionAndStabilise(position);
@@ -496,7 +495,7 @@ void TrafficTests::testPushforwardParkYBBNRepeatGa()
     FGScheduledFlight* returnFlight = new FGScheduledFlight("gaParkYSSY", "", arrivalAirport->getId(), departureAirport->getId(), 24, arr, ret, "WEEK", "TST_BN_1");
     schedule->assign(returnFlight);
 
-    FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
+    SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
 
     const SGGeod position = departureAirport->geod();
     FGTestApi::setPositionAndStabilise(position);
@@ -576,7 +575,7 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
     const SGGeod position = departureAirport->geod();
     FGTestApi::setPositionAndStabilise(position);
 
-    FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
+    SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
 
     aiAircraft->setPerformance("gate", "");
     aiAircraft->setCompany("KLM");
@@ -630,7 +629,7 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
  * 
  */ 
 
-FGAIAircraft * TrafficTests::flyAI(FGAIAircraft * aiAircraft, std::string fName) {
+FGAIAircraft * TrafficTests::flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::string fName) {
     int lineIndex = 0;
 
     CPPUNIT_ASSERT_EQUAL(aiAircraft->GetFlightPlan()->isValidPlan(), true);
@@ -666,7 +665,7 @@ FGAIAircraft * TrafficTests::flyAI(FGAIAircraft * aiAircraft, std::string fName)
     double headingSum = 0;
     int startSpeed = aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getSpeed();
     aiAircraft->AccelTo(startSpeed);
-    int timeOffset = 0;
+
     for (size_t i = 0; i < 12000000 && !(aiAircraft->getDie()) && aiAircraft->GetFlightPlan()->getLeg() < 10; i++) {
         CPPUNIT_ASSERT_EQUAL(aiAircraft->GetFlightPlan()->isValidPlan(), true);
         if (!aiAircraft->getDie()) {
@@ -680,8 +679,9 @@ FGAIAircraft * TrafficTests::flyAI(FGAIAircraft * aiAircraft, std::string fName)
                 (aiAircraft->getSpeed() > 0 &&
                  SGGeodesy::distanceM(aiAircraft->getGeodPos(), FGTestApi::getPosition()) > 10000 &&
                     /* stop following towards the end*/
-                    aiAircraft->GetFlightPlan()->getLeg() < 8)) {
-                FGTestApi::setPositionAndStabilise(aiAircraft->getGeodPos());
+                    aiAircraft->GetFlightPlan()->getLeg() < 8))
+            {
+                FGTestApi::setPosition(aiAircraft->getGeodPos());
             }
         }
         // Leg has been incremented
@@ -714,13 +714,7 @@ FGAIAircraft * TrafficTests::flyAI(FGAIAircraft * aiAircraft, std::string fName)
         && aiAircraft->getSpeed() == 0 ) {
             // Arrived at a parking
             int beforeNextDepTime = aiAircraft->getTrafficRef()->getDepartureTime() - 30;
-            int seconds = beforeNextDepTime - globals->get_time_params()->get_cur_time();
-            if (seconds > 0) {
-                // Next departure 
-                timeOffset += seconds;
-                globals->get_time_params()->update(globals->get_view_position(), globals->get_time_params()->get_cur_time(), seconds);
-                SG_LOG(SG_AI, SG_BULK, "time leap " << seconds );
-            }
+            FGTestApi::adjustSimulationWorldTime(beforeNextDepTime);
         }
         FGTestApi::runForTime(1);
     }

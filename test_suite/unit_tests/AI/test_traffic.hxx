@@ -63,5 +63,5 @@ public:
     void testPushforwardParkYBBNRepeatGate();
 private:
     std::string getTimeString(int timeOffset);
-    FGAIAircraft * flyAI(FGAIAircraft * aiAircraft, std::string fName);
+    FGAIAircraft * flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::string fName);
 };
