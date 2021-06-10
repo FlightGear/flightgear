@@ -80,6 +80,7 @@ FGGroundController::FGGroundController() :
 
 FGGroundController::~FGGroundController()
 {
+    _isDestroying = true;
 }
 
 void FGGroundController::init(FGAirportDynamics* aDynamics)
@@ -152,7 +153,10 @@ void FGGroundController::announcePosition(int id,
 Search for and erase an aircraft with a certain id from the activeTraffic vector
 */
 void FGGroundController::signOff(int id)
-{   
+{
+    if (_isDestroying)
+        return;
+
     // Search the activeTraffic vector to find a traffic vector with our id
     TrafficVectorIterator i = searchActiveTraffic(id);
     
