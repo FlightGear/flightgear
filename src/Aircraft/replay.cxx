@@ -29,12 +29,20 @@
 #include <float.h>
 #include <string.h>
 
+#include <memory>
+#include <iostream>
+#include <streambuf>
+#include <sstream>
+
+#include <zlib.h>
+
 #include <osgViewer/ViewerBase>
 
 #include <simgear/constants.h>
 #include <simgear/structure/exception.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/io/iostreams/gzcontainerfile.hxx>
+#include <simgear/io/iostreams/zlibstream.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/stdint.hxx>
 #include <simgear/misc/strutils.hxx>
@@ -151,6 +159,7 @@ FGReplay::FGReplay() :
     last_lt_time(0.0),
     last_msg_time(0),
     last_replay_state(0),
+    replay_error(fgGetNode("sim/replay/replay-error", true)),
     m_sim_startup_xpos(fgGetNode("sim/startup/xpos", true)),
     m_sim_startup_ypos(fgGetNode("sim/startup/ypos", true)),
     m_sim_startup_xsize(fgGetNode("sim/startup/xsize", true)),
@@ -299,7 +308,12 @@ void FGReplay::valueChanged(SGPropertyNode * node)
             SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to create link " << path_timeless.c_str() << " => " << path.file());
         }
         SG_LOG(SG_SYSTEMS, SG_DEBUG, "Starting continuous recording to " << path);
-        popupTip("Continuous record to file started", 5 /*delay*/);
+        if (m_continuous_out_compression) {
+            popupTip("Continuous+compressed record to file started", 5 /*delay*/);
+        }
+        else {
+            popupTip("Continuous record to file started", 5 /*delay*/);
+        }
     }
 }
 
@@ -683,6 +697,133 @@ saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData,
 }
 
 
+/* streambuf that compresses using deflate(). */
+struct compression_streambuf : std::streambuf
+{
+    compression_streambuf(
+            std::ostream& out,
+            size_t buffer_uncompressed_size,
+            size_t buffer_compressed_size
+            )
+    :
+    std::streambuf(),
+    out(out),
+    buffer_uncompressed(new char[buffer_uncompressed_size]),
+    buffer_uncompressed_size(buffer_uncompressed_size),
+    buffer_compressed(new char[buffer_compressed_size]),
+    buffer_compressed_size(buffer_compressed_size)
+    {
+        zstream.zalloc = nullptr;
+        zstream.zfree = nullptr;
+        zstream.opaque = nullptr;
+        
+        zstream.next_in = nullptr;
+        zstream.avail_in = 0;
+        
+        zstream.next_out = (unsigned char*) &buffer_compressed[0];
+        zstream.avail_out = buffer_compressed_size;
+        
+        int e = deflateInit2(
+                &zstream,
+                Z_DEFAULT_COMPRESSION,
+                Z_DEFLATED,
+                -15 /*windowBits*/,
+                8 /*memLevel*/,
+                Z_DEFAULT_STRATEGY
+                );
+        if (e != Z_OK)
+        {
+            throw std::runtime_error("deflateInit2() failed");
+        }
+        // We leave space for one character to simplify overflow().
+        setp(&buffer_uncompressed[0], &buffer_uncompressed[0] + buffer_uncompressed_size - 1);
+    }
+    
+     // Flush compressed data to .out and reset zstream.next_out.
+    void _flush()
+    {
+        // Send all data in .buffer_compressed to .out.
+        size_t n = (char*) zstream.next_out - &buffer_compressed[0];
+        out.write(&buffer_compressed[0], n);
+        zstream.next_out = (unsigned char*) &buffer_compressed[0];
+        zstream.avail_out = buffer_compressed_size;
+    }
+    
+    /* Compresses specified bytes from buffer_uncompressed into
+    buffer_compressed, flushing to .out as necessary. Returns true if we get
+    EOF writing to .out. */
+    bool _deflate(size_t n, bool flush)
+    {
+        assert(this->pbase() == &buffer_uncompressed[0]);
+        zstream.next_in = (unsigned char*) &buffer_uncompressed[0];
+        zstream.avail_in = n;
+        for(;;)
+        {
+            if (!flush && !zstream.avail_in)   break;
+            if (!zstream.avail_out) _flush();
+            int e = deflate(&zstream, (!zstream.avail_in && flush) ? Z_FINISH : Z_NO_FLUSH);
+            if (e != Z_OK && e != Z_STREAM_END)
+            {
+                throw std::runtime_error("zip_deflate() failed");
+            }
+            if (e == Z_STREAM_END)  break;
+        }
+        if (flush)  _flush();
+        // We leave space for one character to simplify overflow().
+        setp(&buffer_uncompressed[0], &buffer_uncompressed[0] + buffer_uncompressed_size - 1);
+        if (!out) return true;  // EOF.
+        return false;
+    }
+    
+    int overflow(int c) override
+    {
+        // We've deliberately left space for one character, into which we write <c>.
+        assert(this->pptr() == &buffer_uncompressed[0] + buffer_uncompressed_size - 1);
+        *this->pptr() = (char) c;
+        if (_deflate(buffer_uncompressed_size, false /*flush*/)) return EOF;
+        return c;
+    }
+    
+    int sync() override
+    {
+        _deflate(pptr() - &buffer_uncompressed[0], true /*flush*/);
+        return 0;
+    }
+    
+    ~compression_streambuf()
+    {
+        deflateEnd(&zstream);
+    }
+    
+    std::ostream&           out;
+    z_stream                zstream;
+    std::unique_ptr<char[]> buffer_uncompressed;
+    size_t                  buffer_uncompressed_size;
+    std::unique_ptr<char[]> buffer_compressed;
+    size_t                  buffer_compressed_size;
+};
+
+
+/* Accepts uncompressed data via .write(), operator<< etc, and writes
+compressed data to the supplied std::ostream. */
+struct compression_ostream : std::ostream
+{
+    compression_ostream(
+            std::ostream& out,
+            size_t buffer_uncompressed_size,
+            size_t buffer_compressed_size
+            )
+    :
+    std::ostream(&streambuf),
+    streambuf(out, buffer_uncompressed_size, buffer_compressed_size)
+    {
+    }
+    
+    compression_streambuf   streambuf;
+};
+
+
+
 // Sets things up for writing to a normal or continuous fgtape file.
 //
 //  extra:
@@ -702,7 +843,8 @@ static SGPropertyNode_ptr saveSetup(
         const SGPropertyNode*   extra,
         const SGPath&           path,
         double                  duration,
-        FGTapeType              tape_type
+        FGTapeType              tape_type,
+        int                     continuous_compression=0
         )
 {
     SGPropertyNode_ptr  config;
@@ -722,7 +864,9 @@ static SGPropertyNode_ptr saveSetup(
     meta->setStringValue("aircraft-fdm",            fgGetString("/sim/flight-model", ""));
     meta->setStringValue("closest-airport-id",      fgGetString("/sim/airport/closest-airport-id", ""));
     meta->setStringValue("aircraft-version",        fgGetString("/sim/aircraft-version", "(undefined)"));
-
+    if (tape_type == FGTapeType_CONTINUOUS) {
+        meta->setIntValue("continuous-compression", continuous_compression);
+    }
     // add information on the tape's recording duration
     meta->setDoubleValue("tape-duration", duration);
     char StrBuffer[30];
@@ -783,7 +927,9 @@ SGPropertyNode_ptr FGReplay::continuousWriteHeader(
         FGTapeType          tape_type
         )
 {
-    SGPropertyNode_ptr  config = saveSetup(NULL /*Extra*/, path, 0 /*Duration*/, tape_type);
+    m_continuous_out_compression = fgGetInt("/sim/replay/record-continuous-compression");
+    SGPropertyNode_ptr  config = saveSetup(NULL /*Extra*/, path, 0 /*Duration*/,
+            tape_type, m_continuous_out_compression);
     SGPropertyNode* signals = config->getNode("signals", true /*create*/);
     m_pRecorder->getConfig(signals);
     
@@ -804,48 +950,8 @@ SGPropertyNode_ptr FGReplay::continuousWriteHeader(
     return config;
 }
 
-
-// Writes one frame of continuous record information.
-//
-bool
-FGReplay::continuousWriteFrame(FGReplayData* r, std::ostream& out, SGPropertyNode_ptr config)
+static void writeFrame2(FGReplayData* r, std::ostream& out, SGPropertyNode_ptr config)
 {
-    SG_LOG(SG_SYSTEMS, SG_BULK, "writing frame."
-            << " out.tellp()=" << out.tellp()
-            << " r->sim_time=" << r->sim_time
-            );
-    // Don't write frame if no data to write.
-    bool r_has_data = false;
-    for (auto data: config->getChildren("data")) {
-        const char* data_type = data->getStringValue();
-        if (!strcmp(data_type, "signals")) {
-            r_has_data = true;
-            break;
-        }
-        else if (!strcmp(data_type, "multiplayer")) {
-            if (!r->multiplayer_messages.empty()) {
-                r_has_data = true;
-                break;
-            }
-        }
-        else if (!strcmp(data_type, "extra-properties")) {
-            if (!r->extra_properties.empty()) {
-                r_has_data = true;
-                break;
-            }
-        }
-        else {
-            SG_LOG(SG_SYSTEMS, SG_ALERT, "unrecognised data_type=" << data_type);
-            assert(0);
-        }
-    }
-    if (!r_has_data) {
-        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Not writing frame because no data to write");
-        return true;
-    }
-    
-    out.write(reinterpret_cast<char*>(&r->sim_time), sizeof(r->sim_time));
-
     for (auto data: config->getChildren("data")) {
         const char* data_type = data->getStringValue();
         if (!strcmp(data_type, "signals")) {
@@ -880,6 +986,71 @@ FGReplay::continuousWriteFrame(FGReplayData* r, std::ostream& out, SGPropertyNod
         }
     }
     
+}
+
+// Writes one frame of continuous record information.
+//
+bool
+FGReplay::continuousWriteFrame(FGReplayData* r, std::ostream& out, SGPropertyNode_ptr config)
+{
+    SG_LOG(SG_SYSTEMS, SG_BULK, "writing frame."
+            << " out.tellp()=" << out.tellp()
+            << " r->sim_time=" << r->sim_time
+            );
+    // Don't write frame if no data to write.
+    //bool r_has_data = false;
+    bool has_signals = false;
+    bool has_multiplayer = false;
+    bool has_extra_properties = false;
+    for (auto data: config->getChildren("data")) {
+        const char* data_type = data->getStringValue();
+        if (!strcmp(data_type, "signals")) {
+            has_signals = true;
+        }
+        else if (!strcmp(data_type, "multiplayer")) {
+            if (!r->multiplayer_messages.empty()) {
+                has_multiplayer = true;
+            }
+        }
+        else if (!strcmp(data_type, "extra-properties")) {
+            if (!r->extra_properties.empty()) {
+                has_extra_properties = true;
+            }
+        }
+        else {
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "unrecognised data_type=" << data_type);
+            assert(0);
+        }
+    }
+    if (!has_signals && !has_multiplayer && !has_extra_properties) {
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Not writing frame because no data to write");
+        return true;
+    }
+    
+    out.write(reinterpret_cast<char*>(&r->sim_time), sizeof(r->sim_time));
+    
+    if (m_continuous_out_compression) {
+        uint8_t flags = 0;
+        if (has_signals)            flags |= 1;
+        if (has_multiplayer)        flags |= 2;
+        if (has_extra_properties)   flags |= 4;
+        out.write((char*) &flags, sizeof(flags));
+        
+        /* We need to first write the size of the compressed data so compress
+        to a temporary ostringstream first. */
+        std::ostringstream  compressed;
+        compression_ostream out_compressing(compressed, 1024, 1024);
+        writeFrame2(r, out_compressing, config);
+        out_compressing.flush();
+        
+        uint32_t compressed_size = compressed.str().size();
+        out.write((char*) &compressed_size, sizeof(compressed_size));
+        out.write((char*) compressed.str().c_str(), compressed.str().size());
+    }
+    else
+    {
+        writeFrame2(r, out, config);
+    }
     bool ok = true;
     if (!out) ok = false;
     return ok;
@@ -1553,14 +1724,14 @@ FGReplay::replay(double time, FGReplayData* pCurrentFrame, FGReplayData* pOldFra
     m_pRecorder->replay(time, pCurrentFrame, pOldFrame, xpos, ypos, xsize, ysize);
 }
 
-static int16_t read_int16(std::ifstream& in, size_t& pos)
+static int16_t read_int16(std::istream& in, size_t& pos)
 {
     int16_t a;
     in.read(reinterpret_cast<char*>(&a), sizeof(a));
     pos += sizeof(a);
     return a;
 }
-static std::string read_string(std::ifstream& in, size_t& pos)
+static std::string read_string(std::istream& in, size_t& pos)
 {
     int16_t length = read_int16(in, pos);
     std::vector<char>   path(length);
@@ -1572,7 +1743,7 @@ static std::string read_string(std::ifstream& in, size_t& pos)
 
 /* Reads extra-property change items in next <length> bytes. Throws if we don't
 exactly read <length> bytes. */
-static void ReadFGReplayDataExtraProperties(std::ifstream& in, FGReplayData* replay_data, uint32_t length)
+static void ReadFGReplayDataExtraProperties(std::istream& in, FGReplayData* replay_data, uint32_t length)
 {
     SG_LOG(SG_SYSTEMS, SG_BULK, "reading extra-properties. length=" << length);
     size_t pos=0;
@@ -1600,34 +1771,23 @@ static void ReadFGReplayDataExtraProperties(std::ifstream& in, FGReplayData* rep
     }
 }
 
-/* Reads all or part of a FGReplayData from uncompressed file. */
-static std::unique_ptr<FGReplayData> ReadFGReplayData(
-        std::ifstream& in,
-        size_t pos,
+static bool ReadFGReplayData2(
+        std::istream& in,
         SGPropertyNode* config,
         bool load_signals,
         bool load_multiplayer,
-        bool load_extra_properties
+        bool load_extra_properties,
+        FGReplayData* ret
         )
 {
-    /* Need to clear any eof bit, otherwise seekg() will not work (which is
-    pretty unhelpful). E.g. see:
-        https://stackoverflow.com/questions/16364301/whats-wrong-with-the-ifstream-seekg
-    */
-    SG_LOG(SG_SYSTEMS, SG_BULK, "reading frame. pos=" << pos);
-    in.clear();
-    in.seekg(pos);
-    
-    std::unique_ptr<FGReplayData>   ret(new FGReplayData);
-
-    in.read(reinterpret_cast<char*>(&ret->sim_time), sizeof(ret->sim_time));
     ret->raw_data.resize(0);
     for (auto data: config->getChildren("data")) {
         const char* data_type = data->getStringValue();
-        SG_LOG(SG_SYSTEMS, SG_DEBUG, "in.tellg()=" << in.tellg() << " data_type=" << data_type);
+        SG_LOG(SG_SYSTEMS, SG_BULK, "in.tellg()=" << in.tellg() << " data_type=" << data_type);
         uint32_t    length;
         in.read(reinterpret_cast<char*>(&length), sizeof(length));
         SG_LOG(SG_SYSTEMS, SG_DEBUG, "length=" << length);
+        if (!in) break;
         if (load_signals && !strcmp(data_type, "signals")) {
             ret->raw_data.resize(length);
             in.read(&ret->raw_data.front(), ret->raw_data.size());
@@ -1653,14 +1813,64 @@ static std::unique_ptr<FGReplayData> ReadFGReplayData(
             }
         }
         else if (load_extra_properties && !strcmp(data_type, "extra-properties")) {
-            ReadFGReplayDataExtraProperties(in, ret.get(), length);
+            ReadFGReplayDataExtraProperties(in, ret, length);
         }
         else {
-            SG_LOG(SG_GENERAL, SG_BULK, "Skipping unrecognised data: " << data_type);
+            SG_LOG(SG_GENERAL, SG_BULK, "Skipping unrecognised/unwanted data: " << data_type);
             in.seekg(length, std::ios_base::cur);
         }
     }
+    if (!in) {
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Failed to read fgtape data");
+        return false;
+    }
+    return true;
+}
+
+/* Reads all or part of a FGReplayData from uncompressed file. */
+static std::unique_ptr<FGReplayData> ReadFGReplayData(
+        std::ifstream& in,
+        size_t pos,
+        SGPropertyNode* config,
+        bool load_signals,
+        bool load_multiplayer,
+        bool load_extra_properties,
+        int m_continuous_in_compression
+        )
+{
+    /* Need to clear any eof bit, otherwise seekg() will not work (which is
+    pretty unhelpful). E.g. see:
+        https://stackoverflow.com/questions/16364301/whats-wrong-with-the-ifstream-seekg
+    */
+    SG_LOG(SG_SYSTEMS, SG_BULK, "reading frame. pos=" << pos);
+    in.clear();
+    in.seekg(pos);
     
+    std::unique_ptr<FGReplayData>   ret(new FGReplayData);
+
+    in.read(reinterpret_cast<char*>(&ret->sim_time), sizeof(ret->sim_time));
+    if (!in) {
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Failed to read fgtape frame at offset " << pos);
+        return nullptr;
+    }
+    bool ok;
+    if (m_continuous_in_compression)
+    {
+        uint8_t     flags;
+        uint32_t    compressed_size;
+        in.read((char*) &flags, sizeof(flags));
+        in.read((char*) &compressed_size, sizeof(compressed_size));
+        simgear::ZlibDecompressorIStream    in_decompress(in, SGPath(), simgear::ZLibCompressionFormat::ZLIB_RAW);
+        ok = ReadFGReplayData2(in_decompress, config, load_signals, load_multiplayer, load_extra_properties, ret.get());
+    }
+    else
+    {
+        ok = ReadFGReplayData2(in, config, load_signals, load_multiplayer, load_extra_properties, ret.get());
+    }
+    if (!ok) {
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Failed to read fgtape frame at offset " << pos);
+        return nullptr;
+    }
     return ret;
 }
 
@@ -1691,8 +1901,17 @@ void FGReplay::replay(
             m_continuous_in_config,
             replay_signals,
             replay_multiplayer,
-            replay_extra_properties
+            replay_extra_properties,
+            m_continuous_in_compression
             );
+    if (!replay_data) {
+        if (!replay_error->getBoolValue()) {
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to read fgtape frame at offset=" << offset << " time=" << time);
+            popupTip("Replay failed: cannot read fgtape data", 10);
+            replay_error->setBoolValue(true);
+        }
+        return;
+    }
     assert(replay_data.get());
     std::unique_ptr<FGReplayData> replay_data_old;
     if (offset_old) {
@@ -1702,7 +1921,8 @@ void FGReplay::replay(
                 m_continuous_in_config,
                 replay_signals,
                 replay_multiplayer,
-                replay_extra_properties
+                replay_extra_properties,
+                m_continuous_in_compression
                 );
     }
     if (replay_extra_properties) SG_LOG(SG_SYSTEMS, SG_BULK,
@@ -1964,7 +2184,7 @@ int FGReplay::loadContinuousHeader(const std::string& path, std::istream* in, SG
         ok = true;
     }
     catch (std::exception& e) {
-        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Failed to read Config properties in: " << path);
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Failed to read Config properties in: " << path << ": " << e.what());
     }
     if (!ok) {
         // Failed to read properties, so indicate that further download is needed.
@@ -1981,6 +2201,7 @@ void FGReplay::indexContinuousRecording(const void* data, size_t numbytes)
             << " data=" << data
             << " numbytes=" << numbytes
             << " m_continuous_indexing_pos=" << m_continuous_indexing_pos
+            << " m_continuous_in_compression=" << m_continuous_in_compression
             << " m_continuous_in_time_to_frameinfo.size()=" << m_continuous_in_time_to_frameinfo.size()
             );
     time_t t0 = time(NULL);
@@ -2011,40 +2232,76 @@ void FGReplay::indexContinuousRecording(const void* data, size_t numbytes)
                 << " m_continuous_indexing_in.tellg()=" << m_continuous_indexing_in.tellg()
                 << " sim_time=" << sim_time
                 );
+        
         FGFrameInfo frameinfo;
         frameinfo.offset = m_continuous_indexing_pos;
-
-        auto datas = m_continuous_in_config->getChildren("data");
-        SG_LOG(SG_SYSTEMS, SG_BULK, "datas.size()=" << datas.size());
-        for (auto data: datas) {
-            uint32_t    length;
-            m_continuous_indexing_in.read(reinterpret_cast<char*>(&length), sizeof(length));
-            SG_LOG(SG_SYSTEMS, SG_BULK,
-                    "m_continuous_in.tellg()=" << m_continuous_indexing_in.tellg()
-                    << " Skipping data_type=" << data->getStringValue()
-                    << " length=" << length
-                    );
-            // Move forward <length> bytes.
-            m_continuous_indexing_in.seekg(length, std::ios_base::cur);
-            if (!m_continuous_indexing_in) {
-                // Dont add bogus info to <stats>.
-                break;
+        if (m_continuous_in_compression)
+        {
+            // Skip compressed frame data without decompressing it.
+            uint8_t    flags;
+            m_continuous_indexing_in.read((char*) &flags, sizeof(flags));
+            frameinfo.has_signals = flags & 1;
+            frameinfo.has_multiplayer = flags & 2;
+            frameinfo.has_extra_properties = flags & 4;
+            
+            if (frameinfo.has_signals)
+            {
+                stats["signals"].num_frames += 1;
             }
-            if (length) {
-                stats[data->getStringValue()].num_frames += 1;
-                stats[data->getStringValue()].bytes += length;
-                if (!strcmp(data->getStringValue(), "signals")) {
-                    frameinfo.has_signals = true;
+            if (frameinfo.has_multiplayer)
+            {
+                stats["multiplayer"].num_frames += 1;
+                ++m_num_frames_multiplayer;
+                m_continuous_in_multiplayer = true;
+            }
+            if (frameinfo.has_extra_properties)
+            {
+                stats["extra-properties"].num_frames += 1;
+                ++m_num_frames_extra_properties;
+                m_continuous_in_extra_properties = true;
+            }
+            
+            uint32_t    compressed_size;
+            m_continuous_indexing_in.read((char*) &compressed_size, sizeof(compressed_size));
+            SG_LOG(SG_SYSTEMS, SG_BULK, "compressed_size=" << compressed_size);
+            
+            m_continuous_indexing_in.seekg(compressed_size, std::ios_base::cur);
+        }
+        else
+        {
+            // Skip frame data.
+            auto datas = m_continuous_in_config->getChildren("data");
+            SG_LOG(SG_SYSTEMS, SG_BULK, "datas.size()=" << datas.size());
+            for (auto data: datas) {
+                uint32_t    length;
+                m_continuous_indexing_in.read(reinterpret_cast<char*>(&length), sizeof(length));
+                SG_LOG(SG_SYSTEMS, SG_BULK,
+                        "m_continuous_in.tellg()=" << m_continuous_indexing_in.tellg()
+                        << " Skipping data_type=" << data->getStringValue()
+                        << " length=" << length
+                        );
+                // Move forward <length> bytes.
+                m_continuous_indexing_in.seekg(length, std::ios_base::cur);
+                if (!m_continuous_indexing_in) {
+                    // Dont add bogus info to <stats>.
+                    break;
                 }
-                else if (!strcmp(data->getStringValue(), "multiplayer")) {
-                    frameinfo.has_multiplayer = true;
-                    ++m_num_frames_multiplayer;
-                    m_continuous_in_multiplayer = true;
-                }
-                else if (!strcmp(data->getStringValue(), "extra-properties")) {
-                    frameinfo.has_extra_properties = true;
-                    ++m_num_frames_extra_properties;
-                    m_continuous_in_extra_properties = true;
+                if (length) {
+                    stats[data->getStringValue()].num_frames += 1;
+                    stats[data->getStringValue()].bytes += length;
+                    if (!strcmp(data->getStringValue(), "signals")) {
+                        frameinfo.has_signals = true;
+                    }
+                    else if (!strcmp(data->getStringValue(), "multiplayer")) {
+                        frameinfo.has_multiplayer = true;
+                        ++m_num_frames_multiplayer;
+                        m_continuous_in_multiplayer = true;
+                    }
+                    else if (!strcmp(data->getStringValue(), "extra-properties")) {
+                        frameinfo.has_extra_properties = true;
+                        ++m_num_frames_extra_properties;
+                        m_continuous_in_extra_properties = true;
+                    }
                 }
             }
         }
@@ -2134,7 +2391,8 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMet
 {
     SG_LOG(SG_SYSTEMS, SG_DEBUG, "loading Preview=" << Preview << " Filename=" << Filename);
 
-    /* Try to load as uncompressed Continuous recording first. */
+    /* Try to load a Continuous recording first. */
+    replay_error->setBoolValue(false);
     std::ifstream   in_preview;
     std::ifstream&  in(Preview ? in_preview : m_continuous_in);
     in.open(Filename.str());
@@ -2165,6 +2423,8 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMet
         m_num_frames_multiplayer = 0;
         m_continuous_indexing_in.open(Filename.str());
         m_continuous_indexing_pos = in.tellg();
+        m_continuous_in_compression = m_continuous_in_config->getNode("meta/continuous-compression", true /*create*/)->getIntValue();
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "m_continuous_in_compression=" << m_continuous_in_compression);
         SG_LOG(SG_SYSTEMS, SG_DEBUG, "filerequest=" << filerequest.get());
 
         // Make an in-memory index of the recording.

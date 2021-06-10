@@ -14,7 +14,7 @@ As of 2020-12-22, there are three kinds of recordings:
 
 Normal recordings are compressed and contain frames at varying intervals with more recent frames being closer together in time. They are generated from the in-memory recording that Flightgear always maintains. They may contain multiplayer information.
 
-Continuous recordings are uncompressed and written directly to a file while Flightgear runs, giving high resolution with near unlimited recording time. They may contain multiplayer information. As of 2020-12-23 they may contain information about extra properties, allowing replay of views and main window position/size.
+Continuous recordings are written directly to a file while Flightgear runs, giving high resolution with near unlimited recording time. They may contain multiplayer information. As of 2020-12-23 they may contain information about extra properties, allowing replay of views and main window position/size. As of 2021-06-26 each frame's data can be compressed.
 
 Recovery recordings are essentially single-frame Continuous recordings. When enabled, Flightgear creates them periodically to allow recovery of a session if Flightgear crashes.
 
@@ -32,6 +32,7 @@ Recovery recordings are essentially single-frame Continuous recordings. When ena
     * `/sim/replay/record-continuous` - if true, do continuous record to file.
     * `/sim/replay/record-signals` - if true (the default), include signals for user aircraft - these are the core values used to replay the user aircraft.
     * `/sim/replay/record-extra-properties` - if true, we include selected properties in recordings.
+    * `/sim/replay/record-continuous-compression` - if 1, we compress each frame's data.
 * Recovery recordings:
     * `/sim/replay/record-recovery-period` - if non-zero, we update recovery recording in specified interval.
 
@@ -74,15 +75,13 @@ Normal recordings are written as a compressed gzip stream using `simgear::gzCont
 
 ### Continuous recordings
 
-Continuous recordings do not use compression, in order to simplify random access when replaying.
-
 * Header:
 
     * A zero-terminated magic string: `FlightGear Flight Recorder Tape` (variable `FlightRecorderFileMagic`).
 
     * A property tree represented as a `uint32` length followed by zero-terminated text. This contains:
 
-        * A `meta` node with various child nodes.
+        * A `meta` node with various child nodes. If this contains `continuous-compression` with value `1`, then each frame's data is compressed..
 
         * `data[]` nodes describing the data items in each frame in the order in which they occur. Supported values are:
 
@@ -98,7 +97,15 @@ Continuous recordings do not use compression, in order to simplify random access
 
     * Frame time as a binary double.
     
-    * A list of ordered `<length:32><data>` items as described by the `data[]` nodes in the header. This format allows Flightgear to skip data items that it doesn't understand if loading a recording that was created by a newer version.
+    * If compression is used:
+    
+        * uint8_t flags.
+            * Bit 0: this frame has signals.
+            * Bit 1: this frame has multiplayer information.
+            * Bit 2: this frame has extrap properties.
+        * uint32_t compressed-size.
+
+    * Frame data (can be compressed): a list of ordered `<length:32><data>` items as described by the `data[]` nodes in the header. This format allows Flightgear to skip data items that it doesn't understand if loading a recording that was created by a newer version.
         
         * For `signals`, `<data>` is binary data for the core aircraft properties.
     
@@ -114,6 +121,8 @@ Continuous recordings do not use compression, in order to simplify random access
 ## Replay of Continuous recordings
 
 When a Continuous recording is loaded, `FGReplay::loadTape()` first steps through the entire file, building up an index in memory that maps from frame times to a struct containing the offset of the frame in the file plus information on whether the frame has multiplayer and/or extra-properties information. This allows us to support the user jumping forwards and backwards in the recording.
+
+If the recording uses compression, indexing uses the uint8_t flags and uint32_t compressed-size fields and does not need to decompress each frame's data.
 
 If we are replaying from a URL, indexing takes place in the background (by requesting callbacks from the download's `simgear::HTTP::FileRequest`) and replay starts immediately. Thus we avoid having to wait until the entire recording has been downloaded before starting replay.
 

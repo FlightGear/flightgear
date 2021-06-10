@@ -230,7 +230,7 @@ class Fg:
 
 def make_recording(
         fg,
-        continuous=0,
+        continuous=0,   # 2 means continuous with compression.
         extra_properties=0,
         main_view=0,
         length=5,
@@ -244,13 +244,15 @@ def make_recording(
     fg.fg['/sim/replay/record-signals'] = True  # Just in case they are disabled by user.
     if continuous:
         assert not fg.fg['/sim/replay/record-continuous']
+        if continuous == 2:
+            fg.fg['/sim/replay/record-continuous-compression'] = 1
         fg.fg['/sim/replay/record-continuous'] = 1
         t0 = time.time()
         while 1:
             if time.time() > t0 + length:
                 break
-            fg.run_command('run view-step step=1')
             time.sleep(1)
+            fg.run_command('run view-step step=1')
         fg.fg['/sim/replay/record-continuous'] = 0
         path = f'{g_tapedir}/{fg.aircraft}-continuous.fgtape'
         time.sleep(1)
@@ -332,26 +334,44 @@ def test_record_replay(
     fg.waitfor('/sim/fdm-initialized', 1, timeout=45)
     fg.waitfor('/sim/replay/replay-state', 1)
     
+    t0 = time.time()
+    
     # Check replay time is ok.
     rtime_begin = fg.fg['/sim/replay/start-time']
     rtime_end = fg.fg['/sim/replay/end-time']
     rtime = rtime_end - rtime_begin
     log(f'rtime={rtime_begin}..{rtime_end}, recording length: {rtime}, length={length}')
-    assert rtime > length-1 and rtime < length+2, \
+    assert rtime > length-1 and rtime <= length+2, \
             f'length={length} rtime_begin={rtime_begin} rtime_end={rtime_end} rtime={rtime}'
     
     num_frames_extra_properties = fg.fg['/sim/replay/continuous-stats-num-frames-extra-properties']
     log(f'num_frames_extra_properties={num_frames_extra_properties}')
     if continuous:
         if main_view:
-            assert num_frames_extra_properties > 1
+            assert num_frames_extra_properties > 1, f'num_frames_extra_properties={num_frames_extra_properties}'
         else:
             assert num_frames_extra_properties == 0
     else:
         assert num_frames_extra_properties in (0, None), \
                 f'num_frames_extra_properties={num_frames_extra_properties}'
     
-    time.sleep(length)
+    fg.run_command('run dialog-show dialog-name=replay')
+    
+    while 1:
+        t = time.time()
+        if t < t0 + length - 1:
+            pass
+            # Disabled because it seems that Flightgear starts replaying before
+            # we see replay-state set to 1 because scenery loading blocks
+            # things.
+            #
+            #assert not fg.fg['/sim/replay/replay-state-eof'], f'Replay has finished too early; lenth={length} t-t0={t-t0}'
+        if t > t0 + length + 1:
+            assert fg.fg['/sim/replay/replay-state-eof'], f'Replay has not finished on time; lenth={length} t-t0={t-t0}'
+            break
+        e = fg.fg['sim/replay/replay-error']
+        assert not e, f'Replay failed: e={e}'
+        time.sleep(1)
     
     fg.close()
     
@@ -676,7 +696,7 @@ if __name__ == '__main__':
     fgfs_old = None
     
     do_test = 'all'
-    continuous_s = [0, 1]
+    continuous_s = [0, 1, 2]    # 2 is continuous with compression.
     extra_properties_s = [0, 1]
     main_view_s = [0, 1]
     multiplayer_s = [0, 1]
@@ -698,19 +718,20 @@ if __name__ == '__main__':
         elif arg == '--carrier':
             do_test = 'carrier'
         elif arg == '--continuous':
-            continuous_s = map(int, next(args).split(','))
+            continuous_s = [int(x) for x in  next(args).split(',')]
+            log(f'continuous_s={continuous_s}')
         elif arg == '--tape-dir':
             g_tapedir = next(args)
         elif arg == '--extra-properties':
-            extra_properties_s = map(int, next(args).split(','))
+            extra_properties_s = [int(x) for x in  next(args).split(',')]
         elif arg == '--it-max':
             it_max = int(next(args))
         elif arg == '--it-min':
             it_min = int(next(args))
         elif arg == '--main-view':
-            main_view_s = map(int, next(args).split(','))
+            main_view_s = [int(x) for x in  next(args).split(',')]
         elif arg == '--multiplayer':
-            multiplayer_s = map(int, next(args).split(','))
+            multiplayer_s = [int(x) for x in  next(args).split(',')]
         elif arg == '-f':
             fgfs = next(args)
         elif arg == '--f-old':
@@ -748,6 +769,7 @@ if __name__ == '__main__':
                                 length=10,
                                 )
             else:
+                log(f'continuous_s={continuous_s}')
                 its_max = len(multiplayer_s) * len(continuous_s) * len(extra_properties_s) * len(main_view_s) * len(fgfs_reverse_s)
                 it = 0
                 for multiplayer in multiplayer_s:
