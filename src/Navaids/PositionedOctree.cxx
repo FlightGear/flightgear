@@ -148,7 +148,7 @@ void Leaf::visit(const SGVec3d& aPos, double aCutoff,
 
 void Leaf::insertChild(FGPositioned::Type ty, PositionedID id)
 {
-  assert(childrenLoaded);
+  assert(_childrenLoaded);
   children.insert(children.end(), TypedPositioned(ty, id));
 }
 
