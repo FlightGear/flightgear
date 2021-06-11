@@ -102,7 +102,7 @@ static std::initializer_list<ProgressLabel> progressStrings = {
     {NavDataCache::REBUILD_POIS, QT_TRANSLATE_NOOP("initNavCache","Loading point-of-interest data")}
 };
 
-void initNavCache()
+bool initNavCache()
 {
     const char* baseLabelKey = QT_TRANSLATE_NOOP("initNavCache", "Initialising navigation data, this may take several minutes");
     QString baseLabel= qApp->translate("initNavCache", baseLabelKey);
@@ -126,10 +126,12 @@ void initNavCache()
 
         QTimer updateTimer;
         updateTimer.setInterval(500);
+        bool rebuildIsDone = false;
 
-        QObject::connect(&updateTimer, &QTimer::timeout, [&waitForRebuild]() {
+        QObject::connect(&updateTimer, &QTimer::timeout, [&waitForRebuild, &rebuildIsDone]() {
             if (!NavDataCache::isAnotherProcessRebuilding()) {
                 waitForRebuild.done(0);
+                rebuildIsDone = true;
                 return;
             }
         });
@@ -137,6 +139,12 @@ void initNavCache()
         updateTimer.start(); // timer won't actually run until we process events
         waitForRebuild.exec();
         updateTimer.stop();
+
+        if (!rebuildIsDone) {
+            flightgear::addSentryBreadcrumb("Launcher wait on other process nav-cache rebuild abandoned by user", "info");
+            return false;
+        }
+
         addSentryBreadcrumb("Launcher: done waiting for other process NavCache rebuild dialog", "info");
     }
 
@@ -155,10 +163,13 @@ void initNavCache()
         QTimer updateTimer;
         updateTimer.setInterval(100);
 
-        QObject::connect(&updateTimer, &QTimer::timeout, [&cache, &rebuildProgress, &baseLabel]() {
+        bool didComplete = false;
+
+        QObject::connect(&updateTimer, &QTimer::timeout, [&cache, &rebuildProgress, &baseLabel, &didComplete]() {
             auto phase = cache->rebuild();
             if (phase == NavDataCache::REBUILD_DONE) {
                 rebuildProgress.done(0);
+                didComplete = true;
                 return;
             }
             
@@ -179,12 +190,20 @@ void initNavCache()
                 rebuildProgress.setMaximum(100);
             }
         });
-        
+
         updateTimer.start(); // timer won't actually run until we process events
         rebuildProgress.exec();
         updateTimer.stop();
+
+        if (!didComplete) {
+            flightgear::addSentryBreadcrumb("Launcher nav-cache rebuild abandoned by user", "info");
+            return false;
+        }
+
         flightgear::addSentryBreadcrumb("Launcher nav-cache rebuild complete", "info");
     }
+
+    return true;
 }
 
 class NaturalEarthDataLoaderThread : public QThread
@@ -612,7 +631,10 @@ bool runLauncherDialog()
     // startup the nav-cache now. This pre-empts normal startup of
     // the cache, but no harm done. (Providing scenery paths are consistent)
 
-    initNavCache();
+    bool ok = initNavCache();
+    if (!ok) {
+        return false;
+    }
 
     auto options = flightgear::Options::sharedInstance();
     if (options->isOptionSet("download-dir")) {
