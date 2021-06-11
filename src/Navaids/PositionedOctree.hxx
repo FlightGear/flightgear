@@ -25,12 +25,13 @@
 #define FG_POSITIONED_OCTREE_HXX
 
 // std
-#include <vector>
-#include <set>
-#include <queue>
+#include <array>
 #include <cassert>
-#include <map>
 #include <functional>
+#include <map>
+#include <queue>
+#include <set>
+#include <vector>
 
 // SimGear
 #include <simgear/math/SGGeometry.hxx>
@@ -194,12 +195,12 @@ namespace Octree
     void insertChild(FGPositioned::Type ty, PositionedID id);
 
   private:
-    bool childrenLoaded;
+      bool _childrenLoaded = false;
 
-    typedef std::multimap<FGPositioned::Type, PositionedID> ChildMap;
-    ChildMap children;
+      typedef std::multimap<FGPositioned::Type, PositionedID> ChildMap;
+      ChildMap children;
 
-    void loadChildren();
+      void loadChildren();
   };
 
   class Branch : public Node
@@ -241,8 +242,8 @@ namespace Octree
 
     void loadChildren() const;
 
-    mutable Node* children[8];
-    mutable bool childrenLoaded;
+    mutable std::array<Node*, 8> _children;
+    mutable bool _childrenLoaded = false;
   };
 
   bool findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPositioned::Filter* aFilter, FGPositionedList& aResults, int aCutoffMsec);

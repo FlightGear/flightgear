@@ -43,8 +43,8 @@ namespace flightgear
 namespace Octree
 {
 
-std::unique_ptr<Node> global_spatialOctree;
-std::unique_ptr<Node> global_transientOctree;
+static std::unique_ptr<Node> global_spatialOctree;
+static std::unique_ptr<Node> global_transientOctree;
 
 double RADIUS_EARTH_M = 7000 * 1000.0; // 7000km is plenty
 
@@ -98,9 +98,11 @@ Node *Node::findNodeForBox(const SGBoxd&) const
     return const_cast<Node*>(this);
 }
 
-Leaf::Leaf(const SGBoxd& aBox, int64_t aIdent, bool persistent) : Node(aBox, aIdent, persistent),
-                                                                  childrenLoaded(false)
+Leaf::Leaf(const SGBoxd& aBox, int64_t aIdent, bool persistent) : Node(aBox, aIdent, persistent)
 {
+    if (!persistent) {
+        _childrenLoaded = true;
+    }
 }
 
 void Leaf::visit(const SGVec3d& aPos, double aCutoff,
@@ -152,9 +154,9 @@ void Leaf::insertChild(FGPositioned::Type ty, PositionedID id)
 
 void Leaf::loadChildren()
 {
-  if (childrenLoaded) {
-    return;
-  }
+    if (_childrenLoaded) {
+        return;
+    }
 
   NavDataCache* cache = NavDataCache::instance();
   for (const auto& tp : cache->getOctreeLeafChildren(guid())) {
@@ -162,15 +164,17 @@ void Leaf::loadChildren()
     children.insert(children.end(), tp);
   } // of leaf members iteration
 
-  childrenLoaded = true;
+  _childrenLoaded = true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Branch::Branch(const SGBoxd& aBox, int64_t aIdent, bool persistent) : Node(aBox, aIdent, persistent),
-                                                                      childrenLoaded(false)
+Branch::Branch(const SGBoxd& aBox, int64_t aIdent, bool persistent) : Node(aBox, aIdent, persistent)
 {
-  memset(children, 0, sizeof(Node*) * 8);
+    _children.fill(nullptr);
+    if (!_persistent) {
+        _childrenLoaded = true;
+    }
 }
 
 void Branch::visit(const SGVec3d& aPos, double aCutoff,
@@ -179,16 +183,16 @@ void Branch::visit(const SGVec3d& aPos, double aCutoff,
 {
   loadChildren();
   for (unsigned int i=0; i<8; ++i) {
-    if (!children[i]) {
-      continue;
+      if (!_children[i]) {
+          continue;
+      }
+
+      double d = _children[i]->distToNearest(aPos);
+      if (d > aCutoff) {
+          continue; // exceeded cutoff
     }
 
-    double d = children[i]->distToNearest(aPos);
-    if (d > aCutoff) {
-      continue; // exceeded cutoff
-    }
-
-    aQ.push(Ordered<Node*>(children[i], d));
+    aQ.push(Ordered<Node*>(_children[i], d));
   } // of child iteration
 }
 
@@ -200,16 +204,16 @@ void Branch::visitForLines(const SGVec3d& aPos, double aCutoff,
     Node::visitForLines(aPos, aCutoff, aLines, aQ);
 
     for (unsigned int i=0; i<8; ++i) {
-        if (!children[i]) {
+        if (!_children[i]) {
             continue;
         }
 
-        double d = children[i]->distToNearest(aPos);
+        double d = _children[i]->distToNearest(aPos);
         if (d > aCutoff) {
             continue; // exceeded cutoff
         }
 
-        aQ.push_back(children[i]);
+        aQ.push_back(_children[i]);
     } // of child iteration
 }
 
@@ -266,46 +270,42 @@ Node* Branch::childForPos(const SGVec3d& aCart) const
 
 Node* Branch::childAtIndex(int childIndex) const
 {
-  Node* child = children[childIndex];
-  if (!child) { // lazy building of children
-    SGBoxd cb(boxForChild(childIndex));
-    double d2 = dot(cb.getSize(), cb.getSize());
+    Node* child = _children[childIndex];
+    if (!child) { // lazy building of children
+        SGBoxd cb(boxForChild(childIndex));
+        double d2 = dot(cb.getSize(), cb.getSize());
 
-    assert(((_ident << 3) >> 3) == _ident);
+        assert(((_ident << 3) >> 3) == _ident);
 
-    // child index is 0..7, so 3-bits is sufficient, and hence we can
-    // pack 20 levels of octree into a int64, which is plenty
-    int64_t childIdent = (_ident << 3) | childIndex;
+        // child index is 0..7, so 3-bits is sufficient, and hence we can
+        // pack 20 levels of octree into a int64, which is plenty
+        int64_t childIdent = (_ident << 3) | childIndex;
 
-    if (d2 < LEAF_SIZE_SQR) {
-      // REVIEW: Memory Leak - 480 bytes in 3 blocks are still reachable
-      child = new Leaf(cb, childIdent, _persistent);
-    } else {
-      // REVIEW: Memory Leak - 9,152 bytes in 52 blocks are still reachable
-      child = new Branch(cb, childIdent, _persistent);
-    }
+        if (d2 < LEAF_SIZE_SQR) {
+            // REVIEW: Memory Leak - 480 bytes in 3 blocks are still reachable
+            child = new Leaf(cb, childIdent, _persistent);
+        } else {
+            // REVIEW: Memory Leak - 9,152 bytes in 52 blocks are still reachable
+            child = new Branch(cb, childIdent, _persistent);
+        }
 
-    children[childIndex] = child;
+        _children[childIndex] = child;
 
-    if (_persistent && childrenLoaded) {
-        // childrenLoad is done, so we're defining a new node - add it to the
-        // cache too.
-        NavDataCache::instance()->defineOctreeNode(const_cast<Branch*>(this), child);
-    }
+        if (_persistent && _childrenLoaded) {
+            // childrenLoad is done, so we're defining a new node - add it to the
+            // cache too.
+            NavDataCache::instance()->defineOctreeNode(const_cast<Branch*>(this), child);
+        }
   }
 
-  return children[childIndex];
+  return _children[childIndex];
 }
 
 void Branch::loadChildren() const
 {
-  if (childrenLoaded) {
-    return;
-  }
-
-  if (!_persistent) {
-      childrenLoaded = true;
-  }
+    if (_childrenLoaded) {
+        return;
+    }
 
   int childrenMask = NavDataCache::instance()->getOctreeBranchChildren(guid());
   for (int i=0; i<8; ++i) {
@@ -316,16 +316,16 @@ void Branch::loadChildren() const
 
 // set this after creating the child nodes, so the cache update logic
 // in childAtIndex knows any future created children need to be added.
-  childrenLoaded = true;
+  _childrenLoaded = true;
 }
 
 int Branch::childMask() const
 {
   int result = 0;
   for (int i=0; i<8; ++i) {
-    if (children[i]) {
-      result |= 1 << i;
-    }
+      if (_children[i]) {
+          result |= 1 << i;
+      }
   }
 
   return result;
