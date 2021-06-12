@@ -195,7 +195,7 @@ DME::update (double delta_time_sec)
 
     if (distance_nm <= range_nm) {
         double volume = _volume_node->getDoubleValue();
-        if( false == _ident_btn_node->getBoolValue() )
+        if( !_ident_btn_node->getBoolValue() )
             volume = 0.0;
 
         _audioIdent->setIdent(_navrecord->ident(), volume );

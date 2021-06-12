@@ -322,7 +322,7 @@ int RegularConnection::request(struct mg_connection * connection)
 
   // find a handler for the uri and remember it for possible polls on this connection
   _handler = _httpd->findHandler(request.Uri);
-  if (false == _handler.valid()) {
+  if (!_handler.valid()) {
     // uri not registered - pass false to indicate we have not processed the request
     return MG_FALSE;
   }
@@ -350,7 +350,7 @@ int RegularConnection::request(struct mg_connection * connection)
     if (name.empty() || value.empty()) continue;
     mg_send_header(connection, name.c_str(), value.c_str());
   }
-  if (done || false == response.Content.empty()) {
+  if (done || !response.Content.empty()) {
     SG_LOG(SG_NETWORK, SG_INFO,
         "RegularConnection::request() responding " << response.Content.length() << " Bytes, done=" << done);
     mg_send_data(connection, response.Content.c_str(), response.Content.length());
@@ -361,7 +361,7 @@ int RegularConnection::request(struct mg_connection * connection)
 int RegularConnection::poll(struct mg_connection * connection)
 {
   setConnection(connection);
-  if (false == _handler.valid()) return MG_FALSE;
+  if (!_handler.valid()) return MG_FALSE;
   // only return MG_TRUE if we handle this request
   return _handler->poll(this) ? MG_TRUE : MG_MORE;
 }
@@ -508,7 +508,7 @@ void MongooseHttpd::init()
         }
         string & lhs = rw_entries[0];
         string & rhs = rw_entries[1];
-        if (false == rewrites.empty()) rewrites.append(1, ',');
+        if (!rewrites.empty()) rewrites.append(1, ',');
         rewrites.append(lhs).append(1, '=');
         SGPath targetPath(rhs);
         if (targetPath.isAbsolute() ) {
@@ -518,7 +518,7 @@ void MongooseHttpd::init()
           rewrites.append(fgRoot).append(1, '/').append(rhs);
         }
       }
-      if (false == rewrites.empty()) mg_set_option(_server, "url_rewrites", rewrites.c_str());
+      if (!rewrites.empty()) mg_set_option(_server, "url_rewrites", rewrites.c_str());
     }
     mg_set_option(_server, "enable_directory_listing", n->getStringValue("enable-directory-listing", "yes"));
     mg_set_option(_server, "idle_timeout_ms", n->getStringValue("idle-timeout-ms", "30000"));
@@ -638,7 +638,7 @@ int MongooseHttpd::staticRequestHandler(struct mg_connection * connection, mg_ev
 FGHttpd * FGHttpd::createInstance(SGPropertyNode_ptr configNode)
 {
 // only create a server if a port has been configured
-  if (false == configNode.valid()) return NULL;
+  if (!configNode.valid()) return NULL;
   string port = configNode->getStringValue("options/listening-port", "");
   if (port.empty()) return NULL;
   return new MongooseHttpd(configNode);

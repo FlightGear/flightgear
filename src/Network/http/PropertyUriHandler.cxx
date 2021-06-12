@@ -216,7 +216,7 @@ bool PropertyUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResp
   }
 
   // skip trailing '/' - not very efficient but shouldn't happen too often
-  while( false == propertyPath.empty() && propertyPath[ propertyPath.length()-1 ] == '/' )
+  while( !propertyPath.empty() && propertyPath[ propertyPath.length()-1 ] == '/' )
     propertyPath = propertyPath.substr(0,propertyPath.length()-1);
 
   if( request.RequestVariables.get("submit") == "update" ) {
@@ -273,7 +273,7 @@ bool PropertyUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResp
   catch( string & s ) { 
     SG_LOG(SG_NETWORK,SG_WARN, "httpd: reading '" << propertyPath  << "' failed: " << s );
   }
-  if( false == node.valid() ) {
+  if( !node.valid() ) {
     DOMNode * headline = new DOMNode( "h3" );
     body->addChild( headline );
     headline->addChild( new DOMTextElement( "Non-existent node requested!" ) );

@@ -315,7 +315,7 @@ void MetarBridge::requestMetarForId(std::string & id)
     _metarPropertiesNode->getNode("time-to-live", true)->setDoubleValue(0.0);
   } else {
     // use the present weather to generate the ATIS.
-    if ( NULL != _atisNode && false == _requestedId.empty()) {
+    if ( NULL != _atisNode && !_requestedId.empty()) {
       CurrentWeatherATISInformationProvider provider(_requestedId);
       _atisNode->setStringValue(_atisEncoder.encodeATIS(&provider));
     }
@@ -331,7 +331,7 @@ void MetarBridge::clearMetar()
 void MetarBridge::valueChanged(SGPropertyNode * node)
 {
   // check for raising edge of valid flag
-  if ( NULL == node || false == node->getBoolValue() || false == _realWxEnabledNode->getBoolValue()) return;
+  if ( NULL == node || !node->getBoolValue() || !_realWxEnabledNode->getBoolValue()) return;
 
   std::string responseId = simgear::strutils::uppercase(_metarPropertiesNode->getNode("station-id", true)->getStringValue());
 
@@ -640,7 +640,7 @@ void CommRadioImpl::update(double dt)
     _commStationForFrequency = flightgear::CommStation::findByFreq(freqKhz, position, NULL);
   }
 
-  if (false == _commStationForFrequency.valid()) {
+  if (!_commStationForFrequency.valid()) {
     stopAudio();
     return;
   }

@@ -218,7 +218,7 @@ void NavRadioComponentWithIdent::update( double dt, const SGGeod & aircraftPosit
   NavRadioComponent::update( dt, aircraftPosition );
   _audioIdent->update( dt );
 
-  if( false == ( valid() && _identEnabled && _signalQuality_norm > 0.1 ) ) {
+  if( !( valid() && _identEnabled && _signalQuality_norm > 0.1 ) ) {
       _audioIdent->setIdent("", 0.0 );
       return;
   }
@@ -273,7 +273,7 @@ void NavRadioComponent::search( double frequency, const SGGeod & aircraftPositio
 
 double NavRadioComponent::computeSignalQuality_norm( const SGGeod & aircraftPosition )
 {
-  if( false == valid() ) return 0.0;
+  if( !valid() ) return 0.0;
 
   double distance_nm = _slantDistance_m * SG_METER_TO_NM;
   double range_nm = _range_nm;
@@ -286,7 +286,7 @@ double NavRadioComponent::computeSignalQuality_norm( const SGGeod & aircraftPosi
 
 void NavRadioComponent::update( double dt, const SGGeod & aircraftPosition )
 {
-    if( false == valid() ) {
+    if( !valid() ) {
       _signalQuality_norm = 0.0;
       _trueBearingTo_deg = 0.0;
       _trueBearingFrom_deg = 0.0;
@@ -426,7 +426,7 @@ void VOR::update( double dt, const SGGeod & aircraftPosition )
   _totalTime += dt;
   NavRadioComponentWithIdent::update( dt, aircraftPosition );
 
-  if( false == valid() ) {
+  if( !valid() ) {
       _radial = 0.0;
       return;
   }
@@ -448,7 +448,7 @@ void VOR::update( double dt, const SGGeod & aircraftPosition )
 
 void VOR::display( NavIndicator & navIndicator )
 {
-  if( false == valid() ) return;
+  if( !valid() ) return;
 
   double offset = SGMiscd::normalizePeriodic(-180.0,180.0,_radial - navIndicator.getSelectedCourse());
   bool to = fabs(offset) >= 90.0;
@@ -549,7 +549,7 @@ FGNavList::TypeFilter* LOC::getNavaidFilter()
 void LOC::search( double frequency, const SGGeod & aircraftPosition )
 {
   NavRadioComponentWithIdent::search( frequency, aircraftPosition );
-  if( false == valid() ) {
+  if( !valid() ) {
       _localizerWidth_deg = 0.0;
       return;
   }
@@ -587,7 +587,7 @@ void LOC::update( double dt, const SGGeod & aircraftPosition )
 {
   NavRadioComponentWithIdent::update( dt, aircraftPosition );
 
-  if( false == valid() ) {
+  if( !valid() ) {
     _localizerOffset_norm = 0.0;
     _localizerOffset_m = 0.0;
     return;
@@ -611,7 +611,7 @@ void LOC::update( double dt, const SGGeod & aircraftPosition )
 
 void LOC::display( NavIndicator & navIndicator )
 {
-  if( false == valid() ) 
+  if( !valid() ) 
     return;
 
   navIndicator.showTo( true );
@@ -738,7 +738,7 @@ SGVec3d GS::tangentVector(const SGGeod& midpoint, const double heading)
 void GS::search( double frequency, const SGGeod & aircraftPosition )
 {
   NavRadioComponent::search( frequency, aircraftPosition );
-  if( false == valid() ) {
+  if( !valid() ) {
       _gsAxis = SGVec3d::zeros();
       _gsVertical = SGVec3d::zeros();
       _targetGlideslope_deg = 3.0;
@@ -759,7 +759,7 @@ void GS::search( double frequency, const SGGeod & aircraftPosition )
 void GS::update( double dt, const SGGeod & aircraftPosition )
 {
   NavRadioComponent::update( dt, aircraftPosition );
-  if( false == valid() ) {
+  if( !valid() ) {
       _glideslopeOffset_norm = 0.0;
       return;
   }
@@ -785,7 +785,7 @@ void GS::update( double dt, const SGGeod & aircraftPosition )
   double offset = _targetGlideslope_deg - gsDirect;
   if( offset < 0.0 )
     offset = _targetGlideslope_deg/2 * sawtooth(2.0*offset/_targetGlideslope_deg);
-    assert( false == SGMisc<double>::isNaN(offset) );
+    assert( !SGMisc<double>::isNaN(offset) );
 // GS is documented to be 1.4 degrees thick, 
 // i.e. plus or minus 0.7 degrees from the midline:
   _glideslopeOffset_norm = SGMiscd::clip(offset/0.7, -1.0, 1.0);
@@ -793,7 +793,7 @@ void GS::update( double dt, const SGGeod & aircraftPosition )
 
 void GS::display( NavIndicator & navIndicator )
 {
-  if( false == valid() ) {
+  if( !valid() ) {
     navIndicator.setGS( false );
     return;
   }
@@ -913,7 +913,7 @@ void NavRadioImpl::update( double dt )
           p->search( _frequency, position );
       p->update( dt, position );
 
-      if( false == _cdiDisconnected )
+      if( !_cdiDisconnected )
           p->display( _navIndicator );
   }
 

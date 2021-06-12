@@ -112,7 +112,7 @@ void FGRidgeLift::update(double dt) {
 	if( dt <= SGLimitsd::min() ) // paused, do nothing but keep current lift
 		return;
 
-	if( _enabled_node && false == _enabled_node->getBoolValue() ) {
+	if( _enabled_node && !_enabled_node->getBoolValue() ) {
 		// do nothing if lift has been zeroed
 		if( strength != 0.0 ) {
 			if( strength > 0.1 ) {

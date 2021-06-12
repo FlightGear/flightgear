@@ -356,7 +356,7 @@ BasicRealWxController::MetarPropertiesList::iterator BasicRealWxController::find
   // don not compare unprocessed property path
   // /foo/bar[0]/baz equals /foo/bar/baz
   SGPropertyNode_ptr n = fgGetNode(propPath,false);
-  if( false == n.valid() ) // trivial: node does not exist
+  if( !n.valid() ) // trivial: node does not exist
     return _metarProperties.end();
 
   MetarPropertiesList::iterator it = _metarProperties.begin();

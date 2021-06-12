@@ -50,7 +50,7 @@ bool JsonUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & 
     bool timestamp = request.RequestVariables.get("t") == "y";
 
     SGPropertyNode_ptr node = getRequestedNode(request );
-    if( false == node.valid() ) {
+    if( !node.valid() ) {
       response.StatusCode = 404;
       response.Content = "{}";
       return true;
@@ -63,7 +63,7 @@ bool JsonUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & 
 
   if( request.Method == "POST" ) {
     SGPropertyNode_ptr node = getRequestedNode(request );
-    if( false == node.valid() ) {
+    if( !node.valid() ) {
       response.StatusCode = 404;
       response.Content = "{}";
       return true;
@@ -95,11 +95,11 @@ SGPropertyNode_ptr JsonUriHandler::getRequestedNode(const HTTPRequest & request)
   propertyPath = propertyPath.substr( getUri().size() );
 
   // skip trailing '/' - not very efficient but shouldn't happen too often
-  while( false == propertyPath.empty() && propertyPath[ propertyPath.length()-1 ] == '/' )
+  while( !propertyPath.empty() && propertyPath[ propertyPath.length()-1 ] == '/' )
     propertyPath = propertyPath.substr(0,propertyPath.length()-1);
 
   SGPropertyNode_ptr reply = fgGetNode( string("/") + propertyPath );
-  if( false == reply.valid() ) {
+  if( !reply.valid() ) {
     SG_LOG(SG_NETWORK,SG_WARN, "JsonUriHandler: requested node not found: '" << propertyPath << "'");
   }
   return reply;

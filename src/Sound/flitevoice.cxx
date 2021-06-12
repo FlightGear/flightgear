@@ -63,7 +63,7 @@ void FGFLITEVoice::speak(const string & msg)
 {
   // this is called from voice.cxx:FGVoiceMgr::FGVoiceThread::run
   string s = simgear::strutils::strip(msg);
-  if (false == s.empty()) {
+  if (!s.empty()) {
     _sampleQueue.push(_synthesizer->synthesize(msg, 1.0, 0.5, 0.5));
   }
 }

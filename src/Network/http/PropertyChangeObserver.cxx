@@ -40,13 +40,13 @@ void PropertyChangeObserver::check()
 {
 
   for (Entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it) {
-    if (false == (*it)->_node.isShared()) {
+    if (!(*it)->_node.isShared()) {
       // node is no longer used but by us - remove the entry
       it = _entries.erase(it);
       continue;
     }
 
-    if( false == (*it)->_changed ) {
+    if(!(*it)->_changed ) {
       (*it)->_changed = (*it)->_prevValue != (*it)->_node->getStringValue();
       if ((*it)->_changed)
         (*it)->_prevValue = (*it)->_node->getStringValue();

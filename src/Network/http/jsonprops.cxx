@@ -145,7 +145,7 @@ void JSON::toProp(cJSON * json, SGPropertyNode_ptr base)
 
     //TODO: better check for valid name
     string namestr = simgear::strutils::strip(string(name));
-    if( false == namestr.empty() ) {
+    if( !namestr.empty() ) {
       int index = 0;
       cj = cJSON_GetObjectItem(json, "index");
       if (NULL != cj) index = cj->valueint;

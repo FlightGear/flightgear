@@ -244,7 +244,7 @@ void MetarProperties::setMetar( SGSharedPtr<FGMetar> m )
     
     const vector<string> weather = m->getWeather();
     for( vector<string>::const_iterator it = weather.begin(); it != weather.end(); ++it ) {
-        if( false == _decoded.empty() ) _decoded.append(", ");
+        if( !_decoded.empty() ) _decoded.append(", ");
         _decoded.append(*it);
     }
 
@@ -351,7 +351,7 @@ void MetarProperties::setMetar( SGSharedPtr<FGMetar> m )
 
         // fog/mist/haze cloud layer does not work with 3d clouds yet :-(
         bool setGroundCloudLayer = _rootNode->getBoolValue("set-ground-cloud-layer", false ) &&
-              false == fgGetBool("/sim/rendering/clouds3d-enable", false);
+              !fgGetBool("/sim/rendering/clouds3d-enable", false);
 
         if( setGroundCloudLayer ) {
             // create a cloud layer #0 starting at the ground if its fog, mist or haze

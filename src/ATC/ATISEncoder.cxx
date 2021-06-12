@@ -45,7 +45,7 @@ string ATCSpeech::getSpokenNumber( string number )
 {
   string result;
   for( string::iterator it = number.begin(); it != number.end(); ++it ) {
-    if( false == result.empty() )
+    if( !result.empty() )
       result.SPACE;
     result.append( getSpokenDigit( (*it) - '0' ));
   }
@@ -79,8 +79,8 @@ string ATCSpeech::getSpokenNumber( int number, bool leadingZero, int digits )
     result.append( globals->get_locale()->getLocalizedString("minus", "atc", "minus" ) );
   }
 
-  while( false == spokenDigits.empty() ) {
-    if( false == result.empty() )
+  while( !spokenDigits.empty() ) {
+    if( !result.empty() )
       result.SPACE;
 
     result.append( spokenDigits.back() );
@@ -157,7 +157,7 @@ SGPropertyNode_ptr findAtisTemplate( const std::string & stationId, SGPropertyNo
   for( PropertyList::iterator asit = schemaNodes.begin(); asit != schemaNodes.end(); ++asit ) {
     SGPropertyNode_ptr ppp = (*asit)->getNode("station-starts-with", false );
     atisTemplate = (*asit)->getNode("atis", false );
-    if( false == atisTemplate.valid() ) continue; // no <atis> node - ignore entry
+    if( !atisTemplate.valid() ) continue; // no <atis> node - ignore entry
 
     PropertyList startsWithNodes = (*asit)->getChildren("station-starts-with");
     for( PropertyList::iterator swit = startsWithNodes.begin(); swit != startsWithNodes.end(); ++swit ) {
@@ -176,10 +176,10 @@ string ATISEncoder::encodeATIS( ATISInformationProvider * atisInformation )
 {
   using simgear::strutils::lowercase;
 
-  if( false == atisInformation->isValid() ) return NO_ATIS;
+  if( !atisInformation->isValid() ) return NO_ATIS;
 
   airport = FGAirport::getByIdent( atisInformation->airportId() );
-  if( false == airport.valid() ) {
+  if( !airport.valid() ) {
     SG_LOG( SG_ATC, SG_WARN, "ATISEncoder: unknown airport id " << atisInformation->airportId() );
     return NO_ATIS;
   }
@@ -187,7 +187,7 @@ string ATISEncoder::encodeATIS( ATISInformationProvider * atisInformation )
   _atis = atisInformation;
 
   // lazily load the schema file on the first call
-  if( false == atisSchemaNode.valid() ) {
+  if( !atisSchemaNode.valid() ) {
     atisSchemaNode = new SGPropertyNode();
     try
     {
@@ -204,7 +204,7 @@ string ATISEncoder::encodeATIS( ATISInformationProvider * atisInformation )
   string stationId = lowercase( airport->ident() );
   
   SGPropertyNode_ptr atisTemplate = findAtisTemplate( stationId, atisSchemaNode );;
-  if( false == atisTemplate.valid() ) {
+  if( !atisTemplate.valid() ) {
     SG_LOG(SG_ATC, SG_WARN, "no matching atis template for station " << stationId  );
     return NO_ATIS; // no template for this station!?
   }
@@ -324,7 +324,7 @@ string ATISEncoder::processIfToken( SGPropertyNode_ptr token )
 bool ATISEncoder::checkEmptyCondition( SGPropertyNode_ptr node, bool isEmpty ) 
 {
   SGPropertyNode_ptr n1 = node->getNode( "token", false );
-  if( false == n1.valid() ) {
+  if( !n1.valid() ) {
       SG_LOG(SG_ATC, SG_WARN, "missing <token> node for (not)-empty"  );
       return false;
   }
@@ -526,7 +526,7 @@ string ATISEncoder::getClouds( SGPropertyNode_ptr )
   ATISInformationProvider::CloudEntries cloudEntries = _atis->getClouds();
 
   for( ATISInformationProvider::CloudEntries::iterator it = cloudEntries.begin(); it != cloudEntries.end(); it++ ) {
-    if( false == reply.empty() ) reply.SPACE;
+    if( !reply.empty() ) reply.SPACE;
     reply.append( it->second ).SPACE.append( getSpokenAltitude(it->first).SPACE.append( FEET ) );
   }
   return reply;
@@ -539,7 +539,7 @@ string ATISEncoder::getCloudsBrief( SGPropertyNode_ptr )
   ATISInformationProvider::CloudEntries cloudEntries = _atis->getClouds();
 
   for( ATISInformationProvider::CloudEntries::iterator it = cloudEntries.begin(); it != cloudEntries.end(); it++ ) {
-    if( false == reply.empty() ) reply.append(",").SPACE;
+    if( !reply.empty() ) reply.append(",").SPACE;
     reply.append( it->second ).SPACE.append( getSpokenAltitude(it->first) );
   }
   return reply;

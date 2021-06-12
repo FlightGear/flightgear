@@ -278,7 +278,7 @@ public:
 
     osgViewer::GraphicsWindow* window = NULL;
 
-    if (false == windowName.empty()) {
+    if (!windowName.empty()) {
       for (osgViewer::ViewerBase::Windows::iterator itr = windows.begin(); itr != windows.end(); ++itr) {
         if ((*itr)->getTraits()->windowName == windowName) {
           window = *itr;
@@ -288,7 +288,7 @@ public:
     }
 
     if ( NULL == window) {
-      if (false == windowName.empty()) {
+      if (!windowName.empty()) {
         SG_LOG(SG_NETWORK, SG_INFO, "requested window " << windowName << " not found, using first window");
       }
       window = *windows.begin();
@@ -462,7 +462,7 @@ bool ScreenshotUriHandler::handleGetRequest(const HTTPRequest & request, HTTPRes
   //  string camera = request.RequestVariables.get("camera");
   string window = request.RequestVariables.get("window");
 
-  bool stream = (false == request.RequestVariables.get("stream").empty());
+  bool stream = (!request.RequestVariables.get("stream").empty());
 
   int canvasindex = -1;
   string s_canvasindex = request.RequestVariables.get("canvasindex");
@@ -494,7 +494,7 @@ bool ScreenshotUriHandler::handleGetRequest(const HTTPRequest & request, HTTPRes
     return true;
   }
 
-  if (false == stream) {
+  if (!stream) {
     response.Header["Content-Type"] = string("image/").append(type);
     response.Header["Content-Disposition"] = string("inline; filename=\"fgfs-screen.").append(type).append("\"");
   } else {

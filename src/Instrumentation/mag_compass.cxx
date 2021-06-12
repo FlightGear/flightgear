@@ -30,7 +30,7 @@ MagCompass::MagCompass ( SGPropertyNode *node )
         _deviation_table = new SGInterpTable( deviation_table_node );
       } else {
         std::string deviation_node_name = n->getStringValue();
-        if( false == deviation_node_name.empty() )
+        if( !deviation_node_name.empty() )
           _deviation_node = fgGetNode( deviation_node_name, true );
       }
     }

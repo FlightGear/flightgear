@@ -116,7 +116,7 @@ static string AutoUpdateResponse(const HTTPRequest & request,
 static string FlightHistoryToKml(const SGGeodVec & history,
 		const HTTPRequest & request) {
 	string interval = request.RequestVariables.get("interval");
-	if (false == interval.empty()) {
+	if (!interval.empty()) {
 		return AutoUpdateResponse(request, "/flighthistory/track.kml", interval);
 	}
 
