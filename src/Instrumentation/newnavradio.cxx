@@ -144,7 +144,7 @@ public:
   virtual void   search( double frequency, const SGGeod & aircraftPosition );
   virtual double getRange_nm( const SGGeod & aircraftPosition );
   virtual void   display( NavIndicator & navIndicator ) = 0;
-  virtual bool   valid() const { return NULL != _navRecord && true == _serviceable; }
+  virtual bool   valid() const { return NULL != _navRecord && _serviceable; }
   virtual const std::string getIdent() const { return _ident; }
 
 protected:
