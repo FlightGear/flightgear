@@ -27,11 +27,11 @@
 #include <Sound/morse.hxx>
 
 AudioIdent::AudioIdent( const std::string & fx_name, const double interval_secs, const int frequency_hz ) :
-  _fx_name(fx_name),
-  _frequency(frequency_hz),
-  _timer(0.0),
-  _interval(interval_secs),
-  _running(false)
+    _fx_name(fx_name),
+    _frequency(frequency_hz),
+    _timer(0.0),
+    _interval(interval_secs),
+    _running(false)
 {
 }
 
@@ -88,11 +88,11 @@ void AudioIdent::setIdent( const std::string & ident, double volumeNorm )
     if (ident.empty())
         volumeNorm = 0;
 
-    if(( _ident == ident )||
-       (volumeNorm == 0))  // don't bother with sounds when volume is OFF anyway...
+    // don't bother with sounds when volume is OFF anyway...
+    if ((_ident == ident ) || (volumeNorm == 0)) 
     {
-        if( false == _ident.empty() )
-            setVolumeNorm( volumeNorm );
+        if (!_ident.empty())
+            setVolumeNorm(volumeNorm);
         return;
     }
 
@@ -102,8 +102,7 @@ void AudioIdent::setIdent( const std::string & ident, double volumeNorm )
         if ( _sgr->exists( _fx_name ) )
             _sgr->remove( _fx_name );
 
-        if( false == ident.empty() ) {
-
+        if (!ident.empty()) {
             SGSoundSample* sound = FGMorse::instance()->make_ident(ident, _frequency );
             sound->set_volume( volumeNorm );
             if (!_sgr->add( sound, _fx_name )) {
@@ -125,7 +124,7 @@ void AudioIdent::setIdent( const std::string & ident, double volumeNorm )
 void AudioIdent::update( double dt )
 {
     // single-shot
-    if( false == _running || _interval < SGLimitsd::min() ) 
+    if( !_running || _interval < SGLimitsd::min() ) 
         return;
 
     _timer -= dt;
