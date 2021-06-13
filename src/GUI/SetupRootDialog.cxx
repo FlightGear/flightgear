@@ -221,7 +221,7 @@ void SetupRootDialog::onBrowse()
 
 void SetupRootDialog::onDownload()
 {
-    QString templateUrl = "https://sourceforge.net/projects/flightgear/files/release-%1/FlightGear-%2-data.tar.bz2";
+    QString templateUrl = "https://sourceforge.net/projects/flightgear/files/release-%1/FlightGear-%2-data.txz";
     QString majorMinorVersion = QString("%1.%2").arg(FLIGHTGEAR_MAJOR_VERSION).arg(FLIGHTGEAR_MINOR_VERSION);
     QUrl downloadUrl(templateUrl.arg(majorMinorVersion).arg(VERSION));
     QDesktopServices::openUrl(downloadUrl);
