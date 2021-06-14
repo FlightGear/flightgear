@@ -161,6 +161,14 @@ Item {
                         defaultValue: false
                         keywords: ["develop", "developer"]
                         setting: "develop"
+                    },
+
+                    SettingCheckbox {
+                        id: restartLauncher
+                        label: qsTr("Re-open FlightGear on exit")
+                        description: qsTr("Re-open this window when exiting FlightGear, to start another flight immediately.")
+                        keywords: ["restart", "reopen"]
+                        setting: "restart-launcher"
                     }
                 ]
 
@@ -168,6 +176,7 @@ Item {
                     if (!showConsoleWin.hidden && showConsoleWin.checked) _config.setArg("console");
                     _config.setEnableDisableOption("sentry",  enableCrashReporting.checked);
                     if (developerMode.checked) _config.setArg("developer");
+                    if (restartLauncher.checked) _config.setArg("restart-launcher");
                 }
             }
 

@@ -20,6 +20,9 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 class SGPath;
 
 namespace flightgear
@@ -57,6 +60,11 @@ namespace flightgear
    * --launcher flag explicitly.
    */
   void restartTheApp();
+
+  /**
+ @ brief helper to re-open the launcher once FLightGear exits cleanly
+ */
+  void startLaunchOnExit(const std::vector<std::string>& originalCommandLine);
 
   void launcherSetSceneryPaths();
 
