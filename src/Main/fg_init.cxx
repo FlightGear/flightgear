@@ -1440,15 +1440,10 @@ void fgInitPackageRoot()
         return;
     }
 
-    SGPath packageAircraftDir = flightgear::Options::sharedInstance()->valueForOption("download-dir");
-    if (packageAircraftDir.isNull()) {
-        packageAircraftDir = flightgear::defaultDownloadDir();
-    }
-
+    SGPath packageAircraftDir = flightgear::Options::sharedInstance()->actualDownloadDir();
     packageAircraftDir.append("Aircraft");
 
     SG_LOG(SG_GENERAL, SG_INFO, "init package root at:" << packageAircraftDir);
-
 
     SGSharedPtr<Root> pkgRoot(new Root(packageAircraftDir, FLIGHTGEAR_VERSION));
     // set the http client later (too early in startup right now)
@@ -1481,7 +1476,7 @@ int fgUninstall()
     if (terrasyncPath.exists()) {
         simgear::Dir dir(terrasyncPath);
         if (!dir.remove(true /*recursive*/)) {
-            fprintf(stderr, "Errors occurred trying to remove Documents/FlightGear/TerraSync");
+            std::cerr << "Errors occurred trying to remove " << terrasyncPath << std::endl;
         }
     }
 
@@ -1489,7 +1484,15 @@ int fgUninstall()
     if (packagesPath.exists()) {
         simgear::Dir dir(packagesPath);
         if (!dir.remove(true /*recursive*/)) {
-            fprintf(stderr, "Errors occurred trying to remove Documents/FlightGear/Aircraft");
+            std::cerr << "Errors occurred trying to remove " << packagesPath << std::endl;
+        }
+    }
+
+    SGPath cachePath = p / "TextureCache";
+    if (cachePath.exists()) {
+        simgear::Dir dir(cachePath);
+        if (!dir.remove(true /*recursive*/)) {
+            std::cerr << "Errors occurred trying to remove " << cachePath << std::endl;
         }
     }
 #endif
