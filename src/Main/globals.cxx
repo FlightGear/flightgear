@@ -300,6 +300,10 @@ void FGGlobals::set_fg_home (const SGPath &home)
 void FGGlobals::set_texture_cache_dir(const SGPath &textureCache)
 {
     texture_cache_dir = textureCache.realpath();
+    auto node = fgGetNode("/sim/rendering/texture-cache/dir", true);
+    node->setAttribute(SGPropertyNode::WRITE, true);
+    node->setStringValue(textureCache.utf8Str());
+    node->setAttribute(SGPropertyNode::WRITE, false);
 }
 
 

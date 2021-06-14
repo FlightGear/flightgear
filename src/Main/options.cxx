@@ -2680,9 +2680,19 @@ SGPath defaultDownloadDir()
     return globals->get_fg_home();
 }
 
+SGPath Options::actualDownloadDir()
+{
+    SGPath downloadDir = SGPath::fromUtf8(valueForOption("download-dir"));
+    if (!downloadDir.isNull()) {
+        return downloadDir;
+    }
+
+    return defaultDownloadDir();
+}
+
 SGPath defaultTextureCacheDir()
 {
-    return defaultDownloadDir() / "TextureCache";
+    return Options::sharedInstance()->actualDownloadDir() / "TextureCache";
 }
 
 OptionResult Options::processOptions()

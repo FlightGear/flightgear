@@ -44,6 +44,7 @@ namespace flightgear
      */
     SGPath defaultDownloadDir();
 
+
 /// option processing can have various result values
 /// depending on what the user requested. Note processOptions only
 /// returns a subset of these.
@@ -175,31 +176,37 @@ public:
        * @return
        */
       string_list extractOptions() const;
-private:
-  void showUsage() const;
-  void showVersion() const;
-  // Write info such as FG version, FG_ROOT, FG_HOME, scenery paths, aircraft
-  // paths, etc. to stdout in JSON format, using the UTF-8 encoding.
-  void printJSONReport() const;
 
-  // The 'fromConfigFile' parameter indicates whether the option comes from a
-  // config file or directly from the command line.
-  int parseOption(const std::string& s, bool fromConfigFile);
+      /**
+        @brief the actual download dir in use, which may be the default or a user-supplied value
+     */
+      SGPath actualDownloadDir();
 
-  void processArgResult(int result);
+  private:
+      void showUsage() const;
+      void showVersion() const;
+      // Write info such as FG version, FG_ROOT, FG_HOME, scenery paths, aircraft
+      // paths, etc. to stdout in JSON format, using the UTF-8 encoding.
+      void printJSONReport() const;
 
-  /**
+      // The 'fromConfigFile' parameter indicates whether the option comes from a
+      // config file or directly from the command line.
+      int parseOption(const std::string& s, bool fromConfigFile);
+
+      void processArgResult(int result);
+
+      /**
      * Setup the root base, and check it's valid. If
      * the root package was not found or is the incorrect version,
      * returns FG_OPTIONS_ERROR. Argv/argv
      * are passed since we might potentially show a GUI dialog at this point
      * to help the user our (finding a base package), and hence need to init Qt.
      */
-  OptionResult setupRoot(int argc, char** argv);
+      OptionResult setupRoot(int argc, char** argv);
 
 
-  class OptionsPrivate;
-  std::unique_ptr<OptionsPrivate> p;
+      class OptionsPrivate;
+      std::unique_ptr<OptionsPrivate> p;
 };
   
 } // of namespace flightgear
