@@ -1878,9 +1878,9 @@ struct OptionDesc {
     {"developer",                    true,  OPTION_IGNORE | OPTION_BOOL, "", false, "", nullptr },
     {"jsbsim-output-directive-file", true,  OPTION_STRING, "/sim/jsbsim/output-directive-file", false, "", nullptr },
     {"disable-gui",                  false, OPTION_FUNC, "", false, "", fgOptDisableGUI },
+    {"restart-launcher",             false, OPTION_BOOL, "/sim/restart-launcher-on-exit", true, "", nullptr},
     {nullptr,                        false, 0,             nullptr, false, nullptr, nullptr}
 };
-
 
 namespace flightgear
 {

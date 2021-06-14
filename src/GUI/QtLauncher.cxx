@@ -587,6 +587,30 @@ void restartTheApp()
     qApp->exit(-1);
 }
 
+void startLaunchOnExit(const std::vector<std::string>& originalCommandLine)
+{
+    QStringList fgArgs;
+    for (const auto& arg : originalCommandLine) {
+        fgArgs.append(QString::fromStdString(arg));
+    }
+
+    QProcess proc;
+#if defined(Q_OS_MAC)
+    QDir dir(qApp->applicationDirPath()); // returns the 'MacOS' dir
+    dir.cdUp();                           // up to 'contents' dir
+    dir.cdUp();                           // up to .app dir
+
+    QStringList args;
+    // see 'man open' for details, but '-n' ensures we launch a new instance,
+    // and we want to pass remaining arguments to us, not open.
+    args << "-n" << dir.absolutePath() << "--args" << fgArgs;
+    qDebug() << "args" << args;
+    proc.startDetached("open", args);
+#else
+    proc.startDetached(qApp->applicationFilePath(), fgArgs);
+#endif
+}
+
 void launcherSetSceneryPaths()
 {
     globals->clear_fg_scenery();

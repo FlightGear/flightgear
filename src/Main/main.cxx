@@ -765,8 +765,10 @@ int fgMainInit( int argc, char **argv )
 
     fgOSCloseWindow();
     fgShutdownHome();
-    
-     simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_stopped);
+
+    const bool requestLauncherRestart = fgGetBool("/sim/restart-launcher-on-exit");
+
+    simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_stopped);
 
     simgear::clearEffectCache();
 
@@ -779,5 +781,15 @@ int fgMainInit( int argc, char **argv )
     // objects (eg, airports, navaids, runways).
     delete flightgear::NavDataCache::instance();
 
+#if defined(HAVE_QT)
+    if (requestLauncherRestart) {
+        string_list originalArgs;
+        for (int arg = 1; arg < argc; ++arg) {
+            originalArgs.push_back(argv[arg]);
+        }
+        flightgear::addSentryBreadcrumb("Requested to restart launcher", "info");
+        flightgear::startLaunchOnExit(originalArgs);
+    }
+#endif
     return result;
 }
