@@ -549,11 +549,7 @@ void LocationController::restoreLocation(QVariantMap l)
         m_offsetDistance = l.value("offset-distance", QVariant::fromValue(m_defaultOffsetDistance)).value<QuantityValue>();
         m_tuneNAV1 = l.value("tune-nav1-radio").toBool();
 
-        if (l.contains("location-lat")) {
-            m_locationIsLatLon = true;
-            m_geodLocation = SGGeod::fromDeg(l.value("location-lon").toDouble(),
-                                             l.value("location-lat").toDouble());
-        } else if (l.contains("carrier")) {
+        if (l.contains("carrier")) {
             setCarrierLocation(l.value("carrier").toString());
             if (l.contains("carrier-flols")) {
                 setUseCarrierFLOLS(l.value("carrier-flols").toBool());
@@ -563,15 +559,26 @@ void LocationController::restoreLocation(QVariantMap l)
             } else if (l.contains("carrier-parking")) {
                 setCarrierParking(l.value("carrier-parking").toString());
             }
-        } else if (l.contains("location-id")) {
-            m_location = NavDataCache::instance()->loadById(l.value("location-id").toLongLong());
-            m_locationIsLatLon = false;
-            if (FGPositioned::isAirportType(m_location.ptr())) {
-                m_airportLocation = static_cast<FGAirport*>(m_location.ptr());
-            } else {
-                m_airportLocation.clear();
-            }
+        } else if (l.contains("location-apt")) {
+            const auto icao = l.value("location-apt").toString().toStdString();
+            m_airportLocation = FGAirport::findByIdent(icao);
+            m_location = m_airportLocation;
             m_baseQml->setInner(m_location);
+        } else if (l.contains("location-navaid")) {
+            const auto ident = l.value("location-navaid").toString().toStdString();
+
+            // we need lat/lon to disambiguate globally
+            const SGGeod vicinity = SGGeod::fromDeg(l.value("vicinity-lon").toDouble(),
+                                                    l.value("vicinity-lat").toDouble());
+
+            FGPositioned::TypeFilter filter({FGPositioned::Type::NDB, FGPositioned::Type::VOR,
+                                             FGPositioned::Type::FIX, FGPositioned::Type::WAYPOINT});
+            m_location = FGPositioned::findClosestWithIdent(ident, vicinity, &filter);
+            m_baseQml->setInner(m_location);
+        } else if (l.contains("location-lat")) {
+            m_locationIsLatLon = true;
+            m_geodLocation = SGGeod::fromDeg(l.value("location-lon").toDouble(),
+                                             l.value("location-lat").toDouble());
         }
 
         if (m_airportLocation) {
@@ -654,9 +661,8 @@ QVariantMap LocationController::saveLocation() const
             locationSet.insert("carrier-parking", m_carrierParking);
         }
     } else if (m_location) {
-        locationSet.insert("location-id", static_cast<qlonglong>(m_location->guid()));
-
         if (m_airportLocation) {
+            locationSet.insert("location-apt", QString::fromStdString(m_airportLocation->ident()));
             locationSet.insert("location-on-final", m_onFinal);
             locationSet.insert("location-apt-final-distance", QVariant::fromValue(m_offsetDistance));
             locationSet.insert("abeam", m_abeam);
@@ -672,8 +678,13 @@ QVariantMap LocationController::saveLocation() const
                     locationSet.insert("location-apt-parking", QString::fromStdString(m_detailLocation->ident()));
                 }
             }
-        } // of location is an airport
-    } // of m_location is valid
+        } else { // not an aiport, must be a navaid
+            locationSet.insert("location-navaid", QString::fromStdString(m_location->ident()));
+            locationSet.insert("vicinity-lat", m_location->geod().getLatitudeDeg());
+            locationSet.insert("vicinity-lon", m_location->geod().getLongitudeDeg());
+
+        } // of m_location is valid
+    }
 
     if (m_altitudeEnabled) {
         locationSet.insert("altitude", QVariant::fromValue(m_altitude));
