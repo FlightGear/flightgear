@@ -74,10 +74,13 @@ enum class Aggregation {
     MultiPlayer,
     Unknown,     ///< error coudln't be attributed more specifcially
     OutOfMemory, ///< seperate category to give it a custom message
-    Traffic
+    Traffic,
+    ShadersEffects
 };
 
 // these should correspond to simgear::ErrorCode enum
+// they map to translateable strings in fgdata/Translations/sys.xml
+
 string_list static_errorIds = {
     "error-missing-shader",
     "error-loading-texture",
@@ -116,7 +119,8 @@ string_list static_categoryIds = {
     "error-category-multiplayer",
     "error-category-unknown",
     "error-category-out-of-memory",
-    "error-category-traffic"};
+    "error-category-traffic",
+    "error-category-shaders"};
 
 class RecentLogCallback : public simgear::LogCallback
 {
@@ -171,6 +175,7 @@ public:
     bool _reportsDirty = false;
     std::mutex _lock;
     SGTimeStamp _nextShowTimeout;
+    bool _haveDonePostInit = false;
 
     SGPropertyNode_ptr _enabledNode;
     SGPropertyNode_ptr _displayNode;
@@ -221,6 +226,7 @@ public:
 
         bool haveShownToUser = false;
         OccurrenceVec errors;
+        bool isCritical = false;
 
         bool addOccurence(const ErrorOcurrence& err);
     };
@@ -241,7 +247,6 @@ public:
 
     void collectError(simgear::LoadFailure type, simgear::ErrorCode code, const std::string& details, const sg_location& location)
     {
-        SG_LOG(SG_GENERAL, SG_WARN, "Error:" << static_errorTypeIds.at(static_cast<int>(type)) << " from " << static_errorIds.at(static_cast<int>(code)) << "::" << details << "\n\t" << location.asString());
         ErrorOcurrence occurrence{code, type, details, location, time(nullptr)};
 
         // snapshot the top of the context stacks into our occurence data
@@ -255,9 +260,30 @@ public:
         auto it = getAggregateForOccurence(occurrence);
 
         // add to the occurence, if it's not a duplicate
-        if (it->addOccurence(occurrence)) {
-            it->lastErrorTime.stamp();
-            _reportsDirty = true;
+        if (!it->addOccurence(occurrence)) {
+            return; // duplicate, nothing else to do
+        }
+
+        // log it once we know it's not a duplicate
+        SG_LOG(SG_GENERAL, SG_WARN, "Error:" << static_errorTypeIds.at(static_cast<int>(type)) << " from " << static_errorIds.at(static_cast<int>(code)) << "::" << details << "\n\t" << location.asString());
+
+        it->lastErrorTime.stamp();
+        _reportsDirty = true;
+
+        const auto ty = it->type;
+        // decide if it's a critical error or not
+        if ((ty == Aggregation::OutOfMemory) || (ty == Aggregation::InputDevice)) {
+            it->isCritical = true;
+        }
+
+        // aircraft errors are critical if they occur during initial
+        // aircraft load, otherwise we just show the warning
+        if (!_haveDonePostInit && (ty == Aggregation::MainAircraft)) {
+            it->isCritical = true;
+        }
+
+        if (code == simgear::ErrorCode::LoadEffectsShaders) {
+            it->isCritical = true;
         }
     }
 
@@ -329,9 +355,16 @@ public:
             return report.parameter.empty() ? true : report.parameter == a.parameter;
         });
         assert(it != _aggregated.end());
-        _activeReportIndex = std::distance(_aggregated.begin(), it);
+        _activeReportIndex = static_cast<int>(std::distance(_aggregated.begin(), it));
+        _displayNode->setBoolValue("index", _activeReportIndex);
+        _displayNode->setBoolValue("have-next", _activeReportIndex < (_aggregated.size() - 1));
+        _displayNode->setBoolValue("have-previous", _activeReportIndex > 0);
+    }
 
-        flightgear::sentryReportUserError(static_categoryIds.at(catId), detailsTextStream.str());
+    void sendReportToSentry(AggregateReport& report)
+    {
+        const int catId = static_cast<int>(report.type);
+        flightgear::sentryReportUserError(static_categoryIds.at(catId), _displayNode->getStringValue());
     }
 
     void writeReportToStream(const AggregateReport& report, std::ostream& os) const;
@@ -341,6 +374,7 @@ public:
 
     bool dismissReportCommand(const SGPropertyNode* args, SGPropertyNode*);
     bool saveReportCommand(const SGPropertyNode* args, SGPropertyNode*);
+    bool showErrorReportCommand(const SGPropertyNode* args, SGPropertyNode*);
 };
 
 auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorReporter::ErrorReporterPrivate::ErrorOcurrence& oc)
@@ -425,6 +459,13 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
         // check if it's an add-on and use that
 
         return getAggregate(Aggregation::FGData);
+    }
+
+    // becuase we report shader errors from the main thread, they don't
+    // get attributed. Collect them into their own category, which also
+    // means we can display a more specific message
+    if (oc.code == simgear::ErrorCode::LoadEffectsShaders) {
+        return getAggregate(Aggregation::ShadersEffects);
     }
 
     return getAggregate(Aggregation::Unknown);
@@ -519,10 +560,48 @@ bool ErrorReporter::ErrorReporterPrivate::dismissReportCommand(const SGPropertyN
 
     // clear any values underneath displayNode?
 
-
     _nextShowTimeout.stamp();
     _reportsDirty = true; // set this so we check for another report to present
     _activeReportIndex = -1;
+
+    return true;
+}
+
+bool ErrorReporter::ErrorReporterPrivate::showErrorReportCommand(const SGPropertyNode* args, SGPropertyNode*)
+{
+    std::lock_guard<std::mutex> g(_lock);
+
+    if (_aggregated.empty()) {
+        return false;
+    }
+
+    const auto numAggregates = static_cast<int>(_aggregated.size());
+    if (args->getBoolValue("next")) {
+        _activeReportIndex++;
+        if (_activeReportIndex >= numAggregates) {
+            return false;
+        }
+    } else if (args->getBoolValue("previous")) {
+        if (_activeReportIndex < 1) {
+            return false;
+        }
+        _activeReportIndex--;
+    } else if (args->hasChild("index")) {
+        _activeReportIndex = args->getIntValue("index");
+        if ((_activeReportIndex < 0) || (_activeReportIndex >= numAggregates)) {
+            return false;
+        }
+    } else {
+        _activeReportIndex = 0;
+    }
+
+    auto& report = _aggregated.at(_activeReportIndex);
+    presentErrorToUser(report);
+
+    auto gui = globals->get_subsystem<NewGUI>();
+    if (!gui->getDialog("error-report")) {
+        gui->showDialog("error-report");
+    }
 
     return true;
 }
@@ -663,8 +742,24 @@ void ErrorReporter::preinit()
 
 void ErrorReporter::init()
 {
+    // we want to disable errors in developer mode, but since self-compiled
+    // builds default to developer-mode=true, need an override so people
+    // can see errors if they want
+    const auto developerMode = fgGetBool("sim/developer-mode");
+    const auto disableInDeveloperMode = !d->_enabledNode->getParent()->getBoolValue("enable-in-developer-mode");
+    const auto dd = developerMode && disableInDeveloperMode;
+
+    if (dd || !d->_enabledNode) {
+        SG_LOG(SG_GENERAL, SG_INFO, "Error reporting disabled");
+        simgear::setFailureCallback(simgear::FailureCallback());
+        simgear::setErrorContextCallback(simgear::ContextCallback());
+        sglog().removeCallback(d->_logCallback.get());
+        return;
+    }
+
     globals->get_commands()->addCommand("dismiss-error-report", d.get(), &ErrorReporterPrivate::dismissReportCommand);
     globals->get_commands()->addCommand("save-error-report-data", d.get(), &ErrorReporterPrivate::saveReportCommand);
+    globals->get_commands()->addCommand("show-error-report", d.get(), &ErrorReporterPrivate::showErrorReportCommand);
 
     // cache these values here
     d->_fgdataPathPrefix = globals->get_fg_root().utf8Str();
@@ -674,11 +769,19 @@ void ErrorReporter::init()
 void ErrorReporter::update(double dt)
 {
     bool showDialog = false;
+    bool showPopup = false;
     bool havePendingReports = false;
 
     // beginning of locked section
     {
         std::lock_guard<std::mutex> g(d->_lock);
+        if (!d->_enabledNode->getBoolValue()) {
+            return;
+        }
+
+        // we are into the update phase (postinit has ocurred). We treat errors
+        // after this point with lower severity, to avoid popups into a flight
+        d->_haveDonePostInit = true;
 
         SGTimeStamp n = SGTimeStamp::now();
 
@@ -715,7 +818,13 @@ void ErrorReporter::update(double dt)
             const auto ageSec = (n - report.lastErrorTime).toSecs();
             if (ageSec > NoNewErrorsTimeout) {
                 d->presentErrorToUser(report);
-                showDialog = true;
+                if (report.isCritical) {
+                    showDialog = true;
+                } else {
+                    showPopup = true;
+                }
+
+                d->sendReportToSentry(report);
 
                 // if we show one report, don't consider any others for now
                 break;
@@ -729,8 +838,9 @@ void ErrorReporter::update(double dt)
         }
     } // end of locked section
 
-    if (showDialog && flightgear::isHeadlessMode()) {
+    if (flightgear::isHeadlessMode()) {
         showDialog = false;
+        showPopup = false;
     }
 
     // do not call into another subsystem with our lock held,
@@ -738,7 +848,6 @@ void ErrorReporter::update(double dt)
     if (showDialog) {
         auto gui = globals->get_subsystem<NewGUI>();
         gui->showDialog("error-report");
-
         // this needs a bit more thought, disabling for the now
 #if 0
         // pause the sim when showing the popup
@@ -746,14 +855,21 @@ void ErrorReporter::update(double dt)
         pauseArgs->setBoolValue("force-pause", true);
         globals->get_commands()->execute("do_pause", pauseArgs);
 #endif
+    } else if (showPopup) {
+        SGPropertyNode_ptr popupArgs(new SGPropertyNode);
+        popupArgs->setIntValue("index", d->_activeReportIndex);
+        globals->get_commands()->execute("show-error-notification-popup", popupArgs, nullptr);
     }
 }
 
 void ErrorReporter::shutdown()
 {
-    globals->get_commands()->removeCommand("dismiss-error-report");
-    globals->get_commands()->removeCommand("save-error-report-data");
-    sglog().removeCallback(d->_logCallback.get());
+    if (d->_enabledNode) {
+        globals->get_commands()->removeCommand("dismiss-error-report");
+        globals->get_commands()->removeCommand("save-error-report-data");
+        globals->get_commands()->removeCommand("show-error-report");
+        sglog().removeCallback(d->_logCallback.get());
+    }
 }
 
 std::string ErrorReporter::threadSpecificContextValue(const std::string& key)
