@@ -365,7 +365,8 @@ public:
     void sendReportToSentry(AggregateReport& report)
     {
         const int catId = static_cast<int>(report.type);
-        flightgear::sentryReportUserError(static_categoryIds.at(catId), _displayNode->getStringValue());
+        flightgear::sentryReportUserError(static_categoryIds.at(catId), 
+            _displayNode->getStringValue("details-text"));
     }
 
     void writeReportToStream(const AggregateReport& report, std::ostream& os) const;
@@ -854,6 +855,11 @@ void ErrorReporter::update(double dt)
         showDialog = false;
         showPopup = false;
     }
+
+// don't show any error reporting UI on stable, for the moment.
+    showDialog = false;
+    showPopup = false;
+
 
     // do not call into another subsystem with our lock held,
     // as this can trigger deadlocks
