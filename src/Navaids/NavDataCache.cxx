@@ -339,7 +339,7 @@ public:
       int schemaVersion = outer->readIntProperty("schema-version");
       if (schemaVersion != SCHEMA_VERSION) {
         SG_LOG(SG_NAVCACHE, SG_INFO, "Navcache schema mismatch, will rebuild");
-        throw sg_exception("Navcache schema has changed");
+          throw sg_exception("Navcache schema has changed", {}, {}, false);
       }
     }
 
