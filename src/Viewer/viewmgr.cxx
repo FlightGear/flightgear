@@ -185,6 +185,41 @@ FGViewMgr::update (double dt)
     }
 
     SviewUpdate(dt);
+    
+    std::string callsign = globals->get_props()->getStringValue("/sim/log-multiplayer-callsign");
+    if (callsign != "")
+    {
+        auto multiplayers = globals->get_props()->getNode("/ai/models")->getChildren("multiplayer");
+        for (auto mutiplayer: multiplayers)
+        {
+            std::string callsign2 = mutiplayer->getStringValue("callsign");
+            if (callsign2 == callsign)
+            {
+                static SGVec3d pos_prev;
+                static double t = 0;
+                SGGeod  pos_geod = SGGeod::fromDegFt(
+                        mutiplayer->getDoubleValue("position/longitude-deg"),
+                        mutiplayer->getDoubleValue("position/latitude-deg"),
+                        mutiplayer->getDoubleValue("position/altitude-ft")
+                        );
+                SGVec3d pos = SGVec3d::fromGeod(pos_geod);
+                double distance = length(pos - pos_prev);
+                double speed = distance / dt;
+
+                SGPropertyNode* item = fgGetNode("/sim/log-multiplayer", true /*create*/)->addChild("mp");
+                item->setDoubleValue("distance", distance);
+                item->setDoubleValue("speed", speed);
+                item->setDoubleValue("dt", dt);
+                item->setDoubleValue("t", t);
+                item->setDoubleValue("ubody", mutiplayer->getDoubleValue("velocities/uBody-fps"));
+                item->setDoubleValue("vbody", mutiplayer->getDoubleValue("velocities/vBody-fps"));
+                item->setDoubleValue("wbody", mutiplayer->getDoubleValue("velocities/wBody-fps"));
+                pos_prev = pos;
+                t += dt;
+                break;
+            }
+        }
+    }
 }
 
 void FGViewMgr::clear()

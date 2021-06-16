@@ -1111,7 +1111,7 @@ FGMultiplayMgr::init (void)
 
   int txRateHz = fgGetInt("/sim/multiplay/tx-rate-hz", 10);
   if (txRateHz < 1) {
-      txRateHz = 10;
+      txRateHz = 1;
   }
 
   mDt = 1.0 / txRateHz;

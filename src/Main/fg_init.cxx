@@ -1011,6 +1011,7 @@ void fgCreateSubsystems(bool duringReset) {
     {
         globals->add_new_subsystem<PerformanceDB>(SGSubsystemMgr::POST_FDM);
         globals->add_subsystem("ATC", new FGATCManager, SGSubsystemMgr::POST_FDM);
+        globals->add_subsystem("ai-model", new FGAIManager, SGSubsystemMgr::POST_FDM);
         globals->add_subsystem("mp", new FGMultiplayMgr, SGSubsystemMgr::POST_FDM);
 
         #ifdef ENABLE_SWIFT
@@ -1033,7 +1034,7 @@ void fgCreateSubsystems(bool duringReset) {
         globals->add_new_subsystem<FGReplay>(SGSubsystemMgr::POST_FDM)
                 ->init(); // Special case.
 
-        globals->add_subsystem("ai-model", new FGAIManager, SGSubsystemMgr::POST_FDM);
+        //globals->add_subsystem("ai-model", new FGAIManager, SGSubsystemMgr::POST_FDM);
         globals->add_subsystem("submodel-mgr", new FGSubmodelMgr, SGSubsystemMgr::POST_FDM);
 
         // It's probably a good idea to initialize the top level traffic manager

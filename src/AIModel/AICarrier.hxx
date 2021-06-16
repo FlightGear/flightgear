@@ -117,6 +117,7 @@ private:
     void UpdateJBD(double dt);
 
     bool                 _AIControl                               = false;    // under AI control. Either this or MPControl will be true
+    SGPropertyNode_ptr   _ai_latch_node;
     SGPropertyNode_ptr   _altitude_node;                                      
     double               _angled_deck_degrees                     = -8.55;    // angled deck offset from carrier heading. usually negative
     double               _base_course                             = 0;        
@@ -137,6 +138,7 @@ private:
     double               _flolsHeadingOffsetDeg                   = 0.0;      /// angle in degrees offset from the carrier centerline
     SGVec3d              _flolsPosOffset;                                     
     SGVec3d              _flolsTouchdownPosition;                             
+    SGPropertyNode_ptr   _heading_node;
     bool                 _in_to_wind                              = false;    
     bool                 _jbd                                     = false;    
     double               _jbd_elevator_pos_norm                   = 0;        
@@ -154,11 +156,13 @@ private:
     double               _min_lon                                 = 0;        
     SGGeod               _mOpBoxPos;                                          // operational box limit for carrier.
     bool                 _MPControl                               = false;    // being controlled by MP. Either this or AIControl will be true
+    SGPropertyNode_ptr   _pitch_node;
     list<ParkPosition>   _ppositions;                                         // List of positions where an aircraft can start.
     double               _rel_wind                                = 0;        
     double               _rel_wind_from_deg                       = 0;        
     double               _rel_wind_speed_kts                      = 0;        
     bool                 _returning                               = false;    // set if the carrier is returning to an operating box
+    SGPropertyNode_ptr   _roll_node;
     string               _sign;                                               // The sign (pennant) of this carrier; e.g. CVN-68
     SGPropertyNode_ptr   _surface_wind_from_deg_node;                         
     SGPropertyNode_ptr   _surface_wind_speed_node;                            
@@ -176,6 +180,7 @@ private:
     double               _wind_from_east                          = 0;        // fps
     double               _wind_from_north                         = 0;        // fps
     double               _wind_speed_kts                          = 0;        //true wind speed
+    SGPropertyNode_ptr   _is_user_craft;
 
 
 };

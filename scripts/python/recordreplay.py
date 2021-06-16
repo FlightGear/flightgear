@@ -95,7 +95,7 @@ class Fg:
     self.fg is a FlightGear.FlightGear instance, which uses telnet to
     communicate with Flightgear.
     '''
-    def __init__(self, aircraft, args, env=None, telnet_port=None):
+    def __init__(self, aircraft, args, env=None, telnet_port=None, telnet_hz=None, out=None):
         '''
         aircraft:
             Specified as: --aircraft={aircraft}. This is separate from <args>
@@ -105,6 +105,9 @@ class Fg:
             dict.
         env:
             Environment to set. If DISPLAY is not in <env> we add 'DISPLAY=:0'.
+        telnet_port:
+        telnet_hz:
+            .
         '''
         self.child = None
         self.aircraft = aircraft
@@ -112,7 +115,10 @@ class Fg:
         
         if telnet_port is None:
             telnet_port = 5500
-        args += f' --telnet={telnet_port}'
+        if telnet_hz is None:
+            args += f' --telnet={telnet_port}'
+        else:
+            args += f' --telnet=_,_,{telnet_hz},_,{telnet_port},_'
         args += f' --prop:/sim/replay/tape-directory={g_tapedir}'
         
         args2 = args.split()
@@ -139,10 +145,14 @@ class Fg:
             except Exception as e:
                 log(f'*** preexec failed with e={e}')
                 raise
+        if out:
+            out = open(out, 'w')
         self.child = subprocess.Popen(
                 args2,
                 env=environ,
                 preexec_fn=preexec,
+                stdout=out,
+                stderr=subprocess.STDOUT,
                 )
         
         # Connect to flightgear's telnet server.
@@ -564,6 +574,102 @@ def test_motion(fgfs, multiplayer=False):
     log('test_motion() passed')
 
 
+def test_carrier(fgfs):
+    '''
+    Checks that mp carrier motion is even.
+    '''
+    # We require simple-time. Can probably also work by setting the default
+    # timing system's lag parameters but haven't figured this out yet.
+    #
+    simple_time = 'true'
+    fg = Fg( 'harrier-gr3',
+            f'{fgfs} --prop:int:/sim/mp-carriers/latch-always=1 --prop:bool:/sim/time/simple-time/enabled={simple_time} --callsign=cgdae3 --airport=ksfo',
+            telnet_port=5500,
+            telnet_hz=100,
+            #out='out-rr-carrier-1',
+            )
+    fg.waitfor('/sim/fdm-initialized', 1, timeout=45)
+    
+    fg_carrier = Fg('Nimitz',
+            f'{fgfs} --prop:int:/sim/mp-carriers/latch-always=1 --prop:bool:/sim/time/simple-time/enabled={simple_time} --callsign=cgdae4 --multiplay=in,1,,5033 --read-only',
+            telnet_port=5501,
+            #out='out-rr-carrier-2',
+            )
+    fg_carrier.waitfor('/sim/fdm-initialized', 1, timeout=45)
+    
+    fg.fg['/sim/replay/log-raw-speed-multiplayer'] = 'cgdae4'
+    fg.fg['/sim/log-multiplayer-callsign'] = 'cgdae4'
+    
+    def get_items(path, leafname, out=None):
+        '''
+        Finds list of tuples from properties <path>/<leafname>[]/*. Appends new
+        items to <out> and returns new items.
+        
+        Runs rather slowly because telnet commands appear to be throttled.
+        '''
+        if out is None:
+            out = []
+        out_len_original = len(out)
+        items = fg.fg.ls(path)
+        i = 0
+        for item_i, item in enumerate(items):
+            if item.name == leafname:
+                if i == len(out):
+                    #print(f'len(items)={len(items)} item_i={item_i}: looking at {path}/{leafname}[{item.index}]')
+                    class Item:
+                        pass
+                    item2 = Item()
+                    item2.i = i
+                    for j in fg.fg.ls(f'{path}/{leafname}[{item.index}]'):
+                        setattr( item2, j.name, j)
+                    out.append(item2)
+                i += 1
+        return out[out_len_original:]
+    
+    t0 = time.time()
+    mps = []
+    mppackets = []
+    while 1:
+        time.sleep(1)
+        t = time.time() - t0
+        log(f'test_carrier(): t={t:.1f}')
+        if t > 60:
+            print(f'finished, t={t}')
+            break
+        mps_new         = get_items( '/sim/log-multiplayer', 'mp', mps)
+        mppackets_new   = get_items( '/sim/log-multiplayer', 'mppacket', mppackets)
+        for mp in mps_new:
+            log(f'test_carrier():     mp: i={mp.i}:'
+                    f' speed={mp.speed.value:20}'
+                    f' distance={mp.distance.value:20}'
+                    f' t={mp.t.value:20}'
+                    f' dt={mp.dt.value:20}={mp.dt.value*120:20}/120'
+                    f' ubody={mp.ubody.value:20}'
+                    f' vbody={mp.vbody.value:20}'
+                    f' wbody={mp.wbody.value:20}'
+                    )
+        for mppacket in mppackets_new:
+            log(f'test_carrier():     mppacket: i={mppacket.i}:'
+                    f' speed={mppacket.speed.value:20}'
+                    f' distance={mppacket.distance.value:20}'
+                    f' t={mppacket.t.value:20}'
+                    f' linear_vel={mppacket.linear_vel.value:20}'
+                    f' dt={mppacket.dt.value:20}={mppacket.dt.value*120:20}/120'
+                    )
+    
+    # Check speed of multiplayer carrier is constant:
+    knots2si = 1852.0/3600
+    speed_expected = 10 * knots2si
+    num_incorrect = 0
+    for mp in mps[2:]:  # First two items have bogus values.
+        delta = mp.speed.value - speed_expected
+        if abs(delta) > 0.001:
+            num_incorrect += 1
+            print(f'    * speed={mp.speed.value:20}')
+    assert num_incorrect == 0, f'num_incorrect={num_incorrect}'
+    fg.close()
+    fg_carrier.close()
+
 if __name__ == '__main__':
 
     fgfs = f'./build-walk/fgfs.exe-run.sh'
@@ -589,6 +695,8 @@ if __name__ == '__main__':
             break
         if arg == '--all':
             do_all = True
+        elif arg == '--carrier':
+            do_test = 'carrier'
         elif arg == '--continuous':
             continuous_s = map(int, next(args).split(','))
         elif arg == '--tape-dir':
@@ -616,8 +724,12 @@ if __name__ == '__main__':
             raise Exception(f'Unrecognised arg: {arg!r}')
     
     g_tapedir = os.path.abspath(g_tapedir)
-    
-    if do_test == 'motion':
+    os.makedirs( g_tapedir, exist_ok=True)
+    if 0:
+        pass
+    elif do_test == 'carrier':
+        test_carrier(fgfs)
+    elif do_test == 'motion':
         test_motion( fgfs)
     elif do_test == 'motion-mp':
         test_motion( fgfs, True)

@@ -161,10 +161,22 @@ void FGAICarrier::update(double dt) {
     // Now update the position and heading. This will compute new hdg and
     // roll values required for the rotation speed computation.
     FGAIShip::update(dt);
+    
+    if (_is_user_craft->getBoolValue()) {
+        _latitude_node->setDoubleValue(pos.getLatitudeDeg());
+        _longitude_node->setDoubleValue(pos.getLongitudeDeg());
+        _altitude_node->setDoubleValue(pos.getElevationFt());
+        _heading_node->setDoubleValue(hdg);
+        _pitch_node->setDoubleValue(pitch);
+        _roll_node->setDoubleValue(roll);
+    }
 
     //automatic turn into wind with a target wind of 25 kts otd
     //SG_LOG(SG_AI, SG_ALERT, "AICarrier: MPControl " << MPControl << " AIControl " << AIControl);
-    if (!_MPControl && _AIControl){
+    if (strcmp(_ai_latch_node->getStringValue(), "")) {
+        SG_LOG(SG_AI, SG_DEBUG, "FGAICarrier::update(): not updating because ai-latch=" << _ai_latch_node->getStringValue());
+    }
+    else if (!_MPControl && _AIControl){
 
         if(_turn_to_launch_hdg){
             TurnToLaunch();
@@ -317,6 +329,9 @@ bool FGAICarrier::init(ModelSearchOrder searchOrder) {
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);
     _altitude_node = fgGetNode("/position/altitude-ft", true);
+    _heading_node = fgGetNode("/orientation/true-heading-deg", true);
+    _pitch_node = fgGetNode("/orientation/pitch-deg", true);
+    _roll_node = fgGetNode("/orientation/roll-deg", true);
 
     _launchbar_state_node = fgGetNode("/gear/launchbar/state", true);
 
@@ -364,7 +379,9 @@ bool FGAICarrier::init(ModelSearchOrder searchOrder) {
 
 void FGAICarrier::bind(){
     FGAIShip::bind();
-
+    _is_user_craft = props->getNode("is-user-craft", true /*create*/);
+    _ai_latch_node = props->getNode("ai-latch", true /*create*/);
+    
     props->untie("velocities/true-airspeed-kt");
 
     props->getNode("position/deck-altitude-feet", true)->setDoubleValue(_deck_altitude_ft);

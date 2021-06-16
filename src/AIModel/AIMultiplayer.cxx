@@ -118,7 +118,10 @@ void FGAIMultiplayer::bind() {
     _uBodyNode = props->getNode("velocities/uBody-fps", true);
     _vBodyNode = props->getNode("velocities/vBody-fps", true);
     _wBodyNode = props->getNode("velocities/wBody-fps", true);
-
+    
+    m_node_ai_latch = props->getNode("ai-latch", true /*create*/);
+    m_node_log_multiplayer = globals->get_props()->getNode("/sim/log-multiplayer-callsign", true /*create*/);
+    
 #define AIMPROProp(type, name) \
 SGRawValueMethods<FGAIMultiplayer, type>(*this, &FGAIMultiplayer::get##name)
 
@@ -257,10 +260,11 @@ void FGAIMultiplayer::FGAIMultiplayerExtrapolate(
     double t = tInterp - nextIt->first;
     if (!motion_logging)
     {
+        props->setDoubleValue("lag/extrapolation-t", t);
         if (t > 3)
         {
             t = 3;
-            props->setBoolValue("lag/extrapolation-range-error", true);
+            props->setBoolValue("lag/extrapolation-out-of-range", true);
         }
         else
         {
@@ -277,10 +281,14 @@ void FGAIMultiplayer::FGAIMultiplayerExtrapolate(
     SGVec3d ecAcc = toVec3d(ecOrient.backTransform(motionInfo.linearAccel));
 
     double normVel = norm(ecVel);
-
+    double normAngularVel = norm(angularVel);
+    props->setDoubleValue("lag/norm-vel", normVel);
+    props->setDoubleValue("lag/norm-angular-vel", normAngularVel);
+    
     // not doing rotationnal prediction for small speed or rotation rate,
     // to avoid agitated parked plane
-    if (( norm(angularVel) > 0.05 ) || ( normVel > 1.0 ))
+    
+    if (( normAngularVel > 0.05 ) || ( normVel > 1.0 ))
     {
         ecOrient += t*ecOrient.derivative(angularVel);
     }
@@ -704,6 +712,64 @@ void FGAIMultiplayer::update(double dt)
     _uBodyNode->setValue(ecLinearVel[0] * SG_METER_TO_FEET);
     _vBodyNode->setValue(ecLinearVel[1] * SG_METER_TO_FEET);
     _wBodyNode->setValue(ecLinearVel[2] * SG_METER_TO_FEET);
+    
+    double knots2si = 1852.0/3600;      // Knots to metres/sec.
+    double ft2si = 12 * 2.54 / 100;     // Feet to metres
+    
+    if (ecLinearVel[0] == 0) {
+        // MP packets for carriers have zero ecLinearVel, but do specify
+        // velocities/speed-kts.
+        double speed_kts = props->getDoubleValue("velocities/speed-kts");
+        double speed_fps = speed_kts * knots2si / ft2si;
+        _uBodyNode->setDoubleValue(speed_fps);
+    }
+    
+    std::string ai_latch = m_node_ai_latch->getStringValue();
+    if (ai_latch != m_ai_latch) {
+        SG_LOG(SG_AI, SG_ALERT, "latching _callsign=" << _callsign << " to mp " << ai_latch);
+        m_ai_latch = ai_latch;
+        SGPropertyNode* mp_node = globals->get_props()->getNode(ai_latch, false /*create*/);
+        m_node_ai_latch_latitude = mp_node ? mp_node->getNode("position/latitude-deg", true /*create*/) : nullptr;
+        m_node_ai_latch_longitude = mp_node ? mp_node->getNode("position/longitude-deg", true /*create*/) : nullptr;
+        m_node_ai_latch_altitude = mp_node ? mp_node->getNode("position/altitude-ft", true /*create*/) : nullptr;
+        m_node_ai_latch_heading = mp_node ? mp_node->getNode("orientation/true-heading-deg", true /*create*/) : nullptr;
+        m_node_ai_latch_pitch = mp_node ? mp_node->getNode("orientation/pitch-deg", true /*create*/) : nullptr;
+        m_node_ai_latch_roll = mp_node ? mp_node->getNode("orientation/roll-deg", true /*create*/) : nullptr;
+        m_node_ai_latch_ubody_fps = mp_node ? mp_node->getNode("velocities/uBody-fps", true /*create*/) : nullptr;
+        m_node_ai_latch_vbody_fps = mp_node ? mp_node->getNode("velocities/vBody-fps", true /*create*/) : nullptr;
+        m_node_ai_latch_wbody_fps = mp_node ? mp_node->getNode("velocities/wBody-fps", true /*create*/) : nullptr;
+        m_node_ai_latch_speed_kts = mp_node ? mp_node->getNode("velocities/speed-kts", true /*create*/) : nullptr;
+    }
+    if (ai_latch != "") {
+        SGPropertyNode* mp_node = globals->get_props()->getNode(ai_latch, true /*create*/);
+        assert(m_node_ai_latch_latitude->getPath() == mp_node->getNode("position/latitude-deg")->getPath());
+        m_node_ai_latch_latitude->setDoubleValue(pos.getLatitudeDeg());
+        m_node_ai_latch_longitude->setDoubleValue(pos.getLongitudeDeg());
+        m_node_ai_latch_altitude->setDoubleValue(pos.getElevationFt());
+        m_node_ai_latch_heading->setDoubleValue(hDeg);
+        m_node_ai_latch_pitch->setDoubleValue(pitch);
+        m_node_ai_latch_roll->setDoubleValue(roll);
+        m_node_ai_latch_ubody_fps->setDoubleValue(_uBodyNode->getDoubleValue());
+        m_node_ai_latch_vbody_fps->setDoubleValue(_vBodyNode->getDoubleValue());
+        m_node_ai_latch_wbody_fps->setDoubleValue(_wBodyNode->getDoubleValue());
+        
+        // /ai/models/carrier[]/velocities/speed-kts seems to be used
+        // to calculate friction between carrier deck and our aircraft
+        // undercarriage when brakes are on, so we set it here from
+        // /ai/models/multiplayer[]/velocities/uBody-fps.
+        //
+        // [We could possibly use
+        // /ai/models/multiplayer[]/velocities/true-airspeed-kt instead, but
+        // seems nicer to use uBody.]
+        //
+        // [todo: use rate of change of heading to calculating
+        // movement/rotation of the ship under the aircraft, so aircraft
+        // doesn't slip when carrier changes course. Also would be good to
+        // handle vbody and wbody?]
+        //
+        m_node_ai_latch_speed_kts->setDoubleValue(_uBodyNode->getDoubleValue() * ft2si / knots2si);
+    }
+    assert(m_node_ai_latch == props->getNode("ai-latch"));
 
     //SG_LOG(SG_AI, SG_DEBUG, "Multiplayer position and orientation: " << ecPos << ", " << hlOr);
 
@@ -844,6 +910,32 @@ FGAIMultiplayer::addMotionInfo(FGExternalMotionData& motionInfo,
     // properties list in given/returned object, so former owner won't deallocate them.
     motionInfo.properties.clear();
   
+    {
+        // Gather data on multiplayer speed, used by scripts/python/recordreplay.py.
+        //
+        if (m_node_log_multiplayer->getStringValue() == this->_callsign)
+        {
+            static SGVec3d pos_prev;
+            static double t_prev = 0;
+            
+            double distance = length(motionInfo.position - pos_prev);
+            double dt = motionInfo.time - t_prev;
+            double speed = distance / dt;
+            
+            double linear_vel = norm(motionInfo.linearVel);
+            
+            SGPropertyNode* item = fgGetNode("/sim/log-multiplayer", true /*create*/)->addChild("mppacket");
+            item->setDoubleValue("distance", distance);
+            item->setDoubleValue("speed", speed);
+            item->setDoubleValue("dt", dt);
+            item->setDoubleValue("linear_vel", linear_vel);
+            item->setDoubleValue("t", motionInfo.time );
+            
+            pos_prev = motionInfo.position;
+            t_prev = motionInfo.time;
+        }
+    }
+    
 }
 
 void

@@ -369,16 +369,26 @@ FGProps::PropsChannel::foundTerminator()
             } else if (command == "ls2") {
                 SGPropertyNode* dir = globals->get_props()->getNode(tokens[1]);
                 if (dir) {
-                    for (int i = 0; i < dir->nChildren(); i++) {
+                    int n = dir->nChildren();
+                    for (int i = 0; i < n; i++) {
                         SGPropertyNode* child = dir->getChild(i);
-                        string line = std::to_string(child->nChildren())
-                                + " " + child->getNameString()
-                                + " " + std::to_string(child->getIndex())
-                                + " " + getValueTypeString(child)
-                                + " " + simgear::strutils::replace(child->getStringValue(), "\n", "\\n")
-                                + getTerminator()
+                        std::ostringstream text;
+                        text
+                                << child->nChildren()
+                                << ' ' << child->getNameString()
+                                << ' ' << child->getIndex()
+                                << ' ' << getValueTypeString(child)
                                 ;
-                        push( line.c_str() );
+                        if (child->getType() == simgear::props::DOUBLE) {
+                            // Use extra precision so we can represent UTC times.
+                            text << ' ' << std::setprecision(16) << child->getDoubleValue();
+                        }
+                        else {
+                            text << ' ' << simgear::strutils::replace(child->getStringValue(), "\n", "\\n");
+                        }
+                        text << getTerminator();
+                        //SG_LOG(SG_GENERAL, SG_ALERT, "n=" << n << " i=" << i << " pushing: " << text.str());
+                        push( text.str().c_str());
                     }
                 }
             } else if ( command == "dump" ) {

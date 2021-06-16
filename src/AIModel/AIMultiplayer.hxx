@@ -187,6 +187,21 @@ private:
   
   // For use with scripts/python/recordreplay.py --test-motion-mp.
   SGPropertyNode_ptr mLogRawSpeedMultiplayer;
+  
+  SGPropertyNode_ptr    m_node_ai_latch;
+  std::string           m_ai_latch;
+  SGPropertyNode_ptr    m_node_ai_latch_latitude;
+  SGPropertyNode_ptr    m_node_ai_latch_longitude;
+  SGPropertyNode_ptr    m_node_ai_latch_altitude;
+  SGPropertyNode_ptr    m_node_ai_latch_heading;
+  SGPropertyNode_ptr    m_node_ai_latch_pitch;
+  SGPropertyNode_ptr    m_node_ai_latch_roll;
+  SGPropertyNode_ptr    m_node_ai_latch_ubody_fps;
+  SGPropertyNode_ptr    m_node_ai_latch_vbody_fps;
+  SGPropertyNode_ptr    m_node_ai_latch_wbody_fps;
+  SGPropertyNode_ptr    m_node_ai_latch_speed_kts;
+  
+  SGPropertyNode_ptr    m_node_log_multiplayer;
 };
 
 #endif  // _FG_AIMultiplayer_HXX

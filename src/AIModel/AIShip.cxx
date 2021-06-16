@@ -209,7 +209,12 @@ void FGAIShip::bind() {
         SGRawValuePointer<bool>(&_restart));
     tie("velocities/speed-kts",
         SGRawValuePointer<double>(&speed));
+    tie("velocities/uBody-fps",
+        SGRawValuePointer<double>(&speed_fps));
+    // _tiedProperties is /ai/models/carrier[].
+    // this->props is /ai/models/carrier[].
 }
+
 
 void FGAIShip::update(double dt) {
     if (replay_time->getDoubleValue() <= 0)
@@ -234,8 +239,18 @@ void FGAIShip::update(double dt) {
         aip.setReferenceTime(globals->get_sim_time_sec());
 
         // Compute the velocity in m/s in the body frame
-        aip.setBodyLinearVelocity(SGVec3d(0.51444444*speed, 0, 0));
+        // <speed> is in knots.
+        double knots2si = 1852.0/3600;
+        aip.setBodyLinearVelocity(SGVec3d(speed * knots2si, 0, 0));
 
+        // Update speed_fps so that velocities/uBody-fps will be set. <speed>
+        // is in knots.
+        //
+        {
+            double knots2si = 1852.0/3600;      // Knots to metres/sec.
+            double ft2si = 12 * 2.54 / 100;     // Feet to metres
+            speed_fps = speed * knots2si / ft2si;
+        }
         FGAIBase::update(dt);
         Run(dt);
         Transform();
@@ -262,8 +277,9 @@ void FGAIShip::update(double dt) {
         }
     }
     else
+    {
         Transform();
-
+    }
 }
 
 void FGAIShip::Run(double dt) {
@@ -294,19 +310,36 @@ void FGAIShip::Run(double dt) {
     // do not allow unreasonable speeds
     SG_CLAMP_RANGE(speed, -_limit * 0.75, _limit);
 
-    // convert speed to degrees per second
-    speed_north_deg_sec = cos(hdg / SGD_RADIANS_TO_DEGREES)
-        * speed * 1.686 / ft_per_deg_lat;
-    speed_east_deg_sec = sin(hdg / SGD_RADIANS_TO_DEGREES)
-        * speed * 1.686 / ft_per_deg_lon;
-
-    // set new position
-    //cout << _name << " " << type << " run: " << _elevation_m << " " <<_elevation_ft << endl;
-    pos.setLatitudeDeg(pos.getLatitudeDeg() + speed_north_deg_sec * dt);
-    pos.setLongitudeDeg(pos.getLongitudeDeg() + speed_east_deg_sec * dt);
-    pos.setElevationFt(tgt_altitude_ft);
-    pitch = tgt_pitch;
-
+    {
+        /* The rotation rotating from the earth centerd frame to the horizontal
+        local frame. */
+        SGQuatd hlOr = SGQuatd::fromLonLat(pos);
+        
+        /* The rotation from the horizontal local frame to the basic view
+        orientation. */
+        SGQuatd hlToBody = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+        
+        /* Compute the eyepoints orientation and position wrt the earth
+        centered frame - that is global coorinates. */
+        SGQuatd ec2body = hlOr * hlToBody;
+        
+        /* The cartesian position of the basic view coordinate. */
+        SGVec3d position = SGVec3d::fromGeod(pos);
+        
+        /* This is rotates the x-forward, y-right, z-down coordinate system the
+        where simulation runs into the OpenGL camera system with x-right, y-up,
+        z-back. */
+        SGQuatd q(-0.5, -0.5, 0.5, 0.5);
+        
+        double knots2si = 1852.0/3600;
+        
+        SGVec3d offset(0, 0, -speed * knots2si * dt);
+        position += (ec2body * q).backTransform(offset);
+        pos = SGGeod::fromCart(position);
+        
+        pitch = tgt_pitch;
+    }
+    
     // adjust heading based on current _rudder angle
     if (turn_radius_ft <= 0)
         turn_radius_ft = 0; // don't allow nonsense values

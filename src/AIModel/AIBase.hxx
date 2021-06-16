@@ -196,6 +196,7 @@ protected:
     double roll;        // degrees, left is negative
     double pitch;       // degrees, nose-down is negative
     double speed;       // knots true airspeed
+    double speed_fps;   // fps true airspeed
     double altitude_ft; // feet above sea level
     double vs_fps;      // vertical speed
     double speed_north_deg_sec;
