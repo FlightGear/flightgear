@@ -288,6 +288,7 @@ void registerMainLoop()
 
 void unregisterMainLoopProperties()
 {
+    nasal::shutdownMainLoopRecipient();
     frame_signal.reset();
     nasal_gc_threaded.reset();
     nasal_gc_threaded_wait.reset();
