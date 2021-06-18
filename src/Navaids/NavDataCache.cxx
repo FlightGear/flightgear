@@ -384,28 +384,45 @@ public:
     NavDataCache::DatFileType datFileType,
     bool verbose);
 
-  void callSqlite(int result, const string& sql)
-  {
-    if (result == SQLITE_OK)
-      return; // all good
+    
+    sqlite3_stmt_ptr prepareSQL(const std::string& sql)
+    {
+        sqlite3_stmt_ptr stmt;
+        int result = sqlite3_prepare_v2(db, sql.c_str(), sql.length(), &stmt, nullptr);
+        int retries = 0;
+        int retryMSec = 1;
+        
+        while (result == SQLITE_BUSY) {
+            if (retries > MAX_RETRIES) {
+                break;
+            }
+            
+            ++retries;
+            SGTimeStamp::sleepForMSec(retryMSec);
+            retryMSec = retryMSec << 1; // double each time
+            // try again
+            result = sqlite3_prepare_v2(db, sql.c_str(), sql.length(), &stmt, nullptr);
+        }
+        
+        if (result == SQLITE_OK) {
+            return stmt; // common case, all good
+        }
+        
+      string errMsg;
+      if (result == SQLITE_MISUSE) {
+        errMsg = "Sqlite API abuse";
+        SG_LOG(SG_NAVCACHE, SG_ALERT, "Sqlite API abuse");
+      } else {
+        errMsg = sqlite3_errmsg(db);
+        SG_LOG(SG_NAVCACHE, SG_ALERT, "Sqlite error:" << errMsg << " running:\n\t" << sql);
+      }
 
-    string errMsg;
-    if (result == SQLITE_MISUSE) {
-      errMsg = "Sqlite API abuse";
-      SG_LOG(SG_NAVCACHE, SG_ALERT, "Sqlite API abuse");
-    } else {
-      errMsg = sqlite3_errmsg(db);
-      SG_LOG(SG_NAVCACHE, SG_ALERT, "Sqlite error:" << errMsg << " running:\n\t" << sql);
+      throw sg_exception("Sqlite error:" + errMsg, sql);
     }
-
-    throw sg_exception("Sqlite error:" + errMsg, sql);
-  }
 
   void runSQL(const string& sql)
   {
-    sqlite3_stmt_ptr stmt;
-    callSqlite(sqlite3_prepare_v2(db, sql.c_str(), sql.length(), &stmt, NULL), sql);
-
+      sqlite3_stmt_ptr stmt = prepareSQL(sql);
     try {
       execSelect(stmt);
     } catch (sg_exception&) {
@@ -418,8 +435,7 @@ public:
 
   sqlite3_stmt_ptr prepare(const string& sql)
   {
-    sqlite3_stmt_ptr stmt;
-    callSqlite(sqlite3_prepare_v2(db, sql.c_str(), sql.length(), &stmt, NULL), sql);
+      sqlite3_stmt_ptr stmt = prepareSQL(sql);
     prepared.push_back(stmt);
     return stmt;
   }
