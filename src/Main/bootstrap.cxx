@@ -58,15 +58,16 @@
 #include <osg/Version>
 #include <osgText/Font>
 
-#include <Viewer/fgviewer.hxx>
 #include "main.hxx"
-#include <flightgearBuildId.h>
-#include <Main/globals.hxx>
-#include <Main/fg_init.hxx>
-#include <Main/options.hxx>
-#include <Main/fg_props.hxx>
-#include <Main/sentryIntegration.hxx>
 #include <GUI/MessageBox.hxx>
+#include <Main/fg_init.hxx>
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
+#include <Main/options.hxx>
+#include <Main/sentryIntegration.hxx>
+#include <Navaids/NavDataCache.hxx>
+#include <Viewer/fgviewer.hxx>
+#include <flightgearBuildId.h>
 
 #include "fg_os.hxx"
 
@@ -365,6 +366,8 @@ void fgExitCleanup() {
         fgSetMouseCursor(MOUSE_CURSOR_POINTER);
         fgOSCloseWindow();
     }
+
+    flightgear::NavDataCache::shutdown();
 
     // you might imagine we'd call shutdownQtApp here, but it's not safe to do
     // so in an atexit handler, and crashes on Mac. Thiago states this explicitly:

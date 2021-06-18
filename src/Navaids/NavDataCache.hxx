@@ -67,6 +67,8 @@ public:
 // static creator
     static NavDataCache* createInstance();
 
+    static void shutdown();
+
     SGPath path() const;
 
     enum DatFileType {
