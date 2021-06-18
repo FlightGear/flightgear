@@ -68,6 +68,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/sentryIntegration.hxx>
 #include <GUI/MessageBox.hxx>
+#include <Navaids/NavDataCache.hxx>
 
 #include "fg_os.hxx"
 
@@ -355,6 +356,8 @@ void fgExitCleanup() {
         fgSetMouseCursor(MOUSE_CURSOR_POINTER);
         fgOSCloseWindow();
     }
+
+    flightgear::NavDataCache::shutdown();
 
     // you might imagine we'd call shutdownQtApp here, but it's not safe to do
     // so in an atexit handler, and crashes on Mac. Thiago states this explicitly:

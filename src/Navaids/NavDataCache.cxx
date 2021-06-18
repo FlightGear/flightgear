@@ -154,6 +154,14 @@ static string cleanRunwayNo(const string& aRwyNo)
   return result;
 }
 
+class AbandonCacheException : public sg_exception
+{
+public:
+    AbandonCacheException() : sg_exception("Cache build cancelled", {}, {}, false)
+    {
+    }
+};
+
 } // anonymous namespace
 
 namespace flightgear
@@ -176,6 +184,11 @@ public:
   _isFinished(false)
   {
 
+  }
+
+  ~RebuildThread()
+  {
+      join();
   }
 
   bool isFinished() const
@@ -454,28 +467,31 @@ public:
 
   bool stepSelect(sqlite3_stmt_ptr stmt)
   {
-    int retries = 0;
-    int result;
-    int retryMSec = 10;
+      if (abandonCache)
+          throw AbandonCacheException{};
 
-    while (retries < MAX_RETRIES) {
-      result = sqlite3_step(stmt);
-      if (result == SQLITE_ROW) {
-        return true; // at least one result row
-      }
+      int retries = 0;
+      int result;
+      int retryMSec = 10;
 
-      if (result == SQLITE_DONE) {
-        return false; // no result rows
-      }
+      while (retries < MAX_RETRIES) {
+          result = sqlite3_step(stmt);
+          if (result == SQLITE_ROW) {
+              return true; // at least one result row
+          }
 
-      if (result != SQLITE_BUSY) {
-        break;
-      }
+          if (result == SQLITE_DONE) {
+              return false; // no result rows
+          }
 
-      SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache contention on select, will retry:" << retries);
-      SGTimeStamp::sleepForMSec(retryMSec);
-      retryMSec *= 2; // double the back-off time, each time
-    } // of retry loop for DB locked
+          if (result != SQLITE_BUSY) {
+              break;
+          }
+
+          SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache contention on select, will retry:" << retries);
+          SGTimeStamp::sleepForMSec(retryMSec);
+          retryMSec *= 2; // double the back-off time, each time
+      }                   // of retry loop for DB locked
 
     if (retries >= MAX_RETRIES) {
       SG_LOG(SG_NAVCACHE, SG_ALERT, "exceeded maximum number of SQLITE_BUSY retries");
@@ -787,23 +803,26 @@ public:
                                 const string& name, const SGGeod& pos, PositionedID apt,
                                 bool spatialIndex)
   {
-    SGVec3d cartPos(SGVec3d::fromGeod(pos));
+      if (abandonCache)
+          throw AbandonCacheException{};
 
-    sqlite3_bind_int(insertPositionedQuery, 1, ty);
-    sqlite_bind_stdstring(insertPositionedQuery, 2, ident);
-    sqlite_bind_stdstring(insertPositionedQuery, 3, name);
-    sqlite3_bind_int64(insertPositionedQuery, 4, apt);
-    sqlite3_bind_double(insertPositionedQuery, 5, pos.getLongitudeDeg());
-    sqlite3_bind_double(insertPositionedQuery, 6, pos.getLatitudeDeg());
-    sqlite3_bind_double(insertPositionedQuery, 7, pos.getElevationM());
+      SGVec3d cartPos(SGVec3d::fromGeod(pos));
 
-    if (spatialIndex) {
-        Octree::Leaf* octreeLeaf = Octree::globalPersistentOctree()->findLeafForPos(cartPos);
-        assert(intersects(octreeLeaf->bbox(), cartPos));
-        sqlite3_bind_int64(insertPositionedQuery, 8, octreeLeaf->guid());
-    } else {
-      sqlite3_bind_null(insertPositionedQuery, 8);
-    }
+      sqlite3_bind_int(insertPositionedQuery, 1, ty);
+      sqlite_bind_stdstring(insertPositionedQuery, 2, ident);
+      sqlite_bind_stdstring(insertPositionedQuery, 3, name);
+      sqlite3_bind_int64(insertPositionedQuery, 4, apt);
+      sqlite3_bind_double(insertPositionedQuery, 5, pos.getLongitudeDeg());
+      sqlite3_bind_double(insertPositionedQuery, 6, pos.getLatitudeDeg());
+      sqlite3_bind_double(insertPositionedQuery, 7, pos.getElevationM());
+
+      if (spatialIndex) {
+          Octree::Leaf* octreeLeaf = Octree::globalPersistentOctree()->findLeafForPos(cartPos);
+          assert(intersects(octreeLeaf->bbox(), cartPos));
+          sqlite3_bind_int64(insertPositionedQuery, 8, octreeLeaf->guid());
+      } else {
+          sqlite3_bind_null(insertPositionedQuery, 8);
+      }
 
     sqlite3_bind_double(insertPositionedQuery, 9, cartPos.x());
     sqlite3_bind_double(insertPositionedQuery, 10, cartPos.y());
@@ -898,68 +917,73 @@ public:
   SGPath path;
     bool readOnly;
 
-  /// the actual cache of ID -> instances. This holds an owning reference,
-  /// so once items are in the cache they will never be deleted until
-  /// the cache drops its reference
-  PositionedCache cache;
-  unsigned int cacheHits, cacheMisses;
+    // flag set during shutdown: allows us to abandon queries, etc
+    // if exit is requested during a rebuild.
+    bool abandonCache = false;
 
-  /**
+
+    /// the actual cache of ID -> instances. This holds an owning reference,
+    /// so once items are in the cache they will never be deleted until
+    /// the cache drops its reference
+    PositionedCache cache;
+    unsigned int cacheHits, cacheMisses;
+
+    /**
    * record the levels of open transaction objects we have
    */
-  unsigned int transactionLevel;
-  bool transactionAborted;
-  sqlite3_stmt_ptr beginTransactionStmt, commitTransactionStmt, rollbackTransactionStmt;
+    unsigned int transactionLevel;
+    bool transactionAborted;
+    sqlite3_stmt_ptr beginTransactionStmt, commitTransactionStmt, rollbackTransactionStmt;
 
-  std::map<DatFileType, NavDataCache::DatFilesGroupInfo> datFilesInfo;
-  SGPath metarDatPath, poiDatPath,
-  carrierDatPath, airwayDatPath;
+    std::map<DatFileType, NavDataCache::DatFilesGroupInfo> datFilesInfo;
+    SGPath metarDatPath, poiDatPath,
+        carrierDatPath, airwayDatPath;
 
-  sqlite3_stmt_ptr readPropertyQuery, writePropertyQuery,
-    stampFileCache, statCacheCheck,
-    loadAirportStmt, loadCommStation, loadPositioned, loadNavaid,
-    loadRunwayStmt;
-  sqlite3_stmt_ptr writePropertyMulti, clearProperty;
+    sqlite3_stmt_ptr readPropertyQuery, writePropertyQuery,
+        stampFileCache, statCacheCheck,
+        loadAirportStmt, loadCommStation, loadPositioned, loadNavaid,
+        loadRunwayStmt;
+    sqlite3_stmt_ptr writePropertyMulti, clearProperty;
 
-  sqlite3_stmt_ptr insertPositionedQuery, insertAirport, insertTower, insertRunway,
-  insertCommStation, insertNavaid;
-  sqlite3_stmt_ptr setAirportMetar, setRunwayReciprocal, setRunwayILS, setNavaidColocated,
-    setAirportPos;
-  sqlite3_stmt_ptr removePOIQuery;
+    sqlite3_stmt_ptr insertPositionedQuery, insertAirport, insertTower, insertRunway,
+        insertCommStation, insertNavaid;
+    sqlite3_stmt_ptr setAirportMetar, setRunwayReciprocal, setRunwayILS, setNavaidColocated,
+        setAirportPos;
+    sqlite3_stmt_ptr removePOIQuery;
 
-  sqlite3_stmt_ptr findClosestWithIdent;
-// octree (spatial index) related queries
-  sqlite3_stmt_ptr getOctreeChildren, insertOctree, updateOctreeChildren,
-    getOctreeLeafChildren;
+    sqlite3_stmt_ptr findClosestWithIdent;
+    // octree (spatial index) related queries
+    sqlite3_stmt_ptr getOctreeChildren, insertOctree, updateOctreeChildren,
+        getOctreeLeafChildren;
 
-  sqlite3_stmt_ptr searchAirports, getAllAirports;
-  sqlite3_stmt_ptr findCommByFreq, findNavsByFreq,
-  findNavsByFreqNoPos, findNavaidForRunway;
-  sqlite3_stmt_ptr getAirportItems, getAirportItemByIdent;
-  sqlite3_stmt_ptr findAirportRunway,
-    findILS;
+    sqlite3_stmt_ptr searchAirports, getAllAirports;
+    sqlite3_stmt_ptr findCommByFreq, findNavsByFreq,
+        findNavsByFreqNoPos, findNavaidForRunway;
+    sqlite3_stmt_ptr getAirportItems, getAirportItemByIdent;
+    sqlite3_stmt_ptr findAirportRunway,
+        findILS;
 
-  sqlite3_stmt_ptr runwayLengthFtQuery;
+    sqlite3_stmt_ptr runwayLengthFtQuery;
 
-// airways
-  sqlite3_stmt_ptr findAirway, findAirwayNet, insertAirwayEdge,
-    isPosInAirway, airwayEdgesFrom, airwayEdgesTo,
-    insertAirway, airwayEdges;
-  sqlite3_stmt_ptr loadAirway;
+    // airways
+    sqlite3_stmt_ptr findAirway, findAirwayNet, insertAirwayEdge,
+        isPosInAirway, airwayEdgesFrom, airwayEdgesTo,
+        insertAirway, airwayEdges;
+    sqlite3_stmt_ptr loadAirway;
 
-// since there's many permutations of ident/name queries, we create
-// them programtically, but cache the exact query by its raw SQL once
-// used.
-  std::map<string, sqlite3_stmt_ptr> findByStringDict;
+    // since there's many permutations of ident/name queries, we create
+    // them programtically, but cache the exact query by its raw SQL once
+    // used.
+    std::map<string, sqlite3_stmt_ptr> findByStringDict;
 
-  typedef std::vector<sqlite3_stmt_ptr> StmtVec;
-  StmtVec prepared;
+    typedef std::vector<sqlite3_stmt_ptr> StmtVec;
+    StmtVec prepared;
 
-  std::set<Octree::Branch*> deferredOctreeUpdates;
+    std::set<Octree::Branch*> deferredOctreeUpdates;
 
-  // if we're performing a rebuild, the thread that is doing the work.
-  // otherwise, NULL
-  std::unique_ptr<RebuildThread> rebuilder;
+    // if we're performing a rebuild, the thread that is doing the work.
+    // otherwise, NULL
+    std::unique_ptr<RebuildThread> rebuilder;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -967,25 +991,27 @@ public:
 FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid,
                                                           sqlite3_int64& aptId)
 {
+    if (abandonCache)
+        throw AbandonCacheException{};
 
-  sqlite3_bind_int64(loadPositioned, 1, rowid);
-  execSelect1(loadPositioned);
+    sqlite3_bind_int64(loadPositioned, 1, rowid);
+    execSelect1(loadPositioned);
 
-  assert(rowid == sqlite3_column_int64(loadPositioned, 0));
-  FGPositioned::Type ty = (FGPositioned::Type) sqlite3_column_int(loadPositioned, 1);
+    assert(rowid == sqlite3_column_int64(loadPositioned, 0));
+    FGPositioned::Type ty = (FGPositioned::Type)sqlite3_column_int(loadPositioned, 1);
 
-  PositionedID prowid = static_cast<PositionedID>(rowid);
-  string ident = (char*) sqlite3_column_text(loadPositioned, 2);
-  string name = (char*) sqlite3_column_text(loadPositioned, 3);
-  aptId = sqlite3_column_int64(loadPositioned, 4);
-  double lon = sqlite3_column_double(loadPositioned, 5);
-  double lat = sqlite3_column_double(loadPositioned, 6);
-  double elev = sqlite3_column_double(loadPositioned, 7);
-  SGGeod pos = SGGeod::fromDegM(lon, lat, elev);
+    PositionedID prowid = static_cast<PositionedID>(rowid);
+    string ident = (char*)sqlite3_column_text(loadPositioned, 2);
+    string name = (char*)sqlite3_column_text(loadPositioned, 3);
+    aptId = sqlite3_column_int64(loadPositioned, 4);
+    double lon = sqlite3_column_double(loadPositioned, 5);
+    double lat = sqlite3_column_double(loadPositioned, 6);
+    double elev = sqlite3_column_double(loadPositioned, 7);
+    SGGeod pos = SGGeod::fromDegM(lon, lat, elev);
 
-  reset(loadPositioned);
+    reset(loadPositioned);
 
-  switch (ty) {
+    switch (ty) {
     case FGPositioned::AIRPORT:
     case FGPositioned::SEAPORT:
     case FGPositioned::HELIPORT:
@@ -1037,7 +1063,7 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid,
 
     default:
       return NULL;
-  }
+    }
 }
 
 bool NavDataCache::NavDataCachePrivate::isCachedFileModified(const SGPath& path, bool verbose)
@@ -1309,12 +1335,24 @@ NavDataCache::NavDataCache()
 NavDataCache::~NavDataCache()
 {
   assert(static_instance == this);
-  static_instance = nullptr;
-  d.reset();
+
+  if (d->rebuilder) {
+      addSentryBreadcrumb("shutting down cache with rebuild active", "info");
+      // setting thsi will cause DB operations to throw the special
+      // AbandonCache exception, and hence cause the rebuild thread to
+      // exit pretty quickly, so the join() won't take too long.
+      d->abandonCache = true;
+      d->rebuilder.reset(); // will the destructor which does a join()
+      addSentryBreadcrumb("abandoned rebuild scuessfully", "info");
+  }
+
 
 // ensure we wip the airports cache too, or we'll get out
 // of sync during tests
   FGAirport::clearAirportsCache();
+
+  static_instance = nullptr;
+  d.reset();
 }
 
 NavDataCache* NavDataCache::createInstance()
@@ -1327,6 +1365,13 @@ NavDataCache* NavDataCache::createInstance()
 NavDataCache* NavDataCache::instance()
 {
   return static_instance;
+}
+
+void NavDataCache::shutdown()
+{
+    if (static_instance) {
+        delete static_instance;
+    }
 }
 
 // Update the lists of dat files used for NavCache freshness checking and
@@ -2727,7 +2772,7 @@ NavDataCache::Transaction::Transaction(NavDataCache* cache) :
 
 NavDataCache::Transaction::~Transaction()
 {
-    if (_instance->isReadOnly()) {
+    if (_instance->d->abandonCache || _instance->isReadOnly()) {
         return;
     }
 
