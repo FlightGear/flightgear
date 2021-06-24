@@ -296,6 +296,9 @@ FGStgTerrain::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
   bool ok;
 
   SGGeod geod = SGGeod::fromCart(pos);
+  if (!geod.isValid())
+      return false;
+
   geod.setElevationM(geod.getElevationM() + max_altoff);
 
   ok = get_elevation_m(geod, alt, material, butNotFrom);
@@ -308,23 +311,26 @@ FGStgTerrain::get_elevation_m(const SGGeod& geod, double& alt,
                               const simgear::BVHMaterial** material,
                               const osg::Node* butNotFrom)
 {
-  SGVec3d start = SGVec3d::fromGeod(geod);
+    if (!geod.isValid())
+        return false;
 
-  SGGeod geodEnd = geod;
-  geodEnd.setElevationM(SGMiscd::min(geod.getElevationM() - 10, -10000));
-  SGVec3d end = SGVec3d::fromGeod(geodEnd);
+    SGVec3d start = SGVec3d::fromGeod(geod);
 
-  FGSceneryIntersect intersectVisitor(SGLineSegmentd(start, end), butNotFrom);
-  intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
-  terrain_branch->accept(intersectVisitor);
+    SGGeod geodEnd = geod;
+    geodEnd.setElevationM(SGMiscd::min(geod.getElevationM() - 10, -10000));
+    SGVec3d end = SGVec3d::fromGeod(geodEnd);
 
-  if (!intersectVisitor.getHaveHit())
-      return false;
+    FGSceneryIntersect intersectVisitor(SGLineSegmentd(start, end), butNotFrom);
+    intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
+    terrain_branch->accept(intersectVisitor);
 
-  geodEnd = SGGeod::fromCart(intersectVisitor.getLineSegment().getEnd());
-  alt = geodEnd.getElevationM();
-  if (material) {
-      *material = intersectVisitor.getMaterial();
+    if (!intersectVisitor.getHaveHit())
+        return false;
+
+    geodEnd = SGGeod::fromCart(intersectVisitor.getLineSegment().getEnd());
+    alt = geodEnd.getElevationM();
+    if (material) {
+        *material = intersectVisitor.getMaterial();
   }
   
   return true;
