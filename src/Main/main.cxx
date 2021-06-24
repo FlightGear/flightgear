@@ -382,7 +382,16 @@ static void fgIdleFunction ( void ) {
         idle_state = 8; // from the next state on, reset & startup are identical
         SGTimeStamp st;
         st.stamp();
-        fgCreateSubsystems(isReset);
+
+        try {
+            fgCreateSubsystems(isReset);
+        } catch (std::exception& e) {
+            // attempt to trace location of illegal argument / invalid string
+            // position errors on startup
+            flightgear::sentryReportException(string{"Creating subsystems: caught:"} + e.what());
+            throw;
+        }
+
         SG_LOG(SG_GENERAL, SG_INFO, "Creating subsystems took:" << st.elapsedMSec());
         fgSplashProgress("binding-subsystems");
 
