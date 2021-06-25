@@ -713,14 +713,11 @@ void FGAIMultiplayer::update(double dt)
     _vBodyNode->setValue(ecLinearVel[1] * SG_METER_TO_FEET);
     _wBodyNode->setValue(ecLinearVel[2] * SG_METER_TO_FEET);
     
-    double knots2si = 1852.0/3600;      // Knots to metres/sec.
-    double ft2si = 12 * 2.54 / 100;     // Feet to metres
-    
     if (ecLinearVel[0] == 0) {
         // MP packets for carriers have zero ecLinearVel, but do specify
         // velocities/speed-kts.
         double speed_kts = props->getDoubleValue("velocities/speed-kts");
-        double speed_fps = speed_kts * knots2si / ft2si;
+        double speed_fps = speed_kts * SG_KT_TO_FPS;
         _uBodyNode->setDoubleValue(speed_fps);
     }
     
@@ -767,7 +764,7 @@ void FGAIMultiplayer::update(double dt)
         // doesn't slip when carrier changes course. Also would be good to
         // handle vbody and wbody?]
         //
-        m_node_ai_latch_speed_kts->setDoubleValue(_uBodyNode->getDoubleValue() * ft2si / knots2si);
+        m_node_ai_latch_speed_kts->setDoubleValue(_uBodyNode->getDoubleValue() * SG_FPS_TO_KT);
     }
     assert(m_node_ai_latch == props->getNode("ai-latch"));
 

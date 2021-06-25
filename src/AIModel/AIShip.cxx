@@ -240,16 +240,13 @@ void FGAIShip::update(double dt) {
 
         // Compute the velocity in m/s in the body frame
         // <speed> is in knots.
-        double knots2si = 1852.0/3600;
-        aip.setBodyLinearVelocity(SGVec3d(speed * knots2si, 0, 0));
+        aip.setBodyLinearVelocity(SGVec3d(speed * SG_KT_TO_MPS, 0, 0));
 
         // Update speed_fps so that velocities/uBody-fps will be set. <speed>
         // is in knots.
         //
         {
-            double knots2si = 1852.0/3600;      // Knots to metres/sec.
-            double ft2si = 12 * 2.54 / 100;     // Feet to metres
-            speed_fps = speed * knots2si / ft2si;
+            speed_fps = speed * SG_KT_TO_FPS;
         }
         FGAIBase::update(dt);
         Run(dt);
@@ -331,9 +328,7 @@ void FGAIShip::Run(double dt) {
         z-back. */
         SGQuatd q(-0.5, -0.5, 0.5, 0.5);
         
-        double knots2si = 1852.0/3600;
-        
-        SGVec3d offset(0, 0, -speed * knots2si * dt);
+        SGVec3d offset(0, 0, -speed * SG_KT_TO_MPS * dt);
         position += (ec2body * q).backTransform(offset);
         pos = SGGeod::fromCart(position);
         
