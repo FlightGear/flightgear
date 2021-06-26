@@ -124,12 +124,18 @@ void LiveMetarProperties::handleMetarData( const std::string & data )
     _timeToLive = DEFAULT_TIME_TO_LIVE_SECONDS;
     
     SGSharedPtr<FGMetar> m;
+    static bool haveReportedMETARFailure = false;
     try {
         m = new FGMetar(data.c_str());
     }
     catch( sg_io_exception  &) {
         SG_LOG( SG_ENVIRONMENT, SG_WARN, "Can't parse metar: " << data );
-        flightgear::sentryReportException("Failed to parse live METAR", data);
+
+        // ensure we only report one METAR parse failure per session
+        if (!haveReportedMETARFailure) {
+            haveReportedMETARFailure = true;
+            flightgear::sentryReportException("Failed to parse live METAR", data);
+        }
         _failure = true;
         return;
     }
