@@ -265,12 +265,16 @@ def make_recording(
         # time, so we sometimes need to sleep a little longer.
         #
         while 1:
-            t = fg.fg['/sim/time/elapsed-sec']
-            log(f'/sim/time/elapsed-sec={t}')
-            if t > length:
+            t_record_begin = fg.fg['sim/replay/record-normal-begin']
+            t_record_end = fg.fg['sim/replay/record-normal-end']
+            t_delta = t_record_end - t_record_begin
+            log(f't_record_begin={t_record_begin} t_record_end={t_record_end} t_delta={t_delta}')
+            if t_delta >= length:
                 break
-            time.sleep(length - t + 0.5)
+            time.sleep(length - t_delta + 0.1)
         log(f'/sim/time/elapsed-sec={t}')
+        log(f'/sim/replay/start-time={fg.fg["/sim/replay/start-time"]}')
+        log(f'/sim/replay/end-time={fg.fg["/sim/replay/end-time"]}')
         fg.fg.telnet._putcmd('run save-tape tape-data/starttime= tape-data/stoptime=')
         response = fg.fg.telnet._getresp()
         log(f'response: {response!r}')
@@ -306,6 +310,7 @@ def test_record_replay(
     args += f' --prop:bool:/sim/replay/record-extra-properties={extra_properties}'
     args += f' --prop:bool:/sim/replay/record-main-view={main_view}'
     args += f' --prop:bool:/sim/replay/record-main-window=0'
+    #args += f' --prop:bool:/sim/time/simple-time/enabled=0'
     
     # Start Flightgear.
     fg = Fg(aircraft, f'{fgfs_save} {args}',

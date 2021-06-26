@@ -232,6 +232,8 @@ private:
     SGPropertyNode_ptr replay_multiplayer;
     SGPropertyNode_ptr recovery_period;
     SGPropertyNode_ptr replay_error;
+    SGPropertyNode_ptr m_record_normal_begin;   // Time of first in-memory recorded frame.
+    SGPropertyNode_ptr m_record_normal_end;
     
     SGPropertyNode_ptr  m_sim_startup_xpos;
     SGPropertyNode_ptr  m_sim_startup_ypos;

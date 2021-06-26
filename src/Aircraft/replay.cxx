@@ -160,6 +160,8 @@ FGReplay::FGReplay() :
     last_msg_time(0),
     last_replay_state(0),
     replay_error(fgGetNode("sim/replay/replay-error", true)),
+    m_record_normal_begin(fgGetNode("sim/replay/record-normal-begin", true)),
+    m_record_normal_end(fgGetNode("sim/replay/record-normal-end", true)),
     m_sim_startup_xpos(fgGetNode("sim/startup/xpos", true)),
     m_sim_startup_ypos(fgGetNode("sim/startup/ypos", true)),
     m_sim_startup_xsize(fgGetNode("sim/startup/xsize", true)),
@@ -1266,6 +1268,12 @@ FGReplay::update( double dt )
     assert(r->raw_data.size() != 0);
     short_term.push_back( r );
     FGReplayData *st_front = short_term.front();
+    
+    m_record_normal_end->setDoubleValue(r->sim_time);
+    if (m_record_normal_begin->getDoubleValue() == 0)
+    {
+        m_record_normal_begin->setDoubleValue(r->sim_time);
+    }
 
     if (!st_front)
     {
