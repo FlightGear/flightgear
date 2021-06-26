@@ -403,6 +403,18 @@ void addSentryTag(const char* tag, const char* value)
     sentry_set_tag(tag, value);
 }
 
+void updateSentryTag(const std::string& tag, const std::string& value)
+{
+    if (tag.empty() || value.empty())
+        return;
+
+    if (!static_sentryEnabled)
+        return;
+
+    sentry_remove_tag(tag.c_str());
+    sentry_set_tag(tag.c_str(), value.c_str());
+}
+
 void sentryReportNasalError(const std::string& msg, const string_list& stack)
 {
     if (!static_sentryEnabled)
@@ -537,6 +549,11 @@ void addSentryBreadcrumb(const std::string&, const std::string&)
 void addSentryTag(const char*, const char*)
 {
 }
+
+void updateSentryTag(const std::string&, const std::string&)
+{
+}
+
 
 void sentryReportNasalError(const std::string&, const string_list&)
 {

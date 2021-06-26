@@ -37,6 +37,9 @@ void addSentryTag(const char* tag, const char* value);
 
 void addSentryTag(const std::string& tag, const std::string& value);
 
+void updateSentryTag(const std::string& tag, const std::string& value);
+
+
 void sentryReportNasalError(const std::string& msg, const string_list& stack);
 
 void sentryReportException(const std::string& msg, const std::string& location = {});
