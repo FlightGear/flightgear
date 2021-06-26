@@ -58,8 +58,8 @@ void XMLLoader::load(FGGroundNetwork* net)
       FGGroundNetXMLLoader visitor(net);
       readXML(path, visitor);
 
-      if (visitor.hasErrors()) {
-          flightgear::addSentryTag("ground-net", net->airport()->ident());
+      if (visitor.hasErrors() && fgGetBool("/sim/terrasync/enabled")) {
+          flightgear::updateSentryTag("ground-net", net->airport()->ident());
           flightgear::sentryReportException("Ground-net load error", path.utf8Str());
       }
   } catch (sg_exception& e) {
@@ -90,8 +90,9 @@ void XMLLoader::loadFromPath(FGGroundNetwork* net, const SGPath& path)
       flightgear::SentryXMLErrorSupression xs;
       FGGroundNetXMLLoader visitor(net);
       readXML(path, visitor);
-      if (visitor.hasErrors()) {
-          flightgear::addSentryTag("ground-net", net->airport()->ident());
+
+      if (visitor.hasErrors() && fgGetBool("/sim/terrasync/enabled")) {
+          flightgear::updateSentryTag("ground-net", net->airport()->ident());
           flightgear::sentryReportException("Ground-net load error", path.utf8Str());
       }
   } catch (sg_exception& e) {

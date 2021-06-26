@@ -1252,7 +1252,7 @@ void fgStartReposition()
 
 void fgStartNewReset()
 {
-    flightgear::addSentryTag("have-reset", "yes");
+    flightgear::updateSentryTag("have-reset", "yes");
 
     // save user settings now, so that USERARCIVE-d values changes since the
     // last init are recorded and hence re-loaded when we fgInitConfig down
