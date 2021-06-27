@@ -1670,7 +1670,13 @@ FGReplay::replay( double time ) {
     }
 
     if ( ! short_term.empty() ) {
-        t1 = short_term.back()->sim_time;
+        // We use /sim/replay/end-time instead of short_term.back()->sim_time
+        // because if we are recording multiplayer aircraft, new items will
+        // be appended to short_term while we replay, and we don't want to
+        // continue replaying into them. /sim/replay/end-time will remain
+        // pointing to the last frame at the time we started replaying.
+        //
+        t1 = fgGetDouble("/sim/replay/end-time");
         t2 = short_term.front()->sim_time;
         if ( time > t1 ) {
             // replay the most recent frame
