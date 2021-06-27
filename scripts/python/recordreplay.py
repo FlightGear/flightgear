@@ -95,7 +95,7 @@ class Fg:
     self.fg is a FlightGear.FlightGear instance, which uses telnet to
     communicate with Flightgear.
     '''
-    def __init__(self, aircraft, args, env=None, telnet_port=None, telnet_hz=None, out=None):
+    def __init__(self, aircraft, args, env=None, telnet_port=None, telnet_hz=None, out=None, screensaver_suspend=True):
         '''
         aircraft:
             Specified as: --aircraft={aircraft}. This is separate from <args>
@@ -120,6 +120,7 @@ class Fg:
         else:
             args += f' --telnet=_,_,{telnet_hz},_,{telnet_port},_'
         args += f' --prop:/sim/replay/tape-directory={g_tapedir}'
+        args += f' --prop:bool:/sim/startup/screensaver-suspend={"true" if screensaver_suspend else "false"}'
         
         args2 = args.split()
         
@@ -265,13 +266,22 @@ def make_recording(
         # time, so we sometimes need to sleep a little longer.
         #
         while 1:
+            # Telnet interface seems very slow even if we set telnet_hz to
+            # 100 (for example). We want to make recording have near to the
+            # specified length, so we are cautious about overrunning.
+            #
+            #log(f'a: time.time()-t={time.time()-t}')
             t_record_begin = fg.fg['sim/replay/record-normal-begin']
+            #log(f'b: time.time()-t={time.time()-t}')
             t_record_end = fg.fg['sim/replay/record-normal-end']
+            #log(f'c: time.time()-t={time.time()-t}')
             t_delta = t_record_end - t_record_begin
             log(f't_record_begin={t_record_begin} t_record_end={t_record_end} t_delta={t_delta}')
             if t_delta >= length:
                 break
-            time.sleep(length - t_delta + 0.1)
+            ts = max(length - t_delta - 1, 0.2)
+            log(f'd: ts={ts}')
+            time.sleep(ts)
         log(f'/sim/time/elapsed-sec={t}')
         log(f'/sim/replay/start-time={fg.fg["/sim/replay/start-time"]}')
         log(f'/sim/replay/end-time={fg.fg["/sim/replay/end-time"]}')
@@ -315,6 +325,7 @@ def test_record_replay(
     # Start Flightgear.
     fg = Fg(aircraft, f'{fgfs_save} {args}',
             #env='SG_LOG_DELTAS=flightgear/src/Network/props.cxx=4',
+            telnet_hz=100,
             )
     fg.waitfor('/sim/fdm-initialized', 1, timeout=45)
     
