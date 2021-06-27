@@ -430,8 +430,18 @@ FGProps::PropsChannel::foundTerminator()
                 push( getTerminator() );
             } else if ( command == "get" || command == "show" ) {
                 if ( tokens.size() == 2 ) {
+                    std::string value;
+                    SGPropertyNode* n = node->getNode(tokens[1].c_str());
+                    if (n && n->getType() == simgear::props::DOUBLE) {
+                        // Use extra precision so we can represent UTC times etc.
+                        std::ostringstream  s;
+                        s << std::setprecision(16) << n->getDoubleValue();
+                        value = s.str();
+                    }
+                    else {
+                        value = node->getStringValue ( tokens[1].c_str(), "" );
+                    }
                     string tmp;
-                    string value = node->getStringValue ( tokens[1].c_str(), "" );
                     if ( mode == PROMPT ) {
                         tmp = tokens[1];
                         tmp += " = '";
