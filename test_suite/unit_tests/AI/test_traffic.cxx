@@ -24,8 +24,6 @@
 #include <math.h>
 #include <cstring>
 #include <memory>
-#include <unistd.h>
-#include <iostream>
 
 #include "test_suite/FGTestApi/NavDataCache.hxx"
 #include "test_suite/FGTestApi/TestDataLogger.hxx"
@@ -45,6 +43,7 @@
 
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
 
 #include <simgear/timing/sg_time.hxx>
 
@@ -630,7 +629,7 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
  * 
  */ 
 
-FGAIAircraft * TrafficTests::flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::string fName) {
+FGAIAircraft * TrafficTests::flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::string testname) {
     int lineIndex = 0;
 
     CPPUNIT_ASSERT_EQUAL(aiAircraft->GetFlightPlan()->isValidPlan(), true);
@@ -650,14 +649,16 @@ FGAIAircraft * TrafficTests::flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::st
     
     char fname [160];
     time_t t = time(0);   // get time now
-    sprintf (fname, "flightgear_ai_flight_%ld.csv", t);
-    std::ofstream csvFile (fname, ios::trunc | ios::out);
+    sprintf (fname, "%ld.csv", t);
+    SGPath p = SGPath::desktop() / (testname + fname);
+    sg_ofstream csvFile;
+    csvFile.open(p);
     if(!csvFile.is_open()) {
         SG_LOG(SG_AI, SG_DEBUG, "CSV File " << fname << " couldn't be opened");
     }
     if (sglog().get_log_priority() <= SG_DEBUG) {
         aiAircraft->dumpCSVHeader(csvFile);
-        FGTestApi::setUp::logLinestringsToKML(fName);
+        FGTestApi::setUp::logLinestringsToKML(testname);
     }
     flightgear::SGGeodVec geods = flightgear::SGGeodVec();
     int iteration = 1;
