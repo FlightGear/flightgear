@@ -68,7 +68,13 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
                             const string & aircraftType,
                             const string & airline, double distance)
 {
-    SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " Departure Airport : " << dep->getId());
+    if( legNr <= 3 ) 
+        SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " Airport : " << dep->getId());
+    else if( legNr<= 6 ) 
+        SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " Departure Airport : " << dep->getId()  << " Arrival Airport : " << arr->getId());
+    else 
+        SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " Airport : " << arr->getId());
+
     bool retVal = true;
     int currWpt = wpt_iterator - waypoints.begin();
     switch (legNr) {
@@ -964,7 +970,7 @@ static double runwayGlideslopeTouchdownDistance(FGRunway* rwy)
 }
 
 /*******************************************************************
- * CreateLanding
+ * CreateLanding (Leg 7)
  * Create a flight path from the "permision to land" point (currently
    hardcoded at 5000 meters from the threshold) to the threshold, at
    a standard glide slope angle of 3 degrees. 
@@ -1048,7 +1054,8 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
 
     FGGroundNetwork *gn = apt->groundNetwork();
     if (!gn) {
-      return true;
+        SG_LOG(SG_AI, SG_DEBUG, "No groundnet " << apt->getId() << " no landing created.");
+        return true;
     }
   
     coord = rwy->pointOnCenterline(mindist);

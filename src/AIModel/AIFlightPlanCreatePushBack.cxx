@@ -95,6 +95,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
     FGParking *parking = gate.parking();
     if (parking && parking->getPushBackPoint() != nullptr) {
         FGTaxiRoute route = groundNet->findShortestRoute(parking, parking->getPushBackPoint(), false);
+        SG_LOG(SG_AI, SG_BULK, "Creating Pushforward : \t" << parking->getPushBackPoint()->getIndex());
 
         int size = route.size();
         if (size < 2) {
@@ -109,8 +110,8 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         while (route.next(node, &rte))
         {
             char buffer[10];
-            snprintf (buffer, 10, "%d",  node->getIndex());
-            FGAIWaypoint *wpt = createOnGround(ac, string(buffer), node->geod(), dep->getElevation(), vTaxiBackward);
+            snprintf (buffer, 10, "pb %d",  node->getIndex());
+            FGAIWaypoint *wpt = createOnGround(ac, string(buffer), node->geod(), dep->getElevation(), -vTaxiBackward);
 
             /*
             if (previous) {

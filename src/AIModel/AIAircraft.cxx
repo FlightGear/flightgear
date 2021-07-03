@@ -909,6 +909,10 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int 
         prev_dist_to_go = HUGE_VAL;
         return true;
     } else {
+        if (prev_dist_to_go == dist_to_go_m) {
+            //FIXME must be suppressed when parked
+            SG_LOG(SG_AI, SG_WARN, "Aircraft " << _callsign << " stuck. Speed " << speed);
+        }
         prev_dist_to_go = dist_to_go_m;
         return false;
     }
@@ -1106,7 +1110,9 @@ void FGAIAircraft::updateHeading(double dt) {
 
             if (sign(groundTargetSpeed) != sign(tgt_speed)) {
                 if (fabs(speed) < 2 ) {
-                  SG_LOG(SG_AI, SG_DEBUG, "Oh dear we're stuck. Speed set to " << speed );
+                    // This seems to happen in case there is a change from forward to pushback.
+                    // which should never happen.
+                  SG_LOG(SG_AI, SG_BULK, "Oh dear we're stuck. Speed is " << speed );
                 }
                 // Negative Cosinus means angle > 90°
                 groundTargetSpeed = 0.21 * sign(tgt_speed); // to prevent speed getting stuck in 'negative' mode
@@ -1509,9 +1515,11 @@ void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
     o << "Departuretime\t";
     o << "Time\t";
     o << "Startup diff\t";
+    o << "dist_to_go_m\t";
     o << "Leg\t";
     o << "Num WP\t";
     o << "Leaddistance\t";
+    o << "no_roll";
     o << endl;
 }
 
@@ -1523,6 +1531,7 @@ void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
     }
 
     o << lineIndex << "\t";
+    o << setprecision(12);
     o << this->getGeodPos().getLatitudeDeg() << "\t";
     o << this->getGeodPos().getLongitudeDeg() << "\t";
     o << this->getCallSign() << "\t";
@@ -1553,8 +1562,10 @@ void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
         o << this->GetFlightPlan()->getStartTime() << "\t";
         o << globals->get_time_params()->get_cur_time() << "\t";
         o << this->GetFlightPlan()->getStartTime() - globals->get_time_params()->get_cur_time() << "\t";
+        double dist_to_go_m = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), currentWP);
+        o << dist_to_go_m << "\t";
     } else {
-        o << "\t\t\t\t\t\t\t";
+        o << "\t\t\t\t\t\t\t\t";
     }
     if (fp->isValidPlan()) {
         o << fp->getLeg() << "\t";
@@ -1563,6 +1574,7 @@ void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
     } else {
         o << "NotValid\t\t";
     }
+    o << this->onGround();
     o << endl;
 }
 
