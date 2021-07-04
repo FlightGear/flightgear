@@ -256,7 +256,7 @@ public:
 
     void collectError(simgear::LoadFailure type, simgear::ErrorCode code, const std::string& details, const sg_location& location)
     {
-        ErrorOcurrence occurrence{code, type, details, location, time(nullptr)};
+        ErrorOcurrence occurrence{code, type, details, location, time(nullptr), string_list(), ErrorContext()};
 
         // snapshot the top of the context stacks into our occurence data
         for (const auto& c : thread_errorContextStack) {
@@ -366,7 +366,7 @@ public:
         assert(it != _aggregated.end());
         _activeReportIndex = static_cast<int>(std::distance(_aggregated.begin(), it));
         _displayNode->setBoolValue("index", _activeReportIndex);
-        _displayNode->setBoolValue("have-next", _activeReportIndex < (_aggregated.size() - 1));
+        _displayNode->setBoolValue("have-next", _activeReportIndex < (int) _aggregated.size() - 1);
         _displayNode->setBoolValue("have-previous", _activeReportIndex > 0);
     }
 
