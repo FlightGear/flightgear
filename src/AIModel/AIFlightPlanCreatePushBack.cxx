@@ -95,7 +95,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
     FGParking *parking = gate.parking();
     if (parking && parking->getPushBackPoint() != nullptr) {
         FGTaxiRoute route = groundNet->findShortestRoute(parking, parking->getPushBackPoint(), false);
-        SG_LOG(SG_AI, SG_BULK, "Creating Pushforward : \t" << parking->getPushBackPoint()->getIndex());
+        SG_LOG(SG_AI, SG_BULK, "Creating Pushback : \t" << parking->getPushBackPoint()->getIndex());
 
         int size = route.size();
         if (size < 2) {
@@ -110,7 +110,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         while (route.next(node, &rte))
         {
             char buffer[10];
-            snprintf (buffer, 10, "pb %d",  node->getIndex());
+            snprintf (buffer, 10, "pushback-%d4",  (short)node->getIndex());
             FGAIWaypoint *wpt = createOnGround(ac, string(buffer), node->geod(), dep->getElevation(), -vTaxiBackward);
 
             /*
@@ -154,7 +154,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         }
 
         lastNodeVisited = pushForwardSegment->getEnd();
-        double distance = pushForwardSegment->getLength();
+        double distance = pushForwardSegment->getLength();        
 
         double parkingHeading = parking->getHeading();
 
@@ -163,10 +163,11 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         int numSegments = distance/2.0;
         for (int i = 1; i < numSegments; i++) {
             SGGeod pushForwardPt;
+
             SGGeodesy::direct(parking->geod(), parkingHeading,
-                              ((i / numSegments) * distance), pushForwardPt, az2);
+                              (((double)i / numSegments) * distance), pushForwardPt, az2);
             char buffer[16];
-            snprintf(buffer, 16, "pushforward-%02d", i);
+            snprintf(buffer, 16, "pushforward-%d4", (short)i);
             FGAIWaypoint *wpt = createOnGround(ac, string(buffer), pushForwardPt, dep->getElevation(), vTaxiReduced);
 
             wpt->setRouteIndex(pushForwardSegment->getIndex());

@@ -28,34 +28,34 @@
 		<heavy>false</heavy>
 	</aircraft>
 	<flight>
-		<callsign>Test_YBBN_0001</callsign>
+		<callsign>gaParkYSSY1</callsign>
 		<required-aircraft>TST_BN_1</required-aircraft>
 		<fltrules>VFR</fltrules>
 		<departure>
-			<port>YBBN</port>
-			<time>00:20:00</time>
+			<port>YSSY</port>
+			<time>00:40:00</time>
 		</departure>
 		<cruise-alt>50</cruise-alt>
 		<arrival>
-			<port>YSSY</port>
-			<time>00:50:00</time>
+			<port>YBBN</port>
+			<time>00:52:00</time>
 		</arrival>
-		<repeat>01Hr</repeat>
+		<repeat>03Hr</repeat>
 	</flight>
 	<flight>
-		<callsign>Test_YSSY_1001</callsign>
+		<callsign>gaParkYSSY2</callsign>
 		<required-aircraft>TST_BN_1</required-aircraft>
 		<fltrules>VFR</fltrules>
 		<departure>
-			<port>YSSY</port>
-			<time>00:12:00</time>
+			<port>YBBN</port>
+			<time>01:20:00</time>
 		</departure>
 		<cruise-alt>50</cruise-alt>
 		<arrival>
-			<port>YBBN</port>
-			<time>00:50:00</time>
+			<port>YSSY</port>
+			<time>01:50:00</time>
 		</arrival>
-		<repeat>01Hr</repeat>
+		<repeat>03Hr</repeat>
 	</flight>
 	<flight>
 		<callsign>Test_YSSY_1002</callsign>

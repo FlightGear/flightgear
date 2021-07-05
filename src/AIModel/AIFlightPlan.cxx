@@ -537,15 +537,16 @@ void FGAIFlightPlan::pushBackWaypoint(FGAIWaypoint *wpt)
         SG_LOG(SG_AI, SG_DEBUG, "Double WP : \t" << wpt->getName() << " not added ");
       } else {
         waypoints.push_back(wpt);
+        SG_LOG(SG_AI, SG_BULK, "Added WP : \t" << wpt->getName() << "\t" << wpt->getPos() << "\t" << wpt->getSpeed());
       }
   } else {
     waypoints.push_back(wpt);
+    SG_LOG(SG_AI, SG_BULK, "Added WP : \t" << wpt->getName() << "\t" << wpt->getPos() << "\t" << wpt->getSpeed());
   }
   // std::vector::push_back invalidates waypoints
   //  so we should restore wpt_iterator after push_back
   //  (or it could be an index in the vector)
   wpt_iterator = waypoints.begin() + pos;
-  SG_LOG(SG_AI, SG_BULK, "Added WP : \t" << wpt->getName() << "\t" << wpt->getPos() << "\t" << wpt->getSpeed());
 }
 
 // Start flightplan over from the beginning

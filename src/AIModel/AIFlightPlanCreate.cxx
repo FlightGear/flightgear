@@ -332,7 +332,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
 
     // This may happen with buggy ground networks
     if (taxiRoute.size() <= 1) {
-        SG_LOG(SG_AI, SG_DEBUG, "Taxiroute too short creating default taxi.");
+        SG_LOG(SG_AI, SG_DEBUG, "Taxiroute too short " << apt->getId() << "creating default taxi.");
         createDefaultTakeoffTaxi(ac, apt, rwy);
         return true;
     }
