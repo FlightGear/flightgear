@@ -1257,6 +1257,7 @@ NavDataCache::NavDataCache()
 
     // permit additional DB connections from the same process
     sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
+    const bool readOnly = fgGetBool("/sim/fghome-readonly", false);
 
     for (int t=0; t < MAX_TRIES; ++t) {
         SGPath cachePath = homePath / os.str();
@@ -1270,6 +1271,13 @@ NavDataCache::NavDataCache()
             SG_LOG(SG_NAVCACHE, t == 0 ? SG_WARN : SG_ALERT, "NavCache: init failed:" << e.what()
                    << " (attempt " << t << ")");
 
+            if (readOnly) {
+              flightgear::fatalMessageBoxThenExit(
+                  "Unable to open navigation cache",
+                  std::string("The navigation data cache could not be opened, and this copy of FlightGear is runnning read-only. FlightGear needs to be started with write permissions to rebuild the cache.")
+                  + e.getMessage(), e.getOrigin());
+            }
+
             if (t == (MAX_TRIES - 1)) {
                 // final attempt still failed, we are busted
                 flightgear::fatalMessageBoxThenExit(
@@ -1281,7 +1289,7 @@ NavDataCache::NavDataCache()
             d.reset();
 
             // only wipe the existing if not readonly
-            if (cachePath.exists() && !fgGetBool("/sim/fghome-readonly", false)) {
+            if (cachePath.exists() && !readOnly) {
                 bool ok = cachePath.remove();
                 if (!ok) {
                     SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache: failed to remove previous cache file");
