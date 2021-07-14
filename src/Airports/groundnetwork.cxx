@@ -213,6 +213,9 @@ void FGGroundNetwork::init()
         segment->oppositeDirection = opp;
         opp->oppositeDirection = segment;
       }
+
+      // establish node -> segment end cache
+      m_segmentsEndingAtNodeMap.insert(NodeFromSegmentMap::value_type{segment->getEnd(), segment});
     }
 
     networkInitialized = true;
@@ -426,9 +429,8 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(FGTaxiNode* start, FGTaxiNode* en
 
 void FGGroundNetwork::unblockAllSegments(time_t now)
 {
-    FGTaxiSegmentVector::iterator tsi;
-    for ( tsi = segments.begin(); tsi != segments.end(); tsi++) {
-        (*tsi)->unblock(now);
+    for (auto& seg : segments) {
+        seg->unblock(now);
     }
 }
 
@@ -437,13 +439,13 @@ void FGGroundNetwork::blockSegmentsEndingAt(FGTaxiSegment *seg, int blockId, tim
     if (!seg)
         throw sg_exception("Passed invalid segment");
 
-    const FGTaxiNode *node = seg->endNode;
-    FGTaxiSegmentVector::iterator tsi;
-    for ( tsi = segments.begin(); tsi != segments.end(); tsi++) {
-        FGTaxiSegment* otherSegment = *tsi;
-        if ((otherSegment->endNode == node) && (otherSegment != seg)) {
-            otherSegment->block(blockId, blockTime, now);
-        }
+    const auto range = m_segmentsEndingAtNodeMap.equal_range(seg->getEnd());
+    for (auto it = range.first; it != range.second; ++it) {
+        // our inbound segment will be included, so skip it
+        if (it->second == seg)
+            continue;
+
+        it->second->block(blockId, blockTime, now);
     }
 }
 

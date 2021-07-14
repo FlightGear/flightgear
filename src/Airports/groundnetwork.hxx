@@ -27,6 +27,7 @@
 #include <simgear/compiler.h>
 
 #include <string>
+#include <unordered_map>
 
 #include "gnnode.hxx"
 #include "parking.hxx"
@@ -224,6 +225,12 @@ private:
     intVec freqGround;   // </GROUND>
     intVec freqTower;    // </TOWER>
     intVec freqApproach; // </APPROACH>
+
+    using NodeFromSegmentMap = std::unordered_multimap<FGTaxiNode*, FGTaxiSegment*>;
+
+    /// this map exists specifcially to make blockSegmentsEndingAt not be a bottleneck
+    NodeFromSegmentMap m_segmentsEndingAtNodeMap;
+
 public:
     FGGroundNetwork(FGAirport* pr);
     ~FGGroundNetwork();
