@@ -1900,6 +1900,10 @@ struct OptionDesc {
     {"disable-wireframe",            false, OPTION_BOOL,   "/sim/rendering/wireframe", false, "", 0 },
     {"enable-wireframe",             false, OPTION_BOOL,   "/sim/rendering/wireframe", true, "", 0 },
     {"materials-file",               true,  OPTION_STRING, "/sim/rendering/materials-file", false, "", 0 },
+#ifdef ENABLE_OSGXR
+    {"disable-vr",                   false, OPTION_BOOL,   "/sim/vr/enabled", false, "", 0 },
+    {"enable-vr",                    false, OPTION_BOOL,   "/sim/vr/enabled", true, "", 0 },
+#endif
     {"disable-terrasync",            false, OPTION_BOOL,   "/sim/terrasync/enabled", false, "", 0 },
     {"enable-terrasync",             false, OPTION_BOOL,   "/sim/terrasync/enabled", true, "", 0 },
     {"terrasync-dir",                true,  OPTION_IGNORE, "", false, "", 0 },
