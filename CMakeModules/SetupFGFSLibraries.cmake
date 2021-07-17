@@ -23,6 +23,10 @@ function(setup_fgfs_libraries target)
         target_link_libraries(${target} ${X11_LIBRARIES})
     endif()
 
+    if(ENABLE_OSGXR)
+        target_link_libraries(${target} osgXR::osgXR)
+    endif()
+
     target_link_libraries(${target} fgsqlite3 fgvoicesynth fgembeddedresources)
 
     target_link_libraries(${target}

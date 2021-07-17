@@ -151,6 +151,11 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
     if(HTS_ENGINE_FOUND)
         set(SYSTEM_HTS_ENGINE_DEFAULT 1)
     endif()
+
+    find_package(osgXR 0.3)
+    if (osgXR_FOUND)
+        set(ENABLE_OSGXR_DEFAULT 1)
+    endif()
 endif()
 
 # FlightGear build options
@@ -171,6 +176,7 @@ option(SYSTEM_GSM        "Set to ON to build IAXClient with the system's GSM lib
 option(SYSTEM_FLITE      "Set to ON to build Flightgear with the system's Flite library" ${SYSTEM_FLITE_DEFAULT})
 option(SYSTEM_HTS_ENGINE "Set to ON to build Flightgear with the system's HTS Engine library" ${SYSTEM_HTS_ENGINE_DEFAULT})
 option(SYSTEM_CPPUNIT    "Set to ON to build Flightgear with the system's CppUnit library")
+option(ENABLE_OSGXR      "Set to ON to build Flightgear with OpenXR support via the osgXR library" ${ENABLE_OSGXR_DEFAULT})
 
 # additional utilities
 option(ENABLE_FGELEV     "Set to ON to build the fgelev application (default)" ON)
