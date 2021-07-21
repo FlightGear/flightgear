@@ -613,6 +613,10 @@ void TimeManager::updateLocalTime()
 void TimeManager::updateLocalTimeString()
 {
     time_t cur_time = _impl->get_cur_time();
+    if (!_impl->get_zonename()) {
+        return;
+    }
+    
     struct tm* aircraftLocalTime = fgLocaltime(&cur_time, _impl->get_zonename());
     static char buf[16];
     snprintf(buf, 16, "%.2d:%.2d:%.2d",
