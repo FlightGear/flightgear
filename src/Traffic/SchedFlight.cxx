@@ -172,51 +172,48 @@ FGScheduledFlight:: ~FGScheduledFlight()
 
 time_t FGScheduledFlight::processTimeString(const string& theTime)
 {
-  int weekday;
-  int timeOffsetInDays;
-  int targetHour;
-  int targetMinute;
-  int targetSecond;
+    int timeOffsetInDays = 0;
+    int targetHour;
+    int targetMinute;
+    int targetSecond;
 
-  tm targetTimeDate;
-  SGTime* currTimeDate = globals->get_time_params();
- 
-  string timeCopy = theTime;
+    tm targetTimeDate;
+    SGTime* currTimeDate = globals->get_time_params();
+
+    string timeCopy = theTime;
 
 
-  // okay first split theTime string into
-  // weekday, hour, minute, second;
-  // Check if a week day is specified 
-  if (timeCopy.find("/",0) != string::npos)
-    {
-      weekday          = atoi(timeCopy.substr(0,1).c_str());
-      timeOffsetInDays = weekday - currTimeDate->getGmt()->tm_wday;
-      timeCopy = timeCopy.substr(2,timeCopy.length());
+    // okay first split theTime string into
+    // weekday, hour, minute, second;
+    // Check if a week day is specified
+    const auto daySeperatorPos = timeCopy.find("/", 0);
+    if (daySeperatorPos != string::npos) {
+        const int weekday = std::stoi(timeCopy.substr(0, daySeperatorPos));
+        timeOffsetInDays = weekday - currTimeDate->getGmt()->tm_wday;
+        timeCopy = theTime.substr(daySeperatorPos + 1);
     }
-  else 
-    {
-      timeOffsetInDays = 0;
-    }
-  // TODO: verify status of each token.
-  if (timeCopy.length() < 8) {
-    SG_LOG( SG_AI, SG_WARN, "Timestring too short. " << theTime << " Defaulted to now" );
-    return currTimeDate->get_cur_time();
-  }
-  targetHour   = atoi(timeCopy.substr(0,2).c_str());
-  targetMinute = atoi(timeCopy.substr(3,5).c_str());
-  targetSecond = atoi(timeCopy.substr(6,8).c_str());
-  targetTimeDate.tm_year  = currTimeDate->getGmt()->tm_year;
-  targetTimeDate.tm_mon   = currTimeDate->getGmt()->tm_mon;
-  targetTimeDate.tm_mday  = currTimeDate->getGmt()->tm_mday;
-  targetTimeDate.tm_hour  = targetHour;
-  targetTimeDate.tm_min   = targetMinute;
-  targetTimeDate.tm_sec   = targetSecond;
 
-  time_t processedTime = sgTimeGetGMT(&targetTimeDate);
-  processedTime += timeOffsetInDays*24*60*60;
-  if (processedTime < currTimeDate->get_cur_time())
-    {
-      processedTime += repeatPeriod;
+    const auto timeTokens = simgear::strutils::split(timeCopy, ":");
+    if (timeTokens.size() != 3) {
+        SG_LOG(SG_AI, SG_DEV_WARN, "FGScheduledFlight: Timestring too short. " << theTime << " Defaulted to now");
+        return currTimeDate->get_cur_time();
+    }
+
+
+    targetHour = std::stoi(timeTokens.at(0));
+    targetMinute = std::stoi(timeTokens.at(1));
+    targetSecond = std::stoi(timeTokens.at(2));
+    targetTimeDate.tm_year = currTimeDate->getGmt()->tm_year;
+    targetTimeDate.tm_mon = currTimeDate->getGmt()->tm_mon;
+    targetTimeDate.tm_mday = currTimeDate->getGmt()->tm_mday;
+    targetTimeDate.tm_hour = targetHour;
+    targetTimeDate.tm_min = targetMinute;
+    targetTimeDate.tm_sec = targetSecond;
+
+    time_t processedTime = sgTimeGetGMT(&targetTimeDate);
+    processedTime += timeOffsetInDays * 24 * 60 * 60;
+    if (processedTime < currTimeDate->get_cur_time()) {
+        processedTime += repeatPeriod;
     }
   //tm *temp = currTimeDate->getGmt();
   //char buffer[512];
