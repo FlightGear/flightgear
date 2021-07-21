@@ -21,8 +21,7 @@
 // $Id$
 
 
-#ifndef _ROUTE_MGR_HXX
-#define _ROUTE_MGR_HXX 1
+#pragma once
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -32,6 +31,7 @@
 // forward decls
 class SGPath;
 class PropertyWatcher;
+class RoutePath;
 
 /**
  * Top level route manager class
@@ -181,6 +181,8 @@ private:
     InputListener *listener;
     SGPropertyNode_ptr mirror;
 
+    std::unique_ptr<RoutePath> _routePath;
+
     /**
      * Helper to keep various pieces of state in sync when the route is
      * modified (waypoints added, inserted, removed). Notably, this fires the
@@ -236,4 +238,3 @@ private:
     void setAlternate(const std::string &icao);
 };
 
-#endif // _ROUTE_MGR_HXX

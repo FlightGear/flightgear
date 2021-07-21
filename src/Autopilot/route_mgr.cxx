@@ -417,17 +417,15 @@ void FGRouteMgr::postinit()
 // then the global initial waypoint list could die.
   string_list *waypoints = globals->get_initial_waypoints();
   if (waypoints) {
-    string_list::iterator it;
-    for (it = waypoints->begin(); it != waypoints->end(); ++it) {
-        WayptRef w = waypointFromString(*it, -1);
+    for (const auto& wpStr : *waypoints) {
+        WayptRef w = waypointFromString(wpStr, -1);
         if (w) {
             _plan->insertWayptAtIndex(w, -1);
         } else {
-            SG_LOG(SG_AUTOPILOT, SG_WARN, "Failed to create waypoint from '" << *it << "'");
+            SG_LOG(SG_AUTOPILOT, SG_WARN, "Failed to create waypoint from '" << wpStr << "'");
         }
     }
     
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "loaded initial waypoints:" << numLegs());
     update_mirror();
   }
 
@@ -538,8 +536,11 @@ void FGRouteMgr::update( double dt )
   }
   
   // use RoutePath to compute location of active WP
-  RoutePath path(_plan);
-  SGGeod wpPos = path.positionForIndex(_plan->currentIndex());
+  if (!_routePath) {
+    _routePath.reset(new RoutePath{_plan});
+  }
+
+  SGGeod wpPos = _routePath->positionForIndex(_plan->currentIndex());
   double courseDeg, az2, distanceM;
   SGGeodesy::inverse(currentPos, wpPos, courseDeg, az2, distanceM);
 
@@ -564,7 +565,7 @@ void FGRouteMgr::update( double dt )
   
   FlightPlan::Leg* nextLeg = _plan->nextLeg();
   if (nextLeg) {
-    wpPos = path.positionForIndex(_plan->currentIndex() + 1);
+    wpPos = _routePath->positionForIndex(_plan->currentIndex() + 1);
     SGGeodesy::inverse(currentPos, wpPos, courseDeg, az2, distanceM);
 
     wp1->setDoubleValue("dist", distanceM * SG_METER_TO_NM);
@@ -586,6 +587,7 @@ void FGRouteMgr::update( double dt )
 
 void FGRouteMgr::clearRoute()
 {
+  _routePath.reset();
   if (_plan) {
       _plan->clearLegs();
   }
@@ -670,6 +672,7 @@ void FGRouteMgr::waypointsChanged()
 // mirror internal route to the property system for inspection by other subsystems
 void FGRouteMgr::update_mirror()
 {
+    _routePath.reset(); // wipe this so we re-compute on next update()
   mirror->removeChildren("wp");
   NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
   FGDialog* rmDlg = gui ? gui->getDialog("route-manager") : NULL;
