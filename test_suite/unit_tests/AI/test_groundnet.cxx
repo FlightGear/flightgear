@@ -94,7 +94,7 @@ void GroundnetTests::testShortestRoute()
     FGTaxiNodeRef end = network->findNearestNodeOnRunway(runway->threshold());
     FGTaxiRoute route = network->findShortestRoute(startParking, end); 
     CPPUNIT_ASSERT_EQUAL(true, network->exists());
-    CPPUNIT_ASSERT_EQUAL(25, route.size());
+    CPPUNIT_ASSERT_EQUAL(29, route.size());
 }
 
 /**

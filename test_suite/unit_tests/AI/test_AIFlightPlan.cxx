@@ -293,15 +293,15 @@ void AIFlightPlanTests::testAIFlightPlanLoadXML()
         <flightplan>
             <wp>
                 <name>onGroundWP</name>
-                <lat></lat>
-                <lon></lon>
+                <lat>57</lat>
+                <lon>3</lon>
                 <ktas>10</ktas>
                 <on-ground>1</on-ground>
             </wp>
             <wp>
                 <name>someWP</name>
-                <lat></lat>
-                <lon></lon>
+                    <lat>57</lat>
+                    <lon>4</lon>
                 <ktas>200</ktas>
                 <alt>8000</alt>
             </wp>

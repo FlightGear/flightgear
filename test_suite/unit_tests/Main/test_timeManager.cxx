@@ -54,7 +54,7 @@ void TimeManagerTests::tearDown()
 
 void TimeManagerTests::testBasic()
 {
-    auto timeManager = new TimeManager;
+    auto timeManager = globals->get_subsystem<TimeManager>();
 
     // set standard values
     fgSetBool("/sim/freeze", false);
@@ -82,15 +82,13 @@ void TimeManagerTests::testBasic()
 
 void TimeManagerTests::testFreezeUnfreeze()
 {
-    auto timeManager = new TimeManager;
+    auto timeManager = globals->get_subsystem<TimeManager>();
 
     // set standard values
     fgSetBool("/sim/freeze/clock", false);
     fgSetBool("/sim/sceneryloaded", true);
     fgSetDouble("/sim/model-hz", 120.0);
 
-    timeManager->bind();
-    timeManager->init();
     timeManager->postinit();
 
     double simDt, realDt;
@@ -122,19 +120,17 @@ void TimeManagerTests::testFreezeUnfreeze()
 
 void TimeManagerTests::testTimeZones()
 {
+    auto timeManager = globals->get_subsystem<TimeManager>();
+
     auto vabb = fgFindAirportID("VABB");
     FGTestApi::setPositionAndStabilise(vabb->geod());
 
-
-    auto timeManager = new TimeManager;
 
     // set standard values
     fgSetBool("/sim/freeze", false);
     fgSetBool("/sim/sceneryloaded", true);
     fgSetDouble("/sim/model-hz", 120.0);
 
-    timeManager->bind();
-    timeManager->init();
     timeManager->postinit();
 
     // fake Unix time by setting this; it will then
@@ -172,20 +168,17 @@ void TimeManagerTests::testTimeZones()
 
 void TimeManagerTests::testETCTimeZones()
 {
+    auto timeManager = globals->get_subsystem<TimeManager>();
+
     auto phto = fgFindAirportID("PHTO");
     FGTestApi::setPositionAndStabilise(phto->geod());
-    auto timeManager = new TimeManager;
 
-    timeManager->bind();
-    timeManager->init();
     timeManager->postinit();
 
     // fake Unix time by setting this; it will then
     // set the 'current unix time' passed to SGTime
     const auto testDate = 314611200L;
     fgSetInt("/sim/time/cur-time-override", testDate);
-
-    globals->add_subsystem("time", timeManager, SGSubsystemMgr::INIT);
 
     FGTestApi::setPositionAndStabilise(phto->geod());
     timeManager->reposition();
@@ -219,15 +212,13 @@ void TimeManagerTests::testSpecifyTimeOffset()
     // to define sun position
     return;
 
-    auto timeManager = new TimeManager;
+    auto timeManager = globals->get_subsystem<TimeManager>();
 
     // set standard values
     fgSetBool("/sim/freeze", false);
     fgSetBool("/sim/sceneryloaded", true);
     fgSetDouble("/sim/model-hz", 120.0);
 
-    timeManager->bind();
-    timeManager->init();
     timeManager->postinit();
 
     const auto testDate = 314611200L;

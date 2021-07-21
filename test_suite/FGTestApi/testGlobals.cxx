@@ -70,6 +70,7 @@ void initTestGlobals(const std::string& testName)
     fgSetDefaults();
 
     auto t = globals->add_new_subsystem<TimeManager>(SGSubsystemMgr::INIT);
+    t->bind();
     t->init(); // establish mag-var data
 
     /**

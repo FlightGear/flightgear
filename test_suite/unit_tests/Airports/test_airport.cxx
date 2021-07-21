@@ -51,15 +51,16 @@
 /////////////////////////////////////////////////////////////////////////////
 
 // Set up function for each test.
-void AirportTests::setUp() {
-    FGTestApi::setUp::initTestGlobals("timeManager");
-    FGTestApi::setUp::initTestGlobals("Traffic");
+void AirportTests::setUp()
+{
+    FGTestApi::setUp::initTestGlobals("Airports");
     FGTestApi::setUp::initNavDataCache();
 }
 
 // Clean up after each test.
 void AirportTests::tearDown()
 {
+    FGTestApi::tearDown::shutdownTestGlobals();
 }
 
 /**
