@@ -116,10 +116,12 @@ void FGModelMgr::shutdown()
 void
 FGModelMgr::add_model (SGPropertyNode * node)
 {
-  SG_LOG(SG_AIRCRAFT, SG_INFO,
-         "Adding model " << node->getStringValue("name", "[unnamed]"));
-
-  const char *model_path = node->getStringValue("path", "Models/Geometry/glider.ac");
+    const std::string model_path{node->getStringValue("path", "Models/Geometry/glider.ac")};
+    if (model_path.empty()) {
+        SG_LOG(SG_AIRCRAFT, SG_WARN, "add_model called with empty path");
+        return;
+    }
+ 
   osg::Node *object;
 
   Instance * instance = new Instance;
@@ -128,12 +130,19 @@ FGModelMgr::add_model (SGPropertyNode * node)
     
   try {
       std::string fullPath = simgear::SGModelLib::findDataFile(model_path);
+      if (fullPath.empty()) {
+          SG_LOG(SG_AIRCRAFT, SG_ALERT, "add_model: unable to find model with name '" << model_path << "'");
+          return;
+      }
       object = SGModelLib::loadDeferredModel(fullPath, globals->get_props());
   } catch (const sg_throwable& t) {
     SG_LOG(SG_AIRCRAFT, SG_ALERT, "Error loading " << model_path << ":\n  "
         << t.getFormattedMessage() << t.getOrigin());
     return;
   }
+    
+    const std::string modelName{node->getStringValue("name", model_path.c_str())};
+    SG_LOG(SG_AIRCRAFT, SG_INFO, "Adding model " << modelName);
 
   SGModelPlacement *model = new SGModelPlacement;
   instance->model = model;
