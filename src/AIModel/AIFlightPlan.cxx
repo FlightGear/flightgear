@@ -21,6 +21,7 @@
 #endif
 
 #include <iterator>
+#include <algorithm>
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -530,19 +531,18 @@ void FGAIFlightPlan::addWaypoint(FGAIWaypoint* wpt)
 
 void FGAIFlightPlan::pushBackWaypoint(FGAIWaypoint *wpt)
 {
-  size_t pos = wpt_iterator - waypoints.begin();
-  if (waypoints.size()>0) {
-      double dist = SGGeodesy::distanceM( waypoints.back()->getPos(), wpt->getPos());
-      if( dist == 0 ) {
-        SG_LOG(SG_AI, SG_DEBUG, "Double WP : \t" << wpt->getName() << " not added ");
-      } else {
-        waypoints.push_back(wpt);
-        SG_LOG(SG_AI, SG_BULK, "Added WP : \t" << wpt->getName() << "\t" << wpt->getPos() << "\t" << wpt->getSpeed());
+    const size_t pos = std::distance(waypoints.cbegin(), wpt_iterator);
+    
+    if (!waypoints.empty()) {
+      const double dist = SGGeodesy::distanceM( waypoints.back()->getPos(), wpt->getPos());
+      if ( dist < 0.5 ) {
+        SG_LOG(SG_AI, SG_DEV_ALERT, "Double WP : \t" << wpt->getName() << " not added ");
       }
-  } else {
+    }
+
     waypoints.push_back(wpt);
     SG_LOG(SG_AI, SG_BULK, "Added WP : \t" << wpt->getName() << "\t" << wpt->getPos() << "\t" << wpt->getSpeed());
-  }
+
   // std::vector::push_back invalidates waypoints
   //  so we should restore wpt_iterator after push_back
   //  (or it could be an index in the vector)
