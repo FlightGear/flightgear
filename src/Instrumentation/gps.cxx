@@ -264,6 +264,10 @@ GPS::bind()
 // navradio slaving properties  
   tie(_gpsNode, "cdi-deflection", SGRawValueMethods<GPS,double>
     (*this, &GPS::getCDIDeflection));
+
+    _currentWpLatNode = _currentWayptNode->getNode("latitude-deg", true);
+    _currentWpLonNode = _currentWayptNode->getNode("longitude-deg", true);
+    _currentWpAltNode = _currentWayptNode->getNode("altitude-ft", true);
 }
 
 void
@@ -271,6 +275,10 @@ GPS::unbind()
 {
   _tiedProperties.Untie();
   _gpsNode.clear();
+    _currentWayptNode.clear();
+    _currentWpLatNode.clear();
+    _currentWpLonNode.clear();
+    _currentWpAltNode.clear();
 }
 
 void
@@ -323,11 +331,7 @@ GPS::update (double delta_time_sec)
   if (_dataValid) {
     if (_wayptController.get()) {
       _wayptController->update(delta_time_sec);
-      SGGeod p(_wayptController->position());
-      _currentWayptNode->setDoubleValue("longitude-deg", p.getLongitudeDeg());
-      _currentWayptNode->setDoubleValue("latitude-deg", p.getLatitudeDeg());
-      _currentWayptNode->setDoubleValue("altitude-ft", p.getElevationFt());
-      
+        updateCurrentWpNode(_wayptController->position());
       _desiredCourse = getLegMagCourse();
       
       _gpsNode->setStringValue("rnav-controller-status", _wayptController->status());
@@ -800,13 +804,17 @@ void GPS::wp1Changed()
     _legDistanceNm = _wayptController->distanceToWayptM() * SG_METER_TO_NM;
     
     // synchronise these properties immediately
-    SGGeod p(_wayptController->position());
-    _currentWayptNode->setDoubleValue("longitude-deg", p.getLongitudeDeg());
-    _currentWayptNode->setDoubleValue("latitude-deg", p.getLatitudeDeg());
-    _currentWayptNode->setDoubleValue("altitude-ft", p.getElevationFt());
+      updateCurrentWpNode(_wayptController->position());
     
     _desiredCourse = getLegMagCourse();
   }
+}
+
+void GPS::updateCurrentWpNode(const SGGeod& p)
+{
+    _currentWpLatNode->setDoubleValue(p.getLatitudeDeg());
+    _currentWpLonNode->setDoubleValue(p.getLongitudeDeg());
+    _currentWpAltNode->setDoubleValue(p.getElevationFt());
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -321,6 +321,8 @@ private:
     void tieSGGeodReadOnly(SGPropertyNode* aNode, SGGeod& aRef,
                            const char* lonStr, const char* latStr, const char* altStr);
 
+    void updateCurrentWpNode(const SGGeod& p);
+    
 // FlightPlan::Delegate
     void currentWaypointChanged() override;
     void waypointsChanged() override;
@@ -334,6 +336,9 @@ private:
 // members
     SGPropertyNode_ptr _gpsNode;
     SGPropertyNode_ptr _currentWayptNode;
+    SGPropertyNode_ptr _currentWpLatNode,
+        _currentWpLonNode, _currentWpAltNode;
+    
     SGPropertyNode_ptr _magvar_node;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _electrical_node;
