@@ -595,7 +595,7 @@ void CommRadioImpl::init()
   
   auto soundManager = globals->get_subsystem<SGSoundMgr>();
   if (soundManager) {
-    _sampleGroup = soundManager->find("atc", false);
+    _sampleGroup = soundManager->find("atc", true);
   }
 }
 
