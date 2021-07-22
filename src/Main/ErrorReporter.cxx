@@ -143,7 +143,7 @@ public:
         _recentLogEntries.push_back(os.str());
 
         while (_recentLogEntries.size() > _preceedingLogMessageCount) {
-            _recentLogEntries.pop_back();
+            _recentLogEntries.pop_front();
         }
 
         return true;
