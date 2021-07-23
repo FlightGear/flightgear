@@ -151,14 +151,15 @@ bool FGTaxiRoute::next(FGTaxiNodeRef& node, int* rte)
 
     if (currNode == nodes.end())
         return false;
+
+    // work-around for FLIGHTGEAR-NJN: throw an exception here
+    // instead of crashing, to aid debugging
+    if (currRoute == routes.end()) {
+        throw sg_range_exception("Misconfigured taxi route: no route data");
+    }
+
     node = *(currNode);
     if (currNode != nodes.begin()) {
-        // work-around for FLIGHTGEAR-NJN: throw an exception here
-        // instead of crashing, to aid debugging
-        if (currRoute == routes.end()) {
-            throw sg_range_exception("Misconfigured taxi route");
-        }
-
         *rte = *(currRoute);
         currRoute++;
     } else {
