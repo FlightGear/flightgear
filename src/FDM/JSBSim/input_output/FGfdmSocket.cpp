@@ -39,7 +39,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
-#include <WS2tcpip.h>
+#include <ws2tcpip.h>
 #elif defined(__OpenBSD__)
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -156,7 +156,7 @@ FGfdmSocket::FGfdmSocket(int port, int protocol)
   connected = false;
   Protocol = (ProtocolType)protocol;
   string ProtocolName;
- 
+
 #if defined(_MSC_VER) || defined(__MINGW32__)
   if (!LoadWinSockDLL(debug_lvl)) return;
 #endif
@@ -179,7 +179,7 @@ FGfdmSocket::FGfdmSocket(int port, int protocol)
   if (debug_lvl > 0)
     cout << "Creating input " << ProtocolName << " socket on port " << port
          << endl;
-  
+
   if (sckt != -1) {
     memset(&scktName, 0, sizeof(struct sockaddr_in));
     scktName.sin_family = AF_INET;
@@ -275,15 +275,15 @@ string FGfdmSocket::Receive(void)
     }
 #endif
   }
-  
+
   // this is for FGUDPInputSocket
   if (sckt >= 0 && Protocol == ptUDP) {
     struct sockaddr addr;
     socklen_t fromlen = sizeof addr;
     num_chars = recvfrom(sckt, buf, sizeof buf, 0, (struct sockaddr*)&addr, &fromlen);
-    if (num_chars != -1) data.append(buf, num_chars); 
+    if (num_chars != -1) data.append(buf, num_chars);
   }
-  
+
   return data;
 }
 

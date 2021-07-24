@@ -52,12 +52,10 @@ namespace JSBSim {
 
 void FGPropertyManager::Unbind(void)
 {
-    vector<SGPropertyNode_ptr>::iterator it;
+  for(auto& prop: tied_properties)
+    prop->untie();
 
-    for (it = tied_properties.begin();it < tied_properties.end();it++)
-        (*it)->untie();
-
-    tied_properties.clear();
+  tied_properties.clear();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -73,7 +71,7 @@ string FGPropertyManager::mkPropertyName(string name, bool lowercase) {
     else if( isspace(name[i]) )
       name[i]='-';
   }
-  
+
   return name;
 }
 
@@ -324,95 +322,4 @@ void FGPropertyManager::Untie (const string &name)
   cerr << "Failed to untie property " << name << endl
        << "JSBSim is not the owner of this property." << endl;
 }
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGPropertyManager::Tie (const string &name, bool *pointer)
-{
-  SGPropertyNode* property = root->getNode(name.c_str(), true);
-  if (!property) {
-    cerr << "Could not get or create property " << name << endl;
-    return;
-  }
-
-  if (!property->tie(SGRawValuePointer<bool>(pointer), false))
-    cerr << "Failed to tie property " << name << " to a pointer" << endl;
-  else {
-    tied_properties.push_back(property);
-    if (FGJSBBase::debug_lvl & 0x20) cout << name << endl;
-  }
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGPropertyManager::Tie (const string &name, int *pointer)
-{
-  SGPropertyNode* property = root->getNode(name.c_str(), true);
-  if (!property) {
-    cerr << "Could not get or create property " << name << endl;
-    return;
-  }
-
-  if (!property->tie(SGRawValuePointer<int>(pointer), false))
-    cerr << "Failed to tie property " << name << " to a pointer" << endl;
-  else {
-    tied_properties.push_back(property);
-    if (FGJSBBase::debug_lvl & 0x20) cout << name << endl;
-  }
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGPropertyManager::Tie (const string &name, long *pointer)
-{
-  SGPropertyNode* property = root->getNode(name.c_str(), true);
-  if (!property) {
-    cerr << "Could not get or create property " << name << endl;
-    return;
-  }
-
-  if (!property->tie(SGRawValuePointer<long>(pointer), false))
-    cerr << "Failed to tie property " << name << " to a pointer" << endl;
-  else {
-    tied_properties.push_back(property);
-    if (FGJSBBase::debug_lvl & 0x20) cout << name << endl;
-  }
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGPropertyManager::Tie (const string &name, float *pointer)
-{
-  SGPropertyNode* property = root->getNode(name.c_str(), true);
-  if (!property) {
-    cerr << "Could not get or create property " << name << endl;
-    return;
-  }
-
-  if (!property->tie(SGRawValuePointer<float>(pointer), false))
-    cerr << "Failed to tie property " << name << " to a pointer" << endl;
-  else {
-    tied_properties.push_back(property);
-    if (FGJSBBase::debug_lvl & 0x20) cout << name << endl;
-  }
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGPropertyManager::Tie (const string &name, double *pointer)
-{
-  SGPropertyNode* property = root->getNode(name.c_str(), true);
-  if (!property) {
-    cerr << "Could not get or create property " << name << endl;
-    return;
-  }
-
-  if (!property->tie(SGRawValuePointer<double>(pointer), false))
-    cerr << "Failed to tie property " << name << " to a pointer" << endl;
-  else {
-    tied_properties.push_back(property);
-    if (FGJSBBase::debug_lvl & 0x20) cout << name << endl;
-  }
-}
-
 } // namespace JSBSim

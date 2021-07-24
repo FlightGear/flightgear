@@ -90,12 +90,12 @@ void FGElectric::Calculate(void)
   if (Thruster->GetType() == FGThruster::ttPropeller) {
     ((FGPropeller*)Thruster)->SetAdvance(in.PropAdvance[EngineNumber]);
     ((FGPropeller*)Thruster)->SetFeather(in.PropFeather[EngineNumber]);
-  } 
+  }
 
   RPM = Thruster->GetRPM() * Thruster->GetGearRatio();
 
   HP = PowerWatts * in.ThrottlePos[EngineNumber] / hptowatts;
-  
+
   LoadThrusterInputs();
   // Filters out negative powers when the propeller is not rotating.
   double power = HP * hptoftlbssec;

@@ -29,8 +29,9 @@ Purpose: Stores property values
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <assert.h>
+
 #include "FGPropertyValue.h"
-#include "input_output/FGPropertyManager.h"
 
 namespace JSBSim {
 
@@ -80,6 +81,9 @@ double FGPropertyValue::GetValue(void) const
 
 void FGPropertyValue::SetValue(double value)
 {
+  // SetValue() ignores the Sign flag. So make sure it is never called with a
+  // negative sign.
+  assert(Sign == 1);
   GetNode()->setDoubleValue(value);
 }
 
