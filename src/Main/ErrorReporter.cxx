@@ -768,8 +768,10 @@ void ErrorReporter::init()
         SG_LOG(SG_GENERAL, SG_INFO, "Error reporting disabled");
         simgear::setFailureCallback(simgear::FailureCallback());
         simgear::setErrorContextCallback(simgear::ContextCallback());
-        sglog().removeCallback(d->_logCallback.get());
-        d->_logCallbackRegistered = false;
+        if (d->_logCallbackRegistered) {
+            sglog().removeCallback(d->_logCallback.get());
+            d->_logCallbackRegistered = false;
+        }
         return;
     }
 
@@ -885,8 +887,14 @@ void ErrorReporter::shutdown()
         globals->get_commands()->removeCommand("dismiss-error-report");
         globals->get_commands()->removeCommand("save-error-report-data");
         globals->get_commands()->removeCommand("show-error-report");
-        sglog().removeCallback(d->_logCallback.get());
-        d->_logCallbackRegistered = false;
+
+// during a reset we don't want to touch the log callback; it was added in
+// preinit, which does not get repeated on a reset
+        const bool inReset = fgGetBool("/sim/signals/reinit", false);
+        if (!inReset) {
+            sglog().removeCallback(d->_logCallback.get());
+            d->_logCallbackRegistered = false;
+        }
     }
 }
 

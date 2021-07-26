@@ -155,6 +155,7 @@
 #include "util.hxx"
 #include "AircraftDirVisitorBase.hxx"
 #include <Main/sentryIntegration.hxx>
+#include <Main/ErrorReporter.hxx>
 
 #if defined(SG_MAC)
 #include <GUI/CocoaHelpers.h> // for Mac impl of platformDefaultDataPath()
@@ -1235,7 +1236,10 @@ void fgStartNewReset()
         SGSubsystemGroup* grp = subsystemManger->get_group(static_cast<SGSubsystemMgr::GroupType>(g));
         for (auto nm : grp->member_names()) {
             if ((nm == "time") || (nm == "terrasync") || (nm == "events")
-                || (nm == "lighting") || (nm == FGScenery::staticSubsystemClassId()))
+                || (nm == "lighting") 
+                || (nm == FGScenery::staticSubsystemClassId())
+                || (nm == flightgear::ErrorReporter::staticSubsystemClassId())
+                )
             {
                 continue;
             }
