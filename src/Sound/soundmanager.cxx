@@ -212,6 +212,13 @@ bool FGSoundManager::playAudioSampleCommand(const SGPropertyNode * arg, SGProper
     string path = arg->getStringValue("path");
     string file = arg->getStringValue("file");
     float volume = arg->getFloatValue("volume");
+
+    SGPath foundPath = globals->resolve_maybe_aircraft_path(path);
+    if (!foundPath.exists()) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "play-audio-sample: no such file:'" << path << "'");
+        return false;
+    }
+
     // cout << "playing " << path << " / " << file << endl;
     try {
         if ( !_queue[name] ) {
