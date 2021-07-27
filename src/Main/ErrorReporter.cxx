@@ -663,6 +663,16 @@ void ErrorReporter::ErrorReporterPrivate::writeLogToStream(const ErrorOcurrence&
 
 bool ErrorReporter::ErrorReporterPrivate::AggregateReport::addOccurence(const ErrorOcurrence& err)
 {
+    // hacky reduction in noise for 2020.3: special case this error.
+    // file was removed but update-in-place means it will persist
+    // this is the removed RNLAF traffic which has many errors
+    if (type == Aggregation::Traffic) {
+        const auto originPath = err.origin.asString();
+        if (simgear::strutils::ends_with(originPath, "Traffic/R/RNAF.xml")) {
+            return false; // don't add
+        }
+    }
+
     auto it = std::find_if(errors.begin(), errors.end(), [err](const ErrorOcurrence& ext) {
         // check if the two occurences match for the purposes of
         // de-duplication.
