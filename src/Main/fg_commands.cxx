@@ -830,7 +830,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
             if (!quiet) {
                 SG_LOG(SG_IO, SG_INFO, "loadxml: failed to find airport data for " << file << " at ICAO:" << icao);
                 simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::XMLLoadCommand,
-                                       "loadxml: no airprot data file for:" + icao, file);
+                                       "loadxml: no airport data file for:" + icao, file);
             }
           return false;
         }
