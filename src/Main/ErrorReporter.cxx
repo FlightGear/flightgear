@@ -417,7 +417,7 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
         return getAggregate(Aggregation::TerraSync, {});
     }
 
-    if (oc.hasContextKey("terrain-stg")) {
+    if (oc.hasContextKey("terrain-stg") || oc.hasContextKey("btg")) {
         // determine if it's custom scenery, TerraSync or FGData
 
         // bucket is no use here, we need to check the BTG/XML/STG path etc.
@@ -425,18 +425,17 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
         // STG references a model, XML or texture in FGData or TerraSync
         // incorrectly, we attribute the error to the scenery, which is
         // likely what we want/expect
-        const auto stgPath = oc.getContextValue("terrain-stg");
-
-        if (simgear::strutils::starts_with(stgPath, _fgdataPathPrefix)) {
+        auto path = oc.hasContextKey("terrain-stg") ? oc.getContextValue("terrain-stg") : oc.getContextValue("btg");
+        if (simgear::strutils::starts_with(path, _fgdataPathPrefix)) {
             return getAggregate(Aggregation::FGData, {});
-        } else if (simgear::strutils::starts_with(stgPath, _terrasyncPathPrefix)) {
+        } else if (simgear::strutils::starts_with(path, _terrasyncPathPrefix)) {
             return getAggregate(Aggregation::TerraSync, {});
         }
 
         // custom scenery, find out the prefix
         for (const auto& sceneryPath : globals->get_fg_scenery()) {
             const auto pathStr = sceneryPath.utf8Str();
-            if (simgear::strutils::starts_with(stgPath, pathStr)) {
+            if (simgear::strutils::starts_with(path, pathStr)) {
                 return getAggregate(Aggregation::CustomScenery, pathStr);
             }
         }
