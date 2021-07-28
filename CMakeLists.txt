@@ -271,14 +271,10 @@ find_package(OpenSceneGraph 3.6.0 REQUIRED
 
 find_package(sentry QUIET)
 
-set(sentry_api_key $ENV{FLIGHTGEAR_SENTRY_API_KEY})
+set(sentry_api_key "https://b10d9504e71244a7a86ba6c93acf6412@o372956.ingest.sentry.io/5188535")
 if (TARGET sentry::sentry)
-    if (NOT sentry_api_key)
-        message(STATUS "Sentry.io crash reporting detected, but FLIGHTGEAR_SENTRY_API_KEY not set")
-    else()
-        message(STATUS "Sentry.io crash reporting enabled")
-        set(HAVE_SENTRY 1)
-    endif()
+    message(STATUS "Sentry.io crash reporting enabled")
+    set(HAVE_SENTRY 1)
 endif()
 
 ##############################################################################
