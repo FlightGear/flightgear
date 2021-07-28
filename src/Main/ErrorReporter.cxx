@@ -217,6 +217,14 @@ public:
 
     string _terrasyncPathPrefix;
     string _fgdataPathPrefix;
+    string _aircraftDirectoryName;
+
+    /**
+        @brief hueristic to identify relative paths as origination from the main aircraft as opposed
+                to something else. This is based on containing the aircraft directory name.
+     */
+    bool isMainAircraftPath(const std::string& path) const;
+
     /**
         structure representing one or more errors, aggregated together
      */
@@ -455,11 +463,21 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
         return getAggregate(Aggregation::InputDevice, oc.getContextValue("input-device"));
     }
 
+    // start guessing :)
+    // from this point on we're using less reliable inferences about where the
+    // error came from, trying to avoid 'unknown'
+    if (isMainAircraftPath(oc.origin.asString())) {
+        const auto fullId = fgGetString("/sim/aircraft-id");
+        if (fullId != fgGetString("/sim/aircraft")) {
+            return getAggregate(Aggregation::MainAircraft, fullId);
+        }
+
+        return getAggregate(Aggregation::HangarAircraft, fullId);
+    }
+
     // GUI dialog errors often have no context
     if (oc.code == simgear::ErrorCode::GUIDialog) {
-        // TODO: check if it's an aircraft dialog and use MainAicraft
         // check if it's an add-on and use that
-
         return getAggregate(Aggregation::FGData);
     }
 
@@ -691,6 +709,13 @@ bool ErrorReporter::ErrorReporterPrivate::AggregateReport::addOccurence(const Er
     return true;
 }
 
+bool ErrorReporter::ErrorReporterPrivate::isMainAircraftPath(const std::string& path) const
+{
+    const auto pos = path.find(_aircraftDirectoryName);
+    return pos != std::string::npos;
+}
+
+
 ////////////////////////////////////////////
 
 ErrorReporter::ErrorReporter() : d(new ErrorReporterPrivate)
@@ -787,6 +812,9 @@ void ErrorReporter::init()
     // cache these values here
     d->_fgdataPathPrefix = globals->get_fg_root().utf8Str();
     d->_terrasyncPathPrefix = globals->get_terrasync_dir().utf8Str();
+
+    const auto aircraftPath = SGPath::fromUtf8(fgGetString("/sim/aircraft-dir"));
+    d->_aircraftDirectoryName = aircraftPath.file();
 }
 
 void ErrorReporter::update(double dt)
