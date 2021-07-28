@@ -209,8 +209,6 @@ void FGXMLAutopilotGroup::addAutopilotFromFile( const std::string& name,
 
   try
   {
-      flightgear::SentryXMLErrorSupression xmlc;
-
       SGPropertyNode_ptr configNode = new SGPropertyNode();
       readProperties(config, configNode);
 

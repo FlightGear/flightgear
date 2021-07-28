@@ -1070,19 +1070,13 @@ bool FlightPlan::loadXmlFormat(const SGPath& path)
 {
   SGPropertyNode_ptr routeData(new SGPropertyNode);
 
-  // avoid error reports on user flight-plans
-  flightgear::sentryThreadReportXMLErrors(false);
   try {
     readProperties(path, routeData);
   } catch (sg_exception& e) {
      SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
              << "'. " << e.getMessage());
-    // XML parsing fails => not a property XML file
-    flightgear::sentryThreadReportXMLErrors(true);
     return false;
   }
-
-  flightgear::sentryThreadReportXMLErrors(true);
 
   if (routeData.valid())
   {

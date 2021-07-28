@@ -97,7 +97,6 @@ FGDeviceConfigurationMap::configurationForDeviceName(const std::string& name)
       
   SGPropertyNode_ptr result(new SGPropertyNode);
   try {
-      flightgear::SentryXMLErrorSupression xs;
       readProperties(it->second, result);
       result->setStringValue("source", it->second.utf8Str());
   } catch (sg_exception& e) {
@@ -167,7 +166,6 @@ void FGDeviceConfigurationMap::refreshCacheForFile(const SGPath& path)
 
     SG_LOG(SG_INPUT, SG_DEBUG, "Reading device file " << path);
     SGPropertyNode_ptr n(new SGPropertyNode);
-    flightgear::SentryXMLErrorSupression dontReportXmlErrors;
     try {
         readProperties(path, n);
     } catch (sg_exception& e) {

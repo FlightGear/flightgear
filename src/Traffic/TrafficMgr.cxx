@@ -131,7 +131,6 @@ public:
 
   void run() override
   {
-      flightgear::sentryThreadReportXMLErrors(false);
       for (const auto& p : _trafficDirPaths) {
           parseTrafficDir(p);
           if (_cancelThread) {

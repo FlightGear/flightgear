@@ -54,7 +54,6 @@ void XMLLoader::load(FGGroundNetwork* net)
   SGTimeStamp t;
   t.stamp();
   try {
-      flightgear::SentryXMLErrorSupression xs;
       FGGroundNetXMLLoader visitor(net);
       readXML(path, visitor);
 
@@ -72,7 +71,6 @@ void XMLLoader::load(FGGroundNetwork* net)
 void XMLLoader::loadFromStream(FGGroundNetwork* net, std::istream& inData)
 {
   try {
-      flightgear::SentryXMLErrorSupression xs;
       FGGroundNetXMLLoader visitor(net);
       readXML(inData, visitor);
 
@@ -87,7 +85,6 @@ void XMLLoader::loadFromStream(FGGroundNetwork* net, std::istream& inData)
 void XMLLoader::loadFromPath(FGGroundNetwork* net, const SGPath& path)
 {
   try {
-      flightgear::SentryXMLErrorSupression xs;
       FGGroundNetXMLLoader visitor(net);
       readXML(path, visitor);
 
@@ -145,7 +142,6 @@ bool XMLLoader::loadAirportXMLDataIntoVisitor(const string& aICAO,
 
     bool readXMLOk = true;
     try {
-        flightgear::sentryThreadReportXMLErrors(false);
         SG_LOG(SG_NAVAID, SG_DEBUG, "loadAirportXMLDataIntoVisitor: loading from " << path);
         readXML(path, aVisitor);
     } catch (sg_exception& e) {
@@ -153,7 +149,6 @@ bool XMLLoader::loadAirportXMLDataIntoVisitor(const string& aICAO,
         SG_LOG(SG_NAVAID, SG_WARN, "XML errors trying to read:" << path);
     }
     
-    flightgear::sentryThreadReportXMLErrors(true);
     return readXMLOk;
 }
 

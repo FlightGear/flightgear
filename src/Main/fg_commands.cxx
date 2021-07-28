@@ -795,9 +795,6 @@ do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
     else
         targetnode = const_cast<SGPropertyNode *>(arg)->getNode("data", true);
 
-    // don't report Sentry errors for Nasal-loaded XML, since it makes
-    // for very noisy reports
-    flightgear::SentryXMLErrorSupression xmls;
     try {
         readProperties(validated_path, targetnode, true);
     } catch (const sg_exception &e) {

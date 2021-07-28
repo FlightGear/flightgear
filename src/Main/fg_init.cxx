@@ -311,7 +311,6 @@ public:
 
 
     try {
-        flightgear::SentryXMLErrorSupression xs;
         readProperties(_foundPath, globals->get_props());
     } catch ( const sg_exception &e ) {
       SG_LOG(SG_INPUT, SG_ALERT,

@@ -134,13 +134,10 @@ FGFX::init()
 
     SGPropertyNode root;
     try {
-        flightgear::SentryXMLErrorSupression sup;
         readProperties(path, &root);
     } catch (const sg_exception& e) {
         simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::AudioFX,
                                "Failure loading FX XML:" + e.getFormattedMessage(), e.getLocation());
-        SG_LOG(SG_SOUND, SG_ALERT,
-               "Error reading file '" << path << '\'');
         return;
     }
 
