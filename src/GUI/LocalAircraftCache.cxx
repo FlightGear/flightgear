@@ -402,11 +402,6 @@ protected:
         flightgear::addSentryBreadcrumb("AircraftScan started", "info");
         readCache();
 
-        // avoid filling up Sentry with many reports
-        // from unmaintained aircraft. We'll still fail if soemeone tries
-        // to use the aircraft, but that's 100x less common.
-        flightgear::sentryThreadReportXMLErrors(false);
-
         Q_FOREACH(QString d, m_dirs) {
             const auto p = SGPath::fromUtf8(d.toUtf8().toStdString());
             m_currentScanDir->setCurrentPath(p);
@@ -807,7 +802,6 @@ LocalAircraftCache::readAircraftProperties(const SGPath &setPath, SGPropertyNode
     dp->setCurrentAircraftPath(setPath);
 
     ParseSetXMLResult result = ParseSetXMLResult::Failed;
-    flightgear::sentryThreadReportXMLErrors(false);
 
     try {
         readProperties(setPath, props);
@@ -819,7 +813,6 @@ LocalAircraftCache::readAircraftProperties(const SGPath &setPath, SGPropertyNode
     }
 
     rm->removeProvider(dp.get());
-    flightgear::sentryThreadReportXMLErrors(true);
     return result;
 }
 

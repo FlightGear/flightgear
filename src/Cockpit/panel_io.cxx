@@ -822,10 +822,10 @@ fgReadPanel (istream &input)
   SGPropertyNode root;
 
   try {
-      flightgear::SentryXMLErrorSupression xs;
     readProperties(input, &root);
   } catch (const sg_exception &e) {
-    guiErrorMessage("Error reading panel: ", e);
+          simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::AircraftSystems,
+                             "Failed to load aircraft panel:" + e.getFormattedMessage());
     return 0;
   }
     return readPanel(&root, SGPath{});
@@ -851,7 +851,6 @@ fgReadPanel (const string &relative_path)
   }
 
   try {
-      flightgear::SentryXMLErrorSupression xs;
     readProperties(path, &root);
   } catch (const sg_exception &e) {
       simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::AircraftSystems,

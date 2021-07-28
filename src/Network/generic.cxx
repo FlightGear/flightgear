@@ -763,7 +763,6 @@ FGGeneric::reinit()
    
     SGPropertyNode root;
     try {
-        flightgear::SentryXMLErrorSupression xs;
         readProperties(path, &root);
     } catch (const sg_exception & ex) {
         SG_LOG(SG_NETWORK, SG_ALERT,

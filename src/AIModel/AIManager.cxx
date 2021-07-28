@@ -223,9 +223,6 @@ SGPropertyNode_ptr FGAIManager::registerScenarioFile(SGPropertyNode_ptr root, co
 
     simgear::ErrorReportContext ectx("scenario-path", xmlPath.utf8Str());
 
-    // don't report XML errors while loading scenarios, to Sentry
-    flightgear::SentryXMLErrorSupression xml;
-
     try {
         SGPropertyNode_ptr scenarioProps(new SGPropertyNode);
         readProperties(xmlPath, scenarioProps);
@@ -670,9 +667,6 @@ FGAIManager::loadScenarioFile(const std::string& scenarioName, SGPath& outPath)
 {
     auto s = fgGetNode("/sim/ai/scenarios");
     if (!s) return {};
-
-    // don't report XML errors while loading scenarios, to Sentry
-    flightgear::SentryXMLErrorSupression xml;
 
     for (auto n : s->getChildren("scenario")) {
         if (n->getStringValue("id") == scenarioName) {
