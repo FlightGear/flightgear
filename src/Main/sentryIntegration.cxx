@@ -567,12 +567,16 @@ void addSentryTag(const std::string& tag, const std::string& value)
 
 SentryAllocErrorSupression::SentryAllocErrorSupression()
 {
+#if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
     perThread_reportAllocErrors = false;
+#endif
 }
 
 SentryAllocErrorSupression::~SentryAllocErrorSupression()
 {
+#if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
     perThread_reportAllocErrors = true;
+#endif
 }
 
 } // of namespace flightgear
