@@ -337,6 +337,9 @@ int main ( int argc, char **argv )
             info = std::string("received from ") + t.getOrigin();
         flightgear::fatalMessageBoxWithoutExit(
           "Fatal exception", t.getFormattedMessage(), info);
+    } catch (const std::bad_alloc&) {
+        flightgear::fatalMessageBoxWithoutExit("Out of memory",
+        "FlightGear ran out of memory and must exit.", "Consider adjusting your settings or closing other applications.");
     } catch (const std::exception &e ) {
         flightgear::fatalMessageBoxWithoutExit("Fatal exception", e.what());
     } catch (const std::string &s) {
