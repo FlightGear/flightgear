@@ -1392,6 +1392,8 @@ void FGNasalSys::loadPropertyScripts(SGPropertyNode* n)
                 {
                     SG_LOG(SG_NASAL, SG_ALERT, "Cannot find Nasal script '" <<
                             file << "' for module '" << module << "'.");
+                    simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::AircraftSystems,
+                             string{"Missing nasal file for module:"} + module, sg_location{file});
                 }
             }
             ok &= p.isNull() ? false : loadModule(p, module);
