@@ -762,6 +762,9 @@ int fgInitAircraft(bool reinit)
     
     FindAndCacheAircraft f(globals->get_props());
     const bool haveExplicit = f.haveExplicitAircraft();
+    if (haveExplicit) {
+        flightgear::addSentryBreadcrumb("Have explicit aircraft-dr and -set.xml", "info");
+    }
 
     SGSharedPtr<Root> pkgRoot(globals->packageRoot());
     SGPropertyNode* aircraftProp = fgGetNode("/sim/aircraft", true);
@@ -777,7 +780,9 @@ int fgInitAircraft(bool reinit)
 
     if (acftPackage) {
         if (acftPackage->isInstalled()) {
+            flightgear::addSentryBreadcrumb("Loading aircraft from installed package", "info");
             SG_LOG(SG_GENERAL, SG_INFO, "Loading aircraft from package:" << acftPackage->qualifiedId());
+            
             // if we resolved a non-qualified ID, set the full one back to /sim/aircraft-id
             fgSetString("/sim/aircraft-id", acftPackage->qualifiedId());
 
@@ -792,6 +797,8 @@ int fgInitAircraft(bool reinit)
             InstallRef acftInstall = acftPackage->install();
             fgSetString("/sim/aircraft-dir", acftInstall->path().utf8Str());
 
+            flightgear::addSentryBreadcrumb("Computed aircraft-dir as:" + acftInstall->path().utf8Str(), "info");
+
             // overwrite the fully qualified ID with the aircraft one, so the
             // code in FindAndCacheAircraft works as normal
             // note since we may be using a variant, we can't use the package ID
@@ -803,6 +810,7 @@ int fgInitAircraft(bool reinit)
 
             // run the traditional-code path below
         } else {
+            flightgear::addSentryBreadcrumb("Package is not installed:" + aircraftId, "info");
 #if 0
             // naturally the better option would be to on-demand install it!
             flightgear::fatalMessageBoxWithoutExit(
