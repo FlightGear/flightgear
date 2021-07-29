@@ -1286,6 +1286,20 @@ void fgStartNewReset()
     fgSetBool("/sim/signals/reinit", true);
     fgSetBool("/sim/freeze/master", true);
     
+    // pause the osgDB requests right now, but more may appear; we will
+    // clear and cancel further down once shutdown has occured
+    FGRenderer* render = globals->get_renderer();
+    auto pager = render->getViewer()->getDatabasePager();
+    pager->setAcceptNewDatabaseRequests(false);
+    pager->cancel();
+    
+    // extra clear is needed to ensure compile/merge lists are also empty
+    pager->clear();
+    
+    assert(pager->getDataToMergeListSize() == 0);
+    assert(pager->getDataToCompileListSize() == 0);
+
+    
     SGSubsystemMgr* subsystemManger = globals->get_subsystem_mgr();
     // Nasal is added in fgPostInit, ensure it's already shutdown
     // before other subsystems, so Nasal listeners don't fire during shutdown
@@ -1327,7 +1341,6 @@ void fgStartNewReset()
     // drop any references to AI objects with TACAN
     flightgear::NavDataCache::instance()->clearDynamicPositioneds();
 
-    FGRenderer* render = globals->get_renderer();
     // needed or we crash in multi-threaded OSG mode
     render->getViewer()->stopThreading();
     
@@ -1337,11 +1350,6 @@ void fgStartNewReset()
 
     FGScenery::getPagerSingleton()->clearRequests();
     flightgear::CameraGroup::setDefault(NULL);
-    
-    // don't cancel the pager until after shutdown, since AIModels (and
-    // potentially others) can queue delete requests on the pager.
-    render->getViewer()->getDatabasePager()->cancel();
-    render->getViewer()->getDatabasePager()->clear();
     
     osgDB::Registry::instance()->clearObjectCache();
     // Pager requests depend on this, so don't clear it until now
@@ -1355,7 +1363,7 @@ void fgStartNewReset()
 
     globals->set_renderer(NULL);
     globals->set_matlib(NULL);
-
+    
     flightgear::unregisterMainLoopProperties();
     FGReplayData::resetStatisticsProperties();
 
@@ -1426,8 +1434,9 @@ void fgStartNewReset()
 
     sgUserDataInit( globals->get_props() );
 
-    viewer->getDatabasePager()->setUpThreads(20, 1);
-    
+    viewer->getDatabasePager()->setUpThreads(2, 1);
+    viewer->getDatabasePager()->setAcceptNewDatabaseRequests(true);
+
     // must do this before preinit for Rembrandthe
     flightgear::CameraGroup::buildDefaultGroup(viewer.get());
     render->preinit();
