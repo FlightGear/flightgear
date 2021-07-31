@@ -380,8 +380,8 @@ void AddOnsController::collectArgs()
 
     // add hangars as aircraft paths, so they are available for MP model searching
     for (const auto& catRef : globals->packageRoot()->catalogs()) {
-        const auto catPath = catRef->installRoot().utf8Str();
-        m_config->setArg("fg-aircraft", QString::fromStdString(catPath));
+        const auto catAircraftPath = catRef->installRoot() / "Aircraft";
+        m_config->setArg("fg-aircraft", QString::fromStdString(catAircraftPath.utf8Str()));
     }
 
     // add-on module paths
