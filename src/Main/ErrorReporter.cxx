@@ -434,11 +434,6 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
         // incorrectly, we attribute the error to the scenery, which is
         // likely what we want/expect
         auto path = oc.hasContextKey("terrain-stg") ? oc.getContextValue("terrain-stg") : oc.getContextValue("btg");
-        if (simgear::strutils::starts_with(path, _fgdataPathPrefix)) {
-            return getAggregate(Aggregation::FGData, {});
-        } else if (simgear::strutils::starts_with(path, _terrasyncPathPrefix)) {
-            return getAggregate(Aggregation::TerraSync, {});
-        }
 
         // custom scenery, find out the prefix
         for (const auto& sceneryPath : globals->get_fg_scenery()) {
@@ -447,6 +442,15 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
                 return getAggregate(Aggregation::CustomScenery, pathStr);
             }
         }
+
+        // try generic paths
+        if (simgear::strutils::starts_with(path, _fgdataPathPrefix)) {
+            return getAggregate(Aggregation::FGData, {});
+        } else if (simgear::strutils::starts_with(path, _terrasyncPathPrefix)) {
+            return getAggregate(Aggregation::TerraSync, {});
+        }
+
+        
 
         // shouldn't ever happen
         return getAggregate(Aggregation::CustomScenery, {});
