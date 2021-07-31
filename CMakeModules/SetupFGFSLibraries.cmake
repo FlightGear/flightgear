@@ -122,6 +122,8 @@ function (setup_fgfs_library_includes target)
     endif()
 
     if (ENABLE_SWIFT)
+        _apply_all_target_includes(${target} ${dbus_target} ${libEvent_target})
+    elseif(HAVE_DBUS)
         _apply_all_target_includes(${target} ${dbus_target})
     endif()
 
