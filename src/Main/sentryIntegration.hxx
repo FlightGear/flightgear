@@ -48,12 +48,6 @@ void sentryReportFatalError(const std::string& msg, const std::string& more = {}
 
 void sentryReportUserError(const std::string& aggregate, const std::string& details);
 
-class SentryAllocErrorSupression
-{
-public:
-    SentryAllocErrorSupression();
-    ~SentryAllocErrorSupression();
-};
 
 } // of namespace flightgear
 

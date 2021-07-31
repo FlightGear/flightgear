@@ -25,6 +25,8 @@
 #include <simgear/debug/LogCallback.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/debug/ErrorReportingCallback.hxx>
+#include <simgear/debug/Reporting.hxx>
+
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/commands.hxx>
@@ -76,7 +78,6 @@ auto exception_messageWhitelist = {
 #if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
 
 static bool static_sentryEnabled = false;
-thread_local bool perThread_reportAllocErrors = true;
 
 #include <sentry.h>
 
@@ -201,7 +202,7 @@ void sentrySimgearReportCallback(const string& msg, const string& more, bool isF
 
 void sentryReportBadAlloc()
 {
-    if (perThread_reportAllocErrors) {
+    if (simgear::ReportBadAllocGuard::isSet()) {
         sentry_value_t sentryMessage = sentry_value_new_object();
         sentry_value_set_by_key(sentryMessage, "type", sentry_value_new_string("Fatal Error"));
         sentry_value_set_by_key(sentryMessage, "formatted", sentry_value_new_string("bad allocation"));
@@ -563,20 +564,6 @@ void addSentryTag(const std::string& tag, const std::string& value)
         return;
     
     addSentryTag(tag.c_str(), value.c_str());
-}
-
-SentryAllocErrorSupression::SentryAllocErrorSupression()
-{
-#if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
-    perThread_reportAllocErrors = false;
-#endif
-}
-
-SentryAllocErrorSupression::~SentryAllocErrorSupression()
-{
-#if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
-    perThread_reportAllocErrors = true;
-#endif
 }
 
 } // of namespace flightgear
