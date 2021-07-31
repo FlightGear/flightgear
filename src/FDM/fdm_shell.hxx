@@ -65,6 +65,8 @@ private:
 
     void validateOutputProperties();
 
+    void doInitAndBind();
+
 private:
     TankPropertiesList _tankProperties;
     SGSharedPtr<FGInterface> _impl;

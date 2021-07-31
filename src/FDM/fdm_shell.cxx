@@ -170,6 +170,29 @@ void FDMShell::unbind()
   _tankProperties.unbind();
 }
 
+void FDMShell::doInitAndBind()
+{
+    SG_LOG(SG_FLIGHT, SG_INFO, "Scenery loaded, will init FDM");
+    try {
+        _impl->init();
+        if (_impl->get_bound()) {
+            _impl->unbind();
+        }
+        _impl->bind();
+
+        fgSetBool("/sim/fdm-initialized", true);
+        fgSetBool("/sim/signals/fdm-initialized", true);
+    } catch (std::exception& e) {
+        flightgear::fatalMessageBoxThenExit("Aircraft FDM initialization error",
+                                            string{"The aircraft flight dynamics model contains errors and cannot be used. ("} + e.what() + ")");
+    }
+
+    if (!copyProperties(_props->getNode("fdm", true),
+                        _initialFdmProperties)) {
+        SG_LOG(SG_FLIGHT, SG_ALERT, "Failed to save initial FDM property state");
+    }
+}
+
 void FDMShell::update(double dt)
 {
   if (!_impl) {
@@ -189,21 +212,7 @@ void FDMShell::update(double dt)
     SGGeod geod = SGGeod::fromDeg(lon, lat);
     const auto startUpPositionFialized = fgGetBool("/sim/position-finalized", false);
     if (startUpPositionFialized && globals->get_scenery()->scenery_available(geod, range)) {
-        SG_LOG(SG_FLIGHT, SG_INFO, "Scenery loaded, will init FDM");
-        _impl->init();
-        if (_impl->get_bound()) {
-          _impl->unbind();
-        }
-        _impl->bind();
-        
-        fgSetBool("/sim/fdm-initialized", true);
-        fgSetBool("/sim/signals/fdm-initialized", true);
-
-        if (!copyProperties(_props->getNode("fdm", true),
-                                     _initialFdmProperties))
-        {
-            SG_LOG(SG_FLIGHT, SG_ALERT, "Failed to save initial FDM property state");
-        }
+        doInitAndBind();
     }
   }
 
