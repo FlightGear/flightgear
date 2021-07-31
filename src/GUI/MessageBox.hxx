@@ -31,13 +31,15 @@ MessageBoxResult modalMessageBox(const std::string& caption,
 MessageBoxResult fatalMessageBoxWithoutExit(
     const std::string& caption,
     const std::string& msg,
-    const std::string& moreText = std::string());
+    const std::string& moreText = std::string(),
+    bool reportToSentry = true);
 
 [[noreturn]] void fatalMessageBoxThenExit(
     const std::string& caption,
     const std::string& msg,
     const std::string& moreText = std::string(),
-    int exitStatus = EXIT_FAILURE);
+    int exitStatus = EXIT_FAILURE,
+    bool reportToSentry = true);
 
 
 } // of namespace flightgear

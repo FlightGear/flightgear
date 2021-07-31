@@ -172,10 +172,13 @@ MessageBoxResult modalMessageBox(const std::string& caption,
 
 MessageBoxResult fatalMessageBoxWithoutExit(const std::string& caption,
     const std::string& msg,
-    const std::string& moreText)
+    const std::string& moreText,
+    bool reportToSentry)
 {
-    flightgear::sentryReportFatalError(msg, moreText);
-
+    if (reportToSentry) {
+        flightgear::sentryReportFatalError(msg, moreText);
+    }
+    
     // Headless mode.
     if (static_isHeadless) {
         SG_LOG(SG_HEADLESS, SG_ALERT, "Fatal Error: \"" << caption << "\"");
@@ -212,9 +215,10 @@ MessageBoxResult fatalMessageBoxWithoutExit(const std::string& caption,
     const std::string& caption,
     const std::string& msg,
     const std::string& moreText,
-    int exitStatus)
+    int exitStatus,
+    bool reportToSentry)
 {
-    fatalMessageBoxWithoutExit(caption, msg, moreText);
+    fatalMessageBoxWithoutExit(caption, msg, moreText, reportToSentry);
     // we can't use exit() here or QGuiApplication crashes
     // let's instead throw a sepcial exception which we catch
     // in boostrap.

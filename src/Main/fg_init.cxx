@@ -291,15 +291,19 @@ public:
       SG_LOG(SG_GENERAL, SG_ALERT, "\tin paths:" << SGPath::join(globals->get_aircraft_paths(), ";"));
 
       std::string notFoundMessage;
+      bool reportToSentry = true;
       if (globals->get_aircraft_paths().empty()) {
           notFoundMessage = "The requested aircraft (" + aircraft + ") could not be found. No aircraft paths are configured.";
+          reportToSentry = false; // no need to log these
       } else {
           notFoundMessage = "The requested aircraft (" + aircraft + ") could not be found in any of the search paths.";
       }
 
       flightgear::fatalMessageBoxWithoutExit(
           "Aircraft not found",
-          notFoundMessage);
+          notFoundMessage,
+          {},
+          reportToSentry);
       return false;
     }
     
