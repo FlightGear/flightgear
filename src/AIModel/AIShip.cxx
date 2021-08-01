@@ -1006,7 +1006,7 @@ bool FGAIShip::advanceFlightPlan (double start_sec, double day_sec) {
 
         } else {
             distance_nm = getRange(prev->getLatitude(), prev->getLongitude(), curr->getLatitude(), curr->getLongitude());
-            elapsed_sec += distance_nm * 60 * 60 / prev->getSpeed();
+            elapsed_sec += distance_nm * 60 * 60 / fabs(prev->getSpeed());
 
             if (elapsed_sec >= day_sec)
                 continue;
