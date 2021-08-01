@@ -201,6 +201,11 @@ NewGUI::update (double delta_time_sec)
 bool
 NewGUI::showDialog (const string &name)
 {
+    if (name.empty()) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "showDialog: no dialog name provided");
+        return false;
+    }
+
     // first, check if it's already shown
     if (_active_dialogs.find(name) != _active_dialogs.end()){
         _active_dialogs[name]->bringToFront();
