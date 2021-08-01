@@ -38,7 +38,10 @@ PIDController::PIDController():
     edf_n_2( 0.0 ),
     u_n_1( 0.0 ),
     desiredTs( 0.0 ),
-    elapsedTime( 0.0 )
+    elapsedTime( 0.0 ),
+    startup_current( false ),
+    startup_its( 0 ),
+    iteration( 0 )
 {
 }
 
@@ -93,104 +96,143 @@ PIDController::PIDController():
  * u_n
  */
 
-void PIDController::update( bool firstTime, double dt ) 
+void PIDController::update( bool firstTime, double dt )
 {
-    if( firstTime ) {
-      ep_n_1 = 0.0;
-      edf_n_2 = edf_n_1 = 0.0;
-
-      // first time being enabled, seed with current property tree value
-      u_n_1 = get_output_value();
-    }
-
-    double u_min = _minInput.get_value();
-    double u_max = _maxInput.get_value();
-
     elapsedTime += dt;
-    if( elapsedTime <= desiredTs ) {
-        // do nothing if time step is not positive (i.e. no time has
-        // elapsed)
+    if (firstTime) {
+        iteration = 0;
+        /* We always initialise edf_n_1 to zero, regardless of startup_its. */
+        edf_n_1 = 0;
+    }
+    else if (elapsedTime <= desiredTs ) {
+        // do nothing if not enough time has passed.
         return;
     }
-    double Ts = elapsedTime; // sampling interval (sec)
+
+    iteration += 1;
+
+    /* We are going to do an iteration so reset elapsedTime. */
+    double Ts = elapsedTime; 
     elapsedTime = 0.0;
 
-    if( Ts > SGLimitsd::min()) {
-        if( _debug ) cout <<  "Updating " << subsystemId()
-                          << " Ts " << Ts << endl;
+    /* Read generic things from our AnalogComponent base class. */
+    double y_n      = _valueInput.get_value();      // input.
+    double r_n      = _referenceInput.get_value();  // reference.
+    double u_min    = _minInput.get_value();        // minimum output.
+    double u_max    = _maxInput.get_value();        // maximum output.
 
-        double y_n = _valueInput.get_value();
-        double r_n = _referenceInput.get_value();
-                      
-        if ( _debug ) cout << "  input = " << y_n << " ref = " << r_n << endl;
+    /* Read things specific to PIDController. */
+    double td       = Td.get_value();               // derivative time.
+    double ti       = Ti.get_value();               // (reciprocal?) integral time.
 
-        // Calculates proportional error:
-        double ep_n = beta * r_n - y_n;
-        if ( _debug ) cout << "  ep_n = " << ep_n;
-        if ( _debug ) cout << "  ep_n_1 = " << ep_n_1;
+    /*
+    Now do the PID calculations.
+    */
+    
+    double ep_n     = beta * r_n - y_n;             // proportional error.
+    double e_n      = r_n - y_n;                    // error.
+    double ed_n     = gamma * r_n - y_n;            // derivate error.
+    double Tf       = alpha * td;                   // filter time.
 
-        // Calculates error:
-        double e_n = r_n - y_n;
-        if ( _debug ) cout << " e_n = " << e_n;
+    double edf_n = 0.0;                             // derivate error.
+    if (td > 0.0) {
+        edf_n = edf_n_1 / (Ts/Tf + 1)
+            + ed_n * (Ts/Tf) / (Ts/Tf + 1);
+    }
 
-        double edf_n = 0.0;
-        double td = Td.get_value();
-        if ( td > 0.0 ) { // do we need to calcluate derivative error?
-
-          // Calculates derivate error:
-            double ed_n = gamma * r_n - y_n;
-            if ( _debug ) cout << " ed_n = " << ed_n;
-
-            // Calculates filter time:
-            double Tf = alpha * td;
-            if ( _debug ) cout << " Tf = " << Tf;
-
-            // Filters the derivate error:
-            edf_n = edf_n_1 / (Ts/Tf + 1)
-                + ed_n * (Ts/Tf) / (Ts/Tf + 1);
-            if ( _debug ) cout << " edf_n = " << edf_n;
-        } else {
-            edf_n_2 = edf_n_1 = edf_n = 0.0;
+    if (firstTime) {
+        if (startup_current) {
+            /* Seed our historical state with current values. This avoids spurious
+            large terms in calculation of delta_u_n below. */
+            ep_n_1 = ep_n;
+            edf_n_2 = edf_n;
+            edf_n_1 = edf_n;
         }
-
-        // Calculates the incremental output:
-        double ti = Ti.get_value();
-        double delta_u_n = 0.0; // incremental output
-        if ( ti > 0.0 ) {
-            delta_u_n = Kp.get_value() * ( (ep_n - ep_n_1)
-                               + ((Ts/ti) * e_n)
-                               + ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2)) );
-
-          if ( _debug ) {
-              cout << " delta_u_n = " << delta_u_n << endl;
-              cout << "P:" << Kp.get_value() * (ep_n - ep_n_1)
-                   << " I:" << Kp.get_value() * ((Ts/ti) * e_n)
-                   << " D:" << Kp.get_value() * ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2))
-                   << endl;
+        else {
+            // Default behaviour.
+            ep_n_1 = 0;
+            edf_n_2 = 0;
+            // edf_n_1 is already set to zero above.
         }
+        u_n_1 = get_output_value();
+    }
+
+    double delta_u_n = 0.0;                         // incremental output
+    if ( ti > 0.0 ) {
+        delta_u_n = Kp.get_value() * (
+                (ep_n - ep_n_1)
+                + ((Ts/ti) * e_n)
+                + ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2))
+                );
+    }
+
+    const char* saturation = "";
+    double u_n;                                     // absolute output
+
+    if (iteration > startup_its) {
+        
+        /* Update the output, clipping to u_min..u_max. */
+
+        u_n = u_n_1 + delta_u_n;
+
+        if (u_n > u_max) {
+            u_n = u_max;
+            saturation = " max_saturation";
         }
-
-        // Integrator anti-windup logic:
-        if ( delta_u_n > (u_max - u_n_1) ) {
-            delta_u_n = u_max - u_n_1;
-            if ( _debug ) cout << " max saturation " << endl;
-        } else if ( delta_u_n < (u_min - u_n_1) ) {
-            delta_u_n = u_min - u_n_1;
-            if ( _debug ) cout << " min saturation " << endl;
+        else if (u_n < u_min) {
+            u_n = u_min;
+            saturation = " min_saturation";
         }
-
-        // Calculates absolute output:
-        double u_n = u_n_1 + delta_u_n;
-        if ( _debug ) cout << "  output = " << u_n << endl;
-
-        // Updates indexed values;
-        u_n_1   = u_n;
-        ep_n_1  = ep_n;
-        edf_n_2 = edf_n_1;
-        edf_n_1 = edf_n;
-
         set_output_value( u_n );
     }
+    else {
+        /* Do not change the output. Instead get the current output value for
+        use in setting our historical state below. */
+        if (_debug) {
+            cout << subsystemId()
+                    << ": doing nothing."
+                    << " startup_its=" << startup_its
+                    << " iteration=" << iteration
+                    << std::endl;
+        }
+        u_n = get_output_value();
+    }
+
+    if ( _debug ) {
+        cout
+                << "Updating " << subsystemId()
+                << " startup_its=" << startup_its
+                << " startup_current=" << startup_current
+                << " firstTime=" << firstTime
+                << " iteration=" << iteration
+                << " Ts=" << Ts
+                << " input=" << y_n
+                << " ref=" << r_n
+                << " ep_n=" << ep_n
+                << " ep_n_1=" << ep_n_1
+                << " e_n=" << e_n
+                << " ed_n=" << ed_n
+                << " Tf=" << Tf
+                << " edf_n=" << edf_n
+                << " edf_n_1=" << edf_n_1
+                << " edf_n_2=" << edf_n_2
+                << " ti=" << ti
+                << " delta_u_n=" << delta_u_n
+                << " P=" << Kp.get_value() * (ep_n - ep_n_1)
+                << " I=" << Kp.get_value() * ((Ts/ti) * e_n)
+                << " D=" << Kp.get_value() * ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2))
+                << saturation
+                << " u_n_1=" << u_n_1
+                << " delta_u_n=" << delta_u_n
+                << " output=" << u_n
+                << std::endl;
+    }
+
+    // Updates indexed values;
+    u_n_1   = u_n;
+    ep_n_1  = ep_n;
+    edf_n_2 = edf_n_1;
+    edf_n_1 = edf_n;
 }
 
 //------------------------------------------------------------------------------
@@ -235,6 +277,16 @@ bool PIDController::configure( SGPropertyNode& cfg_node,
 
   if (cfg_name == "gamma") {
     gamma = cfg_node.getDoubleValue();
+    return true;
+  }
+  
+  if (cfg_name == "startup-its") {
+    startup_its = cfg_node.getIntValue();
+    return true;
+  }
+
+  if (cfg_name == "startup-current") {
+    startup_current = cfg_node.getBoolValue();
     return true;
   }
 
