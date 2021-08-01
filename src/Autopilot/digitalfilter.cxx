@@ -922,8 +922,8 @@ void DigitalFilter::update( bool firstTime, double dt)
   set_output_value( output );
 
   if(_debug) {
-    std::cout << "input:" << input
-              << "\toutput:" << output << std::endl;
+    std::cout << subsystemId() << ": input=" << input
+              << "\toutput=" << output << std::endl;
   }
 }
 
