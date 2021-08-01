@@ -68,6 +68,7 @@
 #include <simgear/scene/model/particles.hxx>
 #include <simgear/scene/tgdb/TreeBin.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
+#include <simgear/scene/tgdb/VPBTechnique.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
 
 #include <simgear/package/Root.hxx>
@@ -1311,6 +1312,7 @@ void fgStartNewReset()
 
     simgear::clearSharedTreeGeometry();
     simgear::clearEffectCache();
+    simgear::VPBTechnique::clearElevationConstraints();
     simgear::SGModelLib::resetPropertyRoot();
     simgear::ParticlesGlobalManager::clear();
     simgear::UniformFactory::instance()->reset();    
