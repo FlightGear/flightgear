@@ -982,6 +982,9 @@ void reloadCompositors(CameraGroup *cgroup)
             SGReaderWriterOptions::fromPath(globals->get_fg_root());
         options->setPropertyNode(globals->get_props());
 
+        if (info->reloadCompositorCallback.valid())
+            info->reloadCompositorCallback->preReloadCompositor(cgroup, info);
+
         // Force deletion
         info->compositor.reset(nullptr);
         // Then replace it with a new instance
@@ -993,6 +996,9 @@ void reloadCompositors(CameraGroup *cgroup)
                                                   viewport,
                                                   compositor_path,
                                                   options));
+
+        if (info->reloadCompositorCallback.valid())
+            info->reloadCompositorCallback->postReloadCompositor(cgroup, info);
     }
 
     cgroup->_viewer->getViewerBase()->startThreading();

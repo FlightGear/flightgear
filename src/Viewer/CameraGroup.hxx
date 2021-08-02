@@ -51,6 +51,7 @@ namespace flightgear
 
 class CameraGroupListener;
 class GraphicsWindow;
+class CameraGroup;
 
 /** A wrapper around osg::Camera that contains some extra information.
  */
@@ -76,7 +77,7 @@ struct CameraInfo : public osg::Referenced
         flags(flags_),
         physicalWidth(0), physicalHeight(0), bezelHeightTop(0),
         bezelHeightBottom(0), bezelWidthLeft(0), bezelWidthRight(0),
-        relativeCameraParent(0) { }
+        relativeCameraParent(0), reloadCompositorCallback(nullptr) { }
     /** The name as given in the config file.
      */
     std::string name;
@@ -120,6 +121,14 @@ struct CameraInfo : public osg::Referenced
      * Compositor path and should use the default one.
      */
     std::string compositor_path;
+
+    struct ReloadCompositorCallback : public virtual osg::Referenced
+    {
+        virtual void preReloadCompositor(CameraGroup *, CameraInfo *) = 0;
+        virtual void postReloadCompositor(CameraGroup *, CameraInfo *) = 0;
+    };
+    osg::ref_ptr<ReloadCompositorCallback> reloadCompositorCallback;
+
 };
 
 class CameraGroup : public osg::Referenced
