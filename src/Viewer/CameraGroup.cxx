@@ -477,7 +477,7 @@ void CameraGroup::buildDistortionCamera(const SGPropertyNode* psNode,
 #endif
 }
 
-void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
+CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
 {
     WindowBuilder *wBuild = WindowBuilder::getWindowBuilder();
     const SGPropertyNode* windowNode = cameraNode->getNode("window");
@@ -491,7 +491,7 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         window = wBuild->buildWindow(cameraNode);
     }
     if (!window) {
-        return;
+        return nullptr;
     }
 
     osg::Matrix vOff;
@@ -599,7 +599,7 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         if (it == _cameras.end()) {
             SG_LOG(SG_VIEW, SG_ALERT, "CameraGroup::buildCamera: "
                    "failed to find parent camera for relative camera!");
-            return;
+            return nullptr;
         }
         parentInfo = (*it);
         if (projectionNode->getNameString() == "right-of-perspective") {
@@ -717,6 +717,8 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         info->flags = info->flags | CameraInfo::VIEW_ABSOLUTE;
         //buildDistortionCamera(psNode, camera);
     }
+
+    return info;
 }
 
 void CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,

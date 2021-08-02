@@ -150,7 +150,7 @@ public:
      * @param cameraNode the property node.
      * @return a CameraInfo object for the camera.
      */
-    void buildCamera(SGPropertyNode* cameraNode);
+    CameraInfo* buildCamera(SGPropertyNode* cameraNode);
     /** Create a camera from properties that will draw the GUI and add
      * it to the camera group.
      * @param cameraNode the property node. This can be 0, in which
