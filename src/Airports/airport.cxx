@@ -21,9 +21,7 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include "airport.hxx"
 
@@ -592,6 +590,29 @@ void FGAirport::loadProcedures() const
   RouteBase::loadAirportProcedures(path, const_cast<FGAirport*>(this));
 }
 
+void FGAirport::loadRunwayRenames() const
+{
+    if (mRunwayRenamesLoaded) {
+        return;
+    }
+
+    SGPath path;
+    if (!XMLLoader::findAirportData(ident(), "runway_rename", path)) {
+        // No rename for airport; ignore
+        mRunwayRenamesLoaded = true;
+        return;
+    }
+
+    try {
+        SGPropertyNode_ptr rootNode = new SGPropertyNode;
+        readProperties(path, rootNode);
+        const_cast<FGAirport*>(this)->parseRunwayRenameData(rootNode);
+        mRunwayRenamesLoaded = true;
+    } catch (sg_exception& e) {
+        SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading runrway rename XML failed:" << e.getFormattedMessage());
+    }
+}
+
 void FGAirport::loadSceneryDefinitions() const
 {
   if (mThresholdDataLoaded) {
@@ -735,6 +756,38 @@ void FGAirport::readTowerData(SGPropertyNode* aRoot)
   double fieldElevationM = geod().getElevationM();
   mTowerPosition = SGGeod::fromDegM(lon, lat, fieldElevationM + elevM);
 }
+
+void FGAirport::parseRunwayRenameData(SGPropertyNode* aRoot)
+{
+    SGPropertyNode* overrideNode = aRoot->getChild("runway-rename");
+    for (auto rnm : overrideNode->getChildren("runway")) {
+        const std::string oldIdent = rnm->getStringValue("old-ident");
+        const std::string newIdent = rnm->getStringValue("new-ident");
+        if (oldIdent.empty() || newIdent.empty()) {
+            SG_LOG(SG_NAVAID, SG_WARN, ident() << ": runway rename: Skipping bad runway rename entry");
+            continue;
+        }
+
+        if (!hasRunwayWithIdent(oldIdent)) {
+            SG_LOG(SG_NAVAID, SG_WARN, ident() << ": no old runway with ident:" << oldIdent);
+            continue;
+        }
+
+        _renamedRunways[newIdent] = oldIdent;
+    }
+}
+
+std::string FGAirport::findAPTRunwayForNewName(const std::string& newIdent) const
+{
+    loadRunwayRenames();
+
+    auto it = _renamedRunways.find(newIdent);
+    if (it == _renamedRunways.end())
+        return {};
+
+    return it->second;
+}
+
 
 void FGAirport::validateILSData()
 {

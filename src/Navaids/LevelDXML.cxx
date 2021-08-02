@@ -115,10 +115,15 @@ void NavdataVisitor::processRunways(ArrivalDeparture* aProc, const XMLAttributes
   auto rwys = simgear::strutils::split_on_any_of(v, " ,");
   for (auto rwy : rwys) {
       if (!_airport->hasRunwayWithIdent(rwy)) {
-          SG_LOG(SG_NAVAID, SG_DEV_WARN, "Procedure file " << _path << " references unknown airport runway:" << rwy);
-          continue;
+          const auto renamed = _airport->findAPTRunwayForNewName(rwy);
+          if (!renamed.empty()) {
+              rwy = renamed;
+          } else {
+              SG_LOG(SG_NAVAID, SG_DEV_WARN, "Procedure file " << _path << " references unknown airport runway:" << rwy);
+              continue;
+          }
       }
-          
+
     aProc->addRunway(_airport->getRunwayByIdent(rwy));
   }
 }
@@ -241,15 +246,23 @@ Waypt* NavdataVisitor::buildWaypoint(RouteBase* owner)
     wp = new BasicWaypt(pos, _wayptName, owner);
   } else if (_wayptType == "Runway") {
     string ident = _wayptName.substr(2);
-      if (_airport->hasRunwayWithIdent(ident)) {
-          FGRunwayRef rwy = _airport->getRunwayByIdent(ident);
-          wp = new RunwayWaypt(rwy, owner);
-      } else {
-          SG_LOG(SG_NAVAID, SG_DEV_WARN, "Missing runway " << ident << " reading " << _path);
-          SGGeod pos(SGGeod::fromDeg(_longitude, _latitude));
-          // fall back to a basic WP
-          wp = new BasicWaypt(pos, _wayptName, owner);
-      }
+    if (!_airport->hasRunwayWithIdent(ident)) {
+        const auto renamed = _airport->findAPTRunwayForNewName(ident);
+        if (renamed.empty()) {
+            SG_LOG(SG_NAVAID, SG_DEV_WARN, "Missing runway " << ident << " reading " << _path);
+            SGGeod pos(SGGeod::fromDeg(_longitude, _latitude));
+            // fall back to a basic WP
+            wp = new BasicWaypt(pos, _wayptName, owner);
+            ident.clear();
+        } else {
+            ident = renamed;
+        }
+    }
+
+    if (!ident.empty()) {
+        FGRunwayRef rwy = _airport->getRunwayByIdent(ident);
+        wp = new RunwayWaypt(rwy, owner);
+    }
   } else if (_wayptType == "Hold") {
     SGGeod pos(SGGeod::fromDeg(_longitude, _latitude));
     Hold* h = new Hold(pos, _wayptName, owner);

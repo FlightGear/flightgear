@@ -152,7 +152,9 @@ class FGAirport : public FGPositioned
      */
     FGRunwayList getRunways() const;
 
-     /**
+    std::string findAPTRunwayForNewName(const std::string& newIdent) const;
+
+    /**
      * Useful predicate for FMS/GPS/NAV displays and similar - check if this
      * aiport has a hard-surfaced runway of at least the specified length.
      */
@@ -320,6 +322,7 @@ class FGAirport : public FGPositioned
     // helper to allow testing without needing a full Airports hierarchy
     // only for use by the test-suite, not available outside of it.
     void testSuiteInjectGroundnetXML(const SGPath& path);
+
 private:
     static flightgear::AirportCache airportCache;
 
@@ -343,19 +346,26 @@ private:
     void validateTowerData() const;
 
     /**
-     * Helper to parse property data loaded from an ICAO.twr.xml file
+     * Helpers to parse property data loaded from an ICAO.twr.xml file
      */
     void readTowerData(SGPropertyNode* aRoot);
+
+    /**
+     * Helpers to parse property data loaded from an ICAO.rwy_override.xml file
+	 * or a ICAO.rwy_override.xml file
+     */
+    void parseRunwayRenameData(SGPropertyNode* aRoot);
 
     PositionedIDVec itemsOfType(FGPositioned::Type ty) const;
 
     std::string _name;
-    bool _has_metar;
+    bool _has_metar = false;
 
     void loadRunways() const;
     void loadHelipads() const;
     void loadTaxiways() const;
     void loadProcedures() const;
+    void loadRunwayRenames() const;
 
     mutable bool mTowerDataLoaded;
     mutable bool mHasTower;
@@ -365,6 +375,7 @@ private:
     mutable bool mHelipadsLoaded;
     mutable bool mTaxiwaysLoaded;
     mutable bool mProceduresLoaded;
+    mutable bool mRunwayRenamesLoaded = false;
     bool mIsClosed;
     mutable bool mThresholdDataLoaded;
     bool mILSDataLoaded;
@@ -386,6 +397,10 @@ private:
     std::vector<ApproachRef> mApproaches;
 
     mutable std::unique_ptr<FGGroundNetwork> _groundNetwork;
+
+    using RunwayRenameMap = std::map<std::string, std::string>;
+    // map from new name (eg in Navigraph) to old name (in apt.dat)
+    RunwayRenameMap _renamedRunways;
   };
 
 // find basic airport location info from airport database
