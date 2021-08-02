@@ -151,6 +151,10 @@ public:
      * @return a CameraInfo object for the camera.
      */
     CameraInfo* buildCamera(SGPropertyNode* cameraNode);
+    /** Remove a camera from the camera group.
+     * @param info the camera info to remove.
+     */
+    void removeCamera(CameraInfo *info);
     /** Create a camera from properties that will draw the GUI and add
      * it to the camera group.
      * @param cameraNode the property node. This can be 0, in which

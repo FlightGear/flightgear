@@ -721,6 +721,16 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     return info;
 }
 
+void CameraGroup::removeCamera(CameraInfo *info)
+{
+    for (auto it = _cameras.begin(); it != _cameras.end(); ++it) {
+        if (*it == info) {
+            _cameras.erase(it);
+            return;
+        }
+    }
+}
+
 void CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
                                  GraphicsWindow* window)
 {
