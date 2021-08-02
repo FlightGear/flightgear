@@ -1312,7 +1312,7 @@ void fgStartNewReset()
 
     simgear::clearSharedTreeGeometry();
     simgear::clearEffectCache();
-    simgear::VPBTechnique::clearElevationConstraints();
+    simgear::VPBTechnique::clearConstraints();
     simgear::SGModelLib::resetPropertyRoot();
     simgear::ParticlesGlobalManager::clear();
     simgear::UniformFactory::instance()->reset();    
