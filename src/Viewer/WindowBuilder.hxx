@@ -47,7 +47,7 @@ public:
      * @param winNode The window's root property node
      * @return a graphics window.
      */
-    GraphicsWindow* buildWindow(const SGPropertyNode* winNode);
+    GraphicsWindow* buildWindow(const SGPropertyNode* winNode, bool isMainWindow=false);
     /** Get a window whose properties come from FlightGear's
      * command line arguments and their defaults. The window is opened
      * if it has not been already.
@@ -74,7 +74,7 @@ protected:
     bool usingQtGraphicsWindow = false;
     
     static osg::ref_ptr<WindowBuilder> windowBuilder;
-    static const std::string defaultWindowName;
+    static std::string defaultWindowName;
     static bool poseAsStandaloneApp;
 };
 

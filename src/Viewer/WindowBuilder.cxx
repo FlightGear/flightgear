@@ -44,7 +44,7 @@ string makeName(const string& prefix, int num)
 
 ref_ptr<WindowBuilder> WindowBuilder::windowBuilder;
 
-const string WindowBuilder::defaultWindowName("FlightGear");
+string WindowBuilder::defaultWindowName("FlightGear");
 
 // default to true (historical behaviour), we will clear the flag if
 // we run another GUI.
@@ -228,7 +228,7 @@ void WindowBuilder::setMacPoseAsStandaloneApp(GraphicsContext::Traits* traits)
 #endif
 }
     
-GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode)
+GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode, bool isMainWindow)
 {
     WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
     string windowName;
@@ -236,6 +236,11 @@ GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode)
         windowName = winNode->getStringValue("window-name");
     else if (winNode->hasChild("name"))
         windowName = winNode->getStringValue("name");
+    if (isMainWindow) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "Changing defaultWindowName from "
+                << defaultWindowName << " to " << windowName);
+        defaultWindowName = windowName;
+    }
     GraphicsWindow* result = 0;
     if (!windowName.empty()) {
         // look for an existing window and return that

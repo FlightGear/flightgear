@@ -728,7 +728,7 @@ void CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
                                         : 0);
     if (!window && windowNode) {
         // New style window declaration / definition
-        window = wBuild->buildWindow(windowNode);
+        window = wBuild->buildWindow(windowNode, true /*isMainWindow*/);
     }
 
     if (!window) { // buildWindow can fail
