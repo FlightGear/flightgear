@@ -812,7 +812,8 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         break;
     }
     
-    if (audible) {
+    const bool atcAudioEnabled = fgGetBool("/sim/sound/atc/enabled", false);
+    if (audible && atcAudioEnabled) {
         double onBoardRadioFreq0 =
             fgGetDouble("/instrumentation/comm[0]/frequencies/selected-mhz");
         double onBoardRadioFreq1 =
