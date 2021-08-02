@@ -197,8 +197,13 @@ Item {
         z: 100
 
         items: [
-            MenuItem { text:qsTr("Fly!"); shortcut: "Ctrl+F";
-                onTriggered: _launcher.fly(); },
+            MenuItem { 
+                text:qsTr("Fly!")
+                shortcut: "Ctrl+F"
+                enabled: _launcher.canFly
+                onTriggered: _launcher.fly() 
+            },
+
             MenuItem { text:qsTr("Open saved configuration..."); shortcut: "Ctrl+O";
                 onTriggered: _launcher.openConfig(); },
             MenuItem { text:qsTr("Save configuration as..."); shortcut: "Ctrl+S";
