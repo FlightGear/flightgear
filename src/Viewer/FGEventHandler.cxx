@@ -106,7 +106,7 @@ FGEventHandler::eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActi
         // CompositeViewer is enabled and this is not the main window.
         simgear::compositor::Compositor* compositor = SviewGetEventViewport(ea);
         if (!compositor) {
-            SG_LOG(SG_GENERAL, SG_ALERT, "SviewGetEventViewport() returned nullptr");
+            SG_LOG(SG_GENERAL, SG_DEBUG, "SviewGetEventViewport() returned nullptr");
             return WindowType_NONE;
         }
         vport = compositor->getViewport();
