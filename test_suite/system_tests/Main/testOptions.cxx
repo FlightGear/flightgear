@@ -67,7 +67,7 @@ void OptionsTests::testLoadDefaultAircraft()
     }
 
     fgInitAircraftPaths(false);
-    fgInitAircraft(false);
+    fgInitAircraft(false, false);
 
     CPPUNIT_ASSERT_EQUAL("c172p"s, string{fgGetString("/sim/aircraft")});
     CPPUNIT_ASSERT_EQUAL("c172p"s, string{fgGetString("/sim/aircraft-id")});
@@ -89,7 +89,7 @@ void OptionsTests::testOptionAircraftWithAircraftDir()
     }
 
     fgInitAircraftPaths(false);
-    fgInitAircraft(false);
+    fgInitAircraft(false, false);
 
     CPPUNIT_ASSERT_EQUAL("ufo"s, string{fgGetString("/sim/aircraft")});
     CPPUNIT_ASSERT_EQUAL("ufo"s, string{fgGetString("/sim/aircraft-id")});
@@ -111,7 +111,7 @@ void OptionsTests::testOptionAircraftWithFGAircraft()
     }
 
     fgInitAircraftPaths(false);
-    fgInitAircraft(false);
+    fgInitAircraft(false, false);
 
     CPPUNIT_ASSERT_EQUAL("ufo"s, string{fgGetString("/sim/aircraft")});
     CPPUNIT_ASSERT_EQUAL("ufo"s, string{fgGetString("/sim/aircraft-id")});
@@ -136,7 +136,7 @@ void OptionsTests::testOptionAircraftUnqualified()
     }
 
     fgInitAircraftPaths(false);
-    fgInitAircraft(false);
+    fgInitAircraft(false, false);
 
     CPPUNIT_ASSERT_EQUAL("bob"s, string{fgGetString("/sim/aircraft")});
     CPPUNIT_ASSERT_EQUAL("org.fg.test.catalog1.bob"s, string{fgGetString("/sim/aircraft-id")});
@@ -161,7 +161,7 @@ void OptionsTests::testOptionAircraftFullyQualified()
     }
 
     fgInitAircraftPaths(false);
-    fgInitAircraft(false);
+    fgInitAircraft(false, false);
 
     CPPUNIT_ASSERT_EQUAL("bob"s, string{fgGetString("/sim/aircraft")});
     CPPUNIT_ASSERT_EQUAL("org.fg.test.catalog1.bob"s, string{fgGetString("/sim/aircraft-id")});
