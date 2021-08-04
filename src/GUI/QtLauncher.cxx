@@ -212,8 +212,7 @@ class NaturalEarthDataLoaderThread : public QThread
     Q_OBJECT
 public:
 
-    NaturalEarthDataLoaderThread() :
-        m_lineInsertCount(0)
+    NaturalEarthDataLoaderThread()
     {
         connect(this, &QThread::finished, this, &NaturalEarthDataLoaderThread::onFinished);
     }
@@ -225,10 +224,26 @@ public:
 protected:
     void run() override
     {
-        loadNaturalEarthFile("ne_10m_coastline.shp", flightgear::PolyLine::COASTLINE, false);
-        loadNaturalEarthFile("ne_10m_rivers_lake_centerlines.shp", flightgear::PolyLine::RIVER, false);
-        loadNaturalEarthFile("ne_10m_lakes.shp", flightgear::PolyLine::LAKE, true);
-        loadNaturalEarthFile("ne_10m_urban_areas.shp", flightgear::PolyLine::URBAN, true);
+        struct FileAndType {
+            std::string file;
+            flightgear::PolyLine::Type type;
+            bool closed = false;
+        };
+
+        const std::initializer_list<FileAndType> files = {
+            {"ne_10m_coastline.shp", flightgear::PolyLine::COASTLINE, false},
+            {"ne_10m_rivers_lake_centerlines.shp", flightgear::PolyLine::RIVER, false},
+            {"ne_10m_lakes.shp", flightgear::PolyLine::LAKE, true},
+            {"ne_10m_urban_areas.shp", flightgear::PolyLine::URBAN, true}
+        };
+
+        for (const auto& d : files) {
+            if (m_abandoned) {
+                break;
+            }
+
+            loadNaturalEarthFile(d.file, d.type, d.closed);
+        }
     }
 
 private:
@@ -256,7 +271,6 @@ private:
     }
 
     flightgear::PolyLineList m_parsedLines;
-    unsigned int m_lineInsertCount;
     bool m_abandoned = false;
 };
 
