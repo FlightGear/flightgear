@@ -197,6 +197,11 @@ public:
   {
     _cache = autoSave->getNode("sim/startup/path-cache", true);
   }
+
+  void setDidUseLauncher(bool didUseLauncher)
+  {
+      _didUseLauncher = didUseLauncher;
+  }
   
   /**
    * @brief haveExplicitAircraft - check if the combination of /sim/aircraft
@@ -292,7 +297,10 @@ public:
       SG_LOG(SG_GENERAL, SG_ALERT, "\tin paths:" << SGPath::join(globals->get_aircraft_paths(), ";"));
 
       std::string notFoundMessage;
-      bool reportToSentry = true;
+      // don't report failures where the launcher was not used, to Sentry,
+      // since they are nearly all configuration problems.
+      bool reportToSentry = _didUseLauncher;
+
       if (globals->get_aircraft_paths().empty()) {
           notFoundMessage = "The requested aircraft (" + aircraft + ") could not be found. No aircraft paths are configured.";
           reportToSentry = false; // no need to log these
@@ -445,7 +453,8 @@ private:
   
   std::string _searchAircraft;
   SGPath _foundPath;
-  SGPropertyNode* _cache;
+  SGPropertyNode* _cache = nullptr;
+  bool _didUseLauncher = false;
 };
 
 #ifdef _WIN32
@@ -758,7 +767,7 @@ void fgInitAircraftPaths(bool reinit)
   }
 }
 
-int fgInitAircraft(bool reinit)
+int fgInitAircraft(bool reinit, bool didUseLauncher)
 {
     if (!reinit) {
         auto r = flightgear::Options::sharedInstance()->initAircraft();
@@ -767,6 +776,7 @@ int fgInitAircraft(bool reinit)
     }
     
     FindAndCacheAircraft f(globals->get_props());
+    f.setDidUseLauncher(didUseLauncher);
     const bool haveExplicit = f.haveExplicitAircraft();
 
     SGSharedPtr<Root> pkgRoot(globals->packageRoot());
@@ -1367,7 +1377,7 @@ void fgStartNewReset()
 
     fgGetNode("/sim")->removeChild("aircraft-dir");
     fgInitAircraftPaths(true);
-    fgInitAircraft(true);
+    fgInitAircraft(true, false /* not from launcher */);
     
     render = new FGRenderer(composite_viewer);
     render->setEventHandler(eventHandler);

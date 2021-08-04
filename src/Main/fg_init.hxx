@@ -54,7 +54,14 @@ int fgInitConfig ( int argc, char **argv, bool reinit );
 
 void fgInitAircraftPaths(bool reinit);
 
-int fgInitAircraft(bool reinit);
+/**
+ * @brief 
+ * 
+ * @param reinit : is this a second(+) call of the function, i.e after reset
+ * @param didUseLauncher : allow adjusting UI feedback if we used the launcher or not
+ * @return int : an Options result to indicate if we should continue, quit, etc
+ */
+int fgInitAircraft(bool reinit, bool didUseLauncher);
 
 // log various settings / configuration state
 void fgOutputSettings();

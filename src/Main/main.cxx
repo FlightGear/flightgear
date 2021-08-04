@@ -711,6 +711,7 @@ int fgMainInit( int argc, char **argv )
         return EXIT_SUCCESS;
     }
 
+    bool didUseLauncher = false;
 #if defined(HAVE_QT)
     if (showLauncher) {
         flightgear::addSentryBreadcrumb("starting launcher", "info");
@@ -718,6 +719,7 @@ int fgMainInit( int argc, char **argv )
             return EXIT_SUCCESS;
         }
 
+        didUseLauncher = true;
         flightgear::addSentryBreadcrumb("completed launcher", "info");
     }
 #else
@@ -732,7 +734,7 @@ int fgMainInit( int argc, char **argv )
     auto errorManager = globals->add_new_subsystem<flightgear::ErrorReporter>(SGSubsystemMgr::GENERAL);
     errorManager->preinit();
 
-    configResult = fgInitAircraft(false);
+    configResult = fgInitAircraft(false, didUseLauncher);
     if (configResult == flightgear::FG_OPTIONS_ERROR) {
         return EXIT_FAILURE;
     } else if ((configResult == flightgear::FG_OPTIONS_EXIT) ||
