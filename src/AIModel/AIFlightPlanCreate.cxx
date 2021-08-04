@@ -989,6 +989,11 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
     double decelMetric      = decel       * SG_KT_TO_MPS;
 
     char buffer[12];
+    if (!apt->hasRunwayWithIdent(activeRunway)) {
+        SG_LOG(SG_AI, SG_WARN, "FGAIFlightPlan::createLanding: No such runway " << activeRunway << " at " << apt->ident());
+        return false;
+    }
+
     FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
     if (!rwy)
         return false;
