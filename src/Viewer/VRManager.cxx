@@ -232,6 +232,24 @@ void VRManager::doDestroyView(osgXR::View *xrView)
     }
 }
 
+void VRManager::onRunning()
+{
+    // Reload compositors to trigger switch to mirror of VR
+    CameraGroup *cgroup = CameraGroup::getDefault();
+    reloadCompositors(cgroup);
+}
+
+void VRManager::onStopped()
+{
+    // As long as we're not in the process of destroying FlightGear, reload
+    // compositors to trigger switch away from mirror of VR
+    if (!isDestroying())
+    {
+        CameraGroup *cgroup = CameraGroup::getDefault();
+        reloadCompositors(cgroup);
+    }
+}
+
 void VRManager::preReloadCompositor(CameraGroup *cgroup, CameraInfo *info)
 {
     osgXR::View *xrView = _xrViews[info];

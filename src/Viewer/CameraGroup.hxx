@@ -70,7 +70,8 @@ struct CameraInfo : public osg::Referenced
                                        camera. */
         FIXED_NEAR_FAR = 0x20,     /**< take the near far values in the
                                       projection for real. */
-        ENABLE_MASTER_ZOOM = 0x40  /**< Can apply the zoom algorithm. */
+        ENABLE_MASTER_ZOOM = 0x40, /**< Can apply the zoom algorithm. */
+        VR_MIRROR = 0x80           /**< Switch to a mirror of VR. */
     };
 
     CameraInfo(unsigned flags_)     :
@@ -224,6 +225,13 @@ protected:
     float _zFar;
     float _nearField;
 
+    /** Create a compositor for a VR mirror.
+     * @param gc the graphics context to use.
+     * @param viewport the viewport to render to.
+     * @return a new compositor or nullptr if no VR mirror is needed.
+     */
+    simgear::compositor::Compositor *buildVRMirrorCompositor(osg::GraphicsContext *gc,
+                                                             osg::Viewport *viewport);
     /** Build a complete CameraGroup from a property node.
      * @param viewer the viewer associated with this camera group.
      * @param wbuilder the window builder to be used for this camera group.

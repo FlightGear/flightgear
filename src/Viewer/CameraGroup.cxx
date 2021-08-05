@@ -24,6 +24,7 @@
 #include "WindowBuilder.hxx"
 #include "WindowSystemAdapter.hxx"
 #include "sview.hxx"
+#include "VRManager.hxx"
 
 #include <simgear/math/SGRect.hxx>
 #include <simgear/props/props.hxx>
@@ -494,6 +495,10 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         return nullptr;
     }
 
+    // Set vr-mirror flag so camera switches to VR mirror when appropriate.
+    if (cameraNode->getBoolValue("vr-mirror", false))
+        cameraFlags |= CameraInfo::VR_MIRROR;
+
     osg::Matrix vOff;
     const SGPropertyNode* viewNode = cameraNode->getNode("view");
     if (viewNode) {
@@ -700,11 +705,16 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     
     SViewSetCompositorParams(options, compositor_path);
     
-    Compositor *compositor = Compositor::create(_viewer,
-                                                window->gc,
-                                                viewport,
-                                                compositor_path,
-                                                options);
+    Compositor *compositor = nullptr;
+    if (info->flags & CameraInfo::VR_MIRROR)
+        compositor = buildVRMirrorCompositor(window->gc, viewport);
+    if (!compositor)
+        compositor = Compositor::create(_viewer,
+                                        window->gc,
+                                        viewport,
+                                        compositor_path,
+                                        options);
+
     if (compositor) {
         info->compositor.reset(compositor);
     } else {
@@ -805,6 +815,50 @@ void CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
 
     // Disable statistics for the GUI camera.
     camera->setStats(0);
+}
+
+Compositor *CameraGroup::buildVRMirrorCompositor(osg::GraphicsContext* gc,
+                                                 osg::Viewport *viewport)
+{
+#ifdef ENABLE_OSGXR
+    if (VRManager::instance()->getUseMirror()) {
+        Camera* camera = new Camera;
+        camera->setName("VRMirror");
+        camera->setAllowEventFocus(false);
+        camera->setGraphicsContext(gc);
+        camera->setViewport(viewport);
+        camera->setClearMask(0);
+        camera->setInheritanceMask(CullSettings::ALL_VARIABLES
+                                   & ~(CullSettings::COMPUTE_NEAR_FAR_MODE
+                                       | CullSettings::CULLING_MODE
+                                       | CullSettings::CLEAR_MASK
+                                       ));
+        camera->setComputeNearFarMode(CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+        camera->setCullingMode(CullSettings::NO_CULLING);
+        camera->setProjectionResizePolicy(Camera::FIXED);
+
+        // The camera group will always update the camera
+        camera->setReferenceFrame(Transform::ABSOLUTE_RF);
+
+        // Mirror camera needs to be drawn after VR cameras and before GUI
+        camera->setRenderOrder(Camera::POST_RENDER, 9000);
+
+        // Let osgXR do the mirror camera setup
+        VRManager::instance()->setupMirrorCamera(camera);
+
+        Pass *pass = new Pass;
+        pass->camera = camera;
+        pass->useMastersSceneData = false;
+
+        // We just build a simple Compositor directly from C++ space that
+        // encapsulates a single osg::Camera.
+        Compositor *compositor = new Compositor(_viewer, gc, viewport);
+        compositor->addPass(pass);
+
+        return compositor;
+    }
+#endif
+    return nullptr;
 }
 
 CameraGroup* CameraGroup::buildCameraGroup(osgViewer::View* view,
@@ -994,11 +1048,16 @@ void reloadCompositors(CameraGroup *cgroup)
         std::string compositor_path = info->compositor_path.empty() ?
             fgGetString("/sim/rendering/default-compositor", "Compositor/default") :
             info->compositor_path;
-        info->compositor.reset(Compositor::create(cgroup->_viewer,
-                                                  gc,
-                                                  viewport,
-                                                  compositor_path,
-                                                  options));
+        Compositor *compositor = nullptr;
+        if (info->flags & CameraInfo::VR_MIRROR)
+            compositor = cgroup->buildVRMirrorCompositor(gc, viewport);
+        if (!compositor)
+            compositor = Compositor::create(cgroup->_viewer,
+                                            gc,
+                                            viewport,
+                                            compositor_path,
+                                            options);
+        info->compositor.reset(compositor);
 
         if (info->reloadCompositorCallback.valid())
             info->reloadCompositorCallback->postReloadCompositor(cgroup, info);
@@ -1041,6 +1100,8 @@ void CameraGroup::buildDefaultGroup(osgViewer::View* viewer)
             masterCamera = cgroupNode->getChild("camera", cameras.size(), true);
             setValue(masterCamera->getNode("window/name", true),
                      windowBuilder->getDefaultWindowName());
+            // Use VR mirror compositor when VR is enabled.
+            setValue(masterCamera->getNode("vr-mirror", true), true);
         }
         SGPropertyNode* nameNode = masterCamera->getNode("window/name");
         if (nameNode)
