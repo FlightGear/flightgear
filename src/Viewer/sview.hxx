@@ -66,6 +66,8 @@ config:
     x, y:
         Position of new window.
     type:
+        "sview" or not specified:
+            List of sview-step's - see below.
         "current"
             Clones the current view.
         "last_pair"
@@ -101,16 +103,13 @@ config:
             view, possibly because the viewpoint correction config/y-offset-m
             is applied after rotation instead of before.
 
-        "sview" or not specified:
-            List of sview-step's.
-
 An sview-step is:
     step:
         type:
             "aircraft"
                 callsign:
-                    "": move to user aircraft.
-                    Otherwise move to specified multiplayer aircraft.
+                    "": The user's aircraft.
+                    Otherwise specifies a multiplayer aircraft.
             "move":
                 forward
                 up
@@ -120,26 +119,27 @@ An sview-step is:
             "direction-multiply":
                 heading, pitch, roll:
                     Values to multiply into direction. This can be used to
-                    preserve or don't preserve heading, pitch and roll which
-                    allows implementation of Helicopter and Chase views etc.
+                    preserve/not preserve heading, pitch and roll, which allows
+                    implementation of Helicopter and Chase views etc.
             "copy-to-target":
-                Copy current position into target.
+                Copy current position into target. This creates an implicit
+                final step that rotates the view to point at this target.
+            "mouse-drag":
+                Modify heading and pitch in response to mouse drags.
+                heading-scale:
+                pitch-scale:
+                    Defaults to 1. For example use zero to disable or -1 to
+                    reverse response.
             "nearest-tower":
-                Move to nearest tower to aircraft.
+                Move to position of the nearest tower to the aircraft.
             "rotate":
                 heading, pitch, roll:
                     Values used to rotate direction.
-                fixed:
-                    If false (the default), mouse drags modify heading and
-                    pitch.
                 damping-time-heading, damping-time-pitch, damping-time-roll:
                     Damping times for heading, pitch and roll; zero gives no
                     damping. See 'agl' below for details of damping.
             "rotate-current-view":
                 Rotate view direction by current /sim/current-view/....
-            "rotate-to-target":
-                Rotate view direction to point at previously-calculated target
-                position.
             "double":
                 A double view, with eye in foreground and target in background.
                 chase-distance:
@@ -186,10 +186,6 @@ Examples:
 
         <step>  <!-- Move to nearest tower. -->
             <type>nearest-tower</type>
-        </step>
-
-        <step>  <!-- Look at target position we found earlier. -->
-            <type>rotate-to-target</type>
         </step>
 
     Helicopter view:
