@@ -376,7 +376,7 @@ do_view_cycle (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_view_push (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-  SG_LOG(SG_GENERAL, SG_ALERT, "do_view_push() called");
+  SG_LOG(SG_GENERAL, SG_DEBUG, "do_view_push() called");
   globals->get_viewmgr()->view_push();
   return true;
 }
@@ -388,7 +388,7 @@ do_view_push (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_view_clone (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-  SG_LOG(SG_GENERAL, SG_ALERT, "do_view_clone() called");
+  SG_LOG(SG_GENERAL, SG_DEBUG, "do_view_clone() called");
   globals->get_viewmgr()->clone_current_view(arg);
   return true;
 }
@@ -412,7 +412,7 @@ do_view_last_pair (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_view_last_pair_double (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-  SG_LOG(SG_GENERAL, SG_ALERT, "do_view_last_pair_double() called");
+  SG_LOG(SG_GENERAL, SG_DEBUG, "do_view_last_pair_double() called");
   globals->get_viewmgr()->clone_last_pair_double(arg);
   return true;
 }
