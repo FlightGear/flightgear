@@ -1262,8 +1262,8 @@ void FGAIAircraft::handleATCRequests(double dt)
     if (!this->getTrafficRef()) {
         return;
     }
-    time_t startTime = this->getTrafficRef()->getDepartureTime();
-    time_t now = globals->get_time_params()->get_cur_time();
+    time_t startTime = this->getTrafficRef()->getDepartureTime(); /* <startTime> is unused. */
+    time_t now = globals->get_time_params()->get_cur_time(); /* <now> is unused. */
 
     //TODO implement NullController for having no ATC to save the conditionals
     if (controller) {

@@ -711,7 +711,7 @@ int fgMainInit( int argc, char **argv )
         return EXIT_SUCCESS;
     }
 
-    bool didUseLauncher = false;
+    bool didUseLauncher = false; /* <didUseLauncher> is set but unused. */
 #if defined(HAVE_QT)
     if (showLauncher) {
         flightgear::addSentryBreadcrumb("starting launcher", "info");

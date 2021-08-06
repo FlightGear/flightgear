@@ -400,7 +400,7 @@ do_view_clone (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_view_last_pair (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-  SG_LOG(SG_GENERAL, SG_ALERT, "do_view_last_pair() called");
+  SG_LOG(SG_GENERAL, SG_DEBUG, "do_view_last_pair() called");
   globals->get_viewmgr()->clone_last_pair(arg);
   return true;
 }

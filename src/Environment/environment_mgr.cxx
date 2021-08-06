@@ -334,7 +334,7 @@ void FGEnvironmentMgr::updateClosestAirport()
     auto automaticTowerActive = fgGetBool("/sim/tower/auto-position", true);
 
     SGGeod nearestTowerPosition;
-    bool nearestTowerPositionValid = false;
+    bool nearestTowerPositionValid = false; /* <nearestTowerPositionValid> is set but unused. */
     std::string nearestIdent;
     const SGGeod airportGeod;
     double towerDistance = numeric_limits<double>::max();
