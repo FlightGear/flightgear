@@ -609,7 +609,7 @@ void FGAirport::loadRunwayRenames() const
         const_cast<FGAirport*>(this)->parseRunwayRenameData(rootNode);
         mRunwayRenamesLoaded = true;
     } catch (sg_exception& e) {
-        SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading runrway rename XML failed:" << e.getFormattedMessage());
+        SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading runway rename XML failed:" << e.getFormattedMessage());
     }
 }
 

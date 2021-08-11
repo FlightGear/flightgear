@@ -351,8 +351,7 @@ private:
     void readTowerData(SGPropertyNode* aRoot);
 
     /**
-     * Helpers to parse property data loaded from an ICAO.rwy_override.xml file
-	 * or a ICAO.rwy_override.xml file
+     * Helpers to parse property data loaded from an ICAO.runway_rename.xml file
      */
     void parseRunwayRenameData(SGPropertyNode* aRoot);
 
