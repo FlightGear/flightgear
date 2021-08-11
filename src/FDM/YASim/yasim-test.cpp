@@ -77,8 +77,8 @@ void yasim_graph(Airplane* a, const float alt, const float kts, Airplane::Config
     float cl_max = 0, cd_min = 1e6, ld_max = 0;
     int   cl_max_deg = 0, cd_min_deg = 0, ld_max_deg = 0;
     
-    printf("aoa\tlift\tdrag\n");
-    for(int deg=-15; deg<=90; deg++) {
+    printf("aoa\tLift\tDrag\tLvsD\n");
+    for(int deg=-5; deg<=29; deg++) {
         float aoa = deg * DEG2RAD;
         _calculateAcceleration(a, aoa, speed, acc);
         float drag = acc[0] * (-1/9.8);
@@ -97,7 +97,7 @@ void yasim_graph(Airplane* a, const float alt, const float kts, Airplane::Config
             ld_max= ld;
             ld_max_deg = deg;
         }    
-        printf("%2d\t%.4f\t%.4f\n", deg, lift, drag);
+        printf("%2d\t%.4f\t%.4f\t%.4f\n", deg, lift, drag, ld);
     }
     printf("# cl_max %.4f at %d deg\n", cl_max, cl_max_deg);
     printf("# cd_min %.4f at %d deg\n", cd_min, cd_min_deg);
