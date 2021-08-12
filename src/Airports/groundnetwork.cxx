@@ -285,8 +285,27 @@ FGTaxiNodeRef FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod, FGR
     for (it = m_nodes.begin(); it != m_nodes.end(); ++it) {
         if (!(*it)->getIsOnRunway())
             continue;
-
         double localDistanceSqr = distSqr(cartPos, (*it)->cart());
+        if (aRunway) {
+            double headingTowardsExit = SGGeodesy::courseDeg(aGeod, (*it)->geod());
+            double diff = fabs(aRunway->headingDeg() - headingTowardsExit);
+            if (diff > 10) {
+                // Only ahead
+                continue;
+            }
+            FGTaxiNodeVector exitSegments = findSegmentsFrom((*it));
+            // Only ends
+            if (exitSegments.size() != 1) {
+                continue;
+            }
+            double exitHeading = SGGeodesy::courseDeg((*it)->geod(),
+                                                      (exitSegments.back())->geod());
+            diff = fabs(aRunway->headingDeg() - exitHeading);
+            if (diff > 10) {
+                // Only exits going in our direction
+                continue;
+            }
+        }
         if (localDistanceSqr < d) {
             d = localDistanceSqr;
             result = *it;
