@@ -54,6 +54,7 @@ void HUD::Gauge::draw(void)
     float right = _x + _w;
     float top = _y + _h;
     float bottom_4 = _h / 4.0;		// FIXME
+    float right_4 = _w / 4.0;
 
     // Draw the basic markings for the scale...
     if (option_vert()) { // Vertical scale
@@ -68,12 +69,12 @@ void HUD::Gauge::draw(void)
 
         if (option_left()) { // Read left, so line down right side
             draw_line(right, _y, right, top);
-            marker_xs  = marker_xe - _w / 3.0;   // Adjust tick
+            marker_xs  = marker_xe - _w / 2.0;   // Adjust tick
         }
 
         if (option_right()) {     // Read  right, so down left sides
             draw_line(_x, _y, _x, top);
-            marker_xe = _x + _w / 3.0;   // Adjust tick
+            marker_xe = _x + _w / 2.0;   // Adjust tick
         }
 
         // At this point marker x_start and x_end values are transposed.
@@ -102,13 +103,13 @@ void HUD::Gauge::draw(void)
                 if (_minor_divs) {                  // Minor tick marks
                     if (!(i % (int)_minor_divs)) {
                         if (option_left() && option_right()) {
-                            draw_line(_x, marker_ys, marker_xs - 3, marker_ys);
-                            draw_line(marker_xe + 3, marker_ys, right, marker_ys);
+                            draw_line(_x, marker_ys, marker_xs - 4, marker_ys);
+                            draw_line(marker_xe + 4, marker_ys, right, marker_ys);
 
                         } else if (option_left()) {
-                            draw_line(marker_xs + 3, marker_ys, marker_xe, marker_ys);
+                            draw_line(marker_xs + 4, marker_ys, marker_xe, marker_ys);
                         } else {
-                            draw_line(marker_xs, marker_ys, marker_xe - 3, marker_ys);
+                            draw_line(marker_xs, marker_ys, marker_xe - 4, marker_ys);
                         }
                     }
                 }
@@ -147,12 +148,12 @@ void HUD::Gauge::draw(void)
         text_y = _y + ((cur_value - vmin) * factor() /*+.5f*/);
 
         if (option_right()) {
-            _hud->_line_list.add(LineSegment(_x, text_y + 5, marker_xe, text_y));
-            _hud->_line_list.add(LineSegment(marker_xe, text_y, _x, text_y - 5));
+            _hud->_line_list.add(LineSegment(_x, text_y + right_4, marker_xe, text_y));
+            _hud->_line_list.add(LineSegment(marker_xe, text_y, _x, text_y - right_4));
         }
         if (option_left()) {
-            _hud->_line_list.add(LineSegment(right, text_y + 5, marker_xs, text_y));
-            _hud->_line_list.add(LineSegment(marker_xs, text_y, right, text_y - 5));
+            _hud->_line_list.add(LineSegment(right, text_y + right_4, marker_xs, text_y));
+            _hud->_line_list.add(LineSegment(marker_xs, text_y, right, text_y - right_4));
         }
         // End if VERTICAL SCALE TYPE
 
