@@ -122,7 +122,7 @@ AddonManager::loadConfigFileIfExists(const SGPath& configFile)
     
     // copy if it's NOT marked archive. In other words, we can replace
     // values from defaults, but not autosave
-    return dstNode->getAttribute(SGPropertyNode::ARCHIVE) == false;
+    return dstNode->getAttribute(SGPropertyNode::USERARCHIVE) == false;
   });
 
   SG_LOG(SG_GENERAL, SG_INFO,
