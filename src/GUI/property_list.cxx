@@ -340,7 +340,7 @@ void PropertyList::updateTextForEntry(NodeData& data)
         }
     }
     
-    if (!children || (_verbose && node->hasValue())) {
+    if (node->hasValue()) {
         if (node->getType() == props::STRING
                 || node->getType() == props::UNSPECIFIED)
             sanitize(value);
