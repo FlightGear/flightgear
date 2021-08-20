@@ -471,6 +471,8 @@ MapWidget::MapWidget(int x, int y, int maxX, int maxY) :
   _height = maxY - y;
   _hasPanned = false;
   _projection = PROJECTION_AZIMUTHAL_EQUIDISTANT;
+
+  _projectionCenter = globals->get_aircraft_position();
   _magneticHeadings = false;
   
   MapData::setFont(legendFont);
