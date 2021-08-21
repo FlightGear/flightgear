@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include "test_routeManager.hxx"
 
 #include <memory>
@@ -950,3 +952,29 @@ void RouteManagerTests::testCommandAPI()
     auto d = SGGeodesy::distanceNm(waldaVOR->geod(), waldaWpt->position());
     CPPUNIT_ASSERT_DOUBLES_EQUAL(10.0, d, 0.1);
 }
+
+void RouteManagerTests::testRMBug2616()
+{
+    auto edty = FGAirport::findByIdent("EDTY"s);
+    edty->testSuiteInjectProceduresXML(SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "EDTY.procedures.xml");
+
+    auto ils28Approach = edty->findApproachWithIdent("ILS28"s);
+    CPPUNIT_ASSERT(ils28Approach);
+    
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto f = rm->flightPlan();
+    f->clearLegs();
+    
+    auto edds = FGAirport::findByIdent("EDDS");
+    f->setDeparture(edds->getRunwayByIdent("25"));
+    f->setDestination(edty->getRunwayByIdent("28"));
+    f->setApproach(ils28Approach);
+    
+      CPPUNIT_ASSERT(f->destinationRunway()->ident() == "28"s);
+      CPPUNIT_ASSERT(f->approach()->ident() == "ILS28"s);
+
+
+    rm->activate();
+    CPPUNIT_ASSERT(f->isActive());
+}
+

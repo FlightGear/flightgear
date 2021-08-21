@@ -322,7 +322,8 @@ class FGAirport : public FGPositioned
     // helper to allow testing without needing a full Airports hierarchy
     // only for use by the test-suite, not available outside of it.
     void testSuiteInjectGroundnetXML(const SGPath& path);
-
+    
+    void testSuiteInjectProceduresXML(const SGPath& path);
 private:
     static flightgear::AirportCache airportCache;
 

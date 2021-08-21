@@ -53,7 +53,8 @@ class FlightplanTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testCloningBasic);
     CPPUNIT_TEST(testCloningFGFP);
     CPPUNIT_TEST(testCloningProcedures);
-    
+    CPPUNIT_TEST(testBug2616);
+
   //  CPPUNIT_TEST(testParseICAORoute);
    // CPPUNIT_TEST(testParseICANLowLevelRoute);
     CPPUNIT_TEST_SUITE_END();
@@ -90,6 +91,7 @@ public:
     void testCloningBasic();
     void testCloningFGFP();
     void testCloningProcedures();
+    void testBug2616();
 };
 
 #endif  // FG_FLIGHTPLAN_UNIT_TESTS_HXX

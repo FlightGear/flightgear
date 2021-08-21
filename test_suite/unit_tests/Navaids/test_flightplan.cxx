@@ -1,3 +1,25 @@
+/*
+ * Copyright (C) 2020 James Turner
+ *
+ * This file is part of the program FlightGear.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "config.h"
+
+
 #include "test_flightplan.hxx"
 
 #include <algorithm>
@@ -1102,4 +1124,27 @@ void FlightplanTests::testCloningProcedures() {
     
     CPPUNIT_ASSERT_EQUAL(fp2->star()->ident(), "EEL1A"s);
     CPPUNIT_ASSERT_EQUAL(fp2->starTransition()->ident(), "BEDUM"s);
+}
+
+
+void FlightplanTests::testBug2616()
+{
+    auto edty = FGAirport::findByIdent("EDTY"s);
+    edty->testSuiteInjectProceduresXML(SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "EDTY.procedures.xml");
+
+    auto ils28Approach = edty->findApproachWithIdent("ILS28"s);
+    CPPUNIT_ASSERT(ils28Approach);
+    
+        FlightPlanRef fp1 = makeTestFP("EDDS"s, "25"s, "EDTY"s, "28"s,
+                                   ""s);
+
+
+
+    fp1->setApproach(ils28Approach);
+
+      CPPUNIT_ASSERT(fp1->destinationRunway()->ident() == "28"s);
+      CPPUNIT_ASSERT(fp1->approach()->ident() == "ILS28"s);
+
+    fp1->activate();
+    CPPUNIT_ASSERT(fp1->isActive());
 }
