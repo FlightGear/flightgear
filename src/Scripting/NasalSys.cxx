@@ -1466,24 +1466,13 @@ void FGNasalSys::logError(naContext context)
 void FGNasalSys::logNasalStack(naContext context, string_list& stack)
 {
     const int stack_depth = naStackDepth(context);
-    if (stack_depth < 1)
-      return;
-
-    stack.push_back(string{naStr_data(naGetSourceFile(context, 0))} +
-                    ", line " + std::to_string(naGetLine(context, 0)));
-
-    SG_LOG(SG_NASAL, SG_ALERT,
-           "  at " << naStr_data(naGetSourceFile(context, 0)) <<
-           ", line " << naGetLine(context, 0));
-
-    for(int i=1; i<stack_depth; i++) {
-        SG_LOG(SG_NASAL, SG_ALERT,
-               "  called from: " << naStr_data(naGetSourceFile(context, i)) <<
-               ", line " << naGetLine(context, i));
-
-        stack.push_back(string{naStr_data(naGetSourceFile(context, i))} +
-                        ", line " + std::to_string(naGetLine(context, i)));
+    for (int i=0; i<stack_depth; ++i) {
+        std::string text = std::string(naStr_data(naGetSourceFile(context, i)))
+                + ", line " + std::to_string(naGetLine(context, i));
+        stack.push_back(text);
+        SG_LOG(SG_NASAL, SG_ALERT, ((i) ? "  called from: " : "  at ") << text);
     }
+    return;
 }
 
 // Reads a script file, executes it, and places the resulting
