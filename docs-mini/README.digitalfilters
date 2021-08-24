@@ -443,3 +443,7 @@ The output from the reciprocal filter type is: gain / input.
 
 The gain can be changed during run-time by updating the value in the property
 node.
+
+<startup-current> If true, internal state is initialised with the current error
+value, which can reduce startup oscillations. Otherwise if false (the default),
+internal state is initialised to zero.
