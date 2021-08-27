@@ -1106,13 +1106,27 @@ FGRenderer::setEventHandler(FGEventHandler* eventHandler_)
 void
 FGRenderer::addCamera(osg::Camera* camera, bool useSceneData)
 {
-    _viewerSceneRoot->addChild(camera);
+    osg::Camera *guiCamera = getGUICamera(CameraGroup::getDefault());
+    osg::GraphicsContext *gc = guiCamera->getGraphicsContext();
+    camera->setGraphicsContext(gc);
+    if (composite_viewer) {
+        composite_viewer->getView(0)->addSlave(camera, false);
+    } else {
+        viewer->addSlave(camera, false);
+    }
 }
 
 void
 FGRenderer::removeCamera(osg::Camera* camera)
 {
-    _viewerSceneRoot->removeChild(camera);
+    if (composite_viewer) {
+        unsigned int index = composite_viewer->getView(0)
+            ->findSlaveIndexForCamera(camera);
+        composite_viewer->getView(0)->removeSlave(index);
+    } else {
+        unsigned int index = viewer->findSlaveIndexForCamera(camera);
+        viewer->removeSlave(index);
+    }
 }
 
 void

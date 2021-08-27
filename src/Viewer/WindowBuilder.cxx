@@ -249,6 +249,11 @@ GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode, bool i
             return result;
     }
     auto traits = new GraphicsContext::Traits(*defaultTraits);
+
+    // Attempt to share context with the window that was created first
+    if (!wsa->windows.empty())
+        traits->sharedContext = wsa->windows.front()->gc;
+
     int traitsSet = setFromProperty(traits->hostName, winNode, "host-name");
     traitsSet |= setFromProperty(traits->displayNum, winNode, "display");
     traitsSet |= setFromProperty(traits->screenNum, winNode, "screen");
