@@ -122,11 +122,28 @@ bool AircraftItem::initFromFile(QDir dir, QString filePath)
 
     if (sim->hasChild("previews")) {
         SGPropertyNode_ptr previewsNode = sim->getChild("previews");
+        const QString aircraftPrefix = "Aircraft/" + dir.dirName() + "/";
+        
         for (auto previewNode : previewsNode->getChildren("preview")) {
             // add file path as url
             QString pathInXml = QString::fromStdString(previewNode->getStringValue("path"));
+
+            // https://sourceforge.net/p/flightgear/codetickets/2644/
+            // allow Aircraft/ prefixed paths in previews; what we're actually doing here
+            // is trimming them back to the style we expect
+            if (pathInXml.startsWith(aircraftPrefix)) {
+                pathInXml = pathInXml.mid(aircraftPrefix.length());
+            }
+            
             QString previewPath = dir.absoluteFilePath(pathInXml);
+            
+            if (!QFile::exists(previewPath)) {
+                qWarning() << "Missing local preview file" << previewPath;
+                continue;
+            }
+            
             previews.append(QUrl::fromLocalFile(previewPath));
+
         }
     }
 
