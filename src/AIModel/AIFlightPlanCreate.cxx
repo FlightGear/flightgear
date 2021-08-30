@@ -417,7 +417,7 @@ void FGAIFlightPlan::createDefaultLandingTaxi(FGAIAircraft * ac,
     pushBackWaypoint(wpt);
 
     if (gate.isValid()) {
-        wpt = createOnGround(ac, "ENDtaxi", gate.parking()->geod(), airportElev,
+        wpt = createOnGround(ac, "END-taxi", gate.parking()->geod(), airportElev,
                          ac->getPerformance()->vTaxi());
         pushBackWaypoint(wpt);
     }
@@ -468,14 +468,16 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
    // int route;
     for (int i = 0; i < size - 2; i++) {
         taxiRoute.next(node, &route);
-        char buffer[10];
-        snprintf(buffer, 10, "%d",  node->getIndex());
+        char buffer[16];
+        snprintf(buffer, 16, "landingtaxi-%d",  node->getIndex());
         FGAIWaypoint *wpt =
             createOnGround(ac, buffer, node->geod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
         
         wpt->setRouteIndex(route);
-        pushBackWaypoint(wpt);
+        if( !waypoints.back() || SGGeodesy::distanceM( waypoints.back()->getPos(), wpt->getPos()) > 0 ) {
+            pushBackWaypoint(wpt);
+        }
     }
     SG_LOG(SG_AI, SG_BULK, "Created taxi from " << runwayNode->getIndex() <<  " to " << gate.parking()->ident() << " at " << apt->getId());
 
@@ -1113,11 +1115,11 @@ bool FGAIFlightPlan::createParking(FGAIAircraft * ac, FGAirport * apt,
 
     SGGeodesy::direct(parking->geod(), heading, 0.1 * parking->getRadius(),
                     pos, az);
-    wpt = createOnGround(ac, "taxiStart2", pos, aptElev, vTaxiReduced);
+    wpt = createOnGround(ac, "taxiStart2", pos, aptElev, vTaxiReduced/2);
     pushBackWaypoint(wpt);
 
     wpt = createOnGround(ac, "END-Parking", parking->geod(), aptElev,
-                       vTaxiReduced);
+                       vTaxiReduced/3);
     pushBackWaypoint(wpt);
     return true;
 }

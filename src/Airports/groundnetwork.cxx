@@ -301,7 +301,7 @@ FGTaxiNodeRef FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod, FGR
             double exitHeading = SGGeodesy::courseDeg((*it)->geod(),
                                                       (exitSegments.back())->geod());
             diff = fabs(aRunway->headingDeg() - exitHeading);
-            if (diff > 10) {
+            if (diff > 80) {
                 // Only exits going in our direction
                 continue;
             }

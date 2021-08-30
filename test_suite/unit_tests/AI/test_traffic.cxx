@@ -148,7 +148,7 @@ void TrafficTests::testPushback()
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
-    departureTime = departureTime - 90;
+    departureTime = departureTime + 90;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -164,7 +164,7 @@ void TrafficTests::testPushback()
     aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
     globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
 
-    aiAircraft = flyAI(aiAircraft, "flight_EGPH_EGPF_" + std::to_string(departureTime));
+    aiAircraft = flyAI(aiAircraft, "flight_testPushback_EGPH_EGPF_" + std::to_string(departureTime));
 }
 
 void TrafficTests::testPushbackCargo()
@@ -205,7 +205,8 @@ void TrafficTests::testPushbackCargo()
 
     const double crs = SGGeodesy::courseDeg(egph->geod(), egpf->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
-    departureTime = departureTime - 90;
+    departureTime = departureTime + 90;
+
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -264,7 +265,8 @@ void TrafficTests::testChangeRunway()
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
-    departureTime = departureTime - 90;
+    departureTime = departureTime + 90;
+
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -321,7 +323,8 @@ void TrafficTests::testPushforward()
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
-    departureTime = departureTime - 90;
+    departureTime = departureTime + 90;
+
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -377,7 +380,8 @@ void TrafficTests::testPushforwardSpeedy()
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
-    departureTime = departureTime - 90;
+    departureTime = departureTime + 90;
+
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -434,7 +438,8 @@ void TrafficTests::testPushforwardParkYBBN()
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
-    departureTime = departureTime - 90;
+    departureTime = departureTime + 90;
+
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -514,7 +519,8 @@ void TrafficTests::testPushforwardParkYBBNRepeatGa()
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
-    departureTime = departureTime - 90;
+    departureTime = departureTime + 90;
+
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,
@@ -589,7 +595,8 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
-    departureTime = departureTime - 90;
+    departureTime = departureTime + 90;
+
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
                                                           flightPlanName, crs, departureTime,

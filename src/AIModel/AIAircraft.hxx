@@ -128,6 +128,7 @@ private:
     double headingError;
     double minBearing;
     double speedFraction;
+    /**Zero if FP is not active*/
     double groundTargetSpeed;
     double groundOffset;
 
@@ -172,6 +173,9 @@ private:
     std::string transponderCode;
 
     int spinCounter;
+    /**Kills a flight when it's stuck */
+    const int AI_STUCK_LIMIT = 100;
+    int stuckCounter; 
     double prevSpeed;
     double prev_dist_to_go;
 

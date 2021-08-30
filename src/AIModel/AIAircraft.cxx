@@ -255,9 +255,10 @@ void FGAIAircraft::ClimbTo(double alt_ft ) {
 
 void FGAIAircraft::TurnTo(double heading) {
     if( fabs(heading) < 0.1 ) {
-        SG_LOG(SG_AI, SG_WARN, "Heading reset");
+        SG_LOG(SG_AI, SG_WARN, "Heading reset to zero");
     }
     tgt_heading = heading;
+    // SG_LOG(SG_AI, SG_BULK, "Turn tgt_heading to " << tgt_heading);
     hdg_lock = true;
 }
 
@@ -397,8 +398,11 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
             }
         }
 
-        if (next) {
+        if (next && !curr->contains("END") && !curr->contains("PushBackPointlegend")) {
             fp->setLeadDistance(tgt_speed, tgt_heading, curr, next);
+        } else {
+        // If we are ending in a parking  
+            fp->setLeadDistance(1);
         }
 
         // Calculate a target altitude for any leg in which at least one waypoint is in the air.
@@ -768,11 +772,12 @@ void FGAIAircraft::handleFirstWaypoint() {
 
     //TODO fp should handle this
     fp->IncrementWaypoint(eraseWaypoints);
-    if (!(fp->getNextWaypoint()) && trafficRef)
+    if (!(fp->getNextWaypoint()) && trafficRef) {
         if (!loadNextLeg()) {
             setDie(true);
             return;
         }
+    }
 
     prev = fp->getPreviousWaypoint();   //first waypoint
     SG_LOG(SG_AI, SG_BULK, "Previous WP \t" << prev->getName());
@@ -785,7 +790,11 @@ void FGAIAircraft::handleFirstWaypoint() {
 
     setLatitude(prev->getLatitude());
     setLongitude(prev->getLongitude());
-    setSpeed(prev->getSpeed());
+    if(fp->getLeg()==1) {
+        setSpeed(0);
+    } else {
+        setSpeed(prev->getSpeed());
+    }
     setAltitude(prev->getAltitude());
 
     if (prev->getSpeed() > 0.0)
@@ -798,8 +807,11 @@ void FGAIAircraft::handleFirstWaypoint() {
     // If next doesn't exist, as in incrementally created flightplans for
     // AI/Trafficmanager created plans,
     // Make sure lead distance is initialized otherwise
-    if (next) {
+    // If we are ending in a parking 
+    if (next && !curr->contains("END") && !curr->contains("PushBackPointlegend")) {
         fp->setLeadDistance(speed, hdg, curr, next);
+    } else {
+        fp->setLeadDistance(1);
     }
 
     if (curr->getCrossat() > -1000.0) //use a calculated descent/climb rate
@@ -828,7 +840,6 @@ void FGAIAircraft::handleFirstWaypoint() {
     prevSpeed = 0;
 }
 
-
 /**
  * Check Execution time (currently once every 100 ms)
  * Add a bit of randomization to prevent the execution of all flight plans
@@ -855,18 +866,35 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int 
     double dist_to_go_m = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
     // Leaddistance should be ft
     double lead_dist = fp->getLeadDistance();
-    // experimental: Use fabs, because speed can be negative (I hope) during push_back.
-    if ((dist_to_go_m < fabs(10.0* speed)) && (speed < 0) && (tgt_speed < 0) && fp->getCurrentWaypoint()->contains("PushBackPoint")) {
-        tgt_speed = -(dist_to_go_m / 10.0);
-        if (tgt_speed > -0.5) {
-            tgt_speed = -0.5;
+    const double arrivalDist = fabs(10.0*fp->getCurrentWaypoint()->getSpeed());
+    // arrive at pushback end
+    if ((dist_to_go_m < arrivalDist) && (speed < 0) && (tgt_speed < 0) && fp->getCurrentWaypoint()->contains("PushBackPoint")) {        
+//        tgt_speed = -(dist_to_go_m / 10.0);
+        tgt_speed = -std::sqrt((pow(arrivalDist,2)-pow(arrivalDist-dist_to_go_m,2)));
+        SG_LOG(SG_AI, SG_BULK, "tgt_speed " << tgt_speed);
+        if (tgt_speed > -1) {
+            // Speed is int and cannot go below 1 knot
+            tgt_speed = -1;
         }
 
         if (fp->getPreviousWaypoint()->getSpeed() < tgt_speed) {
             SG_LOG(SG_AI, SG_BULK, "Set speed of WP from " << fp->getPreviousWaypoint()->getSpeed() << " to  " << tgt_speed);
             fp->getPreviousWaypoint()->setSpeed(tgt_speed);
         }
-    }
+    } 
+    // arrive at parking
+    if ((dist_to_go_m < arrivalDist) && (speed > 0) && (tgt_speed > 0) && fp->getCurrentWaypoint()->contains("END")) {
+        tgt_speed = (dist_to_go_m / 10.0);
+        if (tgt_speed < 1) {
+            // Speed is int and cannot go below 1 knot
+            tgt_speed = 1;
+        }
+
+        if (fp->getPreviousWaypoint()->getSpeed() < tgt_speed) {
+            SG_LOG(SG_AI, SG_BULK, "Set speed of WP from " << fp->getPreviousWaypoint()->getSpeed() << " to  " << tgt_speed);
+            fp->getPreviousWaypoint()->setSpeed(tgt_speed);
+        }
+    } 
     
     if (lead_dist < fabs(2*speed)) {
       //don't skip over the waypoint
@@ -903,15 +931,22 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int 
 
     if ((dist_to_go_m < lead_dist) ||
         ((dist_to_go_m > prev_dist_to_go) && (bearing > (minBearing * 1.1))) ) {
-        SG_LOG(SG_AI, SG_BULK, "Leadpoint reached " << bearing << "\t" << nextBearing);
+        SG_LOG(SG_AI, SG_BULK, "Leadpoint reached Bearing : " << bearing << "\tNext Bearing : " << nextBearing);
         minBearing = 360;
         speedFraction = 1.0;
         prev_dist_to_go = HUGE_VAL;
         return true;
     } else {
-        if (prev_dist_to_go == dist_to_go_m) {
+        if (prev_dist_to_go == dist_to_go_m && fabs(groundTargetSpeed)>0) {
             //FIXME must be suppressed when parked
-            SG_LOG(SG_AI, SG_WARN, "Aircraft " << _callsign << " stuck. Speed " << speed);
+            SG_LOG(SG_AI, SG_BULK, "Aircraft " << _callsign << " stuck. Speed " << speed);
+            stuckCounter++;
+            if (stuckCounter>AI_STUCK_LIMIT) {
+                SG_LOG(SG_AI, SG_WARN, "Stuck flight " << _callsign << " killed" );
+                setDie(true);
+            }
+        } else {
+            stuckCounter = 0;
         }
         prev_dist_to_go = dist_to_go_m;
         return false;
@@ -966,6 +1001,8 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
     // This is the last taxi waypoint, and marks the the end of the flight plan
     // so, the schedule should update and wait for the next departure time.
     if (prev->contains("END")) {
+        SG_LOG(SG_AI, SG_BULK, "Reached " << prev->getName() );
+
         //FIXME Heading Error should be reset
         time_t nextDeparture = trafficRef->getDepartureTime();
         // make sure to wait at least 20 minutes at parking to prevent "nervous" taxi behavior
@@ -985,11 +1022,7 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
  * @param curr
  */
 void FGAIAircraft::controlHeading(FGAIWaypoint* curr) {
-    double calc_bearing = fp->getBearing(pos, curr);
-    if (speed < 0) {
-        calc_bearing +=180;
-        SG_NORMALIZE_RANGE(calc_bearing, 0.0, 360.0);
-    }
+    const double calc_bearing = speed < 0?SGMiscd::normalizePeriodic(0, 360, fp->getBearing(pos, curr) + 180.0):fp->getBearing(pos, curr);
 
     if (fgIsFinite(calc_bearing)) {
         double hdg_error = calc_bearing - tgt_heading;
@@ -1020,7 +1053,12 @@ void FGAIAircraft::controlSpeed(FGAIWaypoint* curr, FGAIWaypoint* next) {
     if (fabs(speed_diff) > 10) {
         prevSpeed = speed;
         if (next) {
-            fp->setLeadDistance(speed, tgt_heading, curr, next);
+            if (next && !curr->contains("END") && !curr->contains("PushBackPointlegend")) {
+                fp->setLeadDistance(speed, tgt_heading, curr, next);
+            } else {
+            // If we are ending in a parking the heading will be a 
+                fp->setLeadDistance(1);
+            }
         }
     }
 }
@@ -1100,19 +1138,21 @@ void FGAIAircraft::updateHeading(double dt) {
     if (roll != 0.0) {
         // If on ground, calculate heading change directly
         if (onGround()) {
-            double headingDiff = fabs(hdg-tgt_heading);
+            const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, hdg-tgt_heading);
 
-            if (headingDiff > 180) {
-                headingDiff = fabs(headingDiff - 360);
-            }
-
+            // When pushback behind us we still want to move but ...
             groundTargetSpeed = tgt_speed * cos(headingDiff * SG_DEGREES_TO_RADIANS);
 
-            if (sign(groundTargetSpeed) != sign(tgt_speed)) {
-                if (fabs(speed) < 2 ) {
+            if (sign(groundTargetSpeed) != sign(tgt_speed) && fabs(tgt_speed) > 0) {
+                if (fabs(speed) < 2 && fp->isActive(globals->get_time_params()->get_cur_time())) {
                     // This seems to happen in case there is a change from forward to pushback.
                     // which should never happen.
-                  SG_LOG(SG_AI, SG_BULK, "Oh dear we're stuck. Speed is " << speed );
+                    SG_LOG(SG_AI, SG_BULK, "Oh dear " << _callsign << " might get stuck aka next point is behind us. Speed is " << speed );
+                    stuckCounter++;
+                    if (stuckCounter>AI_STUCK_LIMIT) {
+                        SG_LOG(SG_AI, SG_WARN, "Stuck flight " << _callsign << " killed" );
+                        setDie(true);
+                    }
                 }
                 // Negative Cosinus means angle > 90°
                 groundTargetSpeed = 0.21 * sign(tgt_speed); // to prevent speed getting stuck in 'negative' mode
@@ -1120,12 +1160,18 @@ void FGAIAircraft::updateHeading(double dt) {
 
             // Only update the target values when we're not moving because otherwise we might introduce an enormous target change rate while waiting a the gate, or holding.
             if (speed != 0) {
-                if (headingDiff > 30.0) {
+                if (fabs(headingDiff) > 30.0) {
                     // invert if pushed backward
-                    headingChangeRate += 10.0 * dt * sign(roll);
+                    if( sign(headingChangeRate) == sign(headingDiff)) {
+                        // left/right change
+                        headingChangeRate = 10.0 * dt * sign(headingDiff) * -1;
+                    } else {
+                        headingChangeRate -= 10.0 * dt * sign(headingDiff);
+                    }
 
                     // Clamp the maximum steering rate to 30 degrees per second,
                     // But only do this when the heading error is decreasing.
+                    // FIXME
                     if ((headingDiff < headingError)) {
                         if (headingChangeRate > 30)
                             headingChangeRate = 30;
@@ -1134,18 +1180,29 @@ void FGAIAircraft::updateHeading(double dt) {
                     }
                 } else {
                     if (speed != 0) {
-                        if (fabs(headingChangeRate) > headingDiff)
+                        if( sign(headingChangeRate) == sign(headingDiff)) {
+                            // left/right change
+                           headingChangeRate = 3 * dt * sign(headingDiff) * -1;
+                        } else {
+                            headingChangeRate -= 3 * dt * sign(headingDiff);
+                        }
+                        /*
+                        if (headingChangeRate > headingDiff || 
+                            headingChangeRate < headingDiff) {
                             headingChangeRate = headingDiff*sign(roll);
-                        else
+                        }
+                        else {
                             headingChangeRate += dt * sign(roll);
+                        }
+                        */
                     }
                 }
             }
 
             hdg += headingChangeRate * dt * sqrt(fabs(speed) / 15);
-            SG_NORMALIZE_RANGE(headingDiff, 0.0, 360.0);
 
             headingError = headingDiff;
+            // SG_LOG(SG_AI, SG_BULK, "Headingerror " << headingError );
             if (fabs(headingError) < 1.0) {
                 hdg = tgt_heading;
             }
@@ -1262,8 +1319,6 @@ void FGAIAircraft::handleATCRequests(double dt)
     if (!this->getTrafficRef()) {
         return;
     }
-    time_t startTime = this->getTrafficRef()->getDepartureTime(); /* <startTime> is unused. */
-    time_t now = globals->get_time_params()->get_cur_time(); /* <now> is unused. */
 
     //TODO implement NullController for having no ATC to save the conditionals
     if (controller) {
@@ -1491,9 +1546,9 @@ void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
     o << "Lat\t";
     o << "Lon\t";
     o << "Callsign\t";
-    o << "heading change rate\t";
-    o << "headingErr\t";
     o << "headingDiff\t";
+    o << "headingChangeRate\t";
+    o << "headingError\t";
     o << "hdg\t";
     o << "tgt_heading\t";
     o << "tgt_speed\t";
@@ -1504,9 +1559,7 @@ void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
     o << "groundTargetSpeed\t";
     o << "getVerticalSpeedFPM\t";
     o << "getTrueHeadingDeg\t";
-    o << "Bearing\t";
-    o << "headingChangeRate\t";
-    o << "headingError\t";
+    o << "bearingToWP\t";
 
     o << "Name\t";
     o << "WP Lat\t";
@@ -1519,25 +1572,23 @@ void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
     o << "Leg\t";
     o << "Num WP\t";
     o << "Leaddistance\t";
-    o << "no_roll";
+    o << "no_roll\t";
+    o << "roll\t";
+    o << "stuckCounter";
     o << endl;
 }
 
 void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
-    double headingDiff = fabs(hdg-tgt_heading);
-
-    if (headingDiff > 180) {
-        headingDiff = fabs(headingDiff - 360);
-    }
+    const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, hdg-tgt_heading);
 
     o << lineIndex << "\t";
     o << setprecision(12);
     o << this->getGeodPos().getLatitudeDeg() << "\t";
     o << this->getGeodPos().getLongitudeDeg() << "\t";
     o << this->getCallSign() << "\t";
-    o << headingChangeRate << "\t";
-    o << headingError << "\t";
     o << headingDiff << "\t";
+    o << headingChangeRate << "\t";
+    o  << headingError << "\t";
     o << hdg << "\t";
     o << tgt_heading << "\t";
     o << tgt_speed << "\t";
@@ -1550,8 +1601,6 @@ void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
     o  << round(this->getVerticalSpeedFPM()) << "\t";
     o << this->getTrueHeadingDeg() << "\t";
     FGAIFlightPlan* fp = this->GetFlightPlan();
-    o << headingChangeRate << "\t";
-    o  << headingError << "\t";
     FGAIWaypoint* currentWP = this->GetFlightPlan()->getCurrentWaypoint();
     if (currentWP) {
         o << this->GetFlightPlan()->getBearing(this->getGeodPos(), this->GetFlightPlan()->getCurrentWaypoint()) << "\t";
@@ -1565,16 +1614,18 @@ void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
         double dist_to_go_m = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), currentWP);
         o << dist_to_go_m << "\t";
     } else {
-        o << "\t\t\t\t\t\t\t\t";
+        o << "No WP\t\t\t\t\t\t\t\t";
     }
     if (fp->isValidPlan()) {
         o << fp->getLeg() << "\t";
         o << fp->getNrOfWayPoints() << "\t";
         o << fp->getLeadDistance() << "\t";
     } else {
-        o << "NotValid\t\t";
+        o << "FP NotValid\t\t";
     }
-    o << this->onGround();
+    o << this->onGround() << "\t";
+    o << roll << "\t";
+    o << stuckCounter;
     o << endl;
 }
 

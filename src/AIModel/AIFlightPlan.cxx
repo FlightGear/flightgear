@@ -457,6 +457,9 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
   
   //lead_distance = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS); 
   lead_distance = turn_radius * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
+  if (lead_distance > 1000) {
+     SG_LOG(SG_AI, SG_BULK, "Excessive leaddistance possible direction change " << lead_distance << " leadInAngle " << leadInAngle << " inbound " << inbound << " outbound " << outbound);
+  }
   /*
   if ((lead_distance > (3*turn_radius)) && (current->on_ground == false)) {
       SG_LOG(SG_AI, SG_ALERT, "Warning: Lead-in distance is large. Inbound = " << inbound
@@ -531,18 +534,19 @@ void FGAIFlightPlan::addWaypoint(FGAIWaypoint* wpt)
 
 void FGAIFlightPlan::pushBackWaypoint(FGAIWaypoint *wpt)
 {
-    const size_t pos = std::distance(waypoints.cbegin(), wpt_iterator);
-    
-    if (!waypoints.empty()) {
-      const double dist = SGGeodesy::distanceM( waypoints.back()->getPos(), wpt->getPos());
-      if ( dist < 0.5 ) {
-        SG_LOG(SG_AI, SG_DEV_ALERT, "Double WP : \t" << wpt->getName() << " not added ");
+  size_t pos = wpt_iterator - waypoints.begin();
+  if (waypoints.size()>0) {
+      double dist = SGGeodesy::distanceM( waypoints.back()->getPos(), wpt->getPos());
+      if( dist == 0 ) {
+        SG_LOG(SG_AI, SG_DEBUG, "Double WP : \t" << wpt->getName() << " not added ");
+      } else {
+        waypoints.push_back(wpt);
+        SG_LOG(SG_AI, SG_BULK, "Added WP : \t" << setprecision(12) << wpt->getName() << "\t" << wpt->getPos() << "\t" << wpt->getSpeed());
       }
-    }
-
+  } else {
     waypoints.push_back(wpt);
-    SG_LOG(SG_AI, SG_BULK, "Added WP : \t" << wpt->getName() << "\t" << wpt->getPos() << "\t" << wpt->getSpeed());
-
+    SG_LOG(SG_AI, SG_BULK, "Added WP : \t" << setprecision(12) << wpt->getName() << "\t" << wpt->getPos() << "\t" << wpt->getSpeed());
+  }
   // std::vector::push_back invalidates waypoints
   //  so we should restore wpt_iterator after push_back
   //  (or it could be an index in the vector)

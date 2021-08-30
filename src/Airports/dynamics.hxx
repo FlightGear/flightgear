@@ -116,6 +116,8 @@ public:
                           std::string& runway,
                           double heading );
 
+    bool hasParking(FGParking* parking) const;
+
     bool hasParkings() const;
 
     /**

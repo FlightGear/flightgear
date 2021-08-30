@@ -43,7 +43,8 @@ using std::string;
 
 // TODO: Use James Turner's createOnGround functions.
 bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
-                                    bool firstFlight, FGAirport *dep,
+                                    bool firstFlight, 
+                                    FGAirport *dep,
                                     double radius,
                                     const string& fltType,
                                     const string& aircraftType,
@@ -59,32 +60,34 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 
     if (!(dep->getDynamics()->getGroundController()->exists())) {
         //cerr << "Push Back fallback" << endl;
+        SG_LOG(SG_AI, SG_DEV_WARN, "No groundcontroller createPushBackFallBack at " << dep->getId());
         createPushBackFallBack(ac, firstFlight, dep,
                                radius, fltType, aircraftType, airline);
       return true;
     }
 
-  // establish the parking position / gate if required
-    if (firstFlight) {
-        // if the airport has no parking positions defined, don't log
-        // the warning below.
-        if (!dep->getDynamics()->hasParkings()) {
-            return false;
-        }
-
+    if (firstFlight || !dep->getDynamics()->hasParking(gate.parking())) {
+      // establish the parking position / gate
+      // if the airport has no parking positions defined, don't log
+      // the warning below.
+      if (!dep->getDynamics()->hasParkings()) {
+          return false;
+      }
       gate = dep->getDynamics()->getAvailableParking(radius, fltType,
-                                                       aircraftType, airline);
+                                                        aircraftType, airline);
       if (!gate.isValid()) {
         SG_LOG(SG_AI, SG_DEV_WARN, "Could not find parking for a " <<
-               aircraftType <<
-               " of flight type " << fltType <<
-               " of airline     " << airline <<
-               " at airport     " << dep->getId());
+                aircraftType <<
+                " of flight type " << fltType <<
+                " of airline     " << airline <<
+                " at airport     " << dep->getId());
         return false;
       }
     }
 
+
     if (!gate.isValid()) {
+        SG_LOG(SG_AI, SG_DEV_WARN, "Gate " << gate.parking()->ident() << " not valid createPushBackFallBack at " << dep->getId());
         createPushBackFallBack(ac, firstFlight, dep,
                                radius, fltType, aircraftType, airline);
         return true;
@@ -95,23 +98,28 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
     FGParking *parking = gate.parking();
     if (parking && parking->getPushBackPoint() != nullptr) {
         FGTaxiRoute route = groundNet->findShortestRoute(parking, parking->getPushBackPoint(), false);
-        SG_LOG(SG_AI, SG_BULK, "Creating Pushback : \t" << parking->getPushBackPoint()->getIndex());
+        SG_LOG(SG_AI, SG_BULK, "Creating Pushback from " << parking->ident() << " to " << parking->getPushBackPoint()->getIndex());
 
         int size = route.size();
         if (size < 2) {
-            SG_LOG(SG_AI, SG_DEV_WARN, "Push back route from gate " << parking->ident() << " has only " << size << " nodes.");
-            SG_LOG(SG_AI, SG_DEV_WARN, "Using  " << parking->getPushBackPoint());
+            SG_LOG(SG_AI, SG_DEV_WARN, "Push back route from gate " << parking->ident() << " has only " << size << " nodes.\n" << "Using  " << parking->getPushBackPoint());
         }
 
         route.first();
         FGTaxiNodeRef node;
         int rte;
 
+        if (waypoints.size()>0) {
+          // This will be a parking from a previous leg which still contains the forward speed
+          waypoints.back()->setSpeed(vTaxiBackward);
+        }
+                
+
         while (route.next(node, &rte))
         {
             char buffer[20];
-            snprintf (buffer, sizeof(buffer), "pushback-%d4",  (short)node->getIndex());
-            FGAIWaypoint *wpt = createOnGround(ac, string(buffer), node->geod(), dep->getElevation(), -vTaxiBackward);
+            sprintf (buffer, "pushback-%03d",  (short)node->getIndex());
+            FGAIWaypoint *wpt = createOnGround(ac, string(buffer), node->geod(), dep->getElevation(), vTaxiBackward);
 
             /*
             if (previous) {
@@ -143,11 +151,11 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
             SG_LOG(SG_AI, SG_DEV_WARN, "Gate " << parking->ident() << " at " << dep->getId()
                  << " doesn't seem to have pushforward routes associated with it.");
 
-            FGAIWaypoint *wpt = createOnGround(ac, string("park"), dep->geod(), dep->getElevation(), vTaxiReduced);
+            FGAIWaypoint *wpt = createOnGround(ac, string("park"), parking->geod(), dep->getElevation(), vTaxiReduced);
             pushBackWaypoint(wpt);
 
             SGGeod coord;
-            SGGeodesy::direct(dep->geod(), parking->getHeading(), 2.0, coord, az2);
+            SGGeodesy::direct(parking->geod(), parking->getHeading(), 2.0, coord, az2);
             wpt = createOnGround(ac, string("taxiStart"), coord, dep->getElevation(), vTaxiReduced);
             pushBackWaypoint(wpt);
             return true;
@@ -158,16 +166,20 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 
         double parkingHeading = parking->getHeading();
 
-        SG_LOG(SG_AI, SG_BULK, "Creating Pushforward : \t" << pushForwardSegment->getEnd()->getIndex() << " Length : \t" << distance);
-
-        int numSegments = distance/2.0;
+        SG_LOG(SG_AI, SG_BULK, "Creating Pushforward from ID " << pushForwardSegment->getEnd()->getIndex() << " Length : \t" << distance);
+// Add the parking if on first leg and not repeat
+        if (waypoints.size() == 0) {
+          pushBackWaypoint( createOnGround(ac, parking->getName(), parking->geod(), dep->getElevation(), vTaxiReduced));
+        }
+// Make sure we have at least three WPs         
+        int numSegments = distance>15?(distance/5.0):3;
         for (int i = 1; i < numSegments; i++) {
             SGGeod pushForwardPt;
 
             SGGeodesy::direct(parking->geod(), parkingHeading,
                               (((double)i / numSegments) * distance), pushForwardPt, az2);
             char buffer[20];
-            snprintf(buffer, sizeof(buffer), "pushforward-%d4", (short)i);
+            sprintf(buffer, "pushforward-%03d", (short)i);
             FGAIWaypoint *wpt = createOnGround(ac, string(buffer), pushForwardPt, dep->getElevation(), vTaxiReduced);
 
             wpt->setRouteIndex(pushForwardSegment->getIndex());

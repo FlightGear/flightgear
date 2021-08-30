@@ -287,6 +287,14 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
     return candidates.front();
 }
 
+bool FGAirportDynamics::hasParking(FGParking* parking) const
+{
+    return std::find(parent()->groundNetwork()->allParkings().begin(),
+    parent()->groundNetwork()->allParkings().end(),
+    parking)
+    != parent()->groundNetwork()->allParkings().end();
+}
+
 bool FGAirportDynamics::hasParkings() const
 {
     return !parent()->groundNetwork()->allParkings().empty();
