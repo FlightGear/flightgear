@@ -97,24 +97,18 @@ CanvasMgr::CanvasMgr():
 //----------------------------------------------------------------------------
 void CanvasMgr::init()
 {
-  flightgear::CameraGroup* camera_group = flightgear::CameraGroup::getDefault();
-  if (camera_group) {
-    _gui_camera = flightgear::getGUICamera(camera_group);
-      if (_gui_camera.valid()) {
-          // add our two placement factories
-          sc::Canvas::addPlacementFactory
-          (
-           "object", [](SGPropertyNode* placement, sc::CanvasPtr canvas) {
-              return FGODGauge::set_aircraft_texture(placement,
-                                                     canvas->getTexture(),
-                                                     canvas->getCullCallback(),
-                                                     canvas);
-          });
-          
-          sc::Canvas::addPlacementFactory("scenery-object", &addSceneObjectPlacement);
-          sc::Canvas::addPlacementFactory("dynamic-model", &addDynamicModelPlacement);
-      }
-  }
+  // add our two placement factories
+  sc::Canvas::addPlacementFactory
+  (
+   "object", [](SGPropertyNode* placement, sc::CanvasPtr canvas) {
+      return FGODGauge::set_aircraft_texture(placement,
+                                             canvas->getTexture(),
+                                             canvas->getCullCallback(),
+                                             canvas);
+  });
+  sc::Canvas::addPlacementFactory("scenery-object", &addSceneObjectPlacement);
+  sc::Canvas::addPlacementFactory("dynamic-model", &addDynamicModelPlacement);
+
   simgear::canvas::CanvasMgr::init();
 }
 
@@ -126,8 +120,6 @@ void CanvasMgr::shutdown()
   sc::Canvas::removePlacementFactory("object");
   sc::Canvas::removePlacementFactory("scenery-object");
   sc::Canvas::removePlacementFactory("dynamic-model");
-
-    _gui_camera = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -147,8 +139,8 @@ CanvasMgr::getCanvasTexId(const simgear::canvas::CanvasPtr& canvas) const
 //  if( contexts.empty() )
 //    return 0;
 
-  osg::ref_ptr<osg::Camera> guiCamera;
-  if( !_gui_camera.lock(guiCamera) )
+  osg::Camera* guiCamera = flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
+  if (!guiCamera)
     return 0;
 
   osg::State* state = guiCamera->getGraphicsContext()->getState(); //contexts[0]->getState();
