@@ -1027,10 +1027,13 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
     } */
     // only bother with aircraft that have a takeoff status of 2, since those are essentially under tower control
     FGAIAircraft* ac= rwy->getFirstAircraftIndepartureQueue();
-    if (ac->getTakeOffStatus() == 1) {
-        // transmit takeoff clearance
-        ac->setTakeOffStatus(2);
+    if (ac) {
+        if (ac->getTakeOffStatus() == 1) {
+            // transmit takeoff clearance
+            ac->setTakeOffStatus(2);
+        }
     }
+    
     if (current.getAircraft()->getTakeOffStatus() == 2) {
         current.setHoldPosition(false);
     } else {
