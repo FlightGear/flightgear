@@ -48,6 +48,7 @@ class RouteManagerTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testCommandAPI);
     CPPUNIT_TEST(testRMBug2616);
     CPPUNIT_TEST(testsSelectWaypoint);
+    CPPUNIT_TEST(testsSelectWaypoint2);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -78,7 +79,7 @@ public:
     void testCommandAPI();
     void testsSelectWaypoint();
     void testRMBug2616();
-    
+    void testsSelectWaypoint2();
 private:
     GPS* m_gps = nullptr;
 };
