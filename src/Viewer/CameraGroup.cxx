@@ -477,7 +477,7 @@ void CameraGroup::buildDistortionCamera(const SGPropertyNode* psNode,
 #endif
 }
 
-void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
+CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
 {
     WindowBuilder *wBuild = WindowBuilder::getWindowBuilder();
     const SGPropertyNode* windowNode = cameraNode->getNode("window");
@@ -491,7 +491,7 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         window = wBuild->buildWindow(cameraNode);
     }
     if (!window) {
-        return;
+        return nullptr;
     }
 
     osg::Matrix vOff;
@@ -599,7 +599,7 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         if (it == _cameras.end()) {
             SG_LOG(SG_VIEW, SG_ALERT, "CameraGroup::buildCamera: "
                    "failed to find parent camera for relative camera!");
-            return;
+            return nullptr;
         }
         parentInfo = (*it);
         if (projectionNode->getNameString() == "right-of-perspective") {
@@ -716,6 +716,18 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     if (psNode) {
         info->flags = info->flags | CameraInfo::VIEW_ABSOLUTE;
         //buildDistortionCamera(psNode, camera);
+    }
+
+    return info;
+}
+
+void CameraGroup::removeCamera(CameraInfo *info)
+{
+    for (auto it = _cameras.begin(); it != _cameras.end(); ++it) {
+        if (*it == info) {
+            _cameras.erase(it);
+            return;
+        }
     }
 }
 
@@ -970,6 +982,9 @@ void reloadCompositors(CameraGroup *cgroup)
             SGReaderWriterOptions::fromPath(globals->get_fg_root());
         options->setPropertyNode(globals->get_props());
 
+        if (info->reloadCompositorCallback.valid())
+            info->reloadCompositorCallback->preReloadCompositor(cgroup, info);
+
         // Force deletion
         info->compositor.reset(nullptr);
         // Then replace it with a new instance
@@ -981,6 +996,9 @@ void reloadCompositors(CameraGroup *cgroup)
                                                   viewport,
                                                   compositor_path,
                                                   options));
+
+        if (info->reloadCompositorCallback.valid())
+            info->reloadCompositorCallback->postReloadCompositor(cgroup, info);
     }
 
     cgroup->_viewer->getViewerBase()->startThreading();

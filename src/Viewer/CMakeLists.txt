@@ -28,7 +28,14 @@ set(HEADERS
 	viewmgr.hxx
 	sview.hxx
 	GraphicsPresets.hxx
+	VRManager.hxx
 	)
+
+if (ENABLE_OSGXR)
+	list(APPEND SOURCES
+		VRManager.cxx
+		)
+endif()
 
 if (YES)
     list(APPEND HEADERS PUICamera.hxx)

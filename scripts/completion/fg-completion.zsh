@@ -60,6 +60,8 @@ _fgfs_options=(
 	'--enable-skyblend[Enable sky blending]' \
 	'--disable-textures[Disable textures]' \
 	'--enable-textures[Enable textures]' \
+        '--disable-vr[Disable VR]' \
+        '--enable-vr[Enable VR]' \
 	'--disable-wireframe[Disable wireframe drawing mode]' \
 	'--enable-wireframe[Enable wireframe drawing mode]' \
 	'--notrim[Do NOT attempt to trim the model (only with fdm=jsbsim)]' \
