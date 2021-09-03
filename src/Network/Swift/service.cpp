@@ -69,6 +69,8 @@ CService::CService()
     m_rollRateNode              = fgGetNode("/orientation/roll-rate-degps", true);
     m_pichRateNode              = fgGetNode("/orientation/pitch-rate-degps", true);
     m_yawRateNode               = fgGetNode("/orientation/yaw-rate-degps", true);
+    m_com1VolumeNode            = fgGetNode("/instrumentation/comm/volume", true);
+    m_com2VolumeNode            = fgGetNode("/instrumentation/comm[1]/volume", true);
 
     SG_LOG(SG_NETWORK, SG_INFO, "FGSwiftBus Service initialized");
 }
@@ -352,6 +354,17 @@ double CService::getYawRate() const
     return m_yawRateNode->getDoubleValue() * SG_DEGREES_TO_RADIANS;
 }
 
+double CService::getCom1Volume() const
+{
+    return m_com1VolumeNode->getDoubleValue();
+}
+
+double CService::getCom2Volume() const
+{
+    return m_com2VolumeNode->getDoubleValue();
+}
+
+
 static const char* introspection_service = DBUS_INTROSPECT_1_0_XML_DOCTYPE_DECL_NODE;
 
 DBusHandlerResult CService::dbusMessageHandler(const CDBusMessage& message_)
@@ -603,6 +616,14 @@ DBusHandlerResult CService::dbusMessageHandler(const CDBusMessage& message_)
         } else if (message.getMethodName() == "getSpeedBrakeRatio") {
             queueDBusCall([=]() {
                 sendDBusReply(sender, serial, getSpeedBrakeRatio());
+            });
+        } else if (message.getMethodName() == "getCom1Volume") {
+            queueDBusCall([=]() {
+                sendDBusReply(sender, serial, getCom1Volume());
+            });
+        } else if (message.getMethodName() == "getCom2Volume") {
+            queueDBusCall([=]() {
+                sendDBusReply(sender, serial, getCom2Volume());
             });
         } else {
             // Unknown message. Tell DBus that we cannot handle it

@@ -214,6 +214,9 @@ public:
     //! Get yaw rate in rad/sec
     double getYawRate() const;
 
+    double getCom1Volume() const;
+    double getCom2Volume() const;
+
     //! Perform generic processing
     int process();
 
@@ -263,6 +266,8 @@ private:
     SGPropertyNode_ptr m_rollRateNode;
     SGPropertyNode_ptr m_pichRateNode;
     SGPropertyNode_ptr m_yawRateNode;
+    SGPropertyNode_ptr m_com1VolumeNode;
+    SGPropertyNode_ptr m_com2VolumeNode;
 
 
 };
