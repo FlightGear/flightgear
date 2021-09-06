@@ -255,6 +255,7 @@ public:
         }
 
         checkAircraftMinVersion();
+        checkAircraftDirName();
 
           // apply state after the -set.xml, but before any options are are set
           flightgear::applyInitialState();
@@ -340,6 +341,7 @@ public:
       flightgear::applyInitialState();
 
       checkAircraftMinVersion();
+      checkAircraftDirName();
 
     return true;
   }
@@ -450,7 +452,34 @@ private:
       
       return true;
   }
-  
+
+  bool checkAircraftDirName()
+  {
+      auto expectedDirNode = globals->get_props()->getNode("/sim/expected-aircraft-dir-name");
+      const string aircraftId = fgGetString("/sim/aircraft");
+      if (aircraftId != fgGetString("/sim/aircraft-id")){
+          // Skip the check for aircraft installed from catalog.
+          return true;
+      }
+
+      if (expectedDirNode) {
+          const string expectedDir = expectedDirNode->getStringValue();
+          const SGPath dir(fgGetString("/sim/aircraft-dir"));
+          if (dir.file() != expectedDirNode->getStringValue()) {
+              flightgear::fatalMessageBoxThenExit("Aircraft folder named incorrectly",
+                                          "The folder of the selected aircraft must be named '" + expectedDir +
+                                          "' (instead of '" + dir.file() + "') to work correctly. If you downloaded it yourself, " +
+                                          "please ensure the folder is called '" +
+                                          expectedDir + "' and re-name if necessary.");
+              return false;
+          }
+      } else {
+          // TODO Uncomment for the next release.
+          //SG_LOG(SG_AIRCRAFT, SG_DEV_ALERT, "Aircraft does not specify the required aircraft directory name: please add one at /sim/expected-aircraft-dir-name");
+      }
+      return true;
+  }
+
   std::string _searchAircraft;
   SGPath _foundPath;
   SGPropertyNode* _cache = nullptr;
