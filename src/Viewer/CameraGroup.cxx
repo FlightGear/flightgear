@@ -970,6 +970,9 @@ void reloadCompositors(CameraGroup *cgroup)
 {
     cgroup->_viewer->getViewerBase()->stopThreading();
 
+    // Prevent the camera render orders increasing indefinitely with each reload
+    Compositor::resetOrderOffset();
+
     for (auto &info : cgroup->_cameras) {
         // Ignore the GUI camera
         if (info->flags & CameraInfo::GUI)
