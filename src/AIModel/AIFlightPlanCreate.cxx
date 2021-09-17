@@ -69,11 +69,11 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
                             const string & airline, double distance)
 {
     if( legNr <= 3 ) 
-        SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " Airport : " << dep->getId());
+        SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " At Airport : " << dep->getId());
     else if( legNr<= 6 ) 
         SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " Departure Airport : " << dep->getId()  << " Arrival Airport : " << arr->getId());
     else 
-        SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " Airport : " << arr->getId());
+        SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " At Airport : " << arr->getId());
 
     bool retVal = true;
     int currWpt = wpt_iterator - waypoints.begin();
@@ -281,7 +281,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
     FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
     SG_LOG(SG_AI, SG_BULK, "Taxi to " << apt->getId() << "/" << activeRunway);
     assert( rwy != NULL );
-    SGGeod runwayTakeoff = rwy->pointOnCenterline(5.0);
+    SGGeod runwayTakeoff = rwy->pointOnCenterlineDisplaced(5.0);
 
     FGGroundNetwork *gn = apt->groundNetwork();
     if (!gn->exists()) {
@@ -389,7 +389,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         pushBackWaypoint(wpt);
     }
     // Acceleration point, 105 meters into the runway,
-    SGGeod accelPoint = rwy->pointOnCenterline(105.0);
+    SGGeod accelPoint = rwy->pointOnCenterlineDisplaced(105.0);
     FGAIWaypoint *wpt = createOnRunway(ac, "Accel", accelPoint, apt->getElevation(), ac->getPerformance()->vRotate());
     wpt->setFlaps(0.5f);
     pushBackWaypoint(wpt);
@@ -468,8 +468,8 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
    // int route;
     for (int i = 0; i < size - 2; i++) {
         taxiRoute.next(node, &route);
-        char buffer[16];
-        snprintf(buffer, 16, "landingtaxi-%d",  node->getIndex());
+        char buffer[20];
+        snprintf(buffer, 20, "landingtaxi-%d-%d",  node->getIndex(), i);
         FGAIWaypoint *wpt =
             createOnGround(ac, buffer, node->geod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
@@ -560,14 +560,14 @@ bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
     
     // distance from the runway threshold to accelerate to rotation speed.
     double d = accelDistance(vTaxiMetric, vRotateMetric, accelMetric) + ACCEL_POINT;
-    SGGeod rotatePoint = rwy->pointOnCenterline(d);
+    SGGeod rotatePoint = rwy->pointOnCenterlineDisplaced(d);
     wpt = createOnRunway(ac, "rotate", rotatePoint, airportElev, vRotate);
     wpt->setFlaps(0.5f);
     pushBackWaypoint(wpt);
 
     // After rotation, we still need to accelerate to the take-off speed.
     double t  = d + accelDistance(vRotateMetric, vTakeoffMetric, accelMetric);
-    SGGeod takeoffPoint = rwy->pointOnCenterline(t);
+    SGGeod takeoffPoint = rwy->pointOnCenterlineDisplaced(t);
     wpt = createOnRunway(ac, "takeoff", takeoffPoint, airportElev, vTakeoff);
     wpt->setGear_down(true);
     wpt->setFlaps(0.5f);
@@ -580,7 +580,7 @@ bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
     // With closely spaced waypoints on climb-out this can occur almost immediately,
     // so we put the waypoint further away.
     double gearUpDist = t + 2*vRef*SG_FEET_TO_METER + pitchDistance(INITIAL_PITCH_ANGLE, 400 * SG_FEET_TO_METER);
-    SGGeod gearUpPoint = rwy->pointOnCenterline(gearUpDist);  
+    SGGeod gearUpPoint = rwy->pointOnCenterlineDisplaced(gearUpDist);  
     wpt = createInAir(ac, "gear-up", gearUpPoint, airportElev + 400, vRef);
     wpt->setFlaps(0.5f);
     pushBackWaypoint(wpt);
@@ -592,12 +592,12 @@ bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
     // be a (sometimes large) turn towards the destination, and we don't want to
     // commence that turn below 2000'
     double climbOut = t + 2*vClimbBelow10000*SG_FEET_TO_METER + pitchDistance(INITIAL_PITCH_ANGLE, 2000 * SG_FEET_TO_METER);
-    SGGeod climbOutPoint = rwy->pointOnCenterline(climbOut);
+    SGGeod climbOutPoint = rwy->pointOnCenterlineDisplaced(climbOut);
     wpt = createInAir(ac, "2000'", climbOutPoint, airportElev + 2000, vClimbBelow10000);
     pushBackWaypoint(wpt);
   
     climbOut = t + 2*vClimbBelow10000*SG_FEET_TO_METER + pitchDistance(INITIAL_PITCH_ANGLE, 2500 * SG_FEET_TO_METER);
-    SGGeod climbOutPoint2 = rwy->pointOnCenterline(climbOut);
+    SGGeod climbOutPoint2 = rwy->pointOnCenterlineDisplaced(climbOut);
     wpt = createInAir(ac, "2500'", climbOutPoint2, airportElev + 2500, vClimbBelow10000);
     pushBackWaypoint(wpt);
 

@@ -105,7 +105,7 @@ FGAIFlightPlan::FGAIFlightPlan() :
     sid(NULL),
     repeat(false),
     distance_to_go(0),
-    lead_distance(0),
+    lead_distance_ft(0),
     leadInAngle(0),
     start_time(0),
     arrivalTime(0),
@@ -120,7 +120,7 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename) :
     sid(NULL),
     repeat(false),
     distance_to_go(0),
-    lead_distance(0),
+    lead_distance_ft(0),
     leadInAngle(0),
     start_time(0),
     arrivalTime(0),
@@ -155,7 +155,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
     sid(NULL),
     repeat(false),
     distance_to_go(0),
-    lead_distance(0),
+    lead_distance_ft(0),
     leadInAngle(0),
     start_time(start),
     arrivalTime(0),
@@ -360,24 +360,7 @@ FGAIWaypoint* FGAIFlightPlan::getNextWaypoint( void ) const
 
 int FGAIFlightPlan::getNextTurnAngle( void ) const
 {
-    if (wpt_iterator == waypoints.end())
-        return 0;
-    if (wpt_iterator+1 == waypoints.end())
-        return 0;
-    if (wpt_iterator+2 == waypoints.end())
-        return 0;
-    FGAIWaypoint* currentWP = *(wpt_iterator);
-    FGAIWaypoint* nextWP = *(wpt_iterator + 1);
-    FGAIWaypoint* afterNextWP = *(wpt_iterator + 2);
-    int currentBearing = this->getBearing(currentWP, nextWP);
-    int nextBearing = this->getBearing(nextWP, afterNextWP);
-
-    int turnAngle = nextBearing - currentBearing;
-    if (turnAngle>180) {
-      turnAngle -= 180;
-    }
-
-    return turnAngle;
+    return nextTurnAngle;
 }
 
 
@@ -402,6 +385,26 @@ void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
     else {
       wpt_iterator++;
     }
+    // Calculate the angle of the next turn.
+    if (wpt_iterator == waypoints.end()) 
+        return;
+    if (wpt_iterator == waypoints.begin())
+        return;
+    if (wpt_iterator+1 == waypoints.end())
+        return;
+    FGAIWaypoint* previousWP = *(wpt_iterator -1);
+    FGAIWaypoint* currentWP = *(wpt_iterator);
+    FGAIWaypoint* nextWP = *(wpt_iterator + 1);
+    int currentBearing = this->getBearing(previousWP, currentWP);
+    int nextBearing = this->getBearing(currentWP, nextWP);
+
+    nextTurnAngle = SGMiscd::normalizePeriodic(-180, 180, nextBearing - currentBearing);
+    if (previousWP->getSpeed()>0&&nextWP->getSpeed()<0 ||
+        previousWP->getSpeed()<0&&nextWP->getSpeed()>0) {
+      nextTurnAngle += 180;
+      SG_LOG(SG_AI, SG_BULK, "Add 180 to turn angle pushback end");       
+    }
+    SG_LOG(SG_AI, SG_BULK, "Calculated next turn angle " << nextTurnAngle << " " << previousWP->getName() << " " << currentWP->getName() << " Previous Speed " << previousWP->getSpeed() << " Next Speed " << nextWP->getSpeed()); 
 }
 
 void FGAIFlightPlan::DecrementWaypoint()
@@ -438,7 +441,7 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
   // we travel on. Get the turn radius by dividing by PI (*2).
   // FIXME Why when going backwards? No fabs
   if (speed < 0.5) {
-        lead_distance = 0.5;
+        lead_distance_ft = 0.5;
         return;
   }
 
@@ -455,26 +458,26 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
   //if (leadInAngle < 30.0) // To prevent lead_dist from getting so small it is skipped 
   //  leadInAngle = 30.0;
   
-  //lead_distance = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS); 
-  lead_distance = turn_radius * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
-  if (lead_distance > 1000) {
-     SG_LOG(SG_AI, SG_BULK, "Excessive leaddistance possible direction change " << lead_distance << " leadInAngle " << leadInAngle << " inbound " << inbound << " outbound " << outbound);
+  //lead_distance_ft = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS); 
+  lead_distance_ft = turn_radius * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
+  if (lead_distance_ft > 1000) {
+     SG_LOG(SG_AI, SG_BULK, "Excessive leaddistance possible direction change " << lead_distance_ft << " leadInAngle " << leadInAngle << " inbound " << inbound << " outbound " << outbound);
   }
   /*
-  if ((lead_distance > (3*turn_radius)) && (current->on_ground == false)) {
+  if ((lead_distance_ft > (3*turn_radius)) && (current->on_ground == false)) {
       SG_LOG(SG_AI, SG_ALERT, "Warning: Lead-in distance is large. Inbound = " << inbound
             << ". Outbound = " << outbound << ". Lead in angle = " << leadInAngle  << ". Turn radius = " << turn_radius);
-       lead_distance = 3 * turn_radius;
+       lead_distance_ft = 3 * turn_radius;
        return;
   }
   if ((leadInAngle > 90) && (current->on_ground == true)) {
-      lead_distance = turn_radius * tan((90 * SG_DEGREES_TO_RADIANS)/2);
+      lead_distance_ft = turn_radius * tan((90 * SG_DEGREES_TO_RADIANS)/2);
       return;
   }*/
 }
 
 void FGAIFlightPlan::setLeadDistance(double distance_ft){
-  lead_distance = distance_ft;
+  lead_distance_ft = distance_ft;
 }
 
 

@@ -175,7 +175,7 @@ public:
 
    void setLeadDistance(double speed, double bearing, FGAIWaypoint* current, FGAIWaypoint* next);
    void setLeadDistance(double distance_ft);
-   double getLeadDistance( void ) const {return lead_distance;}
+   double getLeadDistance( void ) const {return lead_distance_ft;}
    double getBearing(FGAIWaypoint* previous, FGAIWaypoint* next) const;
    double getBearing(const SGGeod& aPos, FGAIWaypoint* next) const;
 
@@ -231,10 +231,10 @@ public:
   void setGate(const ParkingAssignment& pka);
   FGParking* getParkingGate();
 
-    FGAirportRef departureAirport() const;
-    FGAirportRef arrivalAirport() const;
+  FGAirportRef departureAirport() const;
+  FGAirportRef arrivalAirport() const;
 
-    bool empty() const;
+  bool empty() const;
 
 private:
   FGAIFlightPlan *sid;
@@ -246,12 +246,14 @@ private:
   wpt_vector_iterator   wpt_iterator;
 
   bool repeat;
-  double distance_to_go;
-  double lead_distance;
-  double leadInAngle;
+  double distance_to_go = 0;
+  //FIXME ft
+  double lead_distance_ft = 0;
+  double leadInAngle = 0;
+  double nextTurnAngle = 0;
   time_t start_time;
   time_t arrivalTime;       // For AI/ATC purposes.
-  int leg;
+  int leg = 0;
   ParkingAssignment gate;
   FGTaxiNodeRef lastNodeVisited;
   std::string activeRunway;

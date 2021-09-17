@@ -124,6 +124,11 @@ SGGeod FGRunway::threshold() const
     return pointOnCenterline(_displ_thresh);
 }
 
+SGGeod FGRunway::pointOnCenterlineDisplaced(double aOffset) const
+{
+    return pointOnCenterline(_displ_thresh+aOffset);
+}
+
 void FGRunway::setReciprocalRunway(PositionedID other)
 {
     assert(_reciprocal == 0);

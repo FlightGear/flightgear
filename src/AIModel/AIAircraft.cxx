@@ -308,7 +308,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
     ///////////////////////////////////////////////////////////////////////////
     // Initialize the flightplan
     //////////////////////////////////////////////////////////////////////////
-    if (!prev) {
+    if (!prev||repositioned) {
         handleFirstWaypoint();
         return;
     }                            // end of initialization
@@ -534,9 +534,17 @@ bool FGAIAircraft::loadNextLeg(double distance) {
 
     int leg;
     if ((leg = fp->getLeg()) == 9) {
+        FGAirport *oldArr = trafficRef->getArrivalAirport();
         if (!trafficRef->next()) {
             //FIXME I'm on leg 9 and don't even reach parking.
             return false;
+        }
+        FGAirport *dep = trafficRef->getDepartureAirport();
+        if (oldArr!=dep) {
+            // as though we are first leg
+            repositioned = true;
+        } else {
+            repositioned = false;
         }
         setCallSign(trafficRef->getCallSign());
         leg = 0;
@@ -865,7 +873,7 @@ bool FGAIAircraft::fpExecutable(time_t now) {
 bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int nextTurnAngle) {
     double dist_to_go_m = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
     // Leaddistance should be ft
-    double lead_dist = fp->getLeadDistance();
+    double lead_distance_m = fp->getLeadDistance() * SG_FEET_TO_METER;
     const double arrivalDist = fabs(10.0*fp->getCurrentWaypoint()->getSpeed());
     // arrive at pushback end
     if ((dist_to_go_m < arrivalDist) && (speed < 0) && (tgt_speed < 0) && fp->getCurrentWaypoint()->contains("PushBackPoint")) {        
@@ -896,9 +904,11 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int 
         }
     } 
     
-    if (lead_dist < fabs(2*speed)) {
+    if (lead_distance_m < fabs(2*speed) * SG_FEET_TO_METER) {
       //don't skip over the waypoint
-        lead_dist = fabs(2*speed);
+        SG_LOG(SG_AI, SG_BULK, "Set lead_distance_m due to speed " << lead_distance_m << " to " << fabs(2*speed) * SG_FEET_TO_METER);
+        lead_distance_m = fabs(2*speed) * SG_FEET_TO_METER;
+        fp->setLeadDistance(lead_distance_m * SG_METER_TO_FEET);
     }
     
     double bearing = 0;
@@ -908,14 +918,12 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int 
     if (next) {
         nextBearing = getBearing(fp->getBearing(pos, next));
     }
-    double bearingDiff = fabs(bearing-nextBearing);
-    if (onGround() && nextTurnAngle > 30 && bearingDiff > 50) {
-        // Next turn is pretty sharp so we do a preturn
-        SG_LOG(SG_AI, SG_BULK, "Leadpoint reached due to excessive heading diff " << bearingDiff);
-        minBearing = 360;
-        speedFraction = 1.0;
-        prev_dist_to_go = HUGE_VAL;
-        return true;
+    if (onGround() && fabs(nextTurnAngle) > 50 ) {
+      //don't skip over the waypoint
+        const int multiplicator = 4;
+        SG_LOG(SG_AI, SG_BULK, "Set lead_distance_m due to next turn angle " << lead_distance_m << " to " << fabs(multiplicator*speed) * SG_FEET_TO_METER << " dist_to_go_m " << dist_to_go_m << " Next turn angle : " << fabs(nextTurnAngle) );
+        lead_distance_m = fabs(multiplicator*speed) * SG_FEET_TO_METER;
+        fp->setLeadDistance(lead_distance_m * SG_METER_TO_FEET);
     }
     if (bearing < minBearing) {
         minBearing = bearing;
@@ -929,9 +937,9 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int 
         }
     }
 
-    if ((dist_to_go_m < lead_dist) ||
+    if ((dist_to_go_m < lead_distance_m) ||
         ((dist_to_go_m > prev_dist_to_go) && (bearing > (minBearing * 1.1))) ) {
-        SG_LOG(SG_AI, SG_BULK, "Leadpoint reached Bearing : " << bearing << "\tNext Bearing : " << nextBearing);
+        SG_LOG(SG_AI, SG_BULK, "Leadpoint reached Bearing : " << bearing << "\tNext Bearing : " << nextBearing << " Next Turn Angle : " << fabs(nextTurnAngle));
         minBearing = 360;
         speedFraction = 1.0;
         prev_dist_to_go = HUGE_VAL;
@@ -1565,13 +1573,15 @@ void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
     o << "WP Lat\t";
     o << "WP Lon\t";
     o << "Dist\t";
+    o << "Next Lat\t";
+    o << "Next Lon\t";
     o << "Departuretime\t";
     o << "Time\t";
     o << "Startup diff\t";
     o << "dist_to_go_m\t";
+    o << "Leaddistance\t";
     o << "Leg\t";
     o << "Num WP\t";
-    o << "Leaddistance\t";
     o << "no_roll\t";
     o << "roll\t";
     o << "stuckCounter";
@@ -1588,7 +1598,7 @@ void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
     o << this->getCallSign() << "\t";
     o << headingDiff << "\t";
     o << headingChangeRate << "\t";
-    o  << headingError << "\t";
+    o << headingError << "\t";
     o << hdg << "\t";
     o << tgt_heading << "\t";
     o << tgt_speed << "\t";
@@ -1602,11 +1612,20 @@ void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
     o << this->getTrueHeadingDeg() << "\t";
     FGAIFlightPlan* fp = this->GetFlightPlan();
     FGAIWaypoint* currentWP = this->GetFlightPlan()->getCurrentWaypoint();
+    FGAIWaypoint* nextWP = this->GetFlightPlan()->getNextWaypoint();
     if (currentWP) {
         o << this->GetFlightPlan()->getBearing(this->getGeodPos(), this->GetFlightPlan()->getCurrentWaypoint()) << "\t";
         o << currentWP->getName() << "\t";
-        o << this->GetFlightPlan()->getCurrentWaypoint()->getPos().getLatitudeDeg() << "\t";
-        o << this->GetFlightPlan()->getCurrentWaypoint()->getPos().getLongitudeDeg() << "\t";
+        o << currentWP->getPos().getLatitudeDeg() << "\t";
+        o << currentWP->getPos().getLongitudeDeg() << "\t";
+    }
+    if (nextWP) {
+        o << nextWP->getPos().getLatitudeDeg() << "\t";
+        o << nextWP->getPos().getLongitudeDeg() << "\t";
+    } else {
+        o << "\t\t";
+    }
+    if (currentWP) {
         o << SGGeodesy::distanceM(this->getGeodPos(), currentWP->getPos()) << "\t";
         o << this->GetFlightPlan()->getStartTime() << "\t";
         o << globals->get_time_params()->get_cur_time() << "\t";
@@ -1617,9 +1636,9 @@ void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
         o << "No WP\t\t\t\t\t\t\t\t";
     }
     if (fp->isValidPlan()) {
+        o << fp->getLeadDistance() * SG_FEET_TO_METER << "\t";
         o << fp->getLeg() << "\t";
         o << fp->getNrOfWayPoints() << "\t";
-        o << fp->getLeadDistance() << "\t";
     } else {
         o << "FP NotValid\t\t";
     }

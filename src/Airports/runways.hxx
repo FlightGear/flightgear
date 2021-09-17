@@ -74,6 +74,13 @@ public:
   SGGeod threshold() const;
   
   /**
+   * Retrieve a position on the extended centerline. Positive values
+   * are in the direction of the runway heading, negative values are in the
+   * opposited direction. 0.0 corresponds to the possibly threshold   
+   */
+  SGGeod pointOnCenterlineDisplaced(double aOffset) const;
+
+  /**
    * Get the 'far' end - this is equivalent to calling
    * pointOnCenterline(lengthFt());
    */
