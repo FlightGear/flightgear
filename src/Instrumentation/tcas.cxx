@@ -586,27 +586,39 @@ bool
 TCAS::ThreatDetector::checkTransponder(const SGPropertyNode* pModel, float velocityKt)
 {
     const string name = pModel->getName();
-    if (name != "multiplayer" && name != "aircraft" && name != "swift")
+    if (name == "aircraft")
     {
-        // assume non-MP/non-AI planes (e.g. ships) have no transponder
-        return false;
-    }
-
-    if (velocityKt < 40)
-    {
-        /* assume all pilots have their transponder switched off while taxiing/parking
+        /* assume all non-MP and non-Swift aircraft have their transponder switched off while taxiing/parking
          * (at low speed) */
-        return false;
+        return velocityKt >= 40.0;
     }
-
-    if ((name == "multiplayer")&&
-        (pModel->getBoolValue("controls/invisible")))
+    else if (pModel->getIntValue("instrumentation/transponder/altitude", -9999) != -9999)
     {
-        // ignored MP plane: pretend transponder is switched off
-        return false;
+        // must have Mode C (altitude) transponder to be visible.
+        // "-9999" is a special value used by src/Instrumentation/transponder.cxx to indicate the non-transmission of a value.
+        if (name == "multiplayer")
+        {
+            // ignored MP plane: pretend transponder is switched off
+            return !(pModel->getBoolValue("controls/invisible"));
+        }
+        if (name == "swift"){
+            return true;
+        }
     }
+    // assume non-MP/non-AI planes (e.g. ships) have no transponder
+    return false;
+}
 
-    return true;
+/** Get altitude reported by transponder. */
+float
+TCAS::ThreatDetector::getAltitude(const SGPropertyNode* pModel)
+{
+    const string name = pModel->getName();
+    if (name == "multiplayer" || name == "swift")
+    {
+        return pModel->getIntValue("instrumentation/transponder/altitude");
+    }
+    return pModel->getDoubleValue("position/altitude-ft");
 }
 
 /** Check if plane is a threat. */
@@ -625,7 +637,7 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
         return ThreatInvisible;
 
     int threatLevel = ThreatNone;
-    float altFt = pModel->getDoubleValue("position/altitude-ft");
+    float altFt = getAltitude(pModel);
     currentThreat.relativeAltitudeFt = altFt - self.pressureAltFt;
 
     // save computation time: don't care when relative altitude is excessive
