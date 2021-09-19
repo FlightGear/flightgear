@@ -317,7 +317,6 @@ class TCAS : public SGSubsystem
         void  update              (void);
 
         bool  checkTransponder    (const SGPropertyNode* pModel, float velocityKt);
-        float getAltitude         (const SGPropertyNode* pModel);
         int   checkThreat         (int mode, const SGPropertyNode* pModel);
         void  checkVerticalThreat (void);
         void  horizontalThreat    (float bearing, float distanceNm, float heading,

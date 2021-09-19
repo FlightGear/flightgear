@@ -581,44 +581,36 @@ TCAS::ThreatDetector::update(void)
     tcas->advisoryGenerator.setAlarmThresholds(pAlarmThresholds);
 }
 
+// If plane's transponder is enabled, return true with o_altFt set to
+// altitude. Otherwise return false.
+//
+static bool checkTransponderLocal(const SGPropertyNode* pModel, float velocityKt, float& o_altFt)
+{
+    if (pModel->getBoolValue("controls/invisible", false /*default*/))
+    {
+        // For MP aircraft (name='multiplayer') that are being ignored.
+        return false;
+    }
+    if (pModel->getNameString() == "aircraft")
+    {
+        /* assume all non-MP and non-Swift (i.e. AI) aircraft have their transponder switched off while taxiing/parking
+         * (at low speed) */
+        if (velocityKt < 40.0)  return false;
+        o_altFt = pModel->getDoubleValue("position/altitude-ft");
+        return true;
+    }
+    o_altFt = pModel->getIntValue("instrumentation/transponder/altitude", -9999);
+    // must have Mode C (altitude) transponder to be visible.
+    // "-9999" is a special value used by src/Instrumentation/transponder.cxx to indicate the non-transmission of a value.
+    return (o_altFt != -9999);
+}
+
 /** Check if plane's transponder is enabled. */
 bool
 TCAS::ThreatDetector::checkTransponder(const SGPropertyNode* pModel, float velocityKt)
 {
-    const string name = pModel->getName();
-    if (name == "aircraft")
-    {
-        /* assume all non-MP and non-Swift aircraft have their transponder switched off while taxiing/parking
-         * (at low speed) */
-        return velocityKt >= 40.0;
-    }
-    else if (pModel->getIntValue("instrumentation/transponder/altitude", -9999) != -9999)
-    {
-        // must have Mode C (altitude) transponder to be visible.
-        // "-9999" is a special value used by src/Instrumentation/transponder.cxx to indicate the non-transmission of a value.
-        if (name == "multiplayer")
-        {
-            // ignored MP plane: pretend transponder is switched off
-            return !(pModel->getBoolValue("controls/invisible"));
-        }
-        if (name == "swift"){
-            return true;
-        }
-    }
-    // assume non-MP/non-AI planes (e.g. ships) have no transponder
-    return false;
-}
-
-/** Get altitude reported by transponder. */
-float
-TCAS::ThreatDetector::getAltitude(const SGPropertyNode* pModel)
-{
-    const string name = pModel->getName();
-    if (name == "multiplayer" || name == "swift")
-    {
-        return pModel->getIntValue("instrumentation/transponder/altitude");
-    }
-    return pModel->getDoubleValue("position/altitude-ft");
+    float altFt;
+    return checkTransponderLocal(pModel, velocityKt, altFt);
 }
 
 /** Check if plane is a threat. */
@@ -633,11 +625,11 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
 
     float velocityKt  = pModel->getDoubleValue("velocities/true-airspeed-kt");
 
-    if (!checkTransponder(pModel, velocityKt))
+    float altFt;
+    if (!checkTransponderLocal(pModel, velocityKt, altFt))
         return ThreatInvisible;
 
     int threatLevel = ThreatNone;
-    float altFt = getAltitude(pModel);
     currentThreat.relativeAltitudeFt = altFt - self.pressureAltFt;
 
     // save computation time: don't care when relative altitude is excessive
