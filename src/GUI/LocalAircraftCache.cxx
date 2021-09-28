@@ -485,6 +485,10 @@ private:
         QStringList filters;
         filters << "*-set.xml";
         Q_FOREACH(QFileInfo child, path.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+            if (m_done) { // thread termination bail-out
+                return;
+            }
+            
             QDir childDir(child.absoluteFilePath());
             QMap<QString, AircraftItemPtr> baseAircraft;
             QList<AircraftItemPtr> variants;
@@ -729,7 +733,7 @@ void LocalAircraftCache::abandonCurrentScan()
                 &LocalAircraftCache::onScanFinished);
 
         d->m_scanThread->setDone();
-        if (!d->m_scanThread->wait(2000)) {
+        if (!d->m_scanThread->wait(32000)) {
             qWarning() << Q_FUNC_INFO << "scan thread failed to terminate";
         }
         d->m_scanThread.reset();
