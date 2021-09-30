@@ -18,7 +18,7 @@ Continuous recordings are written directly to a file while Flightgear runs, givi
 
 Recovery recordings are essentially single-frame Continuous recordings. When enabled, Flightgear creates them periodically to allow recovery of a session if Flightgear crashes.
 
-## Properties that control recording
+## Properties that control recording and replay
 
 * `/sim/replay/tape-directory` - where to save recordings.
 * `/sim/replay/record-multiplayer` - if true, we include multiplayer information in Normal and Continuous recordings.
@@ -33,6 +33,11 @@ Recovery recordings are essentially single-frame Continuous recordings. When ena
     * `/sim/replay/record-signals` - if true (the default), include signals for user aircraft - these are the core values used to replay the user aircraft.
     * `/sim/replay/record-extra-properties` - if true, we include selected properties in recordings.
     * `/sim/replay/record-continuous-compression` - if 1, we compress each frame's data.
+    * `/sim/replay/record-main-window` - if 1, we record main window position and size.
+    * `/sim/replay/record-main-view` - if 1, we record main window view details.
+    * `/sim/replay/replay-main-window-position` - if 1, we replay main window position.
+    * `/sim/replay/replay-main-window-size` - if 1, we replay main window size.
+    * `sim/replay/replay-main-view` - if 1, we replay main window view (view type, orientation, zoom etc).
 * Recovery recordings:
     * `/sim/replay/record-recovery-period` - if non-zero, we update recovery recording in specified interval.
 
