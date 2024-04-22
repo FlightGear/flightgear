@@ -487,6 +487,10 @@ void FGATCController::eraseDeadTraffic()
 */
 TrafficVectorIterator FGATCController::searchActiveTraffic(int id)
 {
+    if (activeTraffic.empty()) {
+        SG_LOG(SG_ATC, SG_DEBUG, "searchActiveTraffic empty list");
+        return activeTraffic.end();
+    }
     return std::find_if(activeTraffic.begin(), activeTraffic.end(),
                         [id](const FGTrafficRecord& rec) { return rec.getId() == id; });
 }

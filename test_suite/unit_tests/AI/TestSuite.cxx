@@ -25,11 +25,13 @@
 #include "test_submodels.hxx"
 #include "test_AIFlightPlan.hxx"
 #include "test_VectorMath.hxx"
+#include "test_AirportGroundRadar.hxx"
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AIFlightPlanTests, "Unit tests");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AIManagerTests, "Unit tests");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(GroundnetTests, "Unit tests");
 // CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TrafficTests, "Unit tests");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AirportGroundRadarTests, "Unit tests");
 // CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TrafficMgrTests, "Unit tests");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(SubmodelsTests, "Unit tests");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(VectorMathTests, "Unit tests");

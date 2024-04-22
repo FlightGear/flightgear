@@ -367,6 +367,7 @@ public:
     {
         return rwy;
     };
+    /**Get id of cleared AI Aircraft*/
     int getCleared() const
     {
         return currentlyCleared;

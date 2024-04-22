@@ -58,6 +58,7 @@
 
 #include <Scenery/scenery.hxx>
 
+#include <ATC/AirportGroundRadar.hxx>
 #include <ATC/ATCController.hxx>
 #include <ATC/GroundController.hxx>
 
@@ -79,7 +80,7 @@ FGGroundController::FGGroundController(FGAirportDynamics *par)
     parent = par;
     hasNetwork = true;
     networkInitialized = true;
-
+    airportGroundRadar = new AirportGroundRadar(par->parent());
 }
 
 FGGroundController::~FGGroundController()
@@ -89,6 +90,16 @@ FGGroundController::~FGGroundController()
 bool compare_trafficrecords(FGTrafficRecord a, FGTrafficRecord b)
 {
     return (a.getIntentions().size() < b.getIntentions().size());
+}
+
+void FGGroundController::signOff(int id)
+{
+    // Search the activeTraffic vector to find a traffic vector with our id
+    TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
+    if (i != activeTraffic.end()) {
+        airportGroundRadar->remove(*i->getAircraft());
+    }
+    FGATCController::signOff(id);
 }
 
 void FGGroundController::announcePosition(int id,
@@ -124,6 +135,7 @@ void FGGroundController::announcePosition(int id,
         } else {
             activeTraffic.push_back(rec);
         }
+        airportGroundRadar->add(*aircraft);
     } else {
         i->setPositionAndIntentions(currentPosition, intendedRoute);
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
@@ -258,7 +270,7 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
             if (iter == current) {
                 continue;
             }
-
+// TODO Use Radar
             SGGeod other = iter->getPos();
             SGGeodesy::inverse(curr, other, course, az2, dist);
             bearing = fabs(heading - course);
@@ -274,6 +286,7 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
 
         // Next check with the tower controller
         if (towerController->hasActiveTraffic()) {
+// TODO Use Radar
             for (TrafficVectorIterator iter =
                         towerController->getActiveTraffic().begin();
                     iter != towerController->getActiveTraffic().end(); ++iter) {
@@ -846,6 +859,7 @@ void FGGroundController::updateStartupTraffic(TrafficVectorIterator i,
         SG_LOG(SG_ATC, SG_ALERT, "updateStartupTraffic: missing aircraft performance");
         return;
     }
+    //FIXME use ground radar
 
     i->allowPushBack();
     i->setPriority(priority++);

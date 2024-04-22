@@ -61,7 +61,7 @@ using std::string;
 
 /***************************************************************************
  * class FGTowerController
-s * subclass of FGATCController
+ * subclass of FGATCController
  **************************************************************************/
 
 FGTowerController::FGTowerController(FGAirportDynamics *par) :
