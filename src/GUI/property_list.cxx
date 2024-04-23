@@ -1,29 +1,13 @@
-// Implementation of the <property-list> widget.
-//
-// Copyright (C) 2001  Steve BAKER
-// Copyright (C) 2001  Jim WILSON
-// Copyright (C) 2006  Melchior FRANZ
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-// $Id$
+/*
+ * SPDX-FileName: property_list.cxx
+ * SPDX-FileComment: Implementation of the <property-list> widget.
+ * SPDX-FileCopyrightText: Copyright (C) 2001  Steve BAKER
+ * SPDX-FileCopyrightText: Copyright (C) 2001  Jim WILSON
+ * SPDX-FileCopyrightText: Copyright (C) 2006  Melchior FRANZ
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
 
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <simgear/compiler.h>
 
@@ -32,11 +16,8 @@
 #include <iostream>
 #include <string>
 
-using std::string;
 using std::cout;
 using std::endl;
-
-typedef string stdString;      // puObject has a "string" member
 
 #include <Main/fg_os.hxx>      // fgGetKeyModifiers()
 #include <Main/fg_props.hxx>
@@ -81,9 +62,11 @@ static void dumpProperties(const SGPropertyNode *node)
     cout << node->getPath() << '/' << endl;
     for (int i = 0; i < node->nChildren(); i++) {
         const SGPropertyNode *c = node->getChild(i);
-        props::Type type = c->getType();
-        if (type == props::ALIAS || c->nChildren())
+        if (c->nChildren()) {
+            cout << std::setw(11) << "<dir>" << "  " << c->getNameString() << endl;
             continue;
+        }
+
 
         int index = c->getIndex();
         cout << std::setw(11) << getValueTypeString(c) << "  " << c->getNameString();
@@ -92,28 +75,31 @@ static void dumpProperties(const SGPropertyNode *node)
         cout << " = ";
 
         switch (c->getType()) {
-        case props::DOUBLE:
-        case props::FLOAT:
-        case props::VEC3D:
-        case props::VEC4D:
-        {
-            std::streamsize precision = cout.precision(15);
-            c->printOn(cout);
-            cout.precision(precision);
+            case props::DOUBLE:
+            case props::FLOAT:
+            case props::VEC3D:
+            case props::VEC4D:
+            {
+                std::streamsize precision = cout.precision(15);
+                c->printOn(cout);
+                cout.precision(precision);
+            }
+                break;
+            case props::LONG:
+            case props::INT:
+            case props::BOOL:
+                c->printOn(cout);
+                break;
+            case props::STRING:
+                cout << '"' << c->getStringValue() << '"';
+                break;
+            case props::NONE:
+                break;
+            default:
+                cout << '\'' << c->getStringValue() << '\'';
         }
-            break;
-        case props::LONG:
-        case props::INT:
-        case props::BOOL:
-            c->printOn(cout);
-            break;
-        case props::STRING:
-            cout << '"' << c->getStringValue() << '"';
-            break;
-        case props::NONE:
-            break;
-        default:
-            cout << '\'' << c->getStringValue() << '\'';
+        if (c->isAlias()) {
+            cout << " => " << c->getAliasTarget()->getPath();
         }
         cout << endl;
     }
@@ -121,9 +107,9 @@ static void dumpProperties(const SGPropertyNode *node)
 }
 
 
-static void sanitize(stdString& s)
+static void sanitize(std::string& s)
 {
-    stdString r = s;
+    std::string r = s;
     s = "";
     for (unsigned i = 0; i < r.size(); i++) {
         if (r[i] == '\a')
@@ -149,12 +135,10 @@ static void sanitize(stdString& s)
         else {
             const char *hex = "0123456789abcdef";
             int c = r[i] & 255;
-            s += stdString("\\x") + hex[c / 16] + hex[c % 16];
+            s += std::string("\\x") + hex[c / 16] + hex[c % 16];
         }
     }
 }
-
-
 
 
 PropertyList::PropertyList(int minx, int miny, int maxx, int maxy, SGPropertyNode *start, bool readonly) :
@@ -199,8 +183,9 @@ void PropertyList::handle_select(puObject *list_box)
 {
     PropertyList *prop_list = (PropertyList *)list_box->getUserData();
     int selected = list_box->getIntegerValue();
-    int mod_ctrl = fgGetKeyModifiers() & KEYMOD_CTRL;
-    int mod_shift = fgGetKeyModifiers() & KEYMOD_SHIFT;
+    const auto mod_ctrl = fgGetKeyModifiers() & KEYMOD_CTRL;
+    const auto  mod_shift = fgGetKeyModifiers() & KEYMOD_SHIFT;
+    const auto  mod_alt = fgGetKeyModifiers() & KEYMOD_ALT;
 
     if (selected >= 0 && selected < prop_list->_num_entries) {
         const char *src = prop_list->_entries[selected];
@@ -244,9 +229,15 @@ void PropertyList::handle_select(puObject *list_box)
         }
 
         // it is a regular property
-        if (child->getType() == simgear::props::BOOL && mod_ctrl) {
+        if (child->getType() == simgear::props::BOOL && mod_ctrl && !mod_shift && !mod_alt) {
             child->setBoolValue(!child->getBoolValue());
             prop_list->update(true);
+        } else if (mod_alt && mod_ctrl) {
+            child->setAttribute(SGPropertyNode::TRACE_READ,
+                                !child->getAttribute(SGPropertyNode::TRACE_READ));
+        } else if (mod_alt) {
+            child->setAttribute(SGPropertyNode::TRACE_WRITE,
+                                !child->getAttribute(SGPropertyNode::TRACE_WRITE));
         } else
             prop_list->publish(child);
 
@@ -313,9 +304,9 @@ void PropertyList::updateTextForEntry(NodeData& data)
 {
     using namespace simgear;
     SGPropertyNode *node = data.node;
-    stdString name = node->getDisplayName(true);
-    stdString type = getValueTypeString(node);
-    stdString value = node->getStringValue();
+    auto name = node->getDisplayName(true);
+    auto type = getValueTypeString(node);
+    auto value = node->getStringValue();
 
     std::ostringstream line;
     line << name;
@@ -326,7 +317,8 @@ void PropertyList::updateTextForEntry(NodeData& data)
         if (_verbose) {
             const SGPropertyNode* id = node->getChild("id");
             const SGPropertyNode* name = node->getChild("name");
-            if (id || name) {
+            const SGPropertyNode* desc = node->getChild("desc");
+            if (id || name || desc) {
                 line << " (";
                 if (id) {
                     line << "id: " << id->getStringValue();
@@ -334,12 +326,14 @@ void PropertyList::updateTextForEntry(NodeData& data)
                         line << ", ";
                 } else if (name) {
                     line << "name: " << name->getStringValue();
+                } else if (desc) {
+                    line << "desc: " << desc->getStringValue();
                 }
                 line << ")";
             }
         }
     }
-    
+
     if (node->hasValue()) {
         if (node->getType() == props::STRING
                 || node->getType() == props::UNSPECIFIED)
@@ -348,7 +342,7 @@ void PropertyList::updateTextForEntry(NodeData& data)
         line << " = '" << value << "' (" << type;
 
         if (_verbose) {
-            stdString ext;
+            std::string ext;
             if (!node->getAttribute(SGPropertyNode::READ))
                 ext += 'r';
             if (!node->getAttribute(SGPropertyNode::WRITE))
@@ -384,7 +378,11 @@ void PropertyList::updateTextForEntry(NodeData& data)
         line << " (P)";
     }
 
-    stdString out = line.str();
+    if (_verbose && node->isAlias()) {
+        line << " => " << node->getAliasTarget()->getPath();
+    }
+
+    auto out = line.str();
     if (out.size() >= PUSTRING_MAX)
         out.resize(PUSTRING_MAX - 1);
 
@@ -421,9 +419,9 @@ void PropertyList::setValue(const char *s)
         if (p)
             setCurrent(p);
         else
-            throw stdString("node doesn't exist");
-    } catch (const stdString& m) {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "property-list node '" << s << "': " << m);
+            throw std::runtime_error("node doesn't exist");
+    } catch (const std::exception& m) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "property-list node '" << s << "': " << m.what());
     }
 }
 

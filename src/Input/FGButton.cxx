@@ -63,7 +63,7 @@ void FGButton::update( int modifiers, bool pressed, int x, int y)
   if (pressed) {
     // The press event may be repeated.
     if (!last_state || is_repeatable) {
-      SG_LOG( SG_INPUT, SG_DEBUG, "Button has been pressed" );
+      SG_LOG( SG_INPUT, SG_DEBUG, "FGButton: Button has been pressed" );
       for (unsigned int k = 0; k < bindings[modifiers].size(); k++) {
         bindings[modifiers][k]->fire(x, y);
       }
@@ -71,7 +71,7 @@ void FGButton::update( int modifiers, bool pressed, int x, int y)
   } else {
     // The release event is never repeated.
     if (last_state) {
-      SG_LOG( SG_INPUT, SG_DEBUG, "Button has been released" );
+      SG_LOG( SG_INPUT, SG_DEBUG, "FGButton: Button has been released" );
       for (unsigned int k = 0; k < bindings[modifiers|KEYMOD_RELEASED].size(); k++)
         bindings[modifiers|KEYMOD_RELEASED][k]->fire(x, y);
     }

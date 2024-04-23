@@ -261,11 +261,14 @@ public:
 static EventTypeByName EVENT_TYPE_BY_NAME;
 
 
-FGLinuxInputDevice::FGLinuxInputDevice( std::string aName, std::string aDevname, std::string aSerial ) :
+FGLinuxInputDevice::FGLinuxInputDevice( std::string aName, std::string aDevname, std::string aSerial, std::string aDevpath ) :
   FGInputDevice(aName,aSerial),
-  devname( aDevname ),
+  devfile(aDevname),
+  devpath(aDevpath),
   fd(-1)
 {
+  class_id = "FGLinuxInputDevice";
+  SG_LOG(SG_INPUT, SG_DEBUG, "FGLinuxInputDevice " << aName << " (s/n: " << aSerial << ") " << aDevname);
 }
 
 FGLinuxInputDevice::~FGLinuxInputDevice()
@@ -290,8 +293,8 @@ static inline bool bitSet( unsigned char * buf, unsigned bit )
 bool FGLinuxInputDevice::Open()
 {
   if( fd != -1 ) return true;
-  if( (fd = ::open( devname.c_str(), O_RDWR )) == -1 ) {
-    SG_LOG( SG_INPUT, SG_ALERT, "Cannot open devname='" << devname
+  if( (fd = ::open( devfile.c_str(), O_RDWR )) == -1 ) {
+    SG_LOG( SG_INPUT, SG_ALERT, "Cannot open '" << devfile
             << "'. errno=" << errno
             << ": " << strerror(errno)
             );
@@ -300,20 +303,20 @@ bool FGLinuxInputDevice::Open()
   }
 
   if( GetGrab() && ioctl( fd, EVIOCGRAB, 2 ) == -1 ) {
-    SG_LOG( SG_INPUT, SG_WARN, "Can't grab " << devname << " for exclusive access" );
+    SG_LOG( SG_INPUT, SG_WARN, "Can't grab " << devfile << " for exclusive access" );
   }
 
   {
     unsigned char buf[ABS_CNT/sizeof(unsigned char)/8];
     // get axes maximums
     if( ioctl( fd, EVIOCGBIT(EV_ABS,ABS_MAX), buf ) == -1 ) {
-      SG_LOG( SG_INPUT, SG_WARN, "Can't get abs-axes for " << devname );
+      SG_LOG( SG_INPUT, SG_WARN, "Can't get abs-axes for " << devfile );
     } else {
       for( unsigned i = 0; i < ABS_MAX; i++ ) {
         if( bitSet( buf, i ) ) {
           struct input_absinfo ai;
           if( ioctl(fd, EVIOCGABS(i), &ai) == -1 ) {
-            SG_LOG( SG_INPUT, SG_WARN, "Can't get abs-axes maximums for " << devname );
+            SG_LOG( SG_INPUT, SG_WARN, "Can't get abs-axes maximums for " << devfile );
             continue;
           }
           absinfo[i] = ai;
@@ -346,7 +349,7 @@ bool FGLinuxInputDevice::Open()
     memset(flag,0,sizeof(flag));
     if( ioctl( fd, EVIOCGKEY(sizeof(flag)), flag ) == -1 ||
         ioctl( fd, EVIOCGBIT(EV_KEY, sizeof(mask)), mask ) == -1 ) {
-      SG_LOG( SG_INPUT, SG_WARN, "Can't get keys for " << devname );
+      SG_LOG( SG_INPUT, SG_WARN, "Can't get keys for " << devfile );
     } else {
       for( unsigned i = 0; i < KEY_MAX; i++ ) {
         if( bitSet( mask, i ) ) {
@@ -363,7 +366,7 @@ bool FGLinuxInputDevice::Open()
   {
     unsigned char buf[SW_CNT/sizeof(unsigned char)/8];
     if( ioctl( fd, EVIOCGSW(sizeof(buf)), buf ) == -1 ) {
-      SG_LOG( SG_INPUT, SG_WARN, "Can't get switches for " << devname );
+      SG_LOG( SG_INPUT, SG_WARN, "Can't get switches for " << devfile );
     } else {
       for( unsigned i = 0; i < SW_MAX; i++ ) {
         if( bitSet( buf, i ) ) {
@@ -397,7 +400,7 @@ void FGLinuxInputDevice::Close()
 {
   if( fd != -1 ) {
     if( GetGrab() && ioctl( fd, EVIOCGRAB, 0 ) != 0 ) {
-      SG_LOG( SG_INPUT, SG_WARN, "Can't ungrab " << devname );
+      SG_LOG( SG_INPUT, SG_WARN, "Can't ungrab " << devfile );
     }
     ::close(fd);
   }
@@ -420,20 +423,16 @@ void FGLinuxInputDevice::Send( const char * eventName, double value )
   evt.type=typeCode.type;
   evt.code = typeCode.code;
   evt.value = (long)value;
-  evt.time.tv_sec = 0;
-  evt.time.tv_usec = 0;
+  evt.input_event_sec = 0;
+  evt.input_event_usec = 0;
   size_t bytes_written = write(fd, &evt, sizeof(evt));
-
+  lastEventName->setStringValue(eventName);
+  lastEventValue->setDoubleValue(value);
   if( bytes_written == sizeof(evt) )
-    SG_LOG( SG_INPUT,
-            SG_DEBUG,
-            "Written event " << eventName << " as type=" << evt.type
-                        << ", code=" << evt.code
-                        << " value=" << evt.value );
+    SG_LOG(SG_INPUT, SG_DEBUG, "Written event " << eventName << " as type=" << evt.type
+                        << ", code=" << evt.code << " value=" << evt.value);
   else
-    SG_LOG( SG_INPUT,
-            SG_WARN,
-            "Failed to write event: written = " << bytes_written );
+    SG_LOG(SG_INPUT, SG_WARN, "Failed to write event: written = " << bytes_written);
 }
 
 static char ugly_buffer[128];
@@ -459,7 +458,7 @@ const char * FGLinuxInputDevice::TranslateEventName( FGEventData & eventData )
 
 void FGLinuxInputDevice::SetDevname( const std::string & name )
 {
-  this->devname = name; 
+  this->devfile = name;
 }
 
 FGLinuxEventInput::FGLinuxEventInput()
@@ -485,18 +484,25 @@ void FGLinuxEventInput::postinit()
   struct udev_list_entry *dev_list_entry;
 
   udev_list_entry_foreach(dev_list_entry, devices) {
-    const char * path = udev_list_entry_get_name(dev_list_entry);
-    struct udev_device *dev = udev_device_new_from_syspath(udev, path);
-    const char * node = udev_device_get_devnode(dev);
+    const char * syspath = udev_list_entry_get_name(dev_list_entry);
+    struct udev_device *dev = udev_device_new_from_syspath(udev, syspath);
+    const char * devFile = udev_device_get_devnode(dev);
+
+    // get device path by removing trailing sysname from syspath
+    std::string sysname = udev_device_get_sysname(dev);
+    std::string devpath = syspath;
+    devpath.erase(devpath.length() - sysname.length());
  
     struct udev_device * parent_dev = udev_device_get_parent( dev );
     if ( parent_dev != NULL ) {
       const char * name = udev_device_get_sysattr_value(parent_dev,"name");
+      if( name && devFile ) {
       const char * serial = udev_device_get_sysattr_value(parent_dev, "serial");
-      SG_LOG(SG_INPUT,SG_DEBUG, "name=" << (name?name:"<null>") << ", node=" << (node?node:"<null>"));
-      if( name && node ) {
+        SG_LOG(SG_INPUT,SG_DEBUG, "FGLinuxEventInput: path=" << devpath << ": " <<
+        " name=" << (name?name:"<null>") << ", devFile=" << (devFile?devFile:"<null>") );
+
         std::string serialString = serial ? serial : std::string{};
-        AddDevice( new FGLinuxInputDevice(name, node, serialString) );
+        AddDevice( new FGLinuxInputDevice(name, devFile, serialString, devpath) );
       }
     }
 

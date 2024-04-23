@@ -613,7 +613,7 @@ void Highlight::addPropertyNode(const std::string& property, osg::ref_ptr<osg::N
     std::string property2 = canonical(property);
     s_property_to_info[property2].nodes.insert(node);
     if (s_node_to_properties[node].insert(property2).second)
-        SG_LOG(SG_INPUT, SG_DEBUG, "node=" << node.get() << " property=" << property2);
+        SG_LOG(SG_GENERAL, SG_DEBUG, "node=" << node.get() << " property=" << property2);
 }
 
 void Highlight::addPropertyDialog(const std::string& property, const std::string& dialog)
@@ -621,7 +621,7 @@ void Highlight::addPropertyDialog(const std::string& property, const std::string
     std::string property2 = canonical(property);
     s_property_to_info[property2].dialogs.insert(dialog);
     if (s_dialog_to_properties[dialog].insert(property2).second)
-        SG_LOG(SG_INPUT, SG_DEBUG, "dialog=" << dialog << " property=" << property2);
+        SG_LOG(SG_GENERAL, SG_DEBUG, "dialog=" << dialog << " property=" << property2);
 }
 
 void Highlight::addPropertyKeypress(const std::string& property, const std::string& keypress)
@@ -629,7 +629,7 @@ void Highlight::addPropertyKeypress(const std::string& property, const std::stri
     std::string property2 = canonical(property);
     s_property_to_info[property2].keypresses.insert(keypress);
     if (s_keypress_to_properties[keypress].insert(property2).second)
-        SG_LOG(SG_INPUT, SG_DEBUG, "keypress=" << keypress << " property=" << property2);
+        SG_LOG(SG_GENERAL, SG_DEBUG, "keypress=" << keypress << " property=" << property2);
 }
 
 void Highlight::addPropertyMenu(HighlightMenu menu, const std::string& property)
@@ -637,14 +637,14 @@ void Highlight::addPropertyMenu(HighlightMenu menu, const std::string& property)
     std::string property2 = canonical(property);
     s_property_to_info[property2].menus.insert(menu);
     if (s_menu_to_properties[menu].insert(property2).second)
-        SG_LOG(SG_INPUT, SG_DEBUG, "menu=(" << menu.menu << " " << menu.item << ") property=" << property2);
+        SG_LOG(SG_GENERAL, SG_DEBUG, "menu=(" << menu.menu << " " << menu.item << ") property=" << property2);
 }
 
 void Highlight::addMenuDialog(HighlightMenu menu, const std::string& dialog)
 {
     s_menu_to_dialog[menu] = dialog;
     if (s_dialog_to_menus[dialog].insert(menu).second)
-        SG_LOG(SG_INPUT, SG_DEBUG, "menu (" << menu.menu << " " << menu.item << ") dialog=" << dialog);
+        SG_LOG(SG_GENERAL, SG_DEBUG, "menu (" << menu.menu << " " << menu.item << ") dialog=" << dialog);
 }
 
 void Highlight::addPropertyProperty(const std::string& from0, const std::string& to0)

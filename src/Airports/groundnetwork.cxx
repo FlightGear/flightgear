@@ -301,6 +301,10 @@ FGTaxiNodeRef FGGroundNetwork::findNearestNodeOnRunwayExit(const SGGeod& aGeod, 
                 ((*exitSegments.at(0)).getIsOnRunway() || (*exitSegments.at(0)).getIsOnRunway())) {
                 continue;
             }
+            if (exitSegments.empty()) {
+                SG_LOG(SG_AI, SG_ALERT, "findNearestNodeOnRunwayExit Broken :" << diff << " Id : " << (*it)->getIndex() << " Apt : " << aRunway->airport()->getId());
+                continue;
+            }
             double exitHeading = SGGeodesy::courseDeg((*it)->geod(),
                                                       (exitSegments.back())->geod());
             diff = fabs(SGMiscd::normalizePeriodic(-180, 180, aRunway->headingDeg() - exitHeading));

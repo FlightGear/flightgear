@@ -43,7 +43,7 @@ class FGLinuxInputDevice : public FGInputDevice
 {
 public:
     FGLinuxInputDevice();
-    FGLinuxInputDevice( std::string name, std::string devname, std::string aSerial );
+    FGLinuxInputDevice(std::string aName, std::string aDevname, std::string aSerial, std::string aDevpath);
     virtual ~FGLinuxInputDevice();
 
     bool Open() override;
@@ -52,16 +52,16 @@ public:
     const char * TranslateEventName( FGEventData & eventData ) override;
 
     void SetDevname( const std::string & name );
-    std::string GetDevname() const { return devname; }
+    std::string GetDevFile() const { return devfile; }
+    std::string GetDevPath() const { return devpath; }
 
     int GetFd() { return fd; }
 
     double Normalize( struct input_event & event );
-
 private:
-    std::string devname;
-    int fd;
-
+    std::string devfile;
+    std::string devpath;
+    int fd {-1};
     std::map<unsigned int,input_absinfo> absinfo;
 };
 

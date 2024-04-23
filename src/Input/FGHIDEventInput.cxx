@@ -342,6 +342,7 @@ public:
 
 FGHIDDevice::FGHIDDevice(hid_device_info *devInfo, FGHIDEventInput *)
 {
+    class_id = "FGHIDDevice";
     _hidPath = devInfo->path;
 
     std::wstring manufacturerName, productName;
@@ -407,14 +408,14 @@ void FGHIDDevice::Configure(SGPropertyNode_ptr node)
 
 bool FGHIDDevice::Open()
 {
+    SG_LOG(SG_INPUT, SG_INFO, "HID open " << GetUniqueName());
     _device = hid_open_path(_hidPath.c_str());
     if (_device == nullptr) {
-        SG_LOG(SG_INPUT, SG_WARN, "HID " << GetUniqueName() << ": Failed to open:" << _hidPath);
+        SG_LOG(SG_INPUT, SG_WARN, "Failed to open:" << _hidPath);
         SG_LOG(SG_INPUT, SG_WARN, "\tnote on Linux you may need to adjust permissions of the device using UDev rules.");
         return false;
     }
 
-    SG_LOG(SG_INPUT, SG_INFO, "HID open " << GetUniqueName());
 
 #if !defined(SG_WINDOWS)
     if (_rawXMLDescriptor.empty()) {
@@ -444,7 +445,7 @@ bool FGHIDDevice::Open()
 
         FGInputEvent_ptr event = v.second;
         if (debugEvents) {
-            SG_LOG(SG_INPUT, SG_INFO, "\tfound item for event:" << v.first);
+            SG_LOG(SG_INPUT, SG_INFO, "\tfound item for event: " << v.first);
         }
 
         reportItem.second->event = event;
@@ -481,7 +482,7 @@ bool FGHIDDevice::parseUSBHIDDescriptor()
     hid_item* rootItem = nullptr;
     hid_parse_reportdesc(_rawXMLDescriptor.data(), _rawXMLDescriptor.size(), &rootItem);
     if (debugEvents) {
-        SG_LOG(SG_INPUT, SG_INFO, "HID scan for: " << GetUniqueName());
+        SG_LOG(SG_INPUT, SG_DEBUG, "\tHID scan for: " << GetUniqueName());
     }
 
     parseCollection(rootItem);
@@ -598,7 +599,7 @@ void FGHIDDevice::parseItem(hid_item* item)
     uint32_t bitOffset = report->currentBitSize();
 
     if (debugEvents) {
-        SG_LOG(SG_INPUT, SG_INFO, "\tadd: " << name << ", bits: " << bitOffset << ":" << (int) item->report_size
+        SG_LOG(SG_INPUT, SG_DEBUG, "\thas: " << name << ", bits: " << bitOffset << ":" << (int) item->report_size
             << ", report=" << (int) item->report_id);
     }
 
@@ -706,7 +707,7 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
                                      double dt, int keyModifiers)
 {
     if (_debugRaw) {
-        SG_LOG(SG_INPUT, SG_INFO, GetName() << " FGHIDDeivce received input report:" << (int) report->number << ", len=" << length);
+        SG_LOG(SG_INPUT, SG_INFO, GetName() << " FGHIDDevice received input report:" << (int) report->number << ", len=" << length);
         {
             std::ostringstream byteString;
             for (size_t i=0; i<length; ++i) {
@@ -798,6 +799,9 @@ void FGHIDDevice::Send(const char *eventName, double value)
     if (item.second->lastValue == intValue) {
         return; // not actually changing
     }
+
+    lastEventName->setStringValue(eventName);
+    lastEventValue->setDoubleValue(value);
 
     // update the stored value prior to sending
     item.second->lastValue = intValue;
