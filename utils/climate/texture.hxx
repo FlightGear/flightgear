@@ -10,14 +10,12 @@
  * implied. This program is -not- in the public domain.
  */
 
-#ifndef __SG_TEXTURE_HXX
-#define __SG_TEXTURE_HXX 1
+#pragma once
 
 #include <simgear/compiler.h>
 #include <osg/GL>
 #include <zlib.h>
 
-#include <plib/sg.h>
 
 /**
  * A class to encapsulate all the info surrounding an OpenGL texture
@@ -148,6 +146,3 @@ public:
     void make_normalmap(float brightness = 1.0, float contrast = 1.0);
     void make_bumpmap(float brightness = 1.0, float contrast = 1.0);
 };
-
-#endif
-

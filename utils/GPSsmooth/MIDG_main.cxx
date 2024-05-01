@@ -1,6 +1,5 @@
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+
+#include <config.h>
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -9,10 +8,11 @@
 #endif
 
 #include <cstdlib>
+
+#include <chrono>
 #include <iostream>
 #include <string>
-
-#include <plib/sg.h>
+#include <thread>
 
 #include <simgear/constants.h>
 #include <simgear/io/lowlevel.hxx> // endian tests
@@ -74,7 +74,7 @@ bool inited = false;
 // an exception whenever a "bad" floating point value is loaded into a
 // floating point register.  Solaris is notorious for this, but then
 // so is LynxOS on the PowerPC.  By translating the data in place,
-// there is no need to load a FP register with the "corruped" floating
+// there is no need to load a FP register with the "corrupted" floating
 // point value.  By doing the BIG_ENDIAN test, I can optimize the
 // routine for big-endian processors so it can be as efficient as
 // possible
@@ -546,7 +546,7 @@ int main( int argc, char **argv ) {
             double elapsed_us = (current_time_stamp - last_time_stamp).toUSecs();
             if ( elapsed_us < (frame_us - 2000) ) {
                 double requested_us = (frame_us - elapsed_us) - 2000 ;
-                ulMilliSecondSleep ( (int)(requested_us / 1000.0) ) ;
+                std::this_thread::sleep_for(std::chrono::milliseconds((int) (requested_us / 1000.0)));
             }
             current_time_stamp.stamp();
             while ( (current_time_stamp - last_time_stamp).toUSecs() < frame_us ) {

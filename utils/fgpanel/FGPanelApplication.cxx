@@ -16,9 +16,7 @@
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -31,7 +29,9 @@
 #  include <CoreFoundation/CoreFoundation.h>
 #endif
 
+#include <chrono>
 #include <iostream>
+#include <thread>
 
 #if defined (SG_MAC)
 #include <OpenGL/gl.h>
@@ -55,6 +55,7 @@
 
 #include "panel_io.hxx"
 #include "ApplicationProperties.hxx"
+
 
 using namespace std;
 
@@ -295,12 +296,9 @@ FGPanelApplication::Sleep () {
     const double elapsed_us ((current_time_stamp - last_time_stamp).toUSecs ());
     if (elapsed_us < frame_us) {
       const double requested_us (frame_us - elapsed_us);
-#ifdef _WIN32
-      ::Sleep (int (requested_us / 1000.0));
-#else
-      usleep (useconds_t (requested_us));
-#endif
+      std::this_thread::sleep_for(std::chrono::milliseconds((int) (requested_us * 1000.0)));
     }
+
     // busy wait timing loop.
     //
     // This yields the most accurate timing.  If the previous

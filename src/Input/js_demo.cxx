@@ -1,12 +1,11 @@
+
 #include <config.h>
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>          
-#else
-#  include <unistd.h> // for usleep           
-#endif
+#include <chrono>
+#include <thread>
 
 #include "FlightGear_js.h"
+
 
 #define Z 8
 
@@ -96,17 +95,11 @@ int main ( int, char ** )
     fflush ( stdout ) ;
 
     /* give other processes a chance */
-
-#ifdef _WIN32
-    Sleep ( 1 ) ;
-#elif defined(sgi)
-    sginap ( 1 ) ;
-#else
-    usleep ( 1000 ) ;
-#endif
+    {
+      using namespace std::chrono_literals;
+      std::this_thread::sleep_for(std::chrono::milliseconds(1ms));
+    }
   }
 
-  return 0 ;
+  return 0;
 }
-
-

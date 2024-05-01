@@ -22,9 +22,7 @@
 
 // TODO FIXME Module still contains lots of "static SGPropertyNode"s below.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <simgear/compiler.h>
 
@@ -39,9 +37,11 @@
 
 #include <errno.h>
 #include <cmath>
-
-#include <string>
 #include <cstdio>
+
+#include <chrono>
+#include <string>
+#include <thread>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -51,8 +51,8 @@
 
 #include "ATC-Outputs.hxx"
 
-using std::string;
 
+using std::string;
 
 
 // Lock the ATC hardware
@@ -338,20 +338,19 @@ bool FGATCOutput::open( int lock_fd ) {
             SG_LOG( SG_IO, SG_DEBUG, "Checking if compass home ..." );
         }
 
-	while ( ATCLock( lock_fd ) <= 0 );
+        while ( ATCLock( lock_fd ) <= 0 );
 
-	unsigned char result = ATCReadStepper( stepper_fd );
-	if ( result == 0 ) {
-	    home = true;
-	}
+        unsigned char result = ATCReadStepper( stepper_fd );
+        if ( result == 0 ) {
+            home = true;
+        }
 
-	ATCRelease( lock_fd );
+        ATCRelease( lock_fd );
 
-#ifdef _WIN32
-        Sleep (33);
-#else
-	usleep(33);
-#endif
+        {
+            using namespace std::chrono_literals;
+            std::this_thread::sleep_for(std::chrono::milliseconds(33ms));
+        }
 
         --timeout;
     }

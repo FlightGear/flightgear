@@ -26,13 +26,15 @@
 */
 
 #include <math.h>
-#include <memory>
 #include <stdint.h>
 #include <stdio.h>
 
-#include <plib/netSocket.h>
+#include <chrono>
+#include <memory>
+#include <thread>
 
 #include "FlightGear_js.h"
+
 
 void usage(char* progname)
 {
@@ -58,7 +60,7 @@ int main(int argc, char** argv)
     auto js = std::make_unique<jsJoystick>(0);
 
     if (js->notWorking()) {
-        printf("no Joystick detected... exitting\n");
+        printf("no Joystick detected... exiting\n");
         exit(1);
     }
     printf("Joystick is \"%s\"\n", js->getName());
@@ -102,7 +104,7 @@ int main(int argc, char** argv)
             memcpy(packet + len, &axisvalue, sizeof(axisvalue));
             len += sizeof(axisvalue);
         }
-        // fill emtpy values into packes when less than 4 axes
+        // fill emtpy values into packets when less than 4 axes
         for (; axis < 4; axis++) {
             int32_t axisvalue = 0;
             memcpy(packet + len, &axisvalue, sizeof(axisvalue));
@@ -120,14 +122,11 @@ int main(int argc, char** argv)
         c.send(packet, len, 0);
 
         /* give other processes a chance */
+        {
+            using namespace std::chrono_literals;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1ms));
+        }
 
-#ifdef _WIN32
-        Sleep(1);
-#elif defined(sgi)
-        sginap(1);
-#else
-        usleep(200);
-#endif
         printf(".");
         fflush(stdout);
     }
