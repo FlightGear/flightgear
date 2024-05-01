@@ -45,7 +45,7 @@ class Node {
     const std::size_t depth;
     SGRectd bounds;
     std::array<std::unique_ptr<quadtree::Node<T,GetBox,Equal>>, 4> children;
-    std::vector<const T*> data;
+    std::vector<T*> data;
     const int quadrant;
   public:
 
@@ -58,18 +58,18 @@ class Node {
 
     void resize( const SGRectd& bounds ) {
         if (data.size()>0) {
-            assert("Resizing with data not supported");
+            SG_LOG(SG_ATC, SG_ALERT, "Resizing Quadtree with data not supported");
         }
         this->bounds = bounds;
-        SG_LOG(SG_AI, SG_DEBUG , bounds.x() << "\t" << bounds.y() << "\t" << bounds.width() << "\t" << bounds.height());
+        SG_LOG(SG_ATC, SG_DEBUG , "Resizing Quadtree to " << bounds.x() << "\t" << bounds.y() << "\t" << bounds.width() << "\t" << bounds.height());
     }
 
-    void add(const SGRectd& pos, const T& value)
+    void add(const SGRectd& pos, T* value)
     {
         if (isLeaf())
         {
             if (depth >= MAX_DEPTH || data.size() < SPLIT_THRESHOLD) {
-                data.push_back(&value);
+                data.push_back(value);
             }
             else
             {
@@ -78,7 +78,7 @@ class Node {
                     children[static_cast<std::size_t>(i)].get()->add(pos, value);
                 }
                 else {
-                    data.push_back(&value);
+                    data.push_back(value);
                 }
             }
         }
@@ -89,22 +89,22 @@ class Node {
               children[static_cast<std::size_t>(i)].get()->add(pos, value);
             }
             else {
-              data.push_back(&value);
+              data.push_back(value);
             }
         }
     };
 
-    void removeValue(const T& value, const Equal& equalFkt) {
+    void removeValue(T* value, const Equal& equalFkt) {
           // Find the value in data
         auto it = std::find_if(std::begin(data), std::end(data),
-            [&equalFkt, &value](const auto* rhs){ return equalFkt(&value, rhs); });
+            [equalFkt, &value](auto* rhs){ return equalFkt(value, rhs); });
         assert(it != std::end(data) && "Trying to remove a value that is not present in the node");
         // Swap with the last element and pop back
         *it = std::move(data.back());
         data.pop_back();
     }
 
-    bool remove(const SGRectd& pos, const T& value, const Equal& equal) {
+    bool remove(const SGRectd& pos, T* value, const Equal& equal) {
         if (isLeaf()) {
             removeValue(value, equal);
             return true;
@@ -131,25 +131,26 @@ class Node {
                 return false;
             nbValues += child.get()->size();
         }
-      return true;
+        SG_LOG(SG_ATC, SG_DEBUG , "Trying to merge Quadtree " << nbValues);
+        return true;
     }
 
 
     int split(const SGRectd& pos) {
         // Create children
-        SG_LOG(SG_AI, SG_DEBUG , "Splitting");
+        SG_LOG(SG_ATC, SG_DEBUG, "Splitting Quadtree " << data.size());
 
         for (size_t i = 0; i < 4; i++) {
             children[i] = std::make_unique<Node>(depth+1, i);
             children[i].get()->resize(computeBox(bounds, i));
         }
         // Assign values to children
-        auto newValues = std::vector<const T*>(); // New values for this node
+        auto newValues = std::vector<T*>(); // New values for this node
         for (auto value : data)
         {
             auto i = getQuadrant(bounds, pos);
             if (i != UNKNOWN) {
-                children[static_cast<std::size_t>(i)].get()->add(pos, *value);
+                children[static_cast<std::size_t>(i)].get()->add(pos, value);
             }
             else {
                 newValues.push_back(value);
@@ -201,12 +202,12 @@ class Node {
         }
     };
 
-    void query(const SGRectd& queryBox, const GetBox& getBoxFunction, std::vector<const T*>& values)
+    void query(const SGRectd& queryBox, const GetBox& getBoxFunction, std::vector<T*>& values)
     {
         assert(queryBox.contains(bounds.x(), bounds.y()));
         for (auto value : data)
         {
-            auto pos = getBoxFunction(*value);
+            auto pos = getBoxFunction(value);
             if (queryBox.contains(pos.x(), pos.y())) {
                 values.push_back(value);
             }
@@ -267,26 +268,26 @@ class QuadTree {
              const Equal& equal
             ): rootNode(std::make_unique<quadtree::Node<T,GetBox, Equal>>(0, UNKNOWN)), getBoxFunction(getBox), equalFunction(equal) {}
 
-    void resize( const SGRectd& bounds ) {
+    void resize( const SGRectd& bounds ) {        
         rootNode.get()->resize(bounds);
     }
 
-    void add(const T& value)
+    void add(T* value)
     {
         rootNode.get()->add(getBoxFunction(value), value);
     }
 
-    void remove(const T& value)
+    void remove(T* value)
     {
         rootNode.get()->remove(getBoxFunction(value), value, equalFunction);
     }
 
-    void query(const T& value, std::vector<const T*>& values)
+    void query(T* value, std::vector<T*>& values)
     {
         return rootNode.get()->query(getBoxFunction(value), getBoxFunction, values);
     }
 
-    void query(const SGRectd& queryBox, std::vector<const T*>& values)
+    void query(const SGRectd& queryBox, std::vector<T*>& values)
     {
         return rootNode.get()->query(queryBox, getBoxFunction, values);
     }

@@ -83,8 +83,9 @@ FGGroundController::FGGroundController(FGAirportDynamics *par)
     airportGroundRadar = new AirportGroundRadar(par->parent());
 }
 
-FGGroundController::~FGGroundController()
+FGGroundController::~FGGroundController() 
 {
+    delete airportGroundRadar;
 }
 
 bool compare_trafficrecords(FGTrafficRecord a, FGTrafficRecord b)
@@ -97,7 +98,7 @@ void FGGroundController::signOff(int id)
     // Search the activeTraffic vector to find a traffic vector with our id
     TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
     if (i != activeTraffic.end()) {
-        airportGroundRadar->remove(*i->getAircraft());
+        airportGroundRadar->remove(i->getAircraft());
     }
     FGATCController::signOff(id);
 }
@@ -135,7 +136,7 @@ void FGGroundController::announcePosition(int id,
         } else {
             activeTraffic.push_back(rec);
         }
-        airportGroundRadar->add(*aircraft);
+        airportGroundRadar->add(aircraft);
     } else {
         i->setPositionAndIntentions(currentPosition, intendedRoute);
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
@@ -252,6 +253,19 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
                "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkSpeedAdjustment at " << SG_ORIGIN);
     }
     current = i;
+
+    bool blocked = airportGroundRadar->isBlocked(i->getAircraft());
+    if (blocked) {
+        auto isBlockedBy = airportGroundRadar->isBlockedBy(i->getAircraft());
+        SG_LOG(SG_GENERAL, SG_DEBUG,
+               "Blocked " << i->getAircraft()->getCallSign() << " by " << isBlockedBy->getCallSign() << SG_ORIGIN);
+
+    } else {
+        if (i->getAircraft()!=nullptr) {
+            SG_LOG(SG_GENERAL, SG_DEBUG,
+                "Not Blocked " << i->getAircraft()->getCallSign() << SG_ORIGIN);
+        }
+    }
     //closest = current;
 
     // previousInstruction = current->getSpeedAdjustment();

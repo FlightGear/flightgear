@@ -34,12 +34,12 @@ class AirportGroundRadar {
 public:
 // for index
 	/**Function implementing calculation of dimension for Quadtree*/
-    static SGRect<double> getBox(const FGAIBase& aiObject) {
-		return SGRect<double>(aiObject.getGeodPos().getLatitudeDeg(),
-		aiObject.getGeodPos().getLongitudeDeg());
+    static SGRect<double> getBox(FGAIBase* aiObject) {
+		return SGRect<double>(aiObject->getGeodPos().getLatitudeDeg(),
+		aiObject->getGeodPos().getLongitudeDeg());
 	};
 	/**Function implementing equals for Quadtree*/
-    static bool equal(const FGAIBase* o, const FGAIBase* o2) {
+    static bool equal(FGAIBase* o, FGAIBase* o2) {
 		return o->getID() == o2->getID();
 	};
 
@@ -47,16 +47,16 @@ private:
     const double QUERY_BOX_SIZE = 0.1;
 	QuadTree<FGAIBase, decltype(&getBox), decltype(&equal)> index;
 	SGGeod min;
-	int getSize(const FGAIBase& aiObject);
+	int getSize(FGAIBase* aiObject);
 public:
 	AirportGroundRadar(SGGeod min, SGGeod max);
 	AirportGroundRadar(FGAirportRef airport);
 	~AirportGroundRadar();
-	void add(const FGAIBase& aiObject);
-	void remove(const FGAIBase& aiObject);
+	void add(FGAIBase* aiObject);
+	void remove(FGAIBase* aiObject);
 	size_t size();
 	/**Returns if this AI object is blocked by any other "known" aka visible to the Radar.*/
-	bool isBlocked(const FGAIBase& aiObject);
+	bool isBlocked(FGAIBase* aiObject);
 		/**Returns if this AI object is blocked by any other "known" aka visible to the Radar.*/
-	const FGAIBase* isBlockedBy(const FGAIBase& aiObject);
+	const FGAIBase* isBlockedBy(FGAIBase* aiObject);
 };
