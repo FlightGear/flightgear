@@ -20,9 +20,10 @@
 
 #pragma once
 #include <simgear/math/SGGeod.hxx>
-#include "QuadTree.hxx"
 #include "AIModel/AIBase.hxx"
 #include "Airports/airports_fwd.hxx"
+#include "ATC/trafficcontrol.hxx"
+#include "ATC/QuadTree.hxx"
 
 using quadtree::QuadTree;
 
@@ -34,29 +35,29 @@ class AirportGroundRadar {
 public:
 // for index
 	/**Function implementing calculation of dimension for Quadtree*/
-    static SGRect<double> getBox(FGAIBase* aiObject) {
-		return SGRect<double>(aiObject->getGeodPos().getLatitudeDeg(),
-		aiObject->getGeodPos().getLongitudeDeg());
+    static SGRect<double> getBox(FGTrafficRecord* aiObject) {
+		return SGRect<double>(aiObject->getPos().getLatitudeDeg(),
+		aiObject->getPos().getLongitudeDeg());
 	};
 	/**Function implementing equals for Quadtree*/
-    static bool equal(FGAIBase* o, FGAIBase* o2) {
-		return o->getID() == o2->getID();
+    static bool equal(FGTrafficRecord* o, FGTrafficRecord* o2) {
+		return o->getId() == o2->getId();
 	};
 
 private:
     const double QUERY_BOX_SIZE = 0.1;
-	QuadTree<FGAIBase, decltype(&getBox), decltype(&equal)> index;
+	QuadTree<FGTrafficRecord, decltype(&getBox), decltype(&equal)> index;
 	SGGeod min;
-	int getSize(FGAIBase* aiObject);
+	int getSize(FGTrafficRecord* aiObject);
 public:
 	AirportGroundRadar(SGGeod min, SGGeod max);
 	AirportGroundRadar(FGAirportRef airport);
 	~AirportGroundRadar();
-	void add(FGAIBase* aiObject);
-	void remove(FGAIBase* aiObject);
+	bool add(FGTrafficRecord* aiObject);
+	bool remove(FGTrafficRecord* aiObject);
 	size_t size();
 	/**Returns if this AI object is blocked by any other "known" aka visible to the Radar.*/
-	bool isBlocked(FGAIBase* aiObject);
+	bool isBlocked(FGTrafficRecord* aiObject);
 		/**Returns if this AI object is blocked by any other "known" aka visible to the Radar.*/
-	const FGAIBase* isBlockedBy(FGAIBase* aiObject);
+	const FGTrafficRecord* isBlockedBy(FGTrafficRecord* aiObject);
 };

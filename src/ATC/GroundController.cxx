@@ -98,7 +98,7 @@ void FGGroundController::signOff(int id)
     // Search the activeTraffic vector to find a traffic vector with our id
     TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
     if (i != activeTraffic.end()) {
-        airportGroundRadar->remove(i->getAircraft());
+        airportGroundRadar->remove(&*i);
     }
     FGATCController::signOff(id);
 }
@@ -136,7 +136,7 @@ void FGGroundController::announcePosition(int id,
         } else {
             activeTraffic.push_back(rec);
         }
-        airportGroundRadar->add(aircraft);
+        airportGroundRadar->add(&rec);
     } else {
         i->setPositionAndIntentions(currentPosition, intendedRoute);
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
@@ -254,16 +254,16 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
     }
     current = i;
 
-    bool blocked = airportGroundRadar->isBlocked(i->getAircraft());
+    bool blocked = airportGroundRadar->isBlocked(&*i);
     if (blocked) {
-        auto isBlockedBy = airportGroundRadar->isBlockedBy(i->getAircraft());
+        auto isBlockedBy = airportGroundRadar->isBlockedBy(&*i);
         SG_LOG(SG_GENERAL, SG_DEBUG,
-               "Blocked " << i->getAircraft()->getCallSign() << " by " << isBlockedBy->getCallSign() << SG_ORIGIN);
+               "Blocked " << i->getCallsign() << " by " << isBlockedBy->getCallsign() << SG_ORIGIN);
 
     } else {
         if (i->getAircraft()!=nullptr) {
             SG_LOG(SG_GENERAL, SG_DEBUG,
-                "Not Blocked " << i->getAircraft()->getCallSign() << SG_ORIGIN);
+                "Not Blocked " << i->getCallsign() << SG_ORIGIN);
         }
     }
     //closest = current;

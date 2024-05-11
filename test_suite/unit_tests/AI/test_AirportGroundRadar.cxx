@@ -61,18 +61,17 @@ void AirportGroundRadarTests::testFillingTree()
 
     AirportGroundRadar testsubject(minPos, maxPos);
 
-    FGAIShip boatyMcBoatface;
-    auto rect = testsubject.getBox(&boatyMcBoatface);
+    FGTrafficRecord rec;
+    auto rect = testsubject.getBox(&rec);
     CPPUNIT_ASSERT_EQUAL(0.0, rect.getMin().x());
     CPPUNIT_ASSERT_EQUAL(0.0, rect.getMin().y());
 
     for (size_t i = 0; i < 4; i++)
     {
       for (size_t j = 0; j < 4; j++) {
-        FGAIShip boatyMcBoatface;
-        boatyMcBoatface.setLatitude((i/10)+50);
-        boatyMcBoatface.setLongitude((j/10)+50);
-        testsubject.add(&boatyMcBoatface);
+        FGTrafficRecord rec1;
+        rec1.setPositionAndHeading((i/10)+50, (i/10)+50, 45, 20, 0);;
+        testsubject.add(&rec1);
       }
     }
 }
@@ -84,20 +83,20 @@ void AirportGroundRadarTests::testFillingTreeSplit()
 
     AirportGroundRadar testsubject(minPos, maxPos);
 
-    FGAIShip boatyMcBoatface;
-    auto rect = testsubject.getBox(&boatyMcBoatface);
+    FGTrafficRecord rec;
+    auto rect = testsubject.getBox(&rec);
     CPPUNIT_ASSERT_EQUAL(0.0, rect.getMin().x());
     CPPUNIT_ASSERT_EQUAL(0.0, rect.getMin().y());
 
     for (size_t i = 0; i < 10; i++)
     {
       for (size_t j = 0; j < 10; j++) {
-        FGAIShip boatyMcBoatface;
-        boatyMcBoatface.setLatitude((i/10)+50);
-        boatyMcBoatface.setLongitude((j/10)+50);
-        testsubject.add(&boatyMcBoatface);
+        FGTrafficRecord rec;
+        rec.setPositionAndHeading((i/10)+50, (i/10)+50, 45, 20, 0);;
+        testsubject.add(&rec);
       }
     }
+    CPPUNIT_ASSERT_EQUAL(size_t(100), testsubject.size());
 }
 
 void AirportGroundRadarTests::testFillingTreeRemove()
@@ -107,33 +106,31 @@ void AirportGroundRadarTests::testFillingTreeRemove()
 
     AirportGroundRadar testsubject(minPos, maxPos);
 
-    FGAIShip boatyMcBoatface;
-    auto rect = testsubject.getBox(&boatyMcBoatface);
+    FGTrafficRecord rec33;
+    auto rect = testsubject.getBox(&rec33);
     CPPUNIT_ASSERT_EQUAL(0.0, rect.getMin().x());
     CPPUNIT_ASSERT_EQUAL(0.0, rect.getMin().y());
 
     for (size_t i = 0; i < 100; i++)
     {
-      FGAIShip boatyMcBoatface;
-      boatyMcBoatface.setLatitude((i/10)+50);
-      boatyMcBoatface.setLongitude((i/10)+50);
-      testsubject.add(&boatyMcBoatface);
-      testsubject.remove(&boatyMcBoatface);
+      FGTrafficRecord rec;
+      rec.setPositionAndHeading((i/10)+50, (i/10)+50, 45, 20, 0);;
+      testsubject.add(&rec);
+      bool removed = testsubject.remove(&rec);
+      CPPUNIT_ASSERT_EQUAL(true, removed);
       CPPUNIT_ASSERT_EQUAL(size_t(0), testsubject.size());
     }
 
-    FGAIShip boatyMcBoatface1;
-    boatyMcBoatface1.setLatitude(50);
-    boatyMcBoatface1.setLongitude(50);
-    testsubject.add(&boatyMcBoatface1);
-    FGAIShip boatyMcBoatface2;
-    boatyMcBoatface2.setLatitude(50);
-    boatyMcBoatface2.setLongitude(50);
-    testsubject.add(&boatyMcBoatface2);
+    FGTrafficRecord rec1;
+    rec1.setPositionAndHeading(50, 50, 45, 20, 0);;
+    testsubject.add(&rec1);
+    FGTrafficRecord rec2;
+    rec2.setPositionAndHeading(50, 50, 45, 20, 0);;
+    testsubject.add(&rec2);
     CPPUNIT_ASSERT_EQUAL(size_t(2), testsubject.size());
 
-    testsubject.remove(&boatyMcBoatface1);
-    testsubject.remove(&boatyMcBoatface2);
+    testsubject.remove(&rec1);
+    testsubject.remove(&rec2);
 
     CPPUNIT_ASSERT_EQUAL(size_t(0), testsubject.size());
 
@@ -145,20 +142,16 @@ void AirportGroundRadarTests::testBlocked()
   SGGeod maxPos = SGGeod::fromDeg(60,60);
 
   AirportGroundRadar testsubject(minPos, maxPos);
-  FGAIShip boatyMcBoatface1;
-  boatyMcBoatface1.setLatitude(50);
-  boatyMcBoatface1.setLongitude(50);
-  boatyMcBoatface1.setSpeed(20);
-  boatyMcBoatface1.setHeading(45);
-  testsubject.add(&boatyMcBoatface1);
-  FGAIShip boatyMcBoatface2;
-  boatyMcBoatface2.setLatitude(50);
-  boatyMcBoatface2.setLongitude(50.001);
-  boatyMcBoatface2.setSpeed(20);
-  boatyMcBoatface2.setHeading(315);
-  testsubject.add(&boatyMcBoatface2);
-  CPPUNIT_ASSERT_EQUAL(false, testsubject.isBlocked(&boatyMcBoatface1));
-  CPPUNIT_ASSERT_EQUAL(false, testsubject.isBlocked(&boatyMcBoatface2));
+  FGTrafficRecord rec1;
+  rec1.setId(4);
+  rec1.setPositionAndHeading(50, 50, 45, 20, 0);
+  testsubject.add(&rec1);
+  FGTrafficRecord rec2;
+  rec2.setId(6);
+  rec2.setPositionAndHeading(50, 50.001, 315, 20, 0);;
+  testsubject.add(&rec2);
+  CPPUNIT_ASSERT_EQUAL(false, testsubject.isBlocked(&rec1));
+  CPPUNIT_ASSERT_EQUAL(false, testsubject.isBlocked(&rec2));
 }
 
 void AirportGroundRadarTests::testBlocked1()
@@ -167,20 +160,16 @@ void AirportGroundRadarTests::testBlocked1()
   SGGeod maxPos = SGGeod::fromDeg(60,60);
 
   AirportGroundRadar testsubject(minPos, maxPos);
-  FGAIShip boatyMcBoatface1;
-  boatyMcBoatface1.setLatitude(50);
-  boatyMcBoatface1.setLongitude(50);
-  boatyMcBoatface1.setSpeed(20);
-  boatyMcBoatface1.setHeading(315);
-  testsubject.add(&boatyMcBoatface1);
-  FGAIShip boatyMcBoatface2;
-  boatyMcBoatface2.setLatitude(50);
-  boatyMcBoatface2.setLongitude(50.001);
-  boatyMcBoatface2.setSpeed(20);
-  boatyMcBoatface2.setHeading(45);
-  testsubject.add(&boatyMcBoatface2);
-  CPPUNIT_ASSERT_EQUAL(true, testsubject.isBlocked(&boatyMcBoatface1));
-  CPPUNIT_ASSERT_EQUAL(false, testsubject.isBlocked(&boatyMcBoatface2));
+  FGTrafficRecord rec1;
+  rec1.setId(1);
+  rec1.setPositionAndHeading(50, 50, 315, 20, 0);
+  testsubject.add(&rec1);
+  FGTrafficRecord rec2;
+  rec2.setId(2);
+  rec2.setPositionAndHeading(50, 50.001, 45, 20, 0);
+  testsubject.add(&rec2);
+  CPPUNIT_ASSERT_EQUAL(true, testsubject.isBlocked(&rec1));
+  CPPUNIT_ASSERT_EQUAL(false, testsubject.isBlocked(&rec2));
 }
 
 void AirportGroundRadarTests::testBlockedBy1()
@@ -189,29 +178,23 @@ void AirportGroundRadarTests::testBlockedBy1()
   SGGeod maxPos = SGGeod::fromDeg(60,60);
 
   AirportGroundRadar testsubject(minPos, maxPos);
-  FGAIShip boatyMcBoatface1;
-  boatyMcBoatface1.setLatitude(50);
-  boatyMcBoatface1.setLongitude(50);
-  boatyMcBoatface1.setSpeed(20);
-  boatyMcBoatface1.setHeading(315);
-  testsubject.add(&boatyMcBoatface1);
+  FGTrafficRecord rec1;
+  rec1.setId(2);
+  rec1.setPositionAndHeading(50, 50, 315, 20, 0);
+  testsubject.add(&rec1);
   
-  FGAIShip boatyMcBoatface2;
-  boatyMcBoatface2.setLatitude(50);
-  boatyMcBoatface2.setLongitude(50.001);
-  boatyMcBoatface2.setSpeed(20); 
-  boatyMcBoatface2.setHeading(45);
-  testsubject.add(&boatyMcBoatface2);
+  FGTrafficRecord rec2;
+  rec2.setId(5);
+  rec2.setPositionAndHeading(50, 50.001, 45, 20, 0);
+  testsubject.add(&rec2);
 
-  FGAIShip boatyMcBoatface3;
-  boatyMcBoatface3.setLatitude(50);
-  boatyMcBoatface3.setLongitude(50.003);
-  boatyMcBoatface3.setSpeed(20);
-  boatyMcBoatface3.setHeading(45);
-  testsubject.add(&boatyMcBoatface3);
+  FGTrafficRecord rec3;
+  rec3.setId(4);
+  rec3.setPositionAndHeading(50, 50.003, 45, 20, 0);
+  testsubject.add(&rec3);
 
-  CPPUNIT_ASSERT(testsubject.isBlockedBy(&boatyMcBoatface2)==nullptr);
-  CPPUNIT_ASSERT_EQUAL(boatyMcBoatface2.getID(), testsubject.isBlockedBy(&boatyMcBoatface1)->getID());
+  CPPUNIT_ASSERT(testsubject.isBlockedBy(&rec2)==nullptr);
+  CPPUNIT_ASSERT_EQUAL(rec2.getId(), testsubject.isBlockedBy(&rec1)->getId());
 }
 
 void AirportGroundRadarTests::testBlockedByQueue()
@@ -220,79 +203,62 @@ void AirportGroundRadarTests::testBlockedByQueue()
   SGGeod maxPos = SGGeod::fromDeg(60,60);
 
   AirportGroundRadar testsubject(minPos, maxPos);
-  FGAIShip boatyMcBoatface1;
-  boatyMcBoatface1.setLatitude(50);
-  boatyMcBoatface1.setLongitude(50);
-  boatyMcBoatface1.setSpeed(20);
-  boatyMcBoatface1.setHeading(270);
-  testsubject.add(&boatyMcBoatface1);
+  FGTrafficRecord rec1;
+  rec1.setId(2);
+  rec1.setPositionAndHeading(50, 50, 270, 20, 0);
+  testsubject.add(&rec1);
   
-  FGAIShip boatyMcBoatface2;
-  boatyMcBoatface2.setLatitude(50);
-  boatyMcBoatface2.setLongitude(50.001);
-  boatyMcBoatface2.setSpeed(20); 
-  boatyMcBoatface2.setHeading(270);
-  testsubject.add(&boatyMcBoatface2);
+  FGTrafficRecord rec2;
+  rec2.setId(4);
+  rec2.setPositionAndHeading(50, 50.001, 270, 20, 0);
+  testsubject.add(&rec2);
 
-  FGAIShip boatyMcBoatface3;
-  boatyMcBoatface3.setLatitude(50);
-  boatyMcBoatface3.setLongitude(50.002);
-  boatyMcBoatface3.setSpeed(20);
-  boatyMcBoatface3.setHeading(270);
-  testsubject.add(&boatyMcBoatface3);
+  FGTrafficRecord rec3;
+  rec3.setId(26);
+  rec3.setPositionAndHeading(50, 50.002, 270, 20, 0);
+  testsubject.add(&rec3);
 
   // Not near
-  FGAIShip boatyMcBoatface4;
-  boatyMcBoatface4.setLatitude(50);
-  boatyMcBoatface4.setLongitude(50.005);
-  boatyMcBoatface4.setSpeed(20);
-  boatyMcBoatface4.setHeading(270);
+  FGTrafficRecord boatyMcBoatface4;
+  boatyMcBoatface4.setPositionAndHeading(50, 50.005, 270, 20, 0);
   testsubject.add(&boatyMcBoatface4);
 
-  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface2", testsubject.isBlockedBy(&boatyMcBoatface2)!=nullptr);
-  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface3", testsubject.isBlockedBy(&boatyMcBoatface3)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec2", testsubject.isBlockedBy(&rec2)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec3", testsubject.isBlockedBy(&rec3)!=nullptr);
   CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface4 (None)", testsubject.isBlockedBy(&boatyMcBoatface4)==nullptr);
-  CPPUNIT_ASSERT_EQUAL(boatyMcBoatface1.getID(), testsubject.isBlockedBy(&boatyMcBoatface2)->getID());
-  CPPUNIT_ASSERT_EQUAL(boatyMcBoatface2.getID(), testsubject.isBlockedBy(&boatyMcBoatface3)->getID());
+  CPPUNIT_ASSERT_EQUAL(rec1.getId(), testsubject.isBlockedBy(&rec2)->getId());
+  CPPUNIT_ASSERT_EQUAL(rec2.getId(), testsubject.isBlockedBy(&rec3)->getId());
 }
 
 void AirportGroundRadarTests::testAirport() {
   FGAirportRef egph = FGAirport::getByIdent("EGPH");
   CPPUNIT_ASSERT_MESSAGE("Airport loaded", egph!=nullptr);
   AirportGroundRadar testsubject(egph);
-  FGAIShip boatyMcBoatface1;
-  boatyMcBoatface1.setLatitude(50);
-  boatyMcBoatface1.setLongitude(50);
-  boatyMcBoatface1.setSpeed(20);
-  boatyMcBoatface1.setHeading(270);
-  testsubject.add(&boatyMcBoatface1);
+  FGTrafficRecord rec1;
+  rec1.setId(8);
+  rec1.setPositionAndHeading(50, 50, 270, 20, 0);
+  testsubject.add(&rec1);
   
-  FGAIShip boatyMcBoatface2;
-  boatyMcBoatface2.setLatitude(50);
-  boatyMcBoatface2.setLongitude(50.001);
-  boatyMcBoatface2.setSpeed(20); 
-  boatyMcBoatface2.setHeading(270);
-  testsubject.add(&boatyMcBoatface2);
+  FGTrafficRecord rec2;
+  rec2.setId(2);
+  rec2.setPositionAndHeading(50, 50.001, 270, 20, 0);;
+  testsubject.add(&rec2);
 
-  FGAIShip boatyMcBoatface3;
-  boatyMcBoatface3.setLatitude(50);
-  boatyMcBoatface3.setLongitude(50.002);
-  boatyMcBoatface3.setSpeed(20);
-  boatyMcBoatface3.setHeading(270);
-  testsubject.add(&boatyMcBoatface3);
+  FGTrafficRecord rec3;
+  rec3.setId(7);
+  rec3.setPositionAndHeading(50, 50.002, 270, 20, 0);;
+  testsubject.add(&rec3);
 
   // Not near
-  FGAIShip boatyMcBoatface4;
-  boatyMcBoatface4.setLatitude(50);
-  boatyMcBoatface4.setLongitude(50.005);
-  boatyMcBoatface4.setSpeed(20);
-  boatyMcBoatface4.setHeading(270);
+  FGTrafficRecord boatyMcBoatface4;
+  boatyMcBoatface4.setId(2);
+  boatyMcBoatface4.setPositionAndHeading(50, 50.005, 270, 20, 0);
   testsubject.add(&boatyMcBoatface4);
 
-  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface2", testsubject.isBlockedBy(&boatyMcBoatface2)!=nullptr);
-  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface3", testsubject.isBlockedBy(&boatyMcBoatface3)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec2", testsubject.isBlockedBy(&rec2)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec3", testsubject.isBlockedBy(&rec3)!=nullptr);
   CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface4 (None)", testsubject.isBlockedBy(&boatyMcBoatface4)==nullptr);
-  CPPUNIT_ASSERT_EQUAL(boatyMcBoatface1.getID(), testsubject.isBlockedBy(&boatyMcBoatface2)->getID());
-  CPPUNIT_ASSERT_EQUAL(boatyMcBoatface2.getID(), testsubject.isBlockedBy(&boatyMcBoatface3)->getID());  
+  CPPUNIT_ASSERT_EQUAL(rec1.getId(), testsubject.isBlockedBy(&rec2)->getId());
+  CPPUNIT_ASSERT_EQUAL(rec2.getId(), testsubject.isBlockedBy(&rec3)->getId());  
 }
 
