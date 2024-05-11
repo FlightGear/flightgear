@@ -52,7 +52,17 @@ class Node {
     Node(std::size_t depth, int fQuadtrant): depth(depth), data(), quadrant(fQuadtrant)  {
     }
 
-    size_t size() {return data.size();}
+    size_t size() {
+        if (children[0] == nullptr) {
+            return data.size();
+        } else {
+            int childrenSize = 0;
+            for (auto& n : children) {
+                childrenSize += n->size();
+            }
+            return childrenSize;  
+        }
+    }
 
     bool isLeaf() {return children[0] == nullptr;};
 
@@ -98,7 +108,10 @@ class Node {
           // Find the value in data
         auto it = std::find_if(std::begin(data), std::end(data),
             [equalFkt, &value](auto* rhs){ return equalFkt(value, rhs); });
-        assert(it != std::end(data) && "Trying to remove a value that is not present in the node");
+        if (it == std::end(data)) {
+            SG_LOG(SG_ATC, SG_ALERT , "Trying to remove non existant data ");
+            return;
+        }
         // Swap with the last element and pop back
         *it = std::move(data.back());
         data.pop_back();
@@ -114,9 +127,8 @@ class Node {
             if (i != UNKNOWN) {
                 if (children[static_cast<std::size_t>(i)].get()->remove(computeBox(pos, i), value, equal))
                     return tryMerge();
-            }
             // Otherwise, we remove the value from the current node
-            else {
+            } else {
                 removeValue(value, equal);
             }
             return false;
@@ -272,14 +284,15 @@ class QuadTree {
         rootNode.get()->resize(bounds);
     }
 
-    void add(T* value)
+    bool add(T* value)
     {
         rootNode.get()->add(getBoxFunction(value), value);
+        return true;
     }
 
-    void remove(T* value)
+    bool remove(T* value)
     {
-        rootNode.get()->remove(getBoxFunction(value), value, equalFunction);
+        return rootNode.get()->remove(getBoxFunction(value), value, equalFunction);
     }
 
     void query(T* value, std::vector<T*>& values)
