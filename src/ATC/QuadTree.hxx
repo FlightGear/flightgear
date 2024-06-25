@@ -104,12 +104,44 @@ class Node {
         }
     };
 
+    bool move(const SGRectd& newPos, const SGRectd& pos, T* value, const Equal& equalFkt)
+    {
+        SG_LOG(SG_ATC, SG_DEBUG,
+               "Moving  " << pos.x() << ":" << pos.y() << " to " << newPos.x() << ":" << newPos.y() << (isLeaf()?" leaf ":" ")<< SG_ORIGIN);
+
+        // finding 
+        if (isLeaf())
+        {
+            // No need to do anything since in same node
+//            removeValue(value, equalFkt);
+            return true;
+        }
+        else
+        {
+            auto oldQuadrant = getQuadrant(bounds, pos);
+            auto newQuadrant = getQuadrant(bounds, newPos);
+            SG_LOG(SG_ATC, SG_DEBUG,
+               "Moving  " << oldQuadrant << " to " << newQuadrant << " "<< SG_ORIGIN);
+            if (oldQuadrant != UNKNOWN) {
+                if (oldQuadrant != newQuadrant) {
+                    children[static_cast<std::size_t>(oldQuadrant)].get()->remove(pos, value, equalFkt);    
+                    children[static_cast<std::size_t>(newQuadrant)].get()->add(newPos, value);    
+                } else {
+                    children[static_cast<std::size_t>(oldQuadrant)].get()->move(newPos, pos, value, equalFkt);
+                }
+            } else {
+                // Gone wrong?
+            }
+            return false;
+        }
+    };
+
     void removeValue(T* value, const Equal& equalFkt) {
           // Find the value in data
         auto it = std::find_if(std::begin(data), std::end(data),
             [equalFkt, &value](auto* rhs){ return equalFkt(value, rhs); });
         if (it == std::end(data)) {
-            SG_LOG(SG_ATC, SG_ALERT , "Trying to remove non existant data ");
+            SG_LOG(SG_ATC, SG_ALERT , "Trying to remove non existant data " << SG_ORIGIN);
             return;
         }
         // Swap with the last element and pop back
@@ -287,6 +319,12 @@ class QuadTree {
     bool add(T* value)
     {
         rootNode.get()->add(getBoxFunction(value), value);
+        return true;
+    }
+
+    bool move(const SGRectd& newPos, T* value)
+    {
+        rootNode.get()->move(newPos, getBoxFunction(value), value, equalFunction);
         return true;
     }
 

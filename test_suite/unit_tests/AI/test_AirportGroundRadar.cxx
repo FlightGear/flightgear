@@ -230,6 +230,91 @@ void AirportGroundRadarTests::testBlockedByQueue()
   CPPUNIT_ASSERT_EQUAL(rec2.getId(), testsubject.isBlockedBy(&rec3)->getId());
 }
 
+void AirportGroundRadarTests::testMove()
+{
+  SGGeod minPos = SGGeod::fromDeg(50,50);
+  SGGeod maxPos = SGGeod::fromDeg(60,60);
+
+  AirportGroundRadar testsubject(minPos, maxPos);
+  FGTrafficRecord rec1;
+  rec1.setId(2);
+  // Will be moved to 50/50
+  rec1.setPositionAndHeading(60, 60, 270, 20, 0);
+  testsubject.add(&rec1);
+  
+  FGTrafficRecord rec2;
+  rec2.setId(4);
+  rec2.setPositionAndHeading(50, 50.001, 270, 20, 0);
+  testsubject.add(&rec2);
+
+  FGTrafficRecord rec3;
+  rec3.setId(26);
+  rec3.setPositionAndHeading(50, 50.002, 270, 20, 0);
+  testsubject.add(&rec3);
+
+  testsubject.move(SGRect<double>(50,50), &rec1);
+  rec1.setPositionAndHeading(50, 50, 270, 20, 0);
+
+  // Not near
+  FGTrafficRecord boatyMcBoatface4;
+  boatyMcBoatface4.setId(33);
+  boatyMcBoatface4.setPositionAndHeading(50, 50.005, 270, 20, 0);
+  testsubject.add(&boatyMcBoatface4);
+
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec2", testsubject.isBlockedBy(&rec2)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec3", testsubject.isBlockedBy(&rec3)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface4 (None)", testsubject.isBlockedBy(&boatyMcBoatface4)==nullptr);
+  CPPUNIT_ASSERT_EQUAL(rec1.getId(), testsubject.isBlockedBy(&rec2)->getId());
+  CPPUNIT_ASSERT_EQUAL(rec2.getId(), testsubject.isBlockedBy(&rec3)->getId());
+}
+
+void AirportGroundRadarTests::testMoveLarge()
+{
+  SGGeod minPos = SGGeod::fromDeg(50,50);
+  SGGeod maxPos = SGGeod::fromDeg(60,60);
+
+  AirportGroundRadar testsubject(minPos, maxPos);
+  FGTrafficRecord rec1;
+  rec1.setId(2);
+  // Will be moved to 50/50
+  rec1.setPositionAndHeading(60, 60, 270, 20, 0);
+  testsubject.add(&rec1);
+  
+  FGTrafficRecord rec2;
+  rec2.setId(4);
+  rec2.setPositionAndHeading(50, 50.001, 270, 20, 0);
+  testsubject.add(&rec2);
+
+  FGTrafficRecord rec3;
+  rec3.setId(26);
+  rec3.setPositionAndHeading(50, 50.002, 270, 20, 0);
+  testsubject.add(&rec3);
+
+  // Not near
+  FGTrafficRecord boatyMcBoatface4;
+  boatyMcBoatface4.setId(33);
+  boatyMcBoatface4.setPositionAndHeading(50, 50.005, 270, 20, 0);
+  testsubject.add(&boatyMcBoatface4);
+
+  for( int i=100; i < 300; i++) {
+    // Not near
+    FGTrafficRecord boatyMcBoatface4;
+    boatyMcBoatface4.setId(i);
+    double fraction = 1/i;
+    boatyMcBoatface4.setPositionAndHeading((50.5+fraction), (50.5+fraction), 270, 20, 0);
+    testsubject.add(&boatyMcBoatface4);
+  }
+
+  testsubject.move(SGRect<double>(50,50), &rec1);
+  rec1.setPositionAndHeading(50, 50, 270, 20, 0);
+
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec2", testsubject.isBlockedBy(&rec2)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec3", testsubject.isBlockedBy(&rec3)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface4 (None)", testsubject.isBlockedBy(&boatyMcBoatface4)==nullptr);
+  CPPUNIT_ASSERT_EQUAL(rec1.getId(), testsubject.isBlockedBy(&rec2)->getId());
+  CPPUNIT_ASSERT_EQUAL(rec2.getId(), testsubject.isBlockedBy(&rec3)->getId());
+}
+
 void AirportGroundRadarTests::testAirport() {
   FGAirportRef egph = FGAirport::getByIdent("EGPH");
   CPPUNIT_ASSERT_MESSAGE("Airport loaded", egph!=nullptr);

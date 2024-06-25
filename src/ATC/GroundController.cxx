@@ -138,6 +138,7 @@ void FGGroundController::announcePosition(int id,
         }
         airportGroundRadar->add(&rec);
     } else {
+        airportGroundRadar->move(SGRect<double>(lat, lon), &*i);
         i->setPositionAndIntentions(currentPosition, intendedRoute);
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
     }

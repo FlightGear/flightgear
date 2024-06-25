@@ -40,6 +40,8 @@ class AirportGroundRadarTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testBlocked1);
     CPPUNIT_TEST(testBlockedBy1);
     CPPUNIT_TEST(testBlockedByQueue);
+    CPPUNIT_TEST(testMove);
+    CPPUNIT_TEST(testMoveLarge);
     CPPUNIT_TEST(testAirport);
     CPPUNIT_TEST_SUITE_END();
 
@@ -66,6 +68,9 @@ public:
     void testBlockedBy1();
     /**Testing detection of blocked one behind the other*/
     void testBlockedByQueue();
+    /**Testing movement*/
+    void testMove();
+    void testMoveLarge();
 
     void testAirport();
 };

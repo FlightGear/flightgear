@@ -54,6 +54,7 @@ public:
 	AirportGroundRadar(FGAirportRef airport);
 	~AirportGroundRadar();
 	bool add(FGTrafficRecord* aiObject);
+	bool move(const SGRectd& newPos, FGTrafficRecord* aiObject);
 	bool remove(FGTrafficRecord* aiObject);
 	size_t size();
 	/**Returns if this AI object is blocked by any other "known" aka visible to the Radar.*/

@@ -46,9 +46,14 @@ AirportGroundRadar::AirportGroundRadar(FGAirportRef airport): index(getBox, equa
 AirportGroundRadar::~AirportGroundRadar() {
 }
 
-bool AirportGroundRadar::add(FGTrafficRecord* aiObject)
-{
+bool AirportGroundRadar::add(FGTrafficRecord* aiObject) {
 	return index.add(aiObject);
+}
+
+bool AirportGroundRadar::move(const SGRectd& newPos, FGTrafficRecord* aiObject)
+{
+	// TODO check for actual move
+	return index.move(newPos, aiObject);
 }
 
 bool AirportGroundRadar::remove(FGTrafficRecord* aiObject)
