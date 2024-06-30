@@ -727,6 +727,13 @@ Compositor *CameraGroup::buildVRMirrorCompositor(osg::GraphicsContext* gc,
         camera->setCullingMode(CullSettings::NO_CULLING);
         camera->setProjectionResizePolicy(Camera::FIXED);
 
+        // OSG is buggy and treats draw buffer target as separate from FBO
+        // state. Be explicit about drawing to back buffer to reduce chance of
+        // inheriting a GL_NONE, which is particularly likely with single target
+        // CSM passes and stereo.
+        camera->setDrawBuffer(GL_BACK);
+        camera->setReadBuffer(GL_BACK);
+
         // The camera group will always update the camera
         camera->setReferenceFrame(Transform::ABSOLUTE_RF);
 
