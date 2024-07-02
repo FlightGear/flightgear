@@ -296,11 +296,11 @@ void AirportGroundRadarTests::testMoveLarge()
   boatyMcBoatface4.setPositionAndHeading(50, 50.005, 270, 20, 0);
   testsubject.add(&boatyMcBoatface4);
 
-  for( int i=100; i < 300; i++) {
+  for( int i=100; i < 900; i++) {
     // Not near
     FGTrafficRecord boatyMcBoatface4;
     boatyMcBoatface4.setId(i);
-    double fraction = 1/i;
+    double fraction = 0.01*i;
     boatyMcBoatface4.setPositionAndHeading((50.5+fraction), (50.5+fraction), 270, 20, 0);
     testsubject.add(&boatyMcBoatface4);
   }

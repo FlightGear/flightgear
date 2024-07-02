@@ -47,7 +47,9 @@ AirportGroundRadar::~AirportGroundRadar() {
 }
 
 bool AirportGroundRadar::add(FGTrafficRecord* aiObject) {
-	return index.add(aiObject);
+	bool ret = index.add(aiObject);
+    index.printPath(aiObject);
+	return ret;
 }
 
 bool AirportGroundRadar::move(const SGRectd& newPos, FGTrafficRecord* aiObject)
