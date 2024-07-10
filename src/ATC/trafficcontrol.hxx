@@ -45,8 +45,8 @@ typedef std::vector<FGAIFlightPlan*>::iterator FlightPlanVecIterator;
 typedef std::map<std::string, FlightPlanVec>   FlightPlanVecMap;
 
 class FGTrafficRecord;
-typedef std::list<FGTrafficRecord> TrafficVector;
-typedef std::list<FGTrafficRecord>::iterator TrafficVectorIterator;
+typedef std::list<SGSharedPtr<FGTrafficRecord>> TrafficVector;
+typedef std::list<SGSharedPtr<FGTrafficRecord>>::iterator TrafficVectorIterator;
 
 class ActiveRunway;
 typedef std::vector<ActiveRunway> ActiveRunwayVec;
@@ -148,7 +148,7 @@ public:
  * class FGTrafficRecord
  * Represents the interaction of an AI Aircraft and ATC
  *************************************************************************************/
-class FGTrafficRecord
+class FGTrafficRecord : public SGReferenced
 {
 private:
     int id;

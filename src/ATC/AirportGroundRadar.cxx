@@ -46,38 +46,43 @@ AirportGroundRadar::AirportGroundRadar(FGAirportRef airport): index(getBox, equa
 AirportGroundRadar::~AirportGroundRadar() {
 }
 
-bool AirportGroundRadar::add(FGTrafficRecord* aiObject) {
+bool AirportGroundRadar::add(SGSharedPtr<FGTrafficRecord> aiObject) {
+	SG_LOG(SG_ATC, SG_DEBUG, "Added Aircraft " << aiObject->getId());	
 	bool ret = index.add(aiObject);
     index.printPath(aiObject);
 	return ret;
 }
 
-bool AirportGroundRadar::move(const SGRectd& newPos, FGTrafficRecord* aiObject)
+bool AirportGroundRadar::move(const SGRectd& newPos, SGSharedPtr<FGTrafficRecord> aiObject)
 {
 	// TODO check for actual move
 	return index.move(newPos, aiObject);
 }
 
-bool AirportGroundRadar::remove(FGTrafficRecord* aiObject)
+bool AirportGroundRadar::remove(SGSharedPtr<FGTrafficRecord> aiObject)
 {
-	return index.remove(aiObject);
+	bool ret = index.remove(aiObject);
+	if (!ret) {
+		SG_LOG(SG_ATC, SG_ALERT, "Couldn't remove " << aiObject->getId());	
+	}
+	return ret;
 }
 
 size_t AirportGroundRadar::size(){return index.size();}
 
-int AirportGroundRadar::getSize(FGTrafficRecord* aiObject){
+int AirportGroundRadar::getSize(SGSharedPtr<FGTrafficRecord> aiObject){
   	return 50;
 }
 
-bool AirportGroundRadar::isBlocked(FGTrafficRecord* aiObject)
+bool AirportGroundRadar::isBlocked(SGSharedPtr<FGTrafficRecord> aiObject)
 {
-    auto values = std::vector<FGTrafficRecord*>();
+    auto values = std::vector<SGSharedPtr<FGTrafficRecord>>();
 	const SGRectd queryBox(aiObject->getPos().getLatitudeDeg()-QUERY_BOX_SIZE,
 	aiObject->getPos().getLongitudeDeg()-QUERY_BOX_SIZE,
 	aiObject->getPos().getLatitudeDeg()+QUERY_BOX_SIZE,
 	aiObject->getPos().getLongitudeDeg()+QUERY_BOX_SIZE);
 	index.query(queryBox, values);
-	for (FGTrafficRecord* other: values) {
+	for (SGSharedPtr<FGTrafficRecord> other: values) {
         if (other->getId()!=aiObject->getId()){
 			double distM = SGGeodesy::distanceM(aiObject->getPos(), other->getPos());
 
@@ -85,11 +90,12 @@ bool AirportGroundRadar::isBlocked(FGTrafficRecord* aiObject)
             // For right before left priority
             const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, aiObject->getHeading() - courseTowardOther);
             const double otherHeadingDiff = SGMiscd::normalizePeriodic(-180, 180, other->getHeading() - courseTowardOther);
-            SG_LOG(SG_AI, SG_DEBUG, "Found " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
+            SG_LOG(SG_ATC, SG_DEBUG, "Found " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
 			const int threshold = getSize(aiObject) + getSize(other);
-			if ( distM < threshold && headingDiff < 0 && abs(otherHeadingDiff) < 90 ){
-				// from the right and in front
-                SG_LOG(SG_AI, SG_ALERT, aiObject->getId() << " blocked by " << other->getId());
+			if ( distM < threshold && 
+			    ((headingDiff < 0 && abs(otherHeadingDiff) < 90) || (other->getSpeed() == 0 && abs(headingDiff) < 5)) ){
+				// from the right and in front or other is stopped
+//                SG_LOG(SG_ATC, SG_ALERT, aiObject->getId() << " blocked by " << other->getId());
 				return true;
 			}
 		}
@@ -97,16 +103,16 @@ bool AirportGroundRadar::isBlocked(FGTrafficRecord* aiObject)
     return false;
 }
 
-const FGTrafficRecord* AirportGroundRadar::isBlockedBy(FGTrafficRecord* aiObject)
+const SGSharedPtr<FGTrafficRecord> AirportGroundRadar::getBlockedBy(SGSharedPtr<FGTrafficRecord> aiObject)
 {
-    auto values = std::vector<FGTrafficRecord*>();
+    auto values = std::vector<SGSharedPtr<FGTrafficRecord>>();
 	const SGRectd queryBox(aiObject->getPos().getLatitudeDeg()-QUERY_BOX_SIZE,
 	aiObject->getPos().getLongitudeDeg()-QUERY_BOX_SIZE,
 	aiObject->getPos().getLatitudeDeg()+QUERY_BOX_SIZE,
 	aiObject->getPos().getLongitudeDeg()+QUERY_BOX_SIZE);
-    SG_LOG(SG_AI, SG_DEBUG, "Blocking Id : " << aiObject->getId());
+    SG_LOG(SG_ATC, SG_DEBUG, "Blocking Id : " << aiObject->getId());
 	index.query(queryBox, values);
-	for (FGTrafficRecord* other: values) {
+	for (SGSharedPtr<FGTrafficRecord> other: values) {
         if (other->getId()!=aiObject->getId()){
 			double distM = SGGeodesy::distanceM(aiObject->getPos(), other->getPos());
 
@@ -115,7 +121,7 @@ const FGTrafficRecord* AirportGroundRadar::isBlockedBy(FGTrafficRecord* aiObject
             const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, aiObject->getHeading() - courseTowardOther);
             const double otherHeadingDiff = SGMiscd::normalizePeriodic(-180, 180, other->getHeading() - courseTowardOther);
 			const int threshold = getSize(aiObject) + getSize(other);
-            SG_LOG(SG_AI, SG_DEBUG, "Found Id : " << other->getId() << " Dist \t" << distM << "m Threshold " << threshold << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
+            SG_LOG(SG_ATC, SG_DEBUG, "Found Id : " << other->getId() << " Dist \t" << distM << "m Threshold " << threshold << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
 			if ( distM < threshold && headingDiff < 0 && abs(otherHeadingDiff) < 90 ){
 				// from the right and in front
 				return other;

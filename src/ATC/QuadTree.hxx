@@ -22,6 +22,7 @@
 #include <simgear/math/SGGeod.hxx>
 #include <simgear/math/SGBox.hxx>
 #include <simgear/math/SGRect.hxx>
+#include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <algorithm>
 #include <array>
@@ -46,7 +47,7 @@ class Node {
     const std::size_t depth;
     SGRectd bounds;
     std::array<std::unique_ptr<quadtree::Node<T,GetBox,Equal>>, 4> children;
-    std::vector<T*> data;
+    std::vector<SGSharedPtr<T>> data;
     const int quadrant;
   public:
 
@@ -75,7 +76,7 @@ class Node {
         SG_LOG(SG_ATC, SG_DEBUG , "Resizing Quadtree to " << bounds.x() << "\t" << bounds.y() << "\t" << bounds.width() << "\t" << bounds.height());
     }
 
-    void add(const SGRectd& pos, T* value, const GetBox& getBoxFunction)
+    void add(const SGRectd& pos, SGSharedPtr<T> value, const GetBox& getBoxFunction)
     {
         if (isLeaf())
         {
@@ -108,10 +109,10 @@ class Node {
         }
     };
 
-    bool move(const SGRectd& newPos, const SGRectd& pos, T* value, const Equal& equalFkt, const GetBox& getBoxFunction)
+    bool move(const SGRectd& newPos, const SGRectd& pos, SGSharedPtr<T> value, const Equal& equalFkt, const GetBox& getBoxFunction)
     {
         SG_LOG(SG_ATC, SG_DEBUG,
-               "Moving  " << pos.x() << ":" << pos.y() << " to " << newPos.x() << ":" << newPos.y() << (isLeaf()?" leaf ":" ")<< SG_ORIGIN);
+               "Moving  " << pos.x() << ":" << pos.y() << " to " << newPos.x() << ":" << newPos.y() << (isLeaf()?" leaf ":" "));
 
         // finding 
         if (isLeaf())
@@ -125,7 +126,7 @@ class Node {
             auto oldQuadrant = getQuadrant(bounds, pos);
             auto newQuadrant = getQuadrant(bounds, newPos);
             SG_LOG(SG_ATC, SG_DEBUG,
-               "Moving  from quadrant " << oldQuadrant << " to quadrant " << newQuadrant << " "<< SG_ORIGIN);
+               "Moving from quadrant " << oldQuadrant << " to quadrant " << newQuadrant << " Level " << depth );
             if (oldQuadrant != UNKNOWN) {
                 if (oldQuadrant != newQuadrant) {
                     children[static_cast<std::size_t>(oldQuadrant)].get()->remove(pos, value, equalFkt);    
@@ -140,12 +141,12 @@ class Node {
         }
     };
 
-    bool removeValue(T* value, const Equal& equalFkt) {
+    bool removeValue(SGSharedPtr<T> value, const Equal& equalFkt) {
           // Find the value in data
         auto it = std::find_if(std::begin(data), std::end(data),
-            [equalFkt, &value](auto* rhs){ return equalFkt(value, rhs); });
+            [equalFkt, value](auto rhs){ return equalFkt(value, rhs); });
         if (it == std::end(data)) {
-            SG_LOG(SG_ATC, SG_ALERT , "Trying to remove non existant data " << SG_ORIGIN);
+            SG_LOG(SG_ATC, SG_ALERT , "Trying to remove non existant data ");
             return false;
         }
         // Swap with the last element and pop back
@@ -154,7 +155,7 @@ class Node {
         return true;
     }
 
-    bool remove(const SGRectd& pos, T* value, const Equal& equal) {
+    bool remove(const SGRectd& pos, SGSharedPtr<T> value, const Equal& equal) {
         if (isLeaf()) {
             return removeValue(value, equal);
         } else {
@@ -166,7 +167,7 @@ class Node {
                 }
             // Otherwise, we remove the value from the current node
             } else {
-                SG_LOG(SG_ATC, SG_ALERT , "Trying to remove from UNKNOWN non leaf " << SG_ORIGIN);
+                SG_LOG(SG_ATC, SG_ALERT , "Trying to remove from UNKNOWN non leaf " );
                 return removeValue(value, equal);
             }
             return false;
@@ -177,15 +178,15 @@ class Node {
      * For debugging. Find path to value
      */
 
-    bool findFullScan(T* value, const Equal& equalFkt, const std::string& path) {
+    bool findFullScan(SGSharedPtr<T> value, const Equal& equalFkt, const std::string& path) {
         if (isLeaf()) {
             auto it = std::find_if(std::begin(data), std::end(data),
-                [equalFkt, &value](auto* rhs){ return equalFkt(value, rhs); });
+                [equalFkt, value](auto rhs){ return equalFkt(value, rhs); });
             if (it == std::end(data)) {
-//                SG_LOG(SG_ATC, SG_ALERT , "Not found " << path << " " << SG_ORIGIN);
+//                SG_LOG(SG_ATC, SG_ALERT , "Not found " << path << " " );
                 return false;
             } else {
-                SG_LOG(SG_ATC, SG_DEBUG , "Found in path node " << path << " " << SG_ORIGIN);
+                SG_LOG(SG_ATC, SG_DEBUG , "Found in path node " << path << " " );
                 return true;
             }
         } else {
@@ -201,13 +202,13 @@ class Node {
         }
     }
 
-    bool printPath(const SGRectd& pos, T* value, const Equal& equalFkt, const std::string& path) {
+    bool printPath(const SGRectd& pos, SGSharedPtr<T> value, const Equal& equalFkt, const std::string& path) {
         if (isLeaf()) {
-            SG_LOG(SG_ATC, SG_DEBUG , path << " " << SG_ORIGIN);
+            SG_LOG(SG_ATC, SG_DEBUG , path );
             auto it = std::find_if(std::begin(data), std::end(data),
-                [equalFkt, &value](auto* rhs){ return equalFkt(value, rhs); });
+                [equalFkt, value](auto rhs){ return equalFkt(value, rhs); });
             if (it == std::end(data)) {
-                SG_LOG(SG_ATC, SG_ALERT , "Not found " << SG_ORIGIN);
+                SG_LOG(SG_ATC, SG_ALERT , "Not found when printing path" );
                 return false;
             } else {
                 return true;
@@ -218,7 +219,7 @@ class Node {
                 std::string subpath = path + std::to_string(i) + "/";
                 return children[static_cast<std::size_t>(i)].get()->printPath(computeBox(pos, i), value, equalFkt, subpath);
             } else {
-                SG_LOG(SG_ATC, SG_ALERT , "Unkown quadrant " << SG_ORIGIN);
+                SG_LOG(SG_ATC, SG_ALERT , "Unkown quadrant " );
             }
             return false;
         }
@@ -246,7 +247,7 @@ class Node {
             children[i].get()->resize(computeBox(bounds, i));
         }
         // Assign values to children
-        auto newValues = std::vector<T*>(); // New values for this node
+        auto newValues = std::vector<SGSharedPtr<T>>(); // New values for this node
         for (auto value : data)
         {
             auto i = getQuadrant(bounds, getBoxFunction(value));
@@ -303,7 +304,7 @@ class Node {
         }
     };
 
-    void query(const SGRectd& queryBox, const GetBox& getBoxFunction, std::vector<T*>& values)
+    void query(const SGRectd& queryBox, const GetBox& getBoxFunction, std::vector<SGSharedPtr<T>>& values)
     {
         assert(queryBox.contains(bounds.x(), bounds.y()));
         for (auto value : data)
@@ -373,13 +374,13 @@ class QuadTree {
         rootNode.get()->resize(bounds);
     }
 
-    bool add(T* value)
+    bool add(SGSharedPtr<T> value)
     {
         rootNode.get()->add(getBoxFunction(value), value, getBoxFunction);
         return true;
     }
 
-    bool move(const SGRectd& newPos, T* value)
+    bool move(const SGRectd& newPos, SGSharedPtr<T> value)
     {
         bool found = rootNode.get()->printPath(getBoxFunction(value), value, equalFunction, "Start/");
         if (!found) {
@@ -390,22 +391,22 @@ class QuadTree {
         return true;
     }
 
-    bool remove(T* value)
+    bool remove(SGSharedPtr<T> value)
     {
         return rootNode.get()->remove(getBoxFunction(value), value, equalFunction);
     }
 
-    bool printPath(T* value)
+    bool printPath(SGSharedPtr<T> value)
     {
         return rootNode.get()->printPath(getBoxFunction(value), value, equalFunction, "/");
     }
 
-    void query(T* value, std::vector<T*>& values)
+    void query(SGSharedPtr<T> value, std::vector<SGSharedPtr<T>>& values)
     {
         return rootNode.get()->query(getBoxFunction(value), getBoxFunction, values);
     }
 
-    void query(const SGRectd& queryBox, std::vector<T*>& values)
+    void query(const SGRectd& queryBox, std::vector<SGSharedPtr<T>>& values)
     {
         return rootNode.get()->query(queryBox, getBoxFunction, values);
     }
