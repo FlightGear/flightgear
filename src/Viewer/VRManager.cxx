@@ -249,6 +249,7 @@ void VRManager::doCreateView(osgXR::View *xrView)
     setValue(camNode->getNode("mvr-view-id-vert", true), xrView->getMVRViewIdStr(GL_VERTEX_SHADER));
     setValue(camNode->getNode("mvr-view-id-geom", true), xrView->getMVRViewIdStr(GL_GEOMETRY_SHADER));
     setValue(camNode->getNode("mvr-view-id-frag", true), xrView->getMVRViewIdStr(GL_FRAGMENT_SHADER));
+    setValue(camNode->getNode("mvr-cells", true), (int)xrView->getMVRCells());
 
     // Build a camera
     CameraGroup *cgroup = CameraGroup::getDefault();
