@@ -47,14 +47,14 @@ class VRManager : public osgXR::Manager
                 ReloadCompositorCallback(VRManager *manager) :
                     _manager(manager)
                 {
-                };
+                }
 
-                virtual void preReloadCompositor(CameraGroup *cgroup, CameraInfo *info)
+                void preReloadCompositor(CameraGroup *cgroup, CameraInfo *info) override
                 {
                     _manager->preReloadCompositor(cgroup, info);
                 }
 
-                virtual void postReloadCompositor(CameraGroup *cgroup, CameraInfo *info)
+                void postReloadCompositor(CameraGroup *cgroup, CameraInfo *info) override
                 {
                     _manager->postReloadCompositor(cgroup, info);
                 }
