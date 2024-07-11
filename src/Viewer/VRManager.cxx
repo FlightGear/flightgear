@@ -223,6 +223,13 @@ void VRManager::doCreateView(osgXR::View *xrView)
     WindowBuilder *windowBuilder = WindowBuilder::getWindowBuilder();
     setValue(camNode->getNode("window/name", true),
              windowBuilder->getDefaultWindowName());
+    setValue(camNode->getNode("viewport/width", true), (int)xrView->getMVRWidth());
+    setValue(camNode->getNode("viewport/height", true), (int)xrView->getMVRHeight());
+    setValue(camNode->getNode("mvr-views", true), (int)xrView->getMVRViews());
+    setValue(camNode->getNode("mvr-view-id-global", true), xrView->getMVRViewIdGlobalStr());
+    setValue(camNode->getNode("mvr-view-id-vert", true), xrView->getMVRViewIdStr(GL_VERTEX_SHADER));
+    setValue(camNode->getNode("mvr-view-id-geom", true), xrView->getMVRViewIdStr(GL_GEOMETRY_SHADER));
+    setValue(camNode->getNode("mvr-view-id-frag", true), xrView->getMVRViewIdStr(GL_FRAGMENT_SHADER));
 
     // Build a camera
     CameraGroup *cgroup = CameraGroup::getDefault();
@@ -236,6 +243,9 @@ void VRManager::doCreateView(osgXR::View *xrView)
 
         postReloadCompositor(cgroup, info);
     }
+
+    // Get notified of subview changes
+    xrView->setCallback(new ViewCallback(this));
 }
 
 void VRManager::doDestroyView(osgXR::View *xrView)
@@ -329,6 +339,29 @@ void VRManager::postReloadCompositor(CameraGroup *cgroup, CameraInfo *info)
         auto flags = getPassVRFlags(pass);
         if (flags)
             xrView->addSlave(pass->camera, flags);
+    }
+}
+
+void VRManager::updateSubView(osgXR::View *view, unsigned int subviewIndex,
+                              const osgXR::View::SubView &subview)
+{
+    auto it = _camInfos.find(view);
+    if (it != _camInfos.end()) {
+        osg::ref_ptr<CameraInfo> info = (*it).second;
+
+        osg::Matrix viewMatrix = subview.getViewMatrix();
+        osg::Matrix projMatrix = subview.getProjectionMatrix();
+
+        // see CameraGroup::update()
+        viewMatrix = info->viewOffset * viewMatrix;
+        if ((info->flags & CameraInfo::VIEW_ABSOLUTE) == 0) {
+            auto *masterCam = CameraGroup::getDefault()->getView()->getCamera();
+            viewMatrix = masterCam->getViewMatrix() * viewMatrix;
+        }
+
+        auto vp = subview.getViewport();
+        info->compositor->updateSubView(subviewIndex, viewMatrix, projMatrix,
+                                        osg::Vec4(vp.x, vp.y, vp.w, vp.h));
     }
 }
 

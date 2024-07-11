@@ -76,16 +76,19 @@ struct CameraInfo : public osg::Referenced
     };
 
     CameraInfo(unsigned flags_)     :
-        flags(flags_),
-        physicalWidth(0), physicalHeight(0), bezelHeightTop(0),
-        bezelHeightBottom(0), bezelWidthLeft(0), bezelWidthRight(0),
-        relativeCameraParent(0), reloadCompositorCallback(nullptr) { }
+        flags(flags_), mvr{}, physicalWidth(0), physicalHeight(0),
+        bezelHeightTop(0), bezelHeightBottom(0), bezelWidthLeft(0),
+        bezelWidthRight(0), relativeCameraParent(0),
+        reloadCompositorCallback(nullptr) { }
     /** The name as given in the config file.
      */
     std::string name;
     /** Properties of the camera. @see CameraGroup::Flags.
      */
     unsigned flags;
+    /** Multiview rendering properties.
+     */
+    simgear::compositor::Compositor::MVRInfo mvr;
     /** Physical size parameters.
      */
     double physicalWidth;

@@ -506,6 +506,11 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     info->thisReference[1] = thisReference[1];
     info->viewOffset = vOff;
     info->projOffset = pOff;
+    info->mvr.views = cameraNode->getIntValue("mvr-views", 1);
+    info->mvr.viewIdGlobalStr = cameraNode->getStringValue("mvr-view-id-global", "");
+    info->mvr.viewIdStr[0] = cameraNode->getStringValue("mvr-view-id-vert", "0");
+    info->mvr.viewIdStr[1] = cameraNode->getStringValue("mvr-view-id-geom", "0");
+    info->mvr.viewIdStr[2] = cameraNode->getStringValue("mvr-view-id-frag", "0");
 
     osg::Viewport *viewport = new osg::Viewport(
         viewportNode->getDoubleValue("x"),
@@ -537,7 +542,8 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
                                         window->gc,
                                         viewport,
                                         compositor_path,
-                                        options);
+                                        options,
+                                        &info->mvr);
 
     if (compositor) {
         info->compositor.reset(compositor);
@@ -960,7 +966,8 @@ void reloadCompositors(CameraGroup *cgroup)
                                             gc,
                                             viewport,
                                             compositor_path,
-                                            options);
+                                            options,
+                                            &info->mvr);
         info->compositor.reset(compositor);
 
         if (info->reloadCompositorCallback.valid())
