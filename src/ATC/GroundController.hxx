@@ -45,8 +45,6 @@ private:
     int count;
     int version;
 
-    AirportGroundRadar *airportGroundRadar;
-
     FGTowerController *towerController;
     /**Returns the frequency to be used. */
     int getFrequency();

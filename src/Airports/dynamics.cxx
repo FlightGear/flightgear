@@ -144,6 +144,7 @@ FGParking* ParkingAssignment::parking() const
  * searching for available parkings. This allows us to reject parkings
  * which we might not have marked as occupied, but which an object is
  * neverthless close to; such as the primary user or MP aircraft.
+ * FIXME should be replaced by AirportGroundRadar
  */
 class NearbyAIObjectCache
 {
@@ -210,11 +211,19 @@ FGAirportDynamics::~FGAirportDynamics()
 }
 
 
-// Initialization required after XMLRead
+/**
+ * Initialization required after XMLRead
+ */ 
 void FGAirportDynamics::init()
 {
+    groundRadar = new AirportGroundRadar(_ap);
+
     groundController.setTowerController(&towerController);
     groundController.init();
+    startupController.setAirportGroundRadar(groundRadar);
+    towerController.setAirportGroundRadar(groundRadar);
+    approachController.setAirportGroundRadar(groundRadar);
+    groundController.setAirportGroundRadar(groundRadar);
 }
 
 FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const std::string& flType,

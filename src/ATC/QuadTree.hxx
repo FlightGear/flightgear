@@ -376,7 +376,9 @@ class QuadTree {
 
     bool add(SGSharedPtr<T> value)
     {
-        rootNode.get()->add(getBoxFunction(value), value, getBoxFunction);
+        if (rootNode.get()!=nullptr) {
+            rootNode.get()->add(getBoxFunction(value), value, getBoxFunction);
+        }
         return true;
     }
 

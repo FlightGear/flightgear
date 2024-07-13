@@ -33,7 +33,7 @@ using quadtree::QuadTree;
  * Class representing a kind of ground radar. It is used to control traffic by FGGroundController
  * and prevent collisions. It supporst all FGAIBase objects.
 */
-class AirportGroundRadar {
+class AirportGroundRadar: public SGReferenced {
 public:
 // for index
 	/**Function implementing calculation of dimension for Quadtree*/

@@ -77,6 +77,11 @@ void FGATCController::init()
     }
 }
 
+void FGATCController::setAirportGroundRadar(SGSharedPtr<AirportGroundRadar> groundRadar)
+{
+    airportGroundRadar = groundRadar;
+}
+
 string FGATCController::getGateName(FGAIAircraft* ref)
 {
     return ref->atGate();
@@ -401,6 +406,8 @@ void FGATCController::signOff(int id)
                "AI error: Aircraft without traffic record is signing off from " << getName() << " at " << SG_ORIGIN << " list " << activeTraffic.empty());
         return;
     }
+    airportGroundRadar->remove(*i);
+
     SG_LOG(SG_ATC, SG_DEBUG, (*i)->getCallsign() << " (" << (*i)->getId() << ") signing off from " << getName() << "(" << getFrequency() << ")");
     int oldSize = activeTraffic.size();
     activeTraffic.erase(i);

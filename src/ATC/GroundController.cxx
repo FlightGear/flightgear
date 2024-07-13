@@ -80,12 +80,10 @@ FGGroundController::FGGroundController(FGAirportDynamics *par)
     parent = par;
     hasNetwork = true;
     networkInitialized = true;
-    airportGroundRadar = new AirportGroundRadar(par->parent());
 }
 
 FGGroundController::~FGGroundController() 
 {
-    delete airportGroundRadar;
 }
 
 bool compare_trafficrecords(FGTrafficRecord a, FGTrafficRecord b)
@@ -95,11 +93,6 @@ bool compare_trafficrecords(FGTrafficRecord a, FGTrafficRecord b)
 
 void FGGroundController::signOff(int id)
 {
-    // Search the activeTraffic vector to find a traffic vector with our id
-    TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
-    if (i != activeTraffic.end()) {
-        airportGroundRadar->remove(*i);
-    }
     FGATCController::signOff(id);
 }
 

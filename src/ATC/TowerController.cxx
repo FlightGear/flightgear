@@ -101,6 +101,7 @@ void FGTowerController::announcePosition(int id,
         rec->setAircraft(ref);
         SGSharedPtr<FGTrafficRecord> sharedRec = static_cast<FGTrafficRecord*>(rec);
         activeTraffic.push_back(sharedRec);
+        airportGroundRadar->add(sharedRec);
         // Don't just schedule the aircraft for the tower controller, also assign if to the correct active runway.
         ActiveRunwayVecIterator rwy = activeRunways.begin();
         if (! activeRunways.empty()) {
@@ -128,6 +129,7 @@ void FGTowerController::announcePosition(int id,
 
         SG_LOG(SG_ATC, SG_DEBUG, ref->getTrafficRef()->getCallSign() << " You are number " << rwy->getdepartureQueueSize() << " for takeoff from " << rwy->getRunwayName());
     } else {
+        airportGroundRadar->move(SGRect<double>(lat, lon), *i);
         (*i)->setPositionAndHeading(lat, lon, heading, speed, alt);
     }
 }

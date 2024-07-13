@@ -47,9 +47,9 @@ AirportGroundRadar::~AirportGroundRadar() {
 }
 
 bool AirportGroundRadar::add(SGSharedPtr<FGTrafficRecord> aiObject) {
-	SG_LOG(SG_ATC, SG_DEBUG, "Added Aircraft " << aiObject->getId());	
 	bool ret = index.add(aiObject);
     index.printPath(aiObject);
+	SG_LOG(SG_ATC, SG_DEBUG, "Added Aircraft " << aiObject->getId());	
 	return ret;
 }
 
@@ -90,12 +90,12 @@ bool AirportGroundRadar::isBlocked(SGSharedPtr<FGTrafficRecord> aiObject)
             // For right before left priority
             const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, aiObject->getHeading() - courseTowardOther);
             const double otherHeadingDiff = SGMiscd::normalizePeriodic(-180, 180, other->getHeading() - courseTowardOther);
-            SG_LOG(SG_ATC, SG_DEBUG, "Found " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
+//            SG_LOG(SG_ATC, SG_DEBUG, "Found " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
 			const int threshold = getSize(aiObject) + getSize(other);
 			if ( distM < threshold && 
 			    ((headingDiff < 0 && abs(otherHeadingDiff) < 90) || (other->getSpeed() == 0 && abs(headingDiff) < 5)) ){
 				// from the right and in front or other is stopped
-//                SG_LOG(SG_ATC, SG_ALERT, aiObject->getId() << " blocked by " << other->getId());
+                SG_LOG(SG_ATC, SG_ALERT, aiObject->getId() << " blocked by " << other->getId());
 				return true;
 			}
 		}

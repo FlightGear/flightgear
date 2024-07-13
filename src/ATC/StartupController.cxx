@@ -99,7 +99,9 @@ void FGStartupController::announcePosition(int id,
         rec->setHoldPosition(true);
         SGSharedPtr<FGTrafficRecord> sharedRec = static_cast<FGTrafficRecord*>(rec);
         activeTraffic.push_back(sharedRec);
+        airportGroundRadar->add(sharedRec);
     } else {
+        airportGroundRadar->move(SGRect<double>(lat, lon), *i);
         (*i)->setPositionAndIntentions(currentPosition, intendedRoute);
         (*i)->setPositionAndHeading(lat, lon, heading, speed, alt);
 
