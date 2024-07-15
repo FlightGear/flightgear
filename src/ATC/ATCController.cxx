@@ -356,7 +356,7 @@ void FGATCController::transmit(FGTrafficRecord* rec, FGAirportDynamics* parent, 
             fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
         int onBoardRadioFreqI0 = (int)floor(onBoardRadioFreq0 * 100 + 0.5);
         int onBoardRadioFreqI1 = (int)floor(onBoardRadioFreq1 * 100 + 0.5);
-        SG_LOG(SG_ATC, SG_DEBUG, "Using " << onBoardRadioFreq0 << ", " << onBoardRadioFreq1 << " and " << stationFreq << " for " << text << std::endl);
+        SG_LOG(SG_ATC, SG_DEBUG, "COM1 : " << onBoardRadioFreq0 << " COM2 : " << onBoardRadioFreq1 << " Sending " << formatATCFrequency3_2(stationFreq) << " for " << text );
         if (stationFreq == 0) {
             SG_LOG(SG_ATC, SG_DEBUG, getName() << " stationFreq not found");
         }

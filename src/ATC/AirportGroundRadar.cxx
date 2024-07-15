@@ -140,7 +140,9 @@ const SGSharedPtr<FGTrafficRecord> AirportGroundRadar::getBlockedBy(SGSharedPtr<
 	aiObject->getPos().getLongitudeDeg()+QUERY_BOX_SIZE);
     SG_LOG(SG_ATC, SG_DEBUG, "Blocking Id : " << aiObject->getId());
 	index.query(queryBox, values);
+	SGSharedPtr<FGTrafficRecord> nearestTrafficRecord = nullptr;
 	for (SGSharedPtr<FGTrafficRecord> other: values) {
+		double nearestDist = HUGE_VAL;
         if (other->getId()!=aiObject->getId()){
 			double distM = SGGeodesy::distanceM(aiObject->getPos(), other->getPos());
 
@@ -150,11 +152,12 @@ const SGSharedPtr<FGTrafficRecord> AirportGroundRadar::getBlockedBy(SGSharedPtr<
             const double otherHeadingDiff = SGMiscd::normalizePeriodic(-180, 180, other->getHeading() - courseTowardOther);
 			const int threshold = getSize(aiObject) + getSize(other);
             SG_LOG(SG_ATC, SG_DEBUG, "Found Id : " << other->getId() << " Dist \t" << distM << "m Threshold " << threshold << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
-			if ( distM < threshold && headingDiff < 0 && abs(otherHeadingDiff) < 90 ){
+			if ( distM < threshold && distM < nearestDist && headingDiff < 0 && abs(otherHeadingDiff) < 90 ){
 				// from the right and in front
-				return other;
+				nearestDist = distM;
+				nearestTrafficRecord = other;
 			}
 		}
 	}
-    return nullptr;
+    return nearestTrafficRecord;
 }

@@ -278,6 +278,9 @@ public:
     void setHoldPosition (bool inst) {
         instruction.setHoldPosition(inst);
     };
+    int getWaitsForId() {
+        return waitsForId;
+    }
     void setWaitsForId(int id) {
         waitsForId = id;
     };

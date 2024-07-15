@@ -265,6 +265,11 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
                 (*i)->getCallsign() << " is blocked but no blocker found ");            
         }
     } else {
+        int oldWaitsForId = (*i)->getWaitsForId();
+        if (oldWaitsForId>0) {
+            SG_LOG(SG_ATC, SG_DEBUG,
+                (*i)->getCallsign() << " cleared of blocker " << oldWaitsForId);
+        }
         (*i)->clearSpeedAdjustment();
         (*i)->setWaitsForId(0);
         /*
@@ -273,8 +278,10 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
                 "Not Blocked " << (*i)->getCallsign() );
         }
         */
+       return;
     }
     //closest = current;
+    SG_LOG(SG_ATC, SG_ALERT, "Old blocking code reached");
 
     // previousInstruction = (*current)->getSpeedAdjustment();
     double mindist = HUGE_VAL;
