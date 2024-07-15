@@ -174,8 +174,9 @@ void FGStartupController::updateAircraftInformation(int id, SGGeod geod, double 
         checkTransmissionState(ATCMessageState::ACK_REPORT_RUNWAY, ATCMessageState::ACK_REPORT_RUNWAY, i, now, MSG_REQUEST_PUSHBACK_CLEARANCE, ATC_AIR_TO_GROUND);
     }
     if ((state == ATCMessageState::SWITCH_GROUND_TOWER) && available) {
+        bool pushbackBlocked = airportGroundRadar->isBlockedForPushback(*i);
         if (now > startTime + 200) {
-            if ((*i)->pushBackAllowed()) {
+            if ((*i)->pushBackAllowed() && !pushbackBlocked) {
                 (*i)->allowRepeatedTransmissions();
                 transmit((*i), &(*parent), MSG_PERMIT_PUSHBACK_CLEARANCE,
                          ATC_GROUND_TO_AIR, true);

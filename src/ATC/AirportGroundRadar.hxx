@@ -62,6 +62,7 @@ public:
 	size_t size();
 	/**Returns if this AI object is blocked by any other "known" aka visible to the Radar.*/
 	bool isBlocked(SGSharedPtr<FGTrafficRecord> aiObject);
+	bool isBlockedForPushback(SGSharedPtr<FGTrafficRecord> aiObject);
 		/**Returns which AI object is blocking this traffic.*/
 	const SGSharedPtr<FGTrafficRecord> getBlockedBy(SGSharedPtr<FGTrafficRecord> aiObject);
 };

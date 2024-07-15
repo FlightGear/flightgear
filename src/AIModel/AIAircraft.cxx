@@ -721,6 +721,7 @@ void FGAIAircraft::announcePositionToController()
             controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundController();
         break;
     default:
+        SG_LOG(SG_AI, SG_DEBUG, "AILeg " << leg << " not covered");        
         if (prevController) {
             SG_LOG(SG_AI, SG_BULK, "Will be signing off from " << prevController->getName());
         }
@@ -1002,7 +1003,9 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int 
         prev_dist_to_go = HUGE_VAL;
         return true;
     } else {
-        if (prev_dist_to_go == dist_to_go_m && fabs(groundTargetSpeed) > 0 && this->atGate().empty()) {
+        if (prev_dist_to_go == dist_to_go_m 
+            && fabs(groundTargetSpeed) > 0 
+            && this->atGate().empty()) {
             //FIXME must be suppressed when parked
             SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Aircraft stuck. Speed " << speed);
             stuckCounter++;

@@ -253,14 +253,20 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
     if (blocked) {
         auto blocker = airportGroundRadar->getBlockedBy(*i);
         if (blocker!=nullptr) {
-            SG_LOG(SG_ATC, SG_DEBUG,
-                (*i)->getCallsign() << " is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ")");
             (*i)->setWaitsForId(blocker->getId());
+            double distM = SGGeodesy::distanceM((*i)->getPos(), blocker->getPos());
+            int newSpeed = blocker->getSpeed() * (distM / 100);
+            SG_LOG(SG_ATC, SG_DEBUG,
+                (*i)->getCallsign() << " is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") new speed " << newSpeed);
+            (*i)->setSpeedAdjustment(newSpeed);
+            return;
         } else {
             SG_LOG(SG_ATC, SG_ALERT,
                 (*i)->getCallsign() << " is blocked but no blocker found ");            
         }
     } else {
+        (*i)->clearSpeedAdjustment();
+        (*i)->setWaitsForId(0);
         /*
         if ((*i)->getAircraft()!=nullptr) {
             SG_LOG(SG_ATC, SG_DEBUG,

@@ -111,7 +111,7 @@ class Node {
 
     bool move(const SGRectd& newPos, const SGRectd& pos, SGSharedPtr<T> value, const Equal& equalFkt, const GetBox& getBoxFunction)
     {
-        SG_LOG(SG_ATC, SG_DEBUG,
+        SG_LOG(SG_ATC, SG_BULK,
                "Moving  " << pos.x() << ":" << pos.y() << " to " << newPos.x() << ":" << newPos.y() << (isLeaf()?" leaf ":" "));
 
         // finding 
@@ -125,7 +125,7 @@ class Node {
         {
             auto oldQuadrant = getQuadrant(bounds, pos);
             auto newQuadrant = getQuadrant(bounds, newPos);
-            SG_LOG(SG_ATC, SG_DEBUG,
+            SG_LOG(SG_ATC, SG_BULK,
                "Moving from quadrant " << oldQuadrant << " to quadrant " << newQuadrant << " Level " << depth );
             if (oldQuadrant != UNKNOWN) {
                 if (oldQuadrant != newQuadrant) {
@@ -384,12 +384,16 @@ class QuadTree {
 
     bool move(const SGRectd& newPos, SGSharedPtr<T> value)
     {
+        /*
         bool found = rootNode.get()->printPath(getBoxFunction(value), value, equalFunction, "Start/");
         if (!found) {
             rootNode.get()->findFullScan(value, equalFunction, "Error/");
         }
+        */
         rootNode.get()->move(newPos, getBoxFunction(value), value, equalFunction, getBoxFunction);
+        /*
         rootNode.get()->printPath(newPos, value, equalFunction, "End/");
+        */
         return true;
     }
 

@@ -60,7 +60,7 @@ private:
 
     FGRunwayPreference rwyPrefs;
 
-
+    /**Controls all AI actifity at one airport*/
     SGSharedPtr<AirportGroundRadar> groundRadar;
     FGStartupController startupController;
     FGTowerController towerController;

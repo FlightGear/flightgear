@@ -92,6 +92,7 @@ protected:
     double dt_count;
     osg::Group* group;
     FGAirportDynamics *parent = nullptr;
+    /*Shared Groundradar. All controllers of an airport share it.*/
     SGSharedPtr<AirportGroundRadar> airportGroundRadar;
 
 
