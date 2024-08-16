@@ -21,6 +21,7 @@
 #include <osgXR/Settings>
 
 #include <simgear/scene/util/RenderConstants.hxx>
+#include <simgear/scene/viewer/Compositor.hxx>
 #include <simgear/scene/viewer/CompositorPass.hxx>
 
 #include <Main/fg_props.hxx>
@@ -28,6 +29,8 @@
 
 namespace flightgear
 {
+using namespace simgear;
+using namespace compositor;
 
 // Unfortunately, this can't be scoped inside VRManager::instance().
 // If its initialisation completes after main() calls atexit(fgExitCleanup),
@@ -89,6 +92,22 @@ VRManager::VRManager() :
 
     // No need for a change listener, but it should still be resolvable
     _propMirrorEnabled.node(true);
+
+    // Determine what multiview support the default compositor implements.
+    std::string compositorPath = fgGetString("/sim/rendering/default-compositor",
+                                              "Compositor/default");
+    SGPropertyNode_ptr compositorProps = Compositor::loadPropertyList(compositorPath);
+    if (compositorProps.valid()) {
+        _settings->setViewAlignmentMask(compositorProps->getIntValue("multiview/view-align-mask", 0));
+
+        _settings->allowVRMode(osgXR::Settings::VRMODE_SLAVE_CAMERAS);
+        if (compositorProps->getBoolValue("multiview/sceneview", false))
+            _settings->allowVRMode(osgXR::Settings::VRMODE_SCENE_VIEW);
+
+        _settings->allowSwapchainMode(osgXR::Settings::SWAPCHAIN_MULTIPLE);
+        if (compositorProps->getBoolValue("multiview/intermediates-tiled", false))
+            _settings->allowSwapchainMode(osgXR::Settings::SWAPCHAIN_SINGLE);
+    }
 }
 
 VRManager *VRManager::instance()
@@ -165,7 +184,7 @@ void VRManager::setVRMode(const std::string& mode)
         vrMode = osgXR::Settings::VRMODE_SCENE_VIEW;
     }
 
-    _settings->setVRMode(vrMode);
+    _settings->setPreferredVRModeMask(1u << vrMode);
     syncSettings();
 }
 
