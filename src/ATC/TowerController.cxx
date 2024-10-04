@@ -127,10 +127,19 @@ void FGTowerController::announcePosition(int id,
             rwy->addToDepartureQueue(ref);
         }
 
-        SG_LOG(SG_ATC, SG_DEBUG, ref->getTrafficRef()->getCallSign() << " You are number " << rwy->getdepartureQueueSize() << " for takeoff from " << rwy->getRunwayName());
+        SG_LOG(SG_ATC, SG_DEBUG, ref->getTrafficRef()->getCallSign() << "(" << ref->getID() << ") You are number " << rwy->getdepartureQueueSize() << " for takeoff from " << parent->parent()->getId() << "/" << rwy->getRunwayName());
     } else {
         airportGroundRadar->move(SGRect<double>(lat, lon), *i);
         (*i)->setPositionAndHeading(lat, lon, heading, speed, alt);
+        auto blocker = airportGroundRadar->getBlockedBy(*i);
+        if (blocker!=nullptr) {
+            (*i)->setWaitsForId(blocker->getId());
+            double distM = SGGeodesy::distanceM((*i)->getPos(), blocker->getPos());
+            int newSpeed = blocker->getSpeed() * (distM / 100);
+            SG_LOG(SG_ATC, SG_DEBUG,
+                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked for takeoff by " << blocker->getCallsign() << "(" << blocker->getId() << ") new speed " << newSpeed);
+            (*i)->setSpeedAdjustment(newSpeed);
+        }
     }
 }
 
@@ -228,11 +237,22 @@ void FGTowerController::updateAircraftInformation(int id, SGGeod geod,
         if ((*i)->getAircraft() == rwy->getFirstAircraftInDepartureQueue()) {
             SG_LOG(SG_ATC, SG_BULK,
                (*i)->getCallsign() << "| Cleared for runway " << getName() << " " << rwy->getRunwayName() << " Id " << id);
-            rwy->setCleared(id);
-            auto l_ac = rwy->getFirstOfStatus(AITakeOffStatus::QUEUED);
-            if (l_ac) {
-                l_ac->setTakeOffStatus(AITakeOffStatus::QUEUED);
-                // transmit takeoff clearance? But why twice?
+            auto blocker = airportGroundRadar->getBlockedBy(*i);
+            if (blocker==nullptr) {
+                // FIXME presumably this can be replaced by ground radar
+                rwy->setCleared(id);
+                auto l_ac = rwy->getFirstOfStatus(AITakeOffStatus::QUEUED);
+                if (l_ac) {
+                    l_ac->setTakeOffStatus(AITakeOffStatus::QUEUED);
+                    // transmit takeoff clearance? But why twice?
+                }
+            } else {
+                (*i)->setWaitsForId(blocker->getId());
+                double distM = SGGeodesy::distanceM((*i)->getPos(), blocker->getPos());
+                int newSpeed = blocker->getSpeed() * (distM / 100);
+                SG_LOG(SG_ATC, SG_DEBUG,
+                    (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked for takeoff by " << blocker->getCallsign() << "(" << blocker->getId() << ") new speed " << newSpeed);
+                (*i)->setSpeedAdjustment(newSpeed);
             }
         } else {
 #if 0   // Ticket #2770 : ATC/TowerController floods log
@@ -322,7 +342,7 @@ string FGTowerController::getName() {
 
 
 void FGTowerController::update(double dt)
-{
+{    
     FGATCController::eraseDeadTraffic();
 }
 

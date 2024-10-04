@@ -125,7 +125,7 @@ void FGGroundController::announcePosition(int id,
         rec->setAircraft(aircraft);
         // add to the front of the list of activeTraffic if the aircraft is already taxiing
         SGSharedPtr<FGTrafficRecord> sharedRec = static_cast<FGTrafficRecord*>(rec);
-        if (leg == 2) {
+        if (leg == AILeg::TAXI) {
             activeTraffic.push_front(sharedRec);
         } else {
             activeTraffic.push_back(sharedRec);
@@ -184,7 +184,7 @@ void FGGroundController::updateAircraftInformation(int id, SGGeod geod,
     //else
     //  setDt(0);
     (*current)->clearResolveCircularWait();
-    (*current)->setWaitsForId(0);
+    // (*current)->setWaitsForId(0);
     checkSpeedAdjustment(id, geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
     bool needsTaxiClearance = (*current)->getAircraft()->getTaxiClearanceRequest();
     if (!needsTaxiClearance) {
@@ -234,9 +234,7 @@ void FGGroundController::updateAircraftInformation(int id, SGGeod geod,
 
 void FGGroundController::checkSpeedAdjustment(int id, double lat,
         double lon, double heading,
-        double speed, double alt)
-{
-
+        double speed, double alt) {
     TrafficVectorIterator current, closest, closestOnNetwork;
     // bool previousInstruction;
 	TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
@@ -249,35 +247,23 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
     }
     current = i;
 
-    bool blocked = airportGroundRadar->isBlocked(*i);
-    if (blocked) {
-        auto blocker = airportGroundRadar->getBlockedBy(*i);
-        if (blocker!=nullptr) {
-            (*i)->setWaitsForId(blocker->getId());
-            double distM = SGGeodesy::distanceM((*i)->getPos(), blocker->getPos());
-            int newSpeed = blocker->getSpeed() * (distM / 100);
-            SG_LOG(SG_ATC, SG_DEBUG,
-                (*i)->getCallsign() << " is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") new speed " << newSpeed);
-            (*i)->setSpeedAdjustment(newSpeed);
-            return;
-        } else {
-            SG_LOG(SG_ATC, SG_ALERT,
-                (*i)->getCallsign() << " is blocked but no blocker found ");            
-        }
+    auto blocker = airportGroundRadar->getBlockedBy(*i);
+    if (blocker!=nullptr) {
+        (*i)->setWaitsForId(blocker->getId());
+        double distM = SGGeodesy::distanceM((*i)->getPos(), blocker->getPos());
+        int newSpeed = blocker->getSpeed() * (distM / 100);
+        SG_LOG(SG_ATC, SG_DEBUG,
+            (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") new speed " << newSpeed);
+        (*i)->setSpeedAdjustment(newSpeed);
+        return;
     } else {
         int oldWaitsForId = (*i)->getWaitsForId();
         if (oldWaitsForId>0) {
             SG_LOG(SG_ATC, SG_DEBUG,
-                (*i)->getCallsign() << " cleared of blocker " << oldWaitsForId);
+                (*i)->getCallsign() << "(" << (*i)->getId() << ") cleared of blocker " << oldWaitsForId);
         }
         (*i)->clearSpeedAdjustment();
         (*i)->setWaitsForId(0);
-        /*
-        if ((*i)->getAircraft()!=nullptr) {
-            SG_LOG(SG_ATC, SG_DEBUG,
-                "Not Blocked " << (*i)->getCallsign() );
-        }
-        */
        return;
     }
     //closest = current;
@@ -888,7 +874,7 @@ void FGGroundController::updateStartupTraffic(TrafficVectorIterator i,
         SG_LOG(SG_ATC, SG_ALERT, "updateStartupTraffic: missing aircraft performance");
         return;
     }
-    //FIXME use ground radar
+    //FIXME use ground radar for pushback
 
     (*i)->allowPushBack();
     (*i)->setPriority(priority++);

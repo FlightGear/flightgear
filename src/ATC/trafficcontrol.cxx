@@ -539,8 +539,13 @@ bool FGTrafficRecord::isActive(int margin) const
 
 void FGTrafficRecord::setSpeedAdjustment(double spd)
 {
-    instruction.setChangeSpeed(true);
-    instruction.setSpeed(spd);
+    if (spd!=0) {
+        instruction.setChangeSpeed(true);
+        instruction.setSpeed(spd);
+        instruction.setHoldPosition(false);
+    } else {
+        instruction.setHoldPosition(true);
+    }
 }
 
 void FGTrafficRecord::setHeadingAdjustment(double heading)

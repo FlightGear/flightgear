@@ -406,9 +406,15 @@ void FGATCController::signOff(int id)
                "AI error: Aircraft without traffic record is signing off from " << getName() << " at " << SG_ORIGIN << " list " << activeTraffic.empty());
         return;
     }
-    airportGroundRadar->remove(*i);
+    // if taken off or parked 
+    if (((*i)->getLeg() > AILeg::TAKEOFF && (*i)->getLeg() < AILeg::APPROACH) ||
+        ((*i)->getLeg() > AILeg::PARKING_TAXI)) {
+        airportGroundRadar->remove(*i);
+        SG_LOG(SG_ATC, SG_DEBUG, (*i)->getCallsign() << " (" << (*i)->getId() << ") signing off from " << getName() << "(" << getFrequency() << ") and removed from AirportGroundradar");
+    } else {
+        SG_LOG(SG_ATC, SG_DEBUG, (*i)->getCallsign() << " (" << (*i)->getId() << ") signing off from " << getName() << "(" << getFrequency() << ")");
+    }
 
-    SG_LOG(SG_ATC, SG_DEBUG, (*i)->getCallsign() << " (" << (*i)->getId() << ") signing off from " << getName() << "(" << getFrequency() << ")");
     int oldSize = activeTraffic.size();
     activeTraffic.erase(i);
     if ((oldSize - activeTraffic.size()) != 1) {

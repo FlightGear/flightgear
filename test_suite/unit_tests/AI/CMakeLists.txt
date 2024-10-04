@@ -5,6 +5,7 @@ set(TESTSUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_AIFlightPlan.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_AIManager.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_AirportGroundRadar.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_Quadtree.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_traffic.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_TrafficMgr.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_groundnet.cxx
@@ -18,6 +19,7 @@ set(TESTSUITE_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/test_AIFlightPlan.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_AIManager.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_AirportGroundRadar.hxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_Quadtree.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_traffic.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_TrafficMgr.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_groundnet.hxx

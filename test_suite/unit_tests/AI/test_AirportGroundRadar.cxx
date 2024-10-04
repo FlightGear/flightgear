@@ -59,19 +59,19 @@ void AirportGroundRadarTests::testFillingTree()
     SGGeod minPos = SGGeod::fromDeg(50,50);
     SGGeod maxPos = SGGeod::fromDeg(60,60);
 
-    AirportGroundRadar testsubject(minPos, maxPos);
+    AirportGroundRadar* testsubject = new AirportGroundRadar(minPos, maxPos);
 
-    FGTrafficRecord rec;
-    auto rect = testsubject.getBox(&rec);
+    FGTrafficRecord* rec = new FGTrafficRecord();
+    auto rect = testsubject->getBox(rec);
     CPPUNIT_ASSERT_EQUAL(0.0, rect.getMin().x());
     CPPUNIT_ASSERT_EQUAL(0.0, rect.getMin().y());
 
     for (size_t i = 0; i < 4; i++)
     {
       for (size_t j = 0; j < 4; j++) {
-        FGTrafficRecord rec1;
-        rec1.setPositionAndHeading((i/10)+50, (i/10)+50, 45, 20, 0);;
-        testsubject.add(&rec1);
+         FGTrafficRecord* rec1 = new FGTrafficRecord();
+        rec1->setPositionAndHeading((i/10)+50, (i/10)+50, 45, 20, 0);;
+        testsubject->add(rec1);
       }
     }
 }
@@ -81,22 +81,26 @@ void AirportGroundRadarTests::testFillingTreeSplit()
     SGGeod minPos = SGGeod::fromDeg(50,50);
     SGGeod maxPos = SGGeod::fromDeg(60,60);
 
-    AirportGroundRadar testsubject(minPos, maxPos);
+    AirportGroundRadar* testsubject = new AirportGroundRadar(minPos, maxPos);
 
-    FGTrafficRecord rec;
-    auto rect = testsubject.getBox(&rec);
+    FGTrafficRecord* rec = new FGTrafficRecord();
+    auto rect = testsubject->getBox(rec);
     CPPUNIT_ASSERT_EQUAL(0.0, rect.getMin().x());
     CPPUNIT_ASSERT_EQUAL(0.0, rect.getMin().y());
 
+    int id = 0;
     for (size_t i = 0; i < 10; i++)
     {
       for (size_t j = 0; j < 10; j++) {
-        FGTrafficRecord rec;
-        rec.setPositionAndHeading((i/10)+50, (i/10)+50, 45, 20, 0);;
-        testsubject.add(&rec);
+        FGTrafficRecord* rec = new FGTrafficRecord();
+        id++;
+        rec->setId(id);
+        rec->setPositionAndHeading((i/10)+50, (i/10)+50, 45, 20, 0);
+        testsubject->add(rec);
+        CPPUNIT_ASSERT_EQUAL(size_t(id), testsubject->size());
       }
     }
-    CPPUNIT_ASSERT_EQUAL(size_t(100), testsubject.size());
+    CPPUNIT_ASSERT_EQUAL(size_t(100), testsubject->size());
 }
 
 void AirportGroundRadarTests::testFillingTreeRemove()
@@ -104,35 +108,40 @@ void AirportGroundRadarTests::testFillingTreeRemove()
     SGGeod minPos = SGGeod::fromDeg(50,50);
     SGGeod maxPos = SGGeod::fromDeg(60,60);
 
-    AirportGroundRadar testsubject(minPos, maxPos);
+    AirportGroundRadar* testsubject = new AirportGroundRadar(minPos, maxPos);
 
-    FGTrafficRecord rec33;
-    auto rect = testsubject.getBox(&rec33);
+    FGTrafficRecord* rec33 = new FGTrafficRecord();
+
+    auto rect = testsubject->getBox(rec33);
     CPPUNIT_ASSERT_EQUAL(0.0, rect.getMin().x());
     CPPUNIT_ASSERT_EQUAL(0.0, rect.getMin().y());
 
+    int id = 0;
     for (size_t i = 0; i < 100; i++)
     {
-      FGTrafficRecord rec;
-      rec.setPositionAndHeading((i/10)+50, (i/10)+50, 45, 20, 0);;
-      testsubject.add(&rec);
-      bool removed = testsubject.remove(&rec);
+      FGTrafficRecord* rec = new FGTrafficRecord();
+      rec->setPositionAndHeading((i/10)+50, (i/10)+50, 45, 20, 0);
+      rec->setId(id++);
+      testsubject->add(rec);
+      bool removed = testsubject->remove(rec);
       CPPUNIT_ASSERT_EQUAL(true, removed);
-      CPPUNIT_ASSERT_EQUAL(size_t(0), testsubject.size());
+      CPPUNIT_ASSERT_EQUAL(size_t(0), testsubject->size());
     }
 
-    FGTrafficRecord rec1;
-    rec1.setPositionAndHeading(50, 50, 45, 20, 0);;
-    testsubject.add(&rec1);
-    FGTrafficRecord rec2;
-    rec2.setPositionAndHeading(50, 50, 45, 20, 0);;
-    testsubject.add(&rec2);
-    CPPUNIT_ASSERT_EQUAL(size_t(2), testsubject.size());
+    FGTrafficRecord* rec1 = new FGTrafficRecord();
+    rec1->setId(2);
+    rec1->setPositionAndHeading(50, 50, 45, 20, 0);;
+    testsubject->add(rec1);
+    FGTrafficRecord* rec2 = new FGTrafficRecord();
+    rec2->setId(3);
+    rec2->setPositionAndHeading(50, 50, 45, 20, 0);;
+    testsubject->add(rec2);
+    CPPUNIT_ASSERT_EQUAL(size_t(2), testsubject->size());
 
-    testsubject.remove(&rec1);
-    testsubject.remove(&rec2);
+    testsubject->remove(rec1);
+    testsubject->remove(rec2);
 
-    CPPUNIT_ASSERT_EQUAL(size_t(0), testsubject.size());
+    CPPUNIT_ASSERT_EQUAL(size_t(0), testsubject->size());
 
 }
 
@@ -141,17 +150,18 @@ void AirportGroundRadarTests::testBlocked()
   SGGeod minPos = SGGeod::fromDeg(50,50);
   SGGeod maxPos = SGGeod::fromDeg(60,60);
 
-  AirportGroundRadar testsubject(minPos, maxPos);
-  FGTrafficRecord rec1;
-  rec1.setId(4);
-  rec1.setPositionAndHeading(50, 50, 45, 20, 0);
-  testsubject.add(&rec1);
-  FGTrafficRecord rec2;
-  rec2.setId(6);
-  rec2.setPositionAndHeading(50, 50.001, 315, 20, 0);;
-  testsubject.add(&rec2);
-  CPPUNIT_ASSERT_EQUAL(false, testsubject.isBlocked(&rec1));
-  CPPUNIT_ASSERT_EQUAL(false, testsubject.isBlocked(&rec2));
+  AirportGroundRadar* testsubject = new AirportGroundRadar(minPos, maxPos);
+   FGTrafficRecord* rec1 = new FGTrafficRecord();
+  rec1->setId(4);
+  rec1->setPositionAndHeading(50, 50, 45, 20, 0);
+  testsubject->add(rec1);
+   FGTrafficRecord* rec2 = new FGTrafficRecord();
+  rec2->setId(6);
+  rec2->setPositionAndHeading(50, 50.001, 310, 20, 0);;
+  testsubject->add(rec2);
+  CPPUNIT_ASSERT_EQUAL(true, testsubject->isBlocked(rec1));
+  //Right before left
+  CPPUNIT_ASSERT_EQUAL(false, testsubject->isBlocked(rec2));
 }
 
 void AirportGroundRadarTests::testBlocked1()
@@ -159,17 +169,17 @@ void AirportGroundRadarTests::testBlocked1()
   SGGeod minPos = SGGeod::fromDeg(50,50);
   SGGeod maxPos = SGGeod::fromDeg(60,60);
 
-  AirportGroundRadar testsubject(minPos, maxPos);
-  FGTrafficRecord rec1;
-  rec1.setId(1);
-  rec1.setPositionAndHeading(50, 50, 315, 20, 0);
-  testsubject.add(&rec1);
-  FGTrafficRecord rec2;
-  rec2.setId(2);
-  rec2.setPositionAndHeading(50, 50.001, 45, 20, 0);
-  testsubject.add(&rec2);
-  CPPUNIT_ASSERT_EQUAL(true, testsubject.isBlocked(&rec1));
-  CPPUNIT_ASSERT_EQUAL(false, testsubject.isBlocked(&rec2));
+  AirportGroundRadar* testsubject = new AirportGroundRadar(minPos, maxPos);
+  FGTrafficRecord* rec1 = new FGTrafficRecord();
+  rec1->setId(1);
+  rec1->setPositionAndHeading(50, 50, 315, 20, 0);
+  testsubject->add(rec1);
+  FGTrafficRecord* rec2 = new FGTrafficRecord();
+  rec2->setId(2);
+  rec2->setPositionAndHeading(50, 50.001, 45, 20, 0);
+  testsubject->add(rec2);
+  CPPUNIT_ASSERT_EQUAL(false, testsubject->isBlocked(rec1));
+  CPPUNIT_ASSERT_EQUAL(false, testsubject->isBlocked(rec2));
 }
 
 void AirportGroundRadarTests::testBlockedBy1()
@@ -177,24 +187,23 @@ void AirportGroundRadarTests::testBlockedBy1()
   SGGeod minPos = SGGeod::fromDeg(50,50);
   SGGeod maxPos = SGGeod::fromDeg(60,60);
 
-  AirportGroundRadar testsubject(minPos, maxPos);
-  FGTrafficRecord rec1;
-  rec1.setId(2);
-  rec1.setPositionAndHeading(50, 50, 315, 20, 0);
-  testsubject.add(&rec1);
+  AirportGroundRadar* testsubject = new AirportGroundRadar(minPos, maxPos);
+  FGTrafficRecord* rec1 = new FGTrafficRecord();
+  rec1->setId(2);
+  rec1->setPositionAndHeading(50, 50, 315, 20, 0);
+  testsubject->add(rec1);
   
-  FGTrafficRecord rec2;
-  rec2.setId(5);
-  rec2.setPositionAndHeading(50, 50.001, 45, 20, 0);
-  testsubject.add(&rec2);
+  FGTrafficRecord* rec2 = new FGTrafficRecord();
+  rec2->setId(5);
+  rec2->setPositionAndHeading(50, 50.001, 45, 20, 0);
+  testsubject->add(rec2);
 
-  FGTrafficRecord rec3;
-  rec3.setId(4);
-  rec3.setPositionAndHeading(50, 50.003, 45, 20, 0);
-  testsubject.add(&rec3);
+  FGTrafficRecord* rec3 = new FGTrafficRecord();
+  rec3->setId(4);
+  rec3->setPositionAndHeading(50, 50.003, 45, 20, 0);
+  testsubject->add(rec3);
 
-  CPPUNIT_ASSERT(testsubject.isBlockedBy(&rec2)==nullptr);
-  CPPUNIT_ASSERT_EQUAL(rec2.getId(), testsubject.isBlockedBy(&rec1)->getId());
+  CPPUNIT_ASSERT(testsubject->getBlockedBy(rec1)==nullptr);
 }
 
 void AirportGroundRadarTests::testBlockedByQueue()
@@ -202,32 +211,33 @@ void AirportGroundRadarTests::testBlockedByQueue()
   SGGeod minPos = SGGeod::fromDeg(50,50);
   SGGeod maxPos = SGGeod::fromDeg(60,60);
 
-  AirportGroundRadar testsubject(minPos, maxPos);
-  FGTrafficRecord rec1;
-  rec1.setId(2);
-  rec1.setPositionAndHeading(50, 50, 270, 20, 0);
-  testsubject.add(&rec1);
+  AirportGroundRadar* testsubject = new AirportGroundRadar(minPos, maxPos);
+   FGTrafficRecord* rec1 = new FGTrafficRecord();
+  rec1->setId(2);
+  rec1->setPositionAndHeading(50, 50, 270, 20, 0);
+  testsubject->add(rec1);
   
-  FGTrafficRecord rec2;
-  rec2.setId(4);
-  rec2.setPositionAndHeading(50, 50.001, 270, 20, 0);
-  testsubject.add(&rec2);
+  FGTrafficRecord* rec2 = new FGTrafficRecord();
+  rec2->setId(4);
+  rec2->setPositionAndHeading(50, 50.001, 270, 20, 0);
+  testsubject->add(rec2);
 
-  FGTrafficRecord rec3;
-  rec3.setId(26);
-  rec3.setPositionAndHeading(50, 50.002, 270, 20, 0);
-  testsubject.add(&rec3);
+  FGTrafficRecord* rec3 = new FGTrafficRecord();
+  rec3->setId(26);
+  rec3->setPositionAndHeading(50, 50.002, 270, 20, 0);
+  testsubject->add(rec3);
 
   // Not near
-  FGTrafficRecord boatyMcBoatface4;
-  boatyMcBoatface4.setPositionAndHeading(50, 50.005, 270, 20, 0);
-  testsubject.add(&boatyMcBoatface4);
+  FGTrafficRecord* boatyMcBoatface4 = new FGTrafficRecord();
+  boatyMcBoatface4->setId(66);
+  boatyMcBoatface4->setPositionAndHeading(50, 50.005, 270, 20, 0);
+  testsubject->add(boatyMcBoatface4);
 
-  CPPUNIT_ASSERT_MESSAGE("Blocker of rec2", testsubject.isBlockedBy(&rec2)!=nullptr);
-  CPPUNIT_ASSERT_MESSAGE("Blocker of rec3", testsubject.isBlockedBy(&rec3)!=nullptr);
-  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface4 (None)", testsubject.isBlockedBy(&boatyMcBoatface4)==nullptr);
-  CPPUNIT_ASSERT_EQUAL(rec1.getId(), testsubject.isBlockedBy(&rec2)->getId());
-  CPPUNIT_ASSERT_EQUAL(rec2.getId(), testsubject.isBlockedBy(&rec3)->getId());
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec2", testsubject->getBlockedBy(rec2)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec3", testsubject->getBlockedBy(rec3)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface4 (None)", testsubject->getBlockedBy(boatyMcBoatface4)==nullptr);
+  CPPUNIT_ASSERT_EQUAL(rec1->getId(), testsubject->getBlockedBy(rec2)->getId());
+  CPPUNIT_ASSERT_EQUAL(rec2->getId(), testsubject->getBlockedBy(rec3)->getId());
 }
 
 void AirportGroundRadarTests::testMove()
@@ -235,37 +245,37 @@ void AirportGroundRadarTests::testMove()
   SGGeod minPos = SGGeod::fromDeg(50,50);
   SGGeod maxPos = SGGeod::fromDeg(60,60);
 
-  AirportGroundRadar testsubject(minPos, maxPos);
-  FGTrafficRecord rec1;
-  rec1.setId(2);
+  AirportGroundRadar* testsubject = new AirportGroundRadar(minPos, maxPos);
+   FGTrafficRecord* rec1 = new FGTrafficRecord();
+  rec1->setId(2);
   // Will be moved to 50/50
-  rec1.setPositionAndHeading(60, 60, 270, 20, 0);
-  testsubject.add(&rec1);
+  rec1->setPositionAndHeading(60, 60, 270, 20, 0);
+  testsubject->add(rec1);
   
-  FGTrafficRecord rec2;
-  rec2.setId(4);
-  rec2.setPositionAndHeading(50, 50.001, 270, 20, 0);
-  testsubject.add(&rec2);
+   FGTrafficRecord* rec2 = new FGTrafficRecord();
+  rec2->setId(4);
+  rec2->setPositionAndHeading(50, 50.001, 270, 20, 0);
+  testsubject->add(rec2);
 
-  FGTrafficRecord rec3;
-  rec3.setId(26);
-  rec3.setPositionAndHeading(50, 50.002, 270, 20, 0);
-  testsubject.add(&rec3);
+   FGTrafficRecord* rec3 = new FGTrafficRecord();
+  rec3->setId(26);
+  rec3->setPositionAndHeading(50, 50.002, 270, 20, 0);
+  testsubject->add(rec3);
 
-  testsubject.move(SGRect<double>(50,50), &rec1);
-  rec1.setPositionAndHeading(50, 50, 270, 20, 0);
+  testsubject->move(SGRect<double>(50,50), rec1);
+  rec1->setPositionAndHeading(50, 50, 270, 20, 0);
 
   // Not near
-  FGTrafficRecord boatyMcBoatface4;
-  boatyMcBoatface4.setId(33);
-  boatyMcBoatface4.setPositionAndHeading(50, 50.005, 270, 20, 0);
-  testsubject.add(&boatyMcBoatface4);
+  FGTrafficRecord* boatyMcBoatface4 = new FGTrafficRecord();
+  boatyMcBoatface4->setId(33);
+  boatyMcBoatface4->setPositionAndHeading(50, 50.005, 270, 20, 0);
+  testsubject->add(boatyMcBoatface4);
 
-  CPPUNIT_ASSERT_MESSAGE("Blocker of rec2", testsubject.isBlockedBy(&rec2)!=nullptr);
-  CPPUNIT_ASSERT_MESSAGE("Blocker of rec3", testsubject.isBlockedBy(&rec3)!=nullptr);
-  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface4 (None)", testsubject.isBlockedBy(&boatyMcBoatface4)==nullptr);
-  CPPUNIT_ASSERT_EQUAL(rec1.getId(), testsubject.isBlockedBy(&rec2)->getId());
-  CPPUNIT_ASSERT_EQUAL(rec2.getId(), testsubject.isBlockedBy(&rec3)->getId());
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec2", testsubject->getBlockedBy(rec2)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec3", testsubject->getBlockedBy(rec3)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface4 (None)", testsubject->getBlockedBy(boatyMcBoatface4)==nullptr);
+  CPPUNIT_ASSERT_EQUAL(rec1->getId(), testsubject->getBlockedBy(rec2)->getId());
+  CPPUNIT_ASSERT_EQUAL(rec2->getId(), testsubject->getBlockedBy(rec3)->getId());
 }
 
 void AirportGroundRadarTests::testMoveLarge()
@@ -273,77 +283,77 @@ void AirportGroundRadarTests::testMoveLarge()
   SGGeod minPos = SGGeod::fromDeg(50,50);
   SGGeod maxPos = SGGeod::fromDeg(60,60);
 
-  AirportGroundRadar testsubject(minPos, maxPos);
-  FGTrafficRecord rec1;
-  rec1.setId(2);
+  AirportGroundRadar* testsubject = new AirportGroundRadar(minPos, maxPos);
+  FGTrafficRecord* rec1 = new FGTrafficRecord();
+  rec1->setId(2);
   // Will be moved to 50/50
-  rec1.setPositionAndHeading(60, 60, 270, 20, 0);
-  testsubject.add(&rec1);
+  rec1->setPositionAndHeading(60, 60, 270, 20, 0);
+  testsubject->add(rec1);
   
-  FGTrafficRecord rec2;
-  rec2.setId(4);
-  rec2.setPositionAndHeading(50, 50.001, 270, 20, 0);
-  testsubject.add(&rec2);
+  FGTrafficRecord* rec2 = new FGTrafficRecord();
+  rec2->setId(4);
+  rec2->setPositionAndHeading(50, 50.001, 270, 20, 0);
+  testsubject->add(rec2);
 
-  FGTrafficRecord rec3;
-  rec3.setId(26);
-  rec3.setPositionAndHeading(50, 50.002, 270, 20, 0);
-  testsubject.add(&rec3);
+  FGTrafficRecord* rec3 = new FGTrafficRecord();
+  rec3->setId(26);
+  rec3->setPositionAndHeading(50, 50.002, 270, 20, 0);
+  testsubject->add(rec3);
 
   // Not near
-  FGTrafficRecord boatyMcBoatface4;
-  boatyMcBoatface4.setId(33);
-  boatyMcBoatface4.setPositionAndHeading(50, 50.005, 270, 20, 0);
-  testsubject.add(&boatyMcBoatface4);
+  FGTrafficRecord* boatyMcBoatface4 = new FGTrafficRecord();
+  boatyMcBoatface4->setId(33);
+  boatyMcBoatface4->setPositionAndHeading(50, 50.005, 270, 20, 0);
+  testsubject->add(boatyMcBoatface4);
 
   for( int i=100; i < 900; i++) {
     // Not near
-    FGTrafficRecord boatyMcBoatface4;
-    boatyMcBoatface4.setId(i);
+    FGTrafficRecord* boatyMcBoatface5 = new FGTrafficRecord();
+    boatyMcBoatface5->setId(i);
     double fraction = 0.01*i;
-    boatyMcBoatface4.setPositionAndHeading((50.5+fraction), (50.5+fraction), 270, 20, 0);
-    testsubject.add(&boatyMcBoatface4);
+    boatyMcBoatface5->setPositionAndHeading((50.5+fraction), (50.5+fraction), 270, 20, 0);
+    testsubject->add(boatyMcBoatface5);
   }
 
-  testsubject.move(SGRect<double>(50,50), &rec1);
-  rec1.setPositionAndHeading(50, 50, 270, 20, 0);
+  testsubject->move(SGRect<double>(50,50), rec1);
+  rec1->setPositionAndHeading(50, 50, 270, 20, 0);
 
-  CPPUNIT_ASSERT_MESSAGE("Blocker of rec2", testsubject.isBlockedBy(&rec2)!=nullptr);
-  CPPUNIT_ASSERT_MESSAGE("Blocker of rec3", testsubject.isBlockedBy(&rec3)!=nullptr);
-  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface4 (None)", testsubject.isBlockedBy(&boatyMcBoatface4)==nullptr);
-  CPPUNIT_ASSERT_EQUAL(rec1.getId(), testsubject.isBlockedBy(&rec2)->getId());
-  CPPUNIT_ASSERT_EQUAL(rec2.getId(), testsubject.isBlockedBy(&rec3)->getId());
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec2", testsubject->getBlockedBy(rec2)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec3", testsubject->getBlockedBy(rec3)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface4 (None)", testsubject->getBlockedBy(boatyMcBoatface4)==nullptr);
+  CPPUNIT_ASSERT_EQUAL(rec1->getId(), testsubject->getBlockedBy(rec2)->getId());
+  CPPUNIT_ASSERT_EQUAL(rec2->getId(), testsubject->getBlockedBy(rec3)->getId());
 }
 
 void AirportGroundRadarTests::testAirport() {
   FGAirportRef egph = FGAirport::getByIdent("EGPH");
   CPPUNIT_ASSERT_MESSAGE("Airport loaded", egph!=nullptr);
-  AirportGroundRadar testsubject(egph);
-  FGTrafficRecord rec1;
-  rec1.setId(8);
-  rec1.setPositionAndHeading(50, 50, 270, 20, 0);
-  testsubject.add(&rec1);
+  AirportGroundRadar* testsubject = new AirportGroundRadar(egph);
+  FGTrafficRecord* rec1 = new FGTrafficRecord();
+  rec1->setId(8);
+  rec1->setPositionAndHeading(egph->getLatitude(), egph->getLongitude(), 270, 20, 0);
+  testsubject->add(rec1);
   
-  FGTrafficRecord rec2;
-  rec2.setId(2);
-  rec2.setPositionAndHeading(50, 50.001, 270, 20, 0);;
-  testsubject.add(&rec2);
+  FGTrafficRecord* rec2 = new FGTrafficRecord();
+  rec2->setId(2);
+  rec2->setPositionAndHeading(egph->getLatitude(), egph->getLongitude() + 0.001, 270, 20, 0);;
+  testsubject->add(rec2);
 
-  FGTrafficRecord rec3;
-  rec3.setId(7);
-  rec3.setPositionAndHeading(50, 50.002, 270, 20, 0);;
-  testsubject.add(&rec3);
+  FGTrafficRecord* rec3 = new FGTrafficRecord();
+  rec3->setId(7);
+  rec3->setPositionAndHeading(egph->getLatitude(), egph->getLongitude() + 0.002, 270, 20, 0);;
+  testsubject->add(rec3);
 
   // Not near
-  FGTrafficRecord boatyMcBoatface4;
-  boatyMcBoatface4.setId(2);
-  boatyMcBoatface4.setPositionAndHeading(50, 50.005, 270, 20, 0);
-  testsubject.add(&boatyMcBoatface4);
+  FGTrafficRecord* boatyMcBoatface4 = new FGTrafficRecord();
+  boatyMcBoatface4->setId(55);
+  boatyMcBoatface4->setPositionAndHeading(egph->getLatitude(), egph->getLongitude() + 0.007, 270, 20, 0);
+  testsubject->add(boatyMcBoatface4);
 
-  CPPUNIT_ASSERT_MESSAGE("Blocker of rec2", testsubject.isBlockedBy(&rec2)!=nullptr);
-  CPPUNIT_ASSERT_MESSAGE("Blocker of rec3", testsubject.isBlockedBy(&rec3)!=nullptr);
-  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface4 (None)", testsubject.isBlockedBy(&boatyMcBoatface4)==nullptr);
-  CPPUNIT_ASSERT_EQUAL(rec1.getId(), testsubject.isBlockedBy(&rec2)->getId());
-  CPPUNIT_ASSERT_EQUAL(rec2.getId(), testsubject.isBlockedBy(&rec3)->getId());  
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec2", testsubject->getBlockedBy(rec2)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of rec3", testsubject->getBlockedBy(rec3)!=nullptr);
+  CPPUNIT_ASSERT_MESSAGE("Blocker of boatyMcBoatface4 (None)", testsubject->getBlockedBy(boatyMcBoatface4)==nullptr);
+  CPPUNIT_ASSERT_EQUAL(rec1->getId(), testsubject->getBlockedBy(rec2)->getId());
+  CPPUNIT_ASSERT_EQUAL(rec2->getId(), testsubject->getBlockedBy(rec3)->getId());  
 }
 
