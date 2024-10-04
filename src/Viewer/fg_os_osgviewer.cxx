@@ -31,10 +31,10 @@
 #include <string>
 
 #include <simgear/compiler.h>
-#include <simgear/debug/OsgIoCapture.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/scene/util/OsgIoCapture.hxx>
 
 #include <osg/Camera>
 #include <osg/GraphicsContext>
@@ -198,7 +198,7 @@ void updateOSGNotifyLevel()
 
 void fgOSOpenWindow(bool stencil)
 {
-    osg::setNotifyHandler(new NotifyLogger);
+    osg::setNotifyHandler(new SGNotifyHandler);
 
     auto composite_viewer = dynamic_cast<osgViewer::CompositeViewer*>(
         globals->get_renderer()->getViewerBase());

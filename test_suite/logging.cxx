@@ -23,7 +23,7 @@
 #include "logging.hxx"
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/debug/OsgIoCapture.hxx>
+#include <simgear/scene/util/OsgIoCapture.hxx>
 
 
 // The global stream capture data structure.
@@ -103,7 +103,7 @@ void setupLogging(sgDebugClass c, sgDebugPriority p, bool split)
     log.setTestingMode(true);
 
     // OSG IO capture.
-    osg::setNotifyHandler(new NotifyLogger);
+    osg::setNotifyHandler(new SGNotifyHandler);
 
     // IO capture.
     capturedIO &obj = getIOstreams(c, p);
