@@ -304,7 +304,7 @@ void LauncherController::collectAircraftArgs()
             m_config->setArg("aircraft-dir", setFileInfo.dir().absolutePath());
             QString setFile = setFileInfo.fileName();
             Q_ASSERT(setFile.endsWith("-set.xml"));
-            setFile.truncate(setFile.count() - 8); // drop the '-set.xml' portion
+            setFile.truncate(setFile.size() - 8); // drop the '-set.xml' portion
             m_config->setArg("aircraft", setFile);
         } else if (m_selectedAircraft.scheme() == "package") {
             // no need to set aircraft-dir, handled by the corresponding code
@@ -397,7 +397,7 @@ void LauncherController::doApply()
             QFileInfo setFileInfo(m_selectedAircraft.toLocalFile());
             QString setFile = setFileInfo.fileName();
             Q_ASSERT(setFile.endsWith("-set.xml"));
-            setFile.truncate(setFile.count() - 8); // drop the '-set.xml' portion
+            setFile.truncate(setFile.size() - 8); // drop the '-set.xml' portion
             aircraftDir = setFileInfo.dir().absolutePath().toStdString();
             aircraftPropValue = setFile.toStdString();
         } else if (m_selectedAircraft.scheme() == "package") {

@@ -123,10 +123,10 @@ endif()
 
 # ensure run/debug paths are set automatically in Visual Studio
 if (MSVC)
-  file(TO_NATIVE_PATH "${FG_QT_BIN_DIR}" _qt5_bin_dir_native)
+  file(TO_NATIVE_PATH "${FG_QT_BIN_DIR}" _qt_bin_dir_native)
   file(TO_NATIVE_PATH "${FINAL_MSVC_3RDPARTY_DIR}/bin" _msvc_3rdparty_bin_dir)
   file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}" _install_bin_dir)
 
   set_property(TARGET fgfs PROPERTY
-  VS_GLOBAL_LocalDebuggerEnvironment "PATH=${_install_bin_dir};${_msvc_3rdparty_bin_dir};${_qt5_bin_dir_native}")
+  VS_GLOBAL_LocalDebuggerEnvironment "PATH=${_install_bin_dir};${_msvc_3rdparty_bin_dir};${_qt_bin_dir_native}")
 endif()

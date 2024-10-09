@@ -20,7 +20,6 @@
 
 #include "AirportDiagram.hxx"
 
-#include <limits>
 
 #include <simgear/sg_inlines.h>
 
@@ -115,8 +114,8 @@ AirportDiagram::AirportDiagram(QQuickItem* pr) :
     QFont f;
     f.setPixelSize(24.0);
     f.setBold(true);
-    QFontMetricsF metrics(f);
-    qreal xOffset = metrics.width("H") * 0.5;
+    QFontMetrics metrics(f);
+    qreal xOffset = metrics.horizontalAdvance("H") * 0.5;
     qreal yOffset = metrics.capHeight() * 0.5;
     m_helipadIconPath.addText(-xOffset, yOffset, f, "H");
 }

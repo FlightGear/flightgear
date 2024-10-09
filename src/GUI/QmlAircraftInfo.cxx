@@ -83,18 +83,6 @@ private:
 ////////////////////////////////////////////////////////////////////////////
 
 
-struct StateInfo
-{
-    string_list tags;
-    QString name;   // human-readable name, or blank if we auto-generate this
-    QString description; // human-readable description
-
-    std::string primaryTag() const
-    { return tags.front(); }
-};
-
-using AircraftStateVec = std::vector<StateInfo>;
-
 static bool readAircraftStates(const SGPropertyNode_ptr root, AircraftStateVec& result)
 {
     result.clear();
@@ -147,155 +135,150 @@ QString humanNameFromStateTag(const std::string& tag)
     return QString::fromStdString(tag);
 }
 
-class StatesModel : public QAbstractListModel
+////////////////////////////////////////////////////////////////////////////
+
+
+StatesModel::StatesModel(QObject* pr) : QAbstractListModel(pr)
 {
-    Q_OBJECT
+}
 
-public:
-    StatesModel(QObject* pr) : QAbstractListModel(pr)
-    {
-    }
+void StatesModel::clear()
+{
+    beginResetModel();
+    _data.clear();
+    _explicitAutoState = false;
+    endResetModel();
+}
 
-    void clear()
-    {
-        beginResetModel();
-        _data.clear();
-        _explicitAutoState = false;
+void StatesModel::initWithStates(const AircraftStateVec& states)
+{
+    beginResetModel();
+    _data = states;
+    _explicitAutoState = false;
+
+    // we use an empty model for aircraft with no states defined
+    if (states.empty()) {
         endResetModel();
+        return;
     }
 
-    void initWithStates(const AircraftStateVec& states)
-    {
-        beginResetModel();
-        _data = states;
-        _explicitAutoState = false;
+    // sort which places 'auto' item at the front if it exists
+    std::sort(_data.begin(), _data.end(), [](const AircraftStateInfo& a, const AircraftStateInfo& b) {
+        if (a.primaryTag() == "auto") return true;
+        if (b.primaryTag() == "auto") return false;
+        return a.primaryTag() < b.primaryTag();
+    });
 
-        // we use an empty model for aircraft with no states defined
-        if (states.empty()) {
-            endResetModel();
-            return;
-        }
-
-        // sort which places 'auto' item at the front if it exists
-        std::sort(_data.begin(), _data.end(), [](const StateInfo& a, const StateInfo& b) {
-            if (a.primaryTag() == "auto") return true;
-            if (b.primaryTag() == "auto") return false;
-            return a.primaryTag() < b.primaryTag();
-        });
-
-        if (_data.front().primaryTag() == "auto") {
-            // track if the aircraft supplied an 'auto' state, in which case
-            // we will not run our own selection logic
-            _explicitAutoState = true;
-        } else {
-            _data.insert(_data.begin(), {{"auto"}, {}, tr("Select state based on startup position.")});
-        }
-
-        endResetModel();
+    if (_data.front().primaryTag() == "auto") {
+        // track if the aircraft supplied an 'auto' state, in which case
+        // we will not run our own selection logic
+        _explicitAutoState = true;
+    } else {
+        _data.insert(_data.begin(), {{"auto"}, {}, tr("Select state based on startup position.")});
     }
 
-    Q_INVOKABLE int indexForTag(QString s) const
-    {
-        return indexForTag(s.toStdString());
-    }
+    endResetModel();
+}
 
-    int indexForTag(const std::string &tag) const
-    {
-        auto it = std::find_if(_data.begin(), _data.end(), [tag](const StateInfo& i) {
-            auto tagIt = std::find(i.tags.begin(), i.tags.end(), tag);
-            return (tagIt != i.tags.end());
-        });
+int StatesModel::indexForTag(QString s) const
+{
+    return indexForTag(s.toStdString());
+}
 
-        if (it == _data.end())
-            return -1;
+int StatesModel::indexForTag(const std::string& tag) const
+{
+    auto it = std::find_if(_data.begin(), _data.end(), [tag](const AircraftStateInfo& i) {
+        auto tagIt = std::find(i.tags.begin(), i.tags.end(), tag);
+        return (tagIt != i.tags.end());
+    });
 
-        return static_cast<int>(std::distance(_data.begin(), it));
-    }
+    if (it == _data.end())
+        return -1;
 
-    int rowCount(const QModelIndex &) const override
-    {
-        return static_cast<int>(_data.size());
-    }
+    return static_cast<int>(std::distance(_data.begin(), it));
+}
 
-    QVariant data(const QModelIndex &index, int role) const override
-    {
-        size_t i;
-        if (!makeSafeIndex(index.row(), i))
-            return {};
-        const StateInfo& s = _data.at(i);
-        if (role == Qt::DisplayRole) {
-            if (s.name.isEmpty()) {
-                return humanNameFromStateTag(s.primaryTag());
-            }
-            return s.name;
-        } else if (role == QmlAircraftInfo::StateTagRole) {
-            return QString::fromStdString(s.primaryTag());
-        } else if (role == QmlAircraftInfo::StateDescriptionRole) {
-            return s.description;
-        } else if (role == QmlAircraftInfo::StateExplicitRole) {
-            if (s.primaryTag() == "auto")
-                return _explicitAutoState;
-            return true;
-        }
+int StatesModel::rowCount(const QModelIndex&) const
+{
+    return static_cast<int>(_data.size());
+}
 
+QVariant StatesModel::data(const QModelIndex& index, int role) const
+{
+    size_t i;
+    if (!makeSafeIndex(index.row(), i))
         return {};
-    }
-
-    QHash<int, QByteArray> roleNames() const override
-    {
-        auto result = QAbstractListModel::roleNames();
-        result[Qt::DisplayRole] = "name";
-        result[QmlAircraftInfo::StateTagRole] = "tag";
-        result[QmlAircraftInfo::StateDescriptionRole] = "description";
-        return result;
-    }
-
-    Q_INVOKABLE QString descriptionForState(int row) const
-    {
-        size_t index;
-        if (!makeSafeIndex(row, index))
-            return {};
-
-        const StateInfo& s = _data.at(index);
-        return s.description;
-    }
-
-    Q_INVOKABLE QString tagForState(int row) const
-    {
-        size_t index;
-        if (!makeSafeIndex(row, index))
-            return {};
-
-        return QString::fromStdString(_data.at(index).primaryTag());
-    }
-
-    bool hasExplicitAuto() const
-    {
-        return _explicitAutoState;
-    }
-
-    bool isEmpty() const
-    {
-        return _data.empty();
-    }
-
-    bool hasState(QString st) const
-    {
-        return indexForTag(st.toStdString()) != -1;
-    }
-private:
-    bool makeSafeIndex(int row, size_t& t) const
-    {
-        if (row < 0) {
-            return false;
+    const auto& s = _data.at(i);
+    if (role == Qt::DisplayRole) {
+        if (s.name.isEmpty()) {
+            return humanNameFromStateTag(s.primaryTag());
         }
-        t = static_cast<size_t>(row);
-        return (t < _data.size());
+        return s.name;
+    } else if (role == QmlAircraftInfo::StateTagRole) {
+        return QString::fromStdString(s.primaryTag());
+    } else if (role == QmlAircraftInfo::StateDescriptionRole) {
+        return s.description;
+    } else if (role == QmlAircraftInfo::StateExplicitRole) {
+        if (s.primaryTag() == "auto")
+            return _explicitAutoState;
+        return true;
     }
 
-    AircraftStateVec _data;
-    bool _explicitAutoState = false;
-};
+    return {};
+}
+
+QHash<int, QByteArray> StatesModel::roleNames() const
+{
+    auto result = QAbstractListModel::roleNames();
+    result[Qt::DisplayRole] = "name";
+    result[QmlAircraftInfo::StateTagRole] = "tag";
+    result[QmlAircraftInfo::StateDescriptionRole] = "description";
+    return result;
+}
+
+QString StatesModel::descriptionForState(int row) const
+{
+    size_t index;
+    if (!makeSafeIndex(row, index))
+        return {};
+
+    const auto& s = _data.at(index);
+    return s.description;
+}
+
+QString StatesModel::tagForState(int row) const
+{
+    size_t index;
+    if (!makeSafeIndex(row, index))
+        return {};
+
+    return QString::fromStdString(_data.at(index).primaryTag());
+}
+
+bool StatesModel::hasExplicitAuto() const
+{
+    return _explicitAutoState;
+}
+
+bool StatesModel::isEmpty() const
+{
+    return _data.empty();
+}
+
+bool StatesModel::hasState(QString st) const
+{
+    return indexForTag(st.toStdString()) != -1;
+}
+
+bool StatesModel::makeSafeIndex(int row, size_t& t) const
+{
+    if (row < 0) {
+        return false;
+    }
+    t = static_cast<size_t>(row);
+    return (t < _data.size());
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -933,5 +916,3 @@ bool QmlAircraftInfo::favourite() const
 {
     return FavouriteAircraftData::instance()->isFavourite(uri());
 }
-
-#include "QmlAircraftInfo.moc"

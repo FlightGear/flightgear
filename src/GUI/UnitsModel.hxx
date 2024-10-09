@@ -24,8 +24,8 @@
 #include <vector>
 
 #include <QAbstractListModel>
+#include <QValidator>
 
-class QValidator;
 class QDataStream;
 
 class Units : public QObject

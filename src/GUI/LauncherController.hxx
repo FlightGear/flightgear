@@ -30,19 +30,20 @@
 #include <simgear/package/Package.hxx>
 #include <simgear/package/Catalog.hxx>
 
+#include "AircraftItemModel.hxx"
+#include "AircraftProxyModel.hxx"
+#include "FlightPlanController.hxx"
+#include "LocationController.hxx"
+#include "MPServersModel.h"
+#include "QmlAircraftInfo.hxx"
+#include "RecentAircraftModel.hxx"
+#include "RecentLocationsModel.hxx"
+
 // forward decls
 class QTimer;
 class QWindow;
-class AircraftProxyModel;
-class QmlAircraftInfo;
-class RecentAircraftModel;
-class RecentLocationsModel;
-class MPServersModel;
-class AircraftItemModel;
 class QQuickItem;
 class LaunchConfig;
-class LocationController;
-class FlightPlanController;
 
 class LauncherController : public QObject
 {
