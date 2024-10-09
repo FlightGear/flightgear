@@ -192,10 +192,10 @@ static struct EventTypes {
   { { EV_SW, SW_LID },               "switch-lid" },
   { { EV_SW, SW_TABLET_MODE },       "switch-tablet-mode" },
   { { EV_SW, SW_HEADPHONE_INSERT },  "switch-headphone-insert" },
-#ifdef SW_RFKILL_ALL 
+#ifdef SW_RFKILL_ALL
   { { EV_SW, SW_RFKILL_ALL },        "switch-rfkill" },
 #endif
-#ifdef SW_MICROPHONE_INSERT 
+#ifdef SW_MICROPHONE_INSERT
   { { EV_SW, SW_MICROPHONE_INSERT }, "switch-microphone-insert" },
 #endif
 #ifdef SW_DOCK
@@ -284,7 +284,7 @@ FGLinuxInputDevice::~FGLinuxInputDevice()
 {
   try {
     Close();
-  } 
+  }
   catch(...) {
   }
 }
@@ -331,11 +331,11 @@ bool FGLinuxInputDevice::Open()
           absinfo[i] = ai;
 /*
           SG_LOG( SG_INPUT, SG_INFO, "Axis #" << i <<
-            ": value=" << ai.value << 
-            ": minimum=" << ai.minimum << 
-            ": maximum=" << ai.maximum << 
-            ": fuzz=" << ai.fuzz << 
-            ": flat=" << ai.flat << 
+            ": value=" << ai.value <<
+            ": minimum=" << ai.minimum <<
+            ": maximum=" << ai.maximum <<
+            ": fuzz=" << ai.fuzz <<
+            ": flat=" << ai.flat <<
             ": resolution=" << ai.resolution );
 */
 
@@ -393,7 +393,7 @@ bool FGLinuxInputDevice::Open()
   return true;
 }
 
-double FGLinuxInputDevice::Normalize( struct input_event & event ) 
+double FGLinuxInputDevice::Normalize( struct input_event & event )
 {
   if( absinfo.count(event.code) > 0 ) {
      const struct input_absinfo & ai = absinfo[(unsigned int)event.code];
@@ -445,7 +445,7 @@ void FGLinuxInputDevice::Send( const char * eventName, double value )
 }
 
 static char ugly_buffer[128];
-const char * FGLinuxInputDevice::TranslateEventName( FGEventData & eventData ) 
+const char * FGLinuxInputDevice::TranslateEventName( FGEventData & eventData )
 {
   FGLinuxEventData & linuxEventData = (FGLinuxEventData&)eventData;
   TypeCode typeCode;
@@ -470,7 +470,7 @@ void FGLinuxInputDevice::SetDevname( const std::string & name )
   this->devfile = name;
 }
 
-FGLinuxEventInput::FGLinuxEventInput()
+FGLinuxEventInput::FGLinuxEventInput() : FGEventInput("Input/Event", "/input/event")
 {
 }
 
@@ -501,7 +501,7 @@ void FGLinuxEventInput::postinit()
     std::string sysname = udev_device_get_sysname(dev);
     std::string devpath = syspath;
     devpath.erase(devpath.length() - sysname.length());
- 
+
     struct udev_device * parent_dev = udev_device_get_parent( dev );
     if ( parent_dev != NULL ) {
       const char * name = udev_device_get_sysattr_value(parent_dev,"name");
@@ -528,11 +528,11 @@ void FGLinuxEventInput::update( double dt )
   FGEventInput::update( dt );
   // index the input devices by the associated fd and prepare
   // the pollfd array by filling in the file descriptor
-  struct pollfd fds[input_devices.size()];
+  struct pollfd fds[inputDevices.size()];
   std::map<int,FGLinuxInputDevice*> devicesByFd;
   std::map<int,FGInputDevice*>::const_iterator it;
   int i;
-  for( i=0, it = input_devices.begin(); it != input_devices.end(); ++it, i++ ) {
+  for( i=0, it = inputDevices.begin(); it != inputDevices.end(); ++it, i++ ) {
     FGInputDevice* p = (*it).second;
     int fd = ((FGLinuxInputDevice*)p)->GetFd();
     fds[i].fd = fd;
@@ -565,4 +565,3 @@ void FGLinuxEventInput::update( double dt )
     }
   }
 }
-

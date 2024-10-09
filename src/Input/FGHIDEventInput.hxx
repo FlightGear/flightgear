@@ -40,7 +40,6 @@ public:
     virtual ~FGHIDEventInput();
 
     // Subsystem API.
-    void init() override;
     void postinit() override;
     void reinit() override;
     void shutdown() override;

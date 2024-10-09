@@ -27,6 +27,7 @@
 #include <cassert>
 #include <algorithm>
 
+#include <Main/fg_props.hxx>
 #include <hidapi/hidapi.h>
 #include <hidapi/hidparse.h>
 
@@ -206,7 +207,7 @@ namespace HID
         GD_Qw = 0x4C,
         GD_SystemControl = 0x80,
         GD_SystemPowerDown = 0x81,
-        GD_SystemSleep = 0x82, 
+        GD_SystemSleep = 0x82,
         GD_SystemWakeUp = 0x83,
         GD_SystemContextMenu = 0x84,
         GD_SystemMainMenu = 0x85,
@@ -1461,22 +1462,14 @@ void writeBits(uint8_t* bytes, size_t bitOffset, size_t bitSize, int value)
     }
 }
 
-FGHIDEventInput::FGHIDEventInput() :
-    FGEventInput(),
-    d(new FGHIDEventInputPrivate)
+FGHIDEventInput::FGHIDEventInput() : FGEventInput("Input/HID", "/input/hid"),
+                                     d(new FGHIDEventInputPrivate)
 {
     d->p = this; // store back pointer to outer object on pimpl
 }
 
 FGHIDEventInput::~FGHIDEventInput()
 {
-}
-
-void FGHIDEventInput::init()
-{
-    FGEventInput::init();
-    // have to wait until postinit since loading config files
-    // requires Nasal to be running
 }
 
 void FGHIDEventInput::reinit()
