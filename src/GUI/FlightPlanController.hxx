@@ -3,17 +3,39 @@
 
 #include <memory>
 
+#include <QAbstractListModel>
 #include <QObject>
 
 #include <Navaids/FlightPlan.hxx>
 
+#include "QmlPositioned.hxx"
 #include "UnitsModel.hxx"
 
-class QmlPositioned;
-class LegsModel;
 class FPDelegate;
 class LaunchConfig;
 
+class LegsModel : public QAbstractListModel
+{
+    Q_OBJECT
+
+    Q_PROPERTY(int numLegs READ numLegs NOTIFY numLegsChanged)
+public:
+    void setFlightPlan(flightgear::FlightPlanRef f);
+
+    int rowCount(const QModelIndex& parent) const override;
+    QVariant data(const QModelIndex& index, int role) const override;
+    QHash<int, QByteArray> roleNames() const override;
+
+
+    void waypointsChanged();
+    int numLegs() const;
+
+signals:
+    void numLegsChanged();
+
+private:
+    flightgear::FlightPlanRef _fp;
+};
 class FlightPlanController : public QObject
 {
     Q_OBJECT

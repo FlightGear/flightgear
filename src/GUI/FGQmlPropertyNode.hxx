@@ -25,6 +25,12 @@
 
 #include <simgear/props/props.hxx>
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#define QML_LIST_INDEX_TYPE qsizetype
+#else
+#define QML_LIST_INDEX_TYPE int
+#endif
+
 class FGQmlPropertyNode : public QObject,
         public SGPropertyChangeListener
 {
@@ -55,12 +61,9 @@ public:
 
     QQmlListProperty<FGQmlPropertyNode> childProps()
     {
-        return QQmlListProperty<FGQmlPropertyNode>(this,
-                                                   nullptr,
-                                                   nullptr,
+        return QQmlListProperty<FGQmlPropertyNode>(this, nullptr,
                                                    children_count,
-                                                   child_at,
-                                                   nullptr);
+                                                   child_at);
     }
 
 
@@ -90,13 +93,13 @@ protected:
       void setPath(QString path);
 
   private:
-      static int children_count(QQmlListProperty<FGQmlPropertyNode>* prop)
+      static QML_LIST_INDEX_TYPE children_count(QQmlListProperty<FGQmlPropertyNode>* prop)
       {
           return static_cast<FGQmlPropertyNode*>(prop->object)->childCount();
       }
 
       static FGQmlPropertyNode* child_at(QQmlListProperty<FGQmlPropertyNode>* prop,
-                                         int index)
+                                         QML_LIST_INDEX_TYPE index)
       {
           return static_cast<FGQmlPropertyNode*>(prop->object)->childAt(index);
       }

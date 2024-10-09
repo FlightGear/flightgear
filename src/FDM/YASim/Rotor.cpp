@@ -1661,7 +1661,7 @@ int Rotorgear::getValueforFGSet(int j,char *text,float *f)
 {
     if (j==0)
     {
-        sprintf(text,"/rotors/gear/total-torque");
+        snprintf(text, 300, "/rotors/gear/total-torque");
         *f=_total_torque_on_engine;
     } else return 0;
     return j+1;

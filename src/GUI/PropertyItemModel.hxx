@@ -9,6 +9,12 @@
 class PropertyItemModelRoleMapping;
 class FGQmlPropertyNode;
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#define QML_LIST_INDEX_TYPE qsizetype
+#else
+#define QML_LIST_INDEX_TYPE int
+#endif
+
 class PropertyItemModel : public QAbstractListModel,
                           public SGPropertyChangeListener
 {
@@ -65,8 +71,8 @@ private:
 
     static void append_mapping(QQmlListProperty<PropertyItemModelRoleMapping> *list,
                                PropertyItemModelRoleMapping *mapping);
-    static PropertyItemModelRoleMapping* at_mapping(QQmlListProperty<PropertyItemModelRoleMapping> *list, int index);
-    static int count_mapping(QQmlListProperty<PropertyItemModelRoleMapping> *list);
+    static PropertyItemModelRoleMapping* at_mapping(QQmlListProperty<PropertyItemModelRoleMapping>* list, QML_LIST_INDEX_TYPE index);
+    static QML_LIST_INDEX_TYPE count_mapping(QQmlListProperty<PropertyItemModelRoleMapping>* list);
     static void clear_mapping(QQmlListProperty<PropertyItemModelRoleMapping> *list);
 
     SGPropertyNode_ptr _modelRoot;

@@ -59,7 +59,7 @@ endif()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
 
 project(FlightGear)
 
@@ -128,6 +128,9 @@ IF(APPLE)
     find_library(CORESERVICES_LIBRARY CoreServices)
     find_library(COCOA_LIBRARY Cocoa)
     list(APPEND PLATFORM_LIBS ${COCOA_LIBRARY} ${CORESERVICES_LIBRARY})
+
+    # silence Apple OpenGl warnings about legacy 1.x APIs
+    add_compile_definitions(GL_SILENCE_DEPRECATION)
 elseif(WIN32)
     set(EVENT_INPUT_DEFAULT 1)
     list(APPEND PLATFORM_LIBS "Shlwapi.lib" "Version.lib")
@@ -369,39 +372,30 @@ endif (USE_DBUS)
 ##############################################################################
 ## Qt5 setup setup
 if (ENABLE_QT)
-    message(STATUS "Qt launcher enabled, checking for Qt >= 5.4 / qmake")
-    find_package(Qt5 5.4 COMPONENTS Widgets Gui Network Qml Quick Svg)
-    if (Qt5Widgets_FOUND AND Qt5Quick_FOUND)
-        message(STATUS "Will enable Qt launcher GUI")
+    find_package(QT NAMES Qt6 Qt5 COMPONENTS Core)
+    if (QT_FOUND)
+        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Gui Network Qml Quick Svg)
+        if (NOT Qt${QT_VERSION_MAJOR}Widgets_FOUND)
+            message(FATAL_ERROR "Qt support enabled, Qt was found but some required packages are missing, stopping.")
+        endif()
+    
         set(HAVE_QT 1)
         include (Translations)
 
         # extract the Qt root direction, since we need it for a few things
-        if (TARGET Qt5::qmake)
-            get_target_property(_qt5_qmake_path Qt5::qmake LOCATION)
-            get_filename_component(FG_QT_BIN_DIR ${_qt5_qmake_path} DIRECTORY)
+        if (TARGET Qt${QT_VERSION_MAJOR}::qmake)
+            get_target_property(_qt_qmake_path Qt${QT_VERSION_MAJOR}::qmake LOCATION)
+            get_filename_component(FG_QT_BIN_DIR ${_qt_qmake_path} DIRECTORY)
             get_filename_component(FG_QT_ROOT_DIR ${FG_QT_BIN_DIR} DIRECTORY)
         endif()
 
     else()
+        message(STATUS "Qt support disabled, Qt/qmake not found in PATH/CMAKE_PREFIX_PATH")
         # don't try to build FGQCanvas if Qt wasn't found correctly
         set(ENABLE_FGQCANVAS OFF)
     endif()
-
-    # we would ideally use TARGET::Qt5GuiPrivate but Fedora broke it
-    # perform a manual check instead
-    # see https://bugzilla.redhat.com/show_bug.cgi?id=1846613
-    set (CMAKE_REQUIRED_INCLUDES ${Qt5Gui_PRIVATE_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS})
-    check_include_file_cxx("private/qopenglcontext_p.h" REALLY_HAVE_QGUIPRIVATE)
-
-    if (REALLY_HAVE_QGUIPRIVATE)
-        message(STATUS "Have QtGUI private headers")
-        set(ENABLE_QQ_UI 1)
-    else()
-        message(STATUS "QtGui private headers not available.")
-    endif()
 else()
-    message(STATUS "Qt support disabled")
+    set(HAVE_QT 0)
     set(ENABLE_FGQCANVAS OFF)
 endif (ENABLE_QT)
 ##############################################################################

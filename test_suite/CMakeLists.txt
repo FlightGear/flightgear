@@ -159,7 +159,7 @@ if (MSVC)
     file(TO_NATIVE_PATH "${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/bin" _msvc_3rdparty_bin_dir)
     file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}" _install_bin_dir)
 
-    set(CMAKE_MSVCIDE_RUN_PATH "${_install_bin_dir};${_msvc_3rdparty_bin_dir};${_qt5_bin_dir_native}")
+    set(CMAKE_MSVCIDE_RUN_PATH "${_install_bin_dir};${_msvc_3rdparty_bin_dir};${_qt_bin_dir_native}")
 endif()
 
 if (FG_QT_ROOT_DIR)

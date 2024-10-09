@@ -31,144 +31,129 @@ const int LegTerminatorNavFrequencyRole = Qt::UserRole + 6;
 const int LegAltitudeFtRole = Qt::UserRole + 7;
 const int LegAltitudeTypeRole = Qt::UserRole + 8;
 
-class LegsModel : public QAbstractListModel
+/////////////////////////////////////////////////////////////////////////////
+
+void LegsModel::setFlightPlan(flightgear::FlightPlanRef f)
 {
-    Q_OBJECT
+    beginResetModel();
+    _fp = f;
+    endResetModel();
+    emit numLegsChanged();
+}
 
-    Q_PROPERTY(int numLegs READ numLegs NOTIFY numLegsChanged)
-public:
-    void setFlightPlan(flightgear::FlightPlanRef f)
-    {
-        beginResetModel();
-        _fp = f;
-        endResetModel();
-        emit numLegsChanged();
-    }
+int LegsModel::rowCount(const QModelIndex& parent) const
+{
+    Q_UNUSED(parent)
+    return _fp->numLegs();
+}
 
-    int rowCount(const QModelIndex &parent) const override
-    {
-        Q_UNUSED(parent)
-        return _fp->numLegs();
-    }
-
-    QVariant data(const QModelIndex &index, int role) const override
-    {
-        const auto leg = _fp->legAtIndex(index.row());
-        if (!leg)
-            return {};
-
-        const auto wp = leg->waypoint();
-        
-        switch (role) {
-        case Qt::DisplayRole: {
-            if (wp->type() == "via") {
-                // we want the end waypoint name
-                return QString::fromStdString(wp->source()->ident());
-            }
-            
-            return QString::fromStdString(leg->waypoint()->ident());
-        }
-                
-        case LegDistanceRole:
-            return QVariant::fromValue(QuantityValue{Units::NauticalMiles, leg->distanceNm()});
-        case LegTrackRole:
-            return QVariant::fromValue(QuantityValue{Units::DegreesTrue, leg->courseDeg()});
-
-        case LegAirwayIdentRole:
-        {
-            AirwayRef awy;
-            if (wp->type() == "via") {
-                auto via = static_cast<flightgear::Via*>(leg->waypoint());
-                awy = via->airway();
-            } else if (wp->flag(WPT_VIA)) {
-                awy = static_cast<Airway*>(wp->owner());
-            }
-            
-            return awy ? QString::fromStdString(awy->ident()) : QVariant{};
-        }
-
-        case LegTerminatorNavRole:
-        {
-            if (leg->waypoint()->source()) {
-                return QString::fromStdString(leg->waypoint()->source()->ident());
-            }
-            break;
-        }
-
-        case LegTerminatorNavFrequencyRole:
-        {
-            const auto n = fgpositioned_cast<FGNavRecord>(leg->waypoint()->source());
-            if (n) {
-                const double f = n->get_freq() / 100.0;
-                if (n->type() == FGPositioned::NDB) {
-                    return QVariant::fromValue(QuantityValue(Units::FreqKHz, f));
-                }
-
-                return QVariant::fromValue(QuantityValue(Units::FreqMHz, f));
-            }
-            return QVariant::fromValue(QuantityValue());
-        }
-
-        case LegTerminatorNavNameRole:
-        {
-            if (leg->waypoint()->source()) {
-                return QString::fromStdString(leg->waypoint()->source()->name());
-            }
-            return QString{}; // avoud undefined-value QML error if we return a null variant
-        }
-
-        case LegTerminatorTypeRole:
-            return QString::fromStdString(leg->waypoint()->type());
-
-        case LegAltitudeFtRole:
-            return leg->altitudeFt();
-
-        case LegAltitudeTypeRole:
-            return leg->altitudeRestriction();
-
-        default:
-            break;
-        }
-
+QVariant LegsModel::data(const QModelIndex& index, int role) const
+{
+    const auto leg = _fp->legAtIndex(index.row());
+    if (!leg)
         return {};
+
+    const auto wp = leg->waypoint();
+
+    switch (role) {
+    case Qt::DisplayRole: {
+        if (wp->type() == "via") {
+            // we want the end waypoint name
+            return QString::fromStdString(wp->source()->ident());
+        }
+
+        return QString::fromStdString(leg->waypoint()->ident());
     }
 
-    void waypointsChanged()
-    {
-        beginResetModel();
-        endResetModel();
-        numLegsChanged();
+    case LegDistanceRole:
+        return QVariant::fromValue(QuantityValue{Units::NauticalMiles, leg->distanceNm()});
+    case LegTrackRole:
+        return QVariant::fromValue(QuantityValue{Units::DegreesTrue, leg->courseDeg()});
+
+    case LegAirwayIdentRole: {
+        AirwayRef awy;
+        if (wp->type() == "via") {
+            auto via = static_cast<flightgear::Via*>(leg->waypoint());
+            awy = via->airway();
+        } else if (wp->flag(WPT_VIA)) {
+            awy = static_cast<Airway*>(wp->owner());
+        }
+
+        return awy ? QString::fromStdString(awy->ident()) : QVariant{};
     }
 
-    QHash<int, QByteArray> roleNames() const override
-    {
-        QHash<int, QByteArray> result = QAbstractListModel::roleNames();
-
-        result[Qt::DisplayRole] = "label";
-        result[LegDistanceRole] = "distance";
-        result[LegTrackRole] = "track";
-        result[LegTerminatorNavRole] = "to";
-        result[LegTerminatorNavFrequencyRole] = "frequency";
-        result[LegAirwayIdentRole] = "via";
-        result[LegTerminatorTypeRole] = "wpType";
-        result[LegTerminatorNavNameRole] = "toName";
-        result[LegAltitudeFtRole] = "altitudeFt";
-        result[LegAltitudeTypeRole] = "altitudeType";
-
-        return result;
+    case LegTerminatorNavRole: {
+        if (leg->waypoint()->source()) {
+            return QString::fromStdString(leg->waypoint()->source()->ident());
+        }
+        break;
     }
 
-    int numLegs() const
-    {
-        return _fp->numLegs();
+    case LegTerminatorNavFrequencyRole: {
+        const auto n = fgpositioned_cast<FGNavRecord>(leg->waypoint()->source());
+        if (n) {
+            const double f = n->get_freq() / 100.0;
+            if (n->type() == FGPositioned::NDB) {
+                return QVariant::fromValue(QuantityValue(Units::FreqKHz, f));
+            }
+
+            return QVariant::fromValue(QuantityValue(Units::FreqMHz, f));
+        }
+        return QVariant::fromValue(QuantityValue());
     }
 
-signals:
-    void numLegsChanged();
+    case LegTerminatorNavNameRole: {
+        if (leg->waypoint()->source()) {
+            return QString::fromStdString(leg->waypoint()->source()->name());
+        }
+        return QString{}; // avoud undefined-value QML error if we return a null variant
+    }
 
-private:
-    flightgear::FlightPlanRef _fp;
-};
+    case LegTerminatorTypeRole:
+        return QString::fromStdString(leg->waypoint()->type());
+
+    case LegAltitudeFtRole:
+        return leg->altitudeFt();
+
+    case LegAltitudeTypeRole:
+        return leg->altitudeRestriction();
+
+    default:
+        break;
+    }
+
+    return {};
+}
+
+void LegsModel::waypointsChanged()
+{
+    beginResetModel();
+    endResetModel();
+    numLegsChanged();
+}
+
+QHash<int, QByteArray> LegsModel::roleNames() const
+{
+    QHash<int, QByteArray> result = QAbstractListModel::roleNames();
+
+    result[Qt::DisplayRole] = "label";
+    result[LegDistanceRole] = "distance";
+    result[LegTrackRole] = "track";
+    result[LegTerminatorNavRole] = "to";
+    result[LegTerminatorNavFrequencyRole] = "frequency";
+    result[LegAirwayIdentRole] = "via";
+    result[LegTerminatorTypeRole] = "wpType";
+    result[LegTerminatorNavNameRole] = "toName";
+    result[LegAltitudeFtRole] = "altitudeFt";
+    result[LegAltitudeTypeRole] = "altitudeType";
+
+    return result;
+}
+
+int LegsModel::numLegs() const
+{
+    return _fp->numLegs();
+}
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -663,5 +648,3 @@ void FlightPlanController::setCruiseSpeed(QuantityValue speed)
 
     emit infoChanged();
 }
-
-#include "FlightPlanController.moc"

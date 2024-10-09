@@ -26,13 +26,17 @@
 #include <Navaids/positioned.hxx>
 #include <Airports/airports_fwd.hxx>
 
-#include "QtLauncher_fwd.hxx"
+#include "CarriersLocationModel.hxx"
 #include "LaunchConfig.hxx"
 #include "QmlPositioned.hxx"
+#include "QtLauncher_fwd.hxx"
 #include "UnitsModel.hxx"
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+Q_MOC_INCLUDE("NavaidSearchModel.hxx")
+#endif
+
 class NavaidSearchModel;
-class CarriersLocationModel;
 
 class LocationController : public QObject
 {

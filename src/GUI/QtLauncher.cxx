@@ -76,8 +76,9 @@
 #include "LauncherMainWindow.hxx"
 #include "LocalAircraftCache.hxx"
 #include "PathListModel.hxx"
-#include "UnitsModel.hxx"
 #include "GettingStartedTip.hxx"
+#include "SetupRootDialog.hxx"
+#include "UnitsModel.hxx"
 
 #if defined(SG_MAC)
 #include <GUI/CocoaHelpers.h>
@@ -515,8 +516,9 @@ void initQSettings()
 
     if (!qSettingsInitDone) {
         qRegisterMetaType<QuantityValue>();
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         qRegisterMetaTypeStreamOperators<QuantityValue>("QuantityValue");
-
+#endif
 
         qSettingsInitDone = true;
         string fgHome = globals->get_fg_home().utf8Str();
