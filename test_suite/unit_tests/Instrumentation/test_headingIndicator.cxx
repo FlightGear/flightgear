@@ -188,7 +188,7 @@ void HeadingIndicatorTests::testTumble()
     CPPUNIT_ASSERT(!n->getBoolValue("tumble-flag"));
 
     fgSetDouble("/accelerations/pilot-g", 2.5);
-    r->update(0.1);
+    FGTestApi::runForTime(1.0);
     CPPUNIT_ASSERT(n->getBoolValue("tumble-flag"));
 
     // back to normal Gs, should stay tumbled
