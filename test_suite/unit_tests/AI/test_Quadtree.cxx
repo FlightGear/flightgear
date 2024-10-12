@@ -58,7 +58,7 @@ void QuadtreeTests::testAdd()
     CPPUNIT_ASSERT_EQUAL(false, index.add(new TestObject(id++, 2.5, 2.5)));
 }
 
-void QuadtreeTests::testAddSplit()
+void QuadtreeTests::testAddSplit1()
 {
 	quadtree::QuadTree<TestObject, decltype(&getBox), decltype(&equal)> index (getBox, equal);
     index.resize(SGRectd(0, 0, 2, 2));
@@ -67,5 +67,41 @@ void QuadtreeTests::testAddSplit()
     for( int i= 1; i<=190; ++i) {
         double incr = ((double)1)/i;
         CPPUNIT_ASSERT_EQUAL(true, index.add(new TestObject(id++, 0.1+incr,0.1+incr)));
+    }
+}
+
+void QuadtreeTests::testAddSplit2()
+{
+	quadtree::QuadTree<TestObject, decltype(&getBox), decltype(&equal)> index (getBox, equal);
+    index.resize(SGRectd(0, 0, 2, 2));
+    int id = 0;
+    // Add lots
+    for( int i= 1; i<=190; ++i) {
+        double incr = ((double)1)/i;
+        CPPUNIT_ASSERT_EQUAL(true, index.add(new TestObject(id++, 2-incr,0.1+incr)));
+    }
+}
+
+void QuadtreeTests::testAddSplit3()
+{
+	quadtree::QuadTree<TestObject, decltype(&getBox), decltype(&equal)> index (getBox, equal);
+    index.resize(SGRectd(0, 0, 2, 2));
+    int id = 0;
+    // Add lots
+    for( int i= 1; i<=190; ++i) {
+        double incr = ((double)1)/i;
+        CPPUNIT_ASSERT_EQUAL(true, index.add(new TestObject(id++, 2-incr, 2-incr)));
+    }
+}
+
+void QuadtreeTests::testAddSplit4()
+{
+	quadtree::QuadTree<TestObject, decltype(&getBox), decltype(&equal)> index (getBox, equal);
+    index.resize(SGRectd(0, 0, 2, 2));
+    int id = 0;
+    // Add lots
+    for( int i= 1; i<=190; ++i) {
+        double incr = ((double)1)/i;
+        CPPUNIT_ASSERT_EQUAL(true, index.add(new TestObject(id++, 0.1+incr,2-incr)));
     }
 }

@@ -51,6 +51,7 @@ private:
     const double QUERY_BOX_SIZE = 0.1;
 	QuadTree<FGTrafficRecord, decltype(&getBox), decltype(&equal)> index;
 	SGGeod min;
+	FGAirportRef airport;
 	int getSize(SGSharedPtr<FGTrafficRecord> aiObject);
 public:
 	AirportGroundRadar(SGGeod min, SGGeod max);

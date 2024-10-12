@@ -84,7 +84,7 @@ class Node {
         if (isLeaf())
         {
             if (!bounds.contains(pos.x(), pos.y())) {
-                SG_LOG(SG_ATC, SG_ALERT , "Not in node Quadrant " << quadrant << " to " << bounds.x() << "\t" << bounds.y() << "\t" << (bounds.x()+bounds.width()) << "\t" << (bounds.y()+bounds.height()) << "\t" << pos.x() << "\t" << pos.y() );
+                SG_LOG(SG_ATC, SG_ALERT , "Not in node Quadrant " << quadrant << " to bounds  " << bounds.x() << "\t" << bounds.y() << "\t" << (bounds.x()+bounds.width()) << "\t" << (bounds.y()+bounds.height()) << "\t Pos : \t" << pos.x() << "\t" << pos.y() );
                 return false;
             }
             if (depth >= MAX_DEPTH || data.size() < SPLIT_THRESHOLD) {
@@ -106,7 +106,7 @@ class Node {
             {
                 auto i = split(pos, equalFkt, getBoxFunction);
                 if (i != UNKNOWN) {
-                  return children[static_cast<std::size_t>(i)].get()->add(pos, value, equalFkt, getBoxFunction);
+                    return children[static_cast<std::size_t>(i)].get()->add(pos, value, equalFkt, getBoxFunction);
                 }
                 else {
                     return false;
@@ -261,7 +261,7 @@ class Node {
 
     int split(const SGRectd& pos, const Equal& equalFkt, const GetBox& getBoxFunction) {
         // Create children
-        SG_LOG(SG_ATC, SG_DEBUG, "Splitting Quadtree " << data.size() << " depth " << depth);
+        SG_LOG(SG_ATC, SG_DEBUG, "Splitting Quadtree Size : " << data.size() << " Depth : " << depth);
 
         for (size_t i = 0; i < 4; i++) {
             children[i] = std::make_unique<Node>(depth+1, i);
@@ -292,9 +292,9 @@ class Node {
         {
             case SOUTH_WEST:
                 return SGRectd(SGVec2d(origin.x(), origin.y()), SGVec2d(origin.x() + childSize.x(), origin.y() + childSize.y()));
-            case SOUTH_EAST:
-                return SGRectd(SGVec2d(origin.x(), origin.y() + childSize.y()), SGVec2d(origin.x() + childSize.x(), origin.y() + 2*childSize.y()));
             case NORTH_WEST:
+                return SGRectd(SGVec2d(origin.x(), origin.y() + childSize.y()), SGVec2d(origin.x() + childSize.x(), origin.y() + 2*childSize.y()));
+            case SOUTH_EAST:
                 return SGRectd(SGVec2d(origin.x() + childSize.x(), origin.y()), SGVec2d(origin.x() + 2*childSize.x(), origin.y() + childSize.y()));
             case NORTH_EAST:
                 return SGRectd(SGVec2d(origin.x() + childSize.x(), origin.y() + childSize.y()), SGVec2d(origin.x() + 2*childSize.x(), origin.y() + 2*childSize.y()));
@@ -313,9 +313,9 @@ class Node {
         {
             case SOUTH_WEST:
                 return SGRectd(SGVec2d(origin.x() + childSize.x(), origin.y() + childSize.y()), SGVec2d(origin.x() + childSize.x(), origin.y() + childSize.y()));
-            case SOUTH_EAST:
-                return SGRectd(SGVec2d(origin.x() + childSize.x(), origin.y() + 3*childSize.y()), SGVec2d(origin.x() + childSize.x(), origin.y() + 3*childSize.y()));
             case NORTH_WEST:
+                return SGRectd(SGVec2d(origin.x() + childSize.x(), origin.y() + 3*childSize.y()), SGVec2d(origin.x() + childSize.x(), origin.y() + 3*childSize.y()));
+            case SOUTH_EAST:
                 return SGRectd(SGVec2d(origin.x() + 3*childSize.x(), origin.y() + childSize.y()), SGVec2d(origin.x() + 3*childSize.x(), origin.y() + childSize.y()));
             case NORTH_EAST:
                 return SGRectd(SGVec2d(origin.x() + 3*childSize.x(), origin.y() + 3*childSize.y()), SGVec2d(origin.x() + 3*childSize.x(), origin.y() + 3*childSize.y()));
@@ -416,10 +416,11 @@ class QuadTree {
             SGRectd pos = getBoxFunction(value);
             SGRectd bounds = rootNode.get()->getBounds();
             if (!bounds.contains(pos.x(), pos.y())) {
-                SG_LOG(SG_ATC, SG_ALERT , "Not in index " << bounds.x() << "\t" << bounds.y() << "\t" << (bounds.x()+bounds.width()) << "\t" << (bounds.y()+bounds.height()) << "\t" << pos.x() << "\t" << pos.y() );
+                SG_LOG(SG_ATC, SG_ALERT , "Not in index Bounds : " << bounds.x() << "x" << bounds.y() << "\t" << (bounds.x()+bounds.width()) << "x" << (bounds.y()+bounds.height()) );
+                SG_LOG(SG_ATC, SG_ALERT , "Pos : " << pos.x() << "\t" << pos.y() );
                 return false;
             }
-            rootNode.get()->add(getBoxFunction(value), value, equalFunction, getBoxFunction);
+            return rootNode.get()->add(getBoxFunction(value), value, equalFunction, getBoxFunction);
         }
         return true;
     }
