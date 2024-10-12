@@ -25,6 +25,8 @@ function(export_debug_symbols target)
 endfunction()
 
 
+file(TO_NATIVE_PATH "${FINAL_MSVC_3RDPARTY_DIR}/bin" _msvc_3rdparty_bin_dir)
+set(CMAKE_MSVCIDE_RUN_PATH "${_msvc_3rdparty_bin_dir}")
 
 add_custom_target(upload_debug_symbols
     COMMENT "Uploading debug symbols via sentry-cli"

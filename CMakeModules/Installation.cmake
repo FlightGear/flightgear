@@ -36,6 +36,14 @@ endif()
 
 message(STATUS "OSG plugins at: ${OSG_PLUGINS_DIR}/osgPlugins")
 
+get_filename_component(OSG_BASE_DIR ${OSG_PLUGINS_DIR} DIRECTORY)
+
+
+#if (MSVC)
+    configure_file(${CMAKE_SOURCE_DIR}/package/windows/BuildConfig.iss.in ${CMAKE_BINARY_DIR}/BuildConfig.iss)
+    install(FILES ${CMAKE_BINARY_DIR}/BuildConfig.iss DESTINATION .)
+#endif()
+
 if (APPLE)
     # OSG libs
 
@@ -46,8 +54,17 @@ if (APPLE)
     install(TARGETS fgcom fgjs fgelev DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/MacOS)
 
     # FIXME: this copies the fully version file name, need to rename to the non-versioned one
-    install(FILES $<TARGET_FILE:OpenAL::OpenAL> DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/Frameworks)
+    install(FILES 
+            $<TARGET_FILE:OpenAL::OpenAL>  
+            $<TARGET_FILE:LibLZMA::LibLZMA> 
+        DESTINATION 
+            $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/Frameworks
+    )
+    
+    install(FILES ${CMAKE_SOURCE_DIR}/package/mac/FlightGear.icns DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/Resources)
 endif()
+
+
  
 
 #-----------------------------------------------------------------------------

@@ -1,0 +1,13 @@
+
+; template InnoSetup file, process by CMake with real values
+
+
+#define FGHarnessPath "x:" 
+#define WindowsThirdPartyPath "@FINAL_MSVC_3RDPARTY_DIR@" 
+#define FGVersion "@FLIGHTGEAR_VERSION@" 
+#define FGVersionGroup "@FG_VERSION_MAJOR@.@FG_VERSION_MINOR@"
+#define OSGVersion "@OPENSCENEGRAPH_VERSION@"
+#define OSGInstallPath "@OSG_BASE_DIR@" 
+#define OSGSoNumber "@OSG_SO_NUMBER@" 
+#define OTSoNumber "@OPENTHREADS_SO_NUMBER@"
+
