@@ -986,10 +986,14 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int 
         double bearingTowardsNext = fp->getBearing(this->getGeodPos(), next);
         double headingDiffNext = SGMiscd::normalizePeriodic(-180, 180, hdg - bearingTowardsNext);
         if (abs(headingDiffCurrent) > 80 && speed > 0) {
-            if (fp->getLeg() <= AILeg::CLIMB) {
-                SG_LOG(SG_AI, SG_WARN, getCallSign() << "| possible missed WP at " << trafficRef->getDepartureAirport()->getId() << " " << curr->getName());
+            if (trafficRef != nullptr) {
+                if (fp->getLeg() <= AILeg::CLIMB) {
+                    SG_LOG(SG_AI, SG_WARN, getCallSign() << "| possible missed WP at " << trafficRef->getDepartureAirport()->getId() << " " << curr->getName());
+                } else {
+                    SG_LOG(SG_AI, SG_WARN, getCallSign() << "| possible missed WP at " << trafficRef->getArrivalAirport()->getId() << " " << curr->getName());
+                }
             } else {
-                SG_LOG(SG_AI, SG_WARN, getCallSign() << "| possible missed WP at " << trafficRef->getArrivalAirport()->getId() << " " << curr->getName());
+                SG_LOG(SG_AI, SG_WARN, getCallSign() << "| possible missed WP " << curr->getName());
             }
             SG_LOG(SG_AI, SG_BULK, getCallSign() << "| headingDiffCurrent " << headingDiffCurrent << " headingDiffNext " << headingDiffNext);
         }
