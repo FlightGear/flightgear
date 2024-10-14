@@ -92,8 +92,6 @@ if (APPLE)
     
     install(FILES ${CMAKE_SOURCE_DIR}/package/mac/FlightGear.icns DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/Resources)
 endif()
-
-
  
 
 #-----------------------------------------------------------------------------
