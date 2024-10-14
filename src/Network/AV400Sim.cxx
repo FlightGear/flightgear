@@ -113,12 +113,12 @@ bool FGAV400Sim::gen_message() {
 
     // create msg_h
     double obs = fgGetDouble( "/instrumentation/nav[0]/radials/selected-deg" );
-    sprintf( msg_h, "h%04d\r\n", (int)(obs*10) );
+    snprintf( msg_h, sizeof(msg_h), "h%04d\r\n", (int)(obs*10) );
 
     // create msg_i
     double fuel = fgGetDouble( "/consumables/fuel/total-fuel-gals" );
     if ( fuel > 999.9 ) { fuel = 999.9; }
-    sprintf( msg_i, "i%04.0f\r\n", fuel*10.0 );
+    snprintf( msg_i, sizeof(msg_i), "i%04.0f\r\n", fuel*10.0 );
 
     // create msg_j
     double gph = fgGetDouble( "/engines/engine[0]/fuel-flow-gph" );

@@ -210,7 +210,7 @@ void FGXMLAutopilotGroup::addAutopilotFromFile( const std::string& name,
                                              << ": " << e.getMessage()
     );
     simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::AircraftSystems,
-                           std::string{"Autopilot XML faield to load:"} + e.getFormattedMessage(), e.getLocation());
+                           std::string{"Autopilot XML failed to load:"} + e.getFormattedMessage(), e.getLocation());
     return;
   }
 }

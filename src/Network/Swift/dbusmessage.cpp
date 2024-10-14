@@ -6,7 +6,7 @@
 
 #include "dbusmessage.h"
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
 
 CDBusMessage::CDBusMessage(DBusMessage* message)
 {
@@ -243,4 +243,4 @@ CDBusMessage CDBusMessage::createReply(const std::string& destination, dbus_uint
     return msg;
 }
 
-} // namespace FGSwiftBus
+} // namespace flightgear::swift

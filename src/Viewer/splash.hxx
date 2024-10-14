@@ -116,6 +116,8 @@ private:
     SGPropertyNode_ptr _splashAlphaNode;
     osg::ref_ptr<osg::Camera> _splashFBOCamera;
     osg::Vec3Array* _splashSpinnerVertexArray = nullptr;
+
+    osg::ref_ptr<osg::Program> _program;
     
     int _width, _height;
 

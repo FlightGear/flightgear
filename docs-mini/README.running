@@ -102,7 +102,7 @@ Keyboard controls
 =================
 
 It is also possible to fly using the numeric keypad.  There is some
-unresolved wierdness with the GLUT libraries and keyboard input, so
+unresolved weirdness with the GLUT libraries and keyboard input, so
 for now, the state of the "Num Lock" key is important.
 
 Num Lock Active

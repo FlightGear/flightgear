@@ -5,10 +5,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#ifndef BLACKSIM_FGSWIFTBUS_TRAFFIC_H
-#define BLACKSIM_FGSWIFTBUS_TRAFFIC_H
-
-//! \file
+#pragma once
 
 #include "SwiftAircraftManager.h"
 #include "dbusobject.h"
@@ -16,12 +13,7 @@
 #include <functional>
 #include <utility>
 
-//! \cond PRIVATE
-#define FGSWIFTBUS_TRAFFIC_INTERFACENAME "org.swift_project.fgswiftbus.traffic"
-#define FGSWIFTBUS_TRAFFIC_OBJECTPATH "/fgswiftbus/traffic"
-//! \endcond
-
-namespace FGSwiftBus {
+namespace flightgear::swift {
 /*!
      * FGSwiftBus service object for traffic aircraft which is accessible through DBus
      */
@@ -66,6 +58,4 @@ private:
     bool m_emitSimFrame = true;
     std::unique_ptr<FGSwiftAircraftManager> acm;
 };
-} // namespace FGSwiftBus
-
-#endif // guard
+} // namespace flightgear::swift

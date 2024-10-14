@@ -68,11 +68,11 @@ Normal recordings are written as a compressed gzip stream using `simgear::gzCont
     
     * A Config property tree containing information about what signals will be contained in each frame.
     
-        Each signal is a property; signals are used for the main recorded information such as position and orientation of the user's aircraft, and positions of flight surfaces, gear up/down etc. Aircraft may define their own customised set of signals.
+        Each signal is a property; signals are used for the main recorded information such as position and orientation of the user's aircraft, and positions of flight surfaces, gear up/down etc. Aircraft may define their own customized set of signals.
 
     The Meta and Config property trees are each written as `<length:64><text>` where `<text>` is a text representation of the properties. `<text>` is terminated with a zero which is included in the `<length:64>` field.
 
-* A series of frames, each containg the data in a `FGReplayData` instance, looking like:
+* A series of frames, each containing the data in a `FGReplayData` instance, looking like:
 
     * Frame time as a binary double.
     
@@ -98,7 +98,7 @@ Normal recordings are written as a compressed gzip stream using `simgear::gzCont
 
     The header is written by `FGReplay::continuousWriteHeader()`.
 
-* A series of frames, each containg the data in a `FGReplayData` instance, looking like:
+* A series of frames, each containing the data in a `FGReplayData` instance, looking like:
 
     * Frame time as a binary double.
     

@@ -86,7 +86,7 @@ Cl              Aerodynamic l-moment quantities (lateral)
 Cn              Aerodynamic n-moment quantities (lateral)
 gear            Landing gear model quantities
 ice             Icing model parameters
-record          Record desired quantites to file
+record          Record desired quantities to file
 misc            Miscellaneous inputs
 fog		Fog field quantities
 
@@ -216,7 +216,7 @@ Gamma_ver_deg       local vertical flight path angle        [deg]
 Gamma_horiz         local horizontal flight path angle      [rad]
 Gamma_horiz_deg     local horizontal flight path angle      [deg]
 
-7) atmosperic properties
+7) atmospheric properties
 Density             atmospheric density                     [slug/ft^3]
 V_sound             speed of sound                          [ft/s]
 Mach_number         free-stream Mach number                 []
@@ -270,7 +270,7 @@ ih        horizontal tail incidence angle       [deg]
 |Sv       vertical tail area                    [ft^2]
 Dx_pilot  reference pilot x-location            [ft]
 Dy_pilot  reference pilot y-location            [ft]
-Dz_pilot  referende pilot z-location            [ft]
+Dz_pilot  reference pilot z-location            [ft]
 Dx_cg     reference center of gravity x-loc     [ft]
 Dy_cg     reference center of gravity y-loc     [ft]
 Dz_cg     reference center of gravity z-loc     [ft]
@@ -404,7 +404,7 @@ min     minimum
 
 19) miscellaneous
 recordRate              number of times to record data per second  [/s]
-recordStartTime         time to start recording outpud data        [s]
+recordStartTime         time to start recording output data        [s]
 dyn_on_speed            speed when dynamic pressure terms first computed [ft/s]
 nondim_rate_V_rel_wind  use V_rel_wind to compute control rates    []
 |simpleHingeMomentCoef  hinge moment coefficient                   []
@@ -458,7 +458,7 @@ CD CDfCL                # CD(CL), drag calculated in code based on CL
 IV. Input Line Definitions:
 
 Of all the possible permutations of variable names described above in
-section II, only some are curently implemented in the code.  These are
+section II, only some are currently implemented in the code.  These are
 described below.  Comments, denoted by '#,' are used to define the
 lines and to indicate examples of the data if additional clarity is
 needed for unique situations.  Again, those lines beginning with '|'

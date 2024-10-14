@@ -61,7 +61,7 @@ void SwiftServiceTest::tearDown()
 
 void SwiftServiceTest::testService()
 {
-    FGSwiftBus::CService service;
+    flightgear::swift::CService service;
     CPPUNIT_ASSERT(service.isPaused());
     CPPUNIT_ASSERT_DOUBLES_EQUAL(service.getLatitude(), 50.12, 0.1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(service.getLongitude(), 6.3, 0.1);

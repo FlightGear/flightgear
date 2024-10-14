@@ -251,6 +251,9 @@ double uiuc_3Dinterp_quick( double z[30],
 
 
   // Find the z's
+  znumu=0;
+  zl=0.0;
+  zu=0.0;
   if (zp <= z[1])
     {
       znuml=1;
@@ -272,6 +275,9 @@ double uiuc_3Dinterp_quick( double z[30],
     }
 
   // Find the y's
+  ynumu=0;
+  yl=0.0;
+  yu=0.0;
   if (yp <= y[1])
     {
       ynuml=1;
@@ -294,6 +300,9 @@ double uiuc_3Dinterp_quick( double z[30],
 
 
   // Find the x's
+  xnumu=0;
+  xl=0.0;
+  xu=0.0;
   if (xp <= x[1])
     {
       xnuml=1;
@@ -389,7 +398,6 @@ double uiuc_3Dinterp_quick( double z[30],
           ptzu = ptzuyu - (yu-yp)*(ptzuyu-ptzuyl)/(yu-yl);
           data_point = ptzu - (zu-zp)*(ptzu-ptzl)/(zu-zl);
         }
-
     }
 
 

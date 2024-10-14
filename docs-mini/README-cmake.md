@@ -34,7 +34,7 @@ The global properties used are `FG_SOURCES` and `FG_HEADERS`.
 ## Configurations 
 
 Official release builds are built with `RelWithDebInfo`; this is also the most useful configuration for
-development, since on Windows, `Debug` is unusably slow. If trying to optimise performance,
+development, since on Windows, `Debug` is unusably slow. If trying to optimize performance,
 keep in mind that compiler flags must be manually set for `RelWithDebInfo`; they are _not_
 automatically inherited from `Release`.
 
@@ -57,7 +57,7 @@ in SimGear, it will automatically be added to the include / link paths for Fligh
 the SimGear build type.
 
 If you encounter a case where a downstream target is missing an include path or flag for a
-dependency, it typically indicates a bug in your dependency graph. Do _not_ fix it by maanually
+dependency, it typically indicates a bug in your dependency graph. Do _not_ fix it by manually
 modifying the downstream target's include path or flags. Rather, fix your dependency graph 
 and/or `INTERFACE` exports from your dependency, so that CMake can see the required transitive
 dependencies correctly.

@@ -69,7 +69,7 @@ The range of /sim/rendering/quality-level is [0..5]
 
 A technique can consist of several passes. A pass is basically an Open
 Scene Graph StateSet. Ultimately all OpenGL and OSG modes and state
-attributes  will be accessable in techniques. State attributes -- that
+attributes  will be accessible in techniques. State attributes -- that
 is, technique properties that have children and are not just boolean
 modes -- have an <active> parameter which enables or disables the
 attribute. In this way a technique can declare parameters it needs,
@@ -138,9 +138,9 @@ Values are assigned to technique properties in several ways:
 OpenGL Attributes
 -----------------
 
-The following attributes are currently implemented in techiques:
+The following attributes are currently implemented in techniques:
 alpha-test - children: active, comparison, reference
-		 Valid values for comparision:
+		 Valid values for comparison:
 			 never, less, equal, lequal, greater, notequal, gequal,
 			 always 
 
@@ -248,7 +248,7 @@ Often shader effects need tangent vectors to work properly. These
 tangent vectors, usually called tangent and binormal, are computed 
 on the CPU and given to the shader as vertex attributes. These 
 vectors are computed on demand on the geometry using the effect if 
-the 'generate' clause is present in the effect file. Exemple :
+the 'generate' clause is present in the effect file. Example :
 
 	<generate>
 		<tangent type="int">6</tangent>
@@ -291,7 +291,7 @@ terrain effect, Effects/terrain-default.eff. The parameters section of
 the effect is filled in using the ambient, diffuse, specular,
 emissive, shininess, and transparent fields of the material. The
 parameters image, filter, wrap-s, and wrap-t are also initialized from
-the material xml. Seperate effects are created for each texture
+the material xml. Separate effects are created for each texture
 variant of a material.
 
 Model effects are created by walking the OpenSceneGraph scene graph

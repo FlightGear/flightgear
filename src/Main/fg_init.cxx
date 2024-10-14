@@ -1055,7 +1055,7 @@ void fgCreateSubsystems(bool duringReset) {
         mgr->add<FGMultiplayMgr>();
 
         #ifdef ENABLE_SWIFT
-        mgr->add<SwiftConnection>();
+        mgr->add<flightgear::swift::SwiftConnection>();
         #endif
 
         // FGReplay.

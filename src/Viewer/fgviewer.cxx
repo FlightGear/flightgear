@@ -58,7 +58,7 @@ protected:
 static void dumpOut(osg::Node* node)
 {
     char filename[24];
-    static int count = 1;
+    static short count = 1;
 
     while (count < 1000) {
         FILE *fp;

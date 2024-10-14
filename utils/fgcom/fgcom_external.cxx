@@ -471,16 +471,16 @@ std::string computePhoneNumber(double freq, std::string icao, bool atis)
     char tmp[5];
     int  prefix = atis ? 99 : 01;
 
-    sprintf( tmp, "%4s", icao.c_str() );
+    snprintf(tmp, sizeof(tmp), "%4s", icao.c_str());
 
-    sprintf( exten,
+    snprintf(exten, sizeof(exten),
              "%02d%02d%02d%02d%02d%06d",
              prefix,
              tmp[0],
              tmp[1],
              tmp[2],
              tmp[3],
-             (int) (freq * 1000 + 0.5) );
+             (int)(freq * 1000 + 0.5));
     exten[16] = '\0';
 
     snprintf( phoneNumber,

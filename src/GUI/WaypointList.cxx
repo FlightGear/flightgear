@@ -137,7 +137,7 @@ private:
 static void drawClippedString(puFont& font, const char* s, int x, int y, int maxWidth)
 {
   int fullWidth = font.getStringWidth(s);
-  if (fullWidth <= maxWidth) { // common case, easy and efficent
+  if (fullWidth <= maxWidth) { // common case, easy and efficient
     font.drawString(s, x, y);
     return;
   }

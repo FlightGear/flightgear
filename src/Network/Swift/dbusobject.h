@@ -4,20 +4,19 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#ifndef BLACKSIM_FGSWIFTBUS_DBUSOBJECT_H
-#define BLACKSIM_FGSWIFTBUS_DBUSOBJECT_H
+#pragma once
 
 #include "dbusconnection.h"
 #include <deque>
 #include <mutex>
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
 //! DBus base object
 class CDBusObject
 {
 public:
     //! Constructor
-    CDBusObject();
+    CDBusObject() = default;
 
     //! Destructor
     virtual ~CDBusObject();
@@ -84,11 +83,9 @@ private:
     std::string m_objectPath;
 
     std::mutex m_mutex;
-    std::deque<std::function<void()>> m_qeuedDBusCalls;
+    std::deque<std::function<void()>> m_queuedDBusCalls;
 
     const DBusObjectPathVTable m_dbusObjectPathVTable = {dbusObjectPathUnregisterFunction, dbusObjectPathMessageFunction, nullptr, nullptr, nullptr, nullptr};
 };
 
-} // namespace FGSwiftBus
-
-#endif // guard
+} // namespace flightgear::swift

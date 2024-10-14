@@ -5,14 +5,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#ifndef BLACKSIM_FGSWIFTBUS_SERVICE_H
-#define BLACKSIM_FGSWIFTBUS_SERVICE_H
-
-//! \file
-
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
+#pragma once
 
 
 #include "dbusobject.h"
@@ -30,12 +23,7 @@
 #include <string>
 
 
-//! \cond PRIVATE
-#define FGSWIFTBUS_SERVICE_INTERFACENAME "org.swift_project.fgswiftbus.service"
-#define FGSWIFTBUS_SERVICE_OBJECTPATH "/fgswiftbus/service"
-//! \endcond
-
-namespace FGSwiftBus {
+namespace flightgear::swift {
 
 /*!
      * FGSwiftBus service object which is accessible through DBus
@@ -257,6 +245,4 @@ private:
     SGPropertyNode_ptr m_com1VolumeNode;
     SGPropertyNode_ptr m_com2VolumeNode;
 };
-} // namespace FGSwiftBus
-
-#endif // guard
+} // namespace flightgear::swift

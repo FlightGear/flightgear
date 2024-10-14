@@ -47,7 +47,7 @@ struct FGEventData {
 };
 
 /*
-  FGEventSetting 
+  FGEventSetting
   stores one value or property node together with an optional condition
   Multiple FGEventSetting can be assigned to one FGInputEvent
 */
@@ -57,7 +57,7 @@ public:
     FGEventSetting( SGPropertyNode_ptr base );
     // return evaluted condition or true if condition is nullptr
     bool Test();
-    // return either value of valueNode or value if valueNode is nullptr 
+    // return either value of valueNode or value if valueNode is nullptr
     double GetValue();
 
 protected:
@@ -301,6 +301,7 @@ class FGEventInput : public SGSubsystem,
 {
 public:
     FGEventInput();
+    FGEventInput(const char* filePath, const char* propertyRoot);
     virtual ~FGEventInput();
 
     // Subsystem API.
@@ -313,12 +314,14 @@ public:
     const static unsigned INVALID_DEVICE_INDEX = MAX_DEVICES + 1;
 
 protected:
-    static const char * PROPERTY_ROOT;
+    // where to search for configs and where to put them in the property tree
+    const char* filePath;
+    const char* propertyRoot;
 
-    unsigned AddDevice( FGInputDevice * inputDevice );
+    unsigned AddDevice(FGInputDevice* inputDevice);
     void RemoveDevice( unsigned index );
 
-    std::map<int,FGInputDevice*> input_devices;
+    std::map<int,FGInputDevice*> inputDevices;
     FGDeviceConfigurationMap configMap;
 
     SGPropertyNode_ptr nasalClose;

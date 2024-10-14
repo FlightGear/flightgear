@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#ifndef BLACKSIM_FGSWIFTBUS_DBUSMESSAGE_H
-#define BLACKSIM_FGSWIFTBUS_DBUSMESSAGE_H
+#pragma once
 
 #include "dbus/dbus.h"
 #include <string>
 #include <vector>
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
 
 //! DBus Message
 class CDBusMessage
@@ -94,6 +93,4 @@ private:
     dbus_uint32_t m_serial = 0;
 };
 
-} // namespace FGSwiftBus
-
-#endif // guard
+} // namespace flightgear::swift

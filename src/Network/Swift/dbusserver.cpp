@@ -7,11 +7,10 @@
 #include "dbusobject.h"
 #include "dbusserver.h"
 
-#include <algorithm>
 #include <cassert>
 #include <memory>
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
 
 CDBusServer::CDBusServer()
 {
@@ -81,4 +80,4 @@ void CDBusServer::onNewConnection(DBusServer* server, DBusConnection* conn, void
     obj->onNewConnection(server, conn);
 }
 
-} // namespace FGSwiftBus
+} // namespace flightgear::swift

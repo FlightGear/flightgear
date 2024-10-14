@@ -252,10 +252,12 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     float massFlow = _fuelFlow + (rho * 0.5f * _displacement * speed);
     float specHeat = 1300;
     float corr = 1.0f/(Math::pow(_compression, 0.4f) - 1.0f);
-    _egt = corr * (power * 1.1f) / (massFlow * specHeat);
-    if(_egt < temp) _egt = temp;
-    
-    
+
+    const float egtDelta = corr * (power * 1.1f) / (massFlow * specHeat);
+    // final EGT is Kelvin, based on the ambient temperature (passed in via
+    // 'temp' arg) and the change in temperature we just computed.
+    _egt = temp + egtDelta;
+
     // Oil temperature.
     // Assume a linear variation between ~90degC at idle and ~120degC
     // at full power.  No attempt to correct for airflow over the

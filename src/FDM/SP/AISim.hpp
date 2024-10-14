@@ -264,7 +264,7 @@ private:
     /* environment data */
     static float density[101], vsound[101];
     aiVec3 gravity_ned = { 0.0f, 0.0f, AISIM_G };
-    size_t alt_idx = -1;
+    //size_t alt_idx = -1;
     float rho = 0.0f;
     float qbar = 0.0f;
     float sigma = 0.0f;

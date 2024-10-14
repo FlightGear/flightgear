@@ -18,6 +18,14 @@ if(POLICY CMP0116)
     cmake_policy(SET CMP0116 NEW)
 endif()
 
+if(POLICY CMP0145)
+  cmake_policy(SET CMP0145 NEW)
+endif()
+
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
+
 message("CMAKE Build type: ${CMAKE_BUILD_TYPE}")
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -47,7 +55,7 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.12" CACHE STRING "Minimum OS X deployment version")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
 
 project(FlightGear)
 
@@ -112,6 +120,9 @@ IF(APPLE)
     find_library(CORESERVICES_LIBRARY CoreServices)
     find_library(COCOA_LIBRARY Cocoa)
     list(APPEND PLATFORM_LIBS ${COCOA_LIBRARY} ${CORESERVICES_LIBRARY})
+
+    # silence Apple OpenGl warnings about legacy 1.x APIs
+    add_compile_definitions(GL_SILENCE_DEPRECATION)
 elseif(WIN32)
     set(EVENT_INPUT_DEFAULT 1)
     set(ENABLE_VR_DEFAULT 1)
@@ -338,16 +349,20 @@ endif()
 ##############################################################################
 ## Qt5 setup setup
 if (ENABLE_QT)
-
-    find_package(Qt5 5.9 COMPONENTS Widgets Gui Network Qml Quick Svg)
-    if (Qt5Widgets_FOUND)
+    find_package(QT NAMES Qt6 Qt5 COMPONENTS Core)
+    if (QT_FOUND)
+        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Gui Network Qml Quick Svg)
+        if (NOT Qt${QT_VERSION_MAJOR}Widgets_FOUND)
+            message(FATAL_ERROR "Qt support enabled, Qt was found but some required packages are missing, stopping.")
+        endif()
+    
         set(HAVE_QT 1)
         include (Translations)
 
         # extract the Qt root direction, since we need it for a few things
-        if (TARGET Qt5::qmake)
-            get_target_property(_qt5_qmake_path Qt5::qmake LOCATION)
-            get_filename_component(FG_QT_BIN_DIR ${_qt5_qmake_path} DIRECTORY)
+        if (TARGET Qt${QT_VERSION_MAJOR}::qmake)
+            get_target_property(_qt_qmake_path Qt${QT_VERSION_MAJOR}::qmake LOCATION)
+            get_filename_component(FG_QT_BIN_DIR ${_qt_qmake_path} DIRECTORY)
             get_filename_component(FG_QT_ROOT_DIR ${FG_QT_BIN_DIR} DIRECTORY)
         endif()
 
@@ -355,23 +370,12 @@ if (ENABLE_QT)
         
         message(STATUS "Qt GUI enabled, found Qt at: ${FG_QT_ROOT_DIR}")
     else()
-        message(STATUS "Qt GUI disabled, Qt/qmake not found in PATH/CMAKE_PREFIX_PATH")
+        message(STATUS "Qt support disabled, Qt/qmake not found in PATH/CMAKE_PREFIX_PATH")
         # don't try to build FGQCanvas if Qt wasn't found correctly
         set(ENABLE_FGQCANVAS OFF)
     endif()
-
-    # we would ideally use TARGET::Qt5GuiPrivate but Fedora broke it
-    # perform a manual check instead
-    # see https://bugzilla.redhat.com/show_bug.cgi?id=1846613
-    set (CMAKE_REQUIRED_INCLUDES ${Qt5Gui_PRIVATE_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS})
-    check_include_file_cxx("private/qopenglcontext_p.h" REALLY_HAVE_QGUIPRIVATE)
-
-    if (REALLY_HAVE_QGUIPRIVATE)
-        set(ENABLE_QQ_UI 1)
-    else()
-        message(STATUS "QtGui private headers not available.")
-    endif()
 else()
+    set(HAVE_QT 0)
     set(ENABLE_FGQCANVAS OFF)
 endif (ENABLE_QT)
 
@@ -443,7 +447,15 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Ap
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG")
     set(CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g -DNDEBUG")
 
-    set(SIMD_COMPILER_FLAGS "-msse2 -mfpmath=sse -ftree-vectorize -ftree-slp-vectorize")
+    if(CMAKE_OSX_ARCHITECTURES MATCHES "x86_64")
+      set(SIMD_COMPILER_FLAGS "-msse2 -mfpmath=sse")
+    elseif(CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+      # set(SIMD_COMPILER_FLAGS "-mfpmath=vfp4")
+    elseif(X86 OR X86_64)
+      set(SIMD_COMPILER_FLAGS "-msse2 -mfpmath=sse")
+    endif()
+    set(SIMD_COMPILER_FLAGS "${SIMD_COMPILER_FLAGS} -ftree-vectorize -ftree-slp-vectorize")
+    
     set(WARNING_FLAGS_C "-Wall")
 endif()
 
@@ -458,6 +470,20 @@ if (ENABLE_ASAN)
 
     # needed for check_cxx_source_compiles
     set(CMAKE_REQUIRED_LINK_OPTIONS "-fsanitize=address")
+    if (ENABLE_TSAN)
+        message(FATAL_ERROR  "ENABLE_ASAN=ON incompatible with ENABLE_TSAN=ON")
+    endif()
+else ()
+    if (ENABLE_TSAN)
+        message(WARNING  "ThreadSanitizer (ENABLE_TSAN=ON) has a performance impact.")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=thread")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=thread")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread")
+
+        # needed for check_cxx_source_compiles
+        set(CMAKE_REQUIRED_LINK_OPTIONS "-fsanitize=thread")
+    endif()
 endif()
 
 if(WIN32)

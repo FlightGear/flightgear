@@ -16,7 +16,7 @@ modeled with this system.  Instead you should make a procedural
 electrical system model using nasal, or wait for a better data driven
 electrical system model to be developed "some time" in the future.
 
-Currently the old/depricated electrical system has been made into a
+Currently the old/deprecated electrical system has been made into a
 proper subsystem.  Most aircraft will load the default "systems"
 configuration via the "/sim/systems/path" property which is set in the
 top level preferences.xml file and which defaults to a value of
@@ -32,7 +32,7 @@ again for backwards compatibility.
 
 
 
-What follows here is a description of the "old" "depricated"
+What follows here is a description of the "old" "deprecated"
 "obsolete" electrical system.
 
 
@@ -45,7 +45,7 @@ We don't model down to the level of individual electrons, but we do
 try to model a rich enough subset of components so that a realistic
 electrical system may be implemented (at least from the pilot's
 perspective.)  We try to model enough of the general flow so that
-typical electrical system failures can be implimented and so that the
+typical electrical system failures can be implemented and so that the
 pilot can practice realistic troubleshooting techniques and learn the
 basic structure and relationships of the real aircraft electrical
 system.
@@ -189,7 +189,7 @@ are wired in series so all of them need to be on (i.e. true) in order
 for current to pass to the output.
 
 Note: by default the system forces any listed switches to be true.
-The assumption is that not every aircraft or cockpit may impliment
+The assumption is that not every aircraft or cockpit may implement
 every available switch, so rather than having systems be switched off,
 with no way to turn them on, we default to switched on.
 

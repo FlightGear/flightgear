@@ -12,11 +12,11 @@ else()
     set(do_translate FALSE)
 endif()
 
-find_package(Qt5 5.4 COMPONENTS LinguistTools)
-if (${do_translate} AND NOT TARGET Qt5::lrelease)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS LinguistTools)
+if (${do_translate} AND NOT TARGET Qt${QT_VERSION_MAJOR}::lrelease)
     set(do_translate FALSE)
-    message(STATUS "Built-in translations disabled becuase Qt5 lrelease tool was not found."
-        "\n(on Linux You may need to install an additional package containing the Qt5 translation tools)")
+    message(STATUS "Built-in translations disabled becuase Qt lrelease tool was not found."
+        "\n(on Linux You may need to install an additional package containing the Qt translation tools)")
 endif()
 
 
@@ -56,7 +56,7 @@ if (${do_translate})
         set(out_file "${PROJECT_BINARY_DIR}/FlightGear_${LANG}.qm")
         add_custom_command(
             OUTPUT ${out_file}
-            COMMAND Qt5::lrelease ${TRANSLATIONS_SRC_DIR}/${LANG}/FlightGear-Qt.xlf
+            COMMAND Qt${QT_VERSION_MAJOR}::lrelease ${TRANSLATIONS_SRC_DIR}/${LANG}/FlightGear-Qt.xlf
                 -qm ${out_file}
             DEPENDS ${TRANSLATIONS_SRC_DIR}/${LANG}/FlightGear-Qt.xlf
         )
@@ -85,7 +85,7 @@ if (${do_translate})
     foreach(lang ${LANGUAGES})
         add_custom_target(
             ts_${lang}
-            COMMAND Qt5::lupdate ${CMAKE_SOURCE_DIR}/src/GUI
+            COMMAND Qt${QT_VERSION_MAJOR}::lupdate ${CMAKE_SOURCE_DIR}/src/GUI
                 -locations relative  -no-ui-lines -ts ${TRANSLATIONS_SRC_DIR}/${lang}/FlightGear-Qt.xlf
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )

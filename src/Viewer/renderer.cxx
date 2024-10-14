@@ -74,10 +74,10 @@
 #include <simgear/scene/util/SGUpdateVisitor.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
+#include <simgear/scene/util/OsgUtils.hxx>
 #include <simgear/scene/tgdb/GroundLightManager.hxx>
 #include <simgear/scene/tgdb/pt_lights.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
-#include <simgear/structure/OSGUtils.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>

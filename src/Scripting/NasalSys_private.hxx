@@ -1,24 +1,22 @@
-// Copyright (C) 2013  James Turner//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// NasalSys.hxx -
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Copyright (C) 2013  James Turner
 
-#ifndef __NASALSYS_PRIVATE_HXX
-#define __NASALSYS_PRIVATE_HXX
+#pragma once
 
-#include <simgear/props/props.hxx>
+#include <simgear/debug/BufferedLogCallback.hxx>
 #include <simgear/nasal/nasal.h>
+#include <simgear/props/props.hxx>
+#include <simgear/threads/SGQueue.hxx>
 #include <simgear/xml/easyxml.hxx>
+
+#include "NasalModelData.hxx"
+
+// forward decls
+class FGNasalSys;
+class TimerObj; ///< persistent timer created by maketimer
+class FGNasalModuleListener;
+class NasalCommand;
 
 /**
   @breif wrapper for naEqual which recursively checks vec/hash equality
@@ -94,4 +92,51 @@ struct NasalTimer
 naRef initNasalUnitTestCppUnit(naRef globals, naContext c);
 naRef initNasalUnitTestInSim(naRef globals, naContext c);
 
-#endif // of __NASALSYS_PRIVATE_HXX
+
+class NasalSysPrivate
+{
+public:
+    ~NasalSysPrivate();
+
+    //friend class FGNasalScript;
+    // friend class FGNasalListener;
+    // friend class FGNasalModuleListener;
+
+    SGLockedQueue<SGSharedPtr<FGNasalModelData>> _loadList;
+    SGLockedQueue<SGSharedPtr<FGNasalModelData>> _unloadList;
+    // Delay removing items of the _loadList to ensure the are already attached
+    // to the scene graph (eg. enables to retrieve world position in load
+    // callback).
+    bool _delay_load;
+
+    // Listener
+    std::map<int, FGNasalListener*> _listener;
+    std::vector<FGNasalListener*> _dead_listener;
+
+    std::vector<FGNasalModuleListener*> _moduleListeners;
+
+    static int _listenerId;
+
+    bool _inited = false;
+    naContext _context = nullptr;
+    naRef _globals,
+        _string;
+
+    SGPropertyNode_ptr _cmdArg;
+
+    std::unique_ptr<simgear::BufferedLogCallback> _log;
+
+    typedef std::map<std::string, NasalCommand*> NasalCommandDict;
+    NasalCommandDict _commands;
+
+    naRef _wrappedNodeFunc;
+
+    // track NasalTimer instances (created via settimer() call) -
+    // this allows us to clean these up on shutdown
+    std::vector<NasalTimer*> _nasalTimers;
+
+
+    // track persistent timers. These are owned from the Nasal side, so we
+    // only track a non-owning reference here.
+    std::vector<TimerObj*> _persistentTimers;
+};

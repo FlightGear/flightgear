@@ -138,7 +138,7 @@ Each filter drives one to many output properties. No scaling or offsetting is im
 for the output value, these should be done in the filter itself.
 The output properties are defined in the <output/> element by adding <property/> elements
 within the <output/> element. For just a single output property, the <property/> element
-may be ommited. For backward compatibility, <property/> may be replaced by <prop/>.
+may be omitted. For backward compatibility, <property/> may be replaced by <prop/>.
 Nonexisting properties will be created with type double.
 
 Example: (Multiple output properties)
@@ -175,8 +175,8 @@ Example:
                           is only limited by the internal limit of double precision float computation.
                           If either <u_min> or <u_max> is given, clamping is activated. A missing
                           min or max value defaults to 0 (zero).
-                          Note: <u_min> and <u_max> may also occour within a <config> element.
-                          <min> and <max> may be used as a substitude for the corresponding u_xxx element.
+                          Note: <u_min> and <u_max> may also occur within a <config> element.
+                          <min> and <max> may be used as a substitute for the corresponding u_xxx element.
 <period>      Complex     Define a periodical input or output value. The phase width is defined by the 
                           child elements <min> and <max> which are of type InputValue
 
@@ -197,8 +197,8 @@ Implicit definition of the minimum value of 0 (zero) and defining a maximum of 1
 
 This defines the input or output as a periodic value with a phase width of 360, like 
 the compass rose.  Any value reaching the filter's input or leaving the filter at the 
-output will be transformed to fit into the given range by adding or substracting one phase 
-width of 360. Values of -270, 90 or 450 applied to this periodical element will allways 
+output will be transformed to fit into the given range by adding or subtracting one phase 
+width of 360. Values of -270, 90 or 450 applied to this periodical element will always 
 result in +90. A value of 630, 270 or -90 will be normalized to -90 in the given example.
 <period>
   <min>-180.0</min>
@@ -246,7 +246,7 @@ Use a complex condition, only compute this filter if the autopilot is serviceabl
 is either dg-heading-hold or nav1-heading-hold
 <enable>
   <condition>
-    <property>/autopilo/serviceable</property>
+    <property>/autopilot/serviceable</property>
     <or>
       <equals>
         <property>/autopilot/locks/heading</property>
@@ -306,7 +306,7 @@ the digital filter:
                           <value> element.
           
 Example: a pressure-rate-filter implemented as a double exponential low pass filter
-         with a bandwith of 10Hz
+         with a bandwidth of 10Hz
 
   <filter>
     <name>pressure-rate-filter</name>
@@ -444,6 +444,6 @@ The output from the reciprocal filter type is: gain / input.
 The gain can be changed during run-time by updating the value in the property
 node.
 
-<startup-current> If true, internal state is initialised with the current error
+<startup-current> If true, internal state is initialized with the current error
 value, which can reduce startup oscillations. Otherwise if false (the default),
-internal state is initialised to zero.
+internal state is initialized to zero.

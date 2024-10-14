@@ -92,7 +92,7 @@ window, camera, or gui tags.
    are taken as default.
 
    bezel
-   Gives informantion about the bezel of monitors for a seamless view.
+   Gives information about the bezel of monitors for a seamless view.
 
     right
     right bezel with in the same units than with and height above
@@ -174,7 +174,7 @@ window, camera, or gui tags.
    Defaults to true.
 
   master-perspective
-  Defines a persective projection matrix for use as the leading display
+  Defines a perspective projection matrix for use as the leading display
   in a seamless multiscreen configuration. This kind of perspective
   projection is zoomable.
 
@@ -191,7 +191,7 @@ window, camera, or gui tags.
   Defines a perspective projection matrix for use as derived display
   in a seamless multiscreen configuration. The projection matrix
   is computed so that the respective edge of this display matches the
-  assiciated other edge of the other display. For example the right edge
+  associated other edge of the other display. For example the right edge
   of a left-of-perspective display matches the left edge of the parent
   display. This also works with different zoom levels, leading to distorted
   but still seamless multiview configurations.
@@ -207,7 +207,7 @@ window, camera, or gui tags.
   left-of-perspective and friends. It is just a more flexible but less
   convenient way to get the same effect. A child display is configured
   by 2 sets of reference points one in this current camera and one in
-  the parrent camera which should match in the final view.
+  the parent camera which should match in the final view.
 
    parent-camera - string
    Name of the parent camera.
@@ -218,7 +218,7 @@ window, camera, or gui tags.
     point - array of two points
 
      x, y - double
-     x and y coodinates of the reference points in units of this
+     x and y coordinates of the reference points in units of this
      physical-dimensions.
 
    parent
@@ -227,7 +227,7 @@ window, camera, or gui tags.
     point - array of two points
 
      x, y - double
-     x and y coodinates of the reference points in units of the
+     x and y coordinates of the reference points in units of the
      parents physical-dimensions.
 
   texture
@@ -354,7 +354,7 @@ horizontal row.
   </sim>
 </PropertyList>
 
-Here's a complete example that uses a seperate window on each
+Here's a complete example that uses a separate window on each
 display. The displays are arranged in a shallow arc with the left and
 right displays at a 45.3 degree angle to the center display because,
 at the assumed screen dimensions, the horizontal field of view of one
@@ -496,7 +496,7 @@ Here is an example for a 3 screen seamless zoomable multiscreen
 configuration using 3 533mmx300mm displays each with a 23mm bezel.
 The side views are angled with 45 deg.
 The commented out reference-points-perspective shows the
-aequivalent configuration than the active right-of-perspective.
+equivalent configuration than the active right-of-perspective.
 This is done by just using two reference points at the outer
 edge of the bezel of the respective display.
 

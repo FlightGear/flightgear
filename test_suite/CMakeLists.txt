@@ -63,9 +63,6 @@ endif()
 #-----------------------------------------------------------------------------
 # Set up all test suites as CTests.
 
-# Activation.
-include(Dart)
-
 # System test suites.
 add_test(AeroMeshSystemTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -s AeroMeshTests)
 #add_test(GPSSystemTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -s GPSTests)
@@ -88,6 +85,7 @@ endif()
 add_test(LaRCSimMatrixUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u LaRCSimMatrixTests)
 add_test(MktimeUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u MktimeTests)
 add_test(NasalSysUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u NasalSysTests)
+add_test(NasalSysUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u NasalLibTests)
 add_test(NavaidsUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u NavaidsTests)
 add_test(NavRadioUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u NavRadioTests)
 add_test(PosInitUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u PosInitTests)
@@ -155,11 +153,11 @@ target_link_libraries(fgfs_test_suite CppUnitLib)
 
 # target to run the tests
 if (MSVC)
-    file(TO_NATIVE_PATH "${FG_QT_BIN_DIR}" _qt5_bin_dir_native)
+    file(TO_NATIVE_PATH "${FG_QT_BIN_DIR}" _qt_bin_dir_native)
     file(TO_NATIVE_PATH "${FINAL_MSVC_3RDPARTY_DIR}/bin" _msvc_3rdparty_bin_dir)
     file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}" _install_bin_dir)
 
-    set(CMAKE_MSVCIDE_RUN_PATH "${_install_bin_dir};${_msvc_3rdparty_bin_dir};${_qt5_bin_dir_native}")
+    set(CMAKE_MSVCIDE_RUN_PATH "${_install_bin_dir};${_msvc_3rdparty_bin_dir};${_qt_bin_dir_native}")
 endif()
 
 if (FG_QT_ROOT_DIR)

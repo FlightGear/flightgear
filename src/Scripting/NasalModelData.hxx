@@ -61,8 +61,9 @@ public:
     static FGNasalModelData* getByModuleId(unsigned int id);
 
 private:
-    static unsigned int _max_module_id;
-    static FGNasalModelDataList _loaded_models;
+    inline static std::mutex _loaded_models_mutex; // mutex protecting the _loaded_models
+    inline static unsigned int _max_module_id = 0;
+    inline static FGNasalModelDataList _loaded_models;
 
     std::string _module, _path;
     SGPropertyNode_ptr _root, _prop;

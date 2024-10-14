@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#ifndef BLACKSIM_FGSWIFTBUS_DBUSCONNECTION_H
-#define BLACKSIM_FGSWIFTBUS_DBUSCONNECTION_H
+#pragma once
 
 #include "dbuscallbacks.h"
 #include "dbusdispatcher.h"
@@ -18,7 +17,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
 
 class CDBusObject;
 
@@ -36,7 +35,7 @@ public:
     CDBusConnection();
 
     //! Constructor
-    CDBusConnection(DBusConnection* connection);
+    explicit CDBusConnection(DBusConnection* connection);
 
     //! Destructor
     ~CDBusConnection() override;
@@ -82,7 +81,7 @@ public:
 
 protected:
     // cppcheck-suppress virtualCallInConstructor
-    virtual void dispatch() override final;
+    void dispatch() override;
 
 private:
     void setDispatchStatus(DBusConnection* connection, DBusDispatchStatus status);
@@ -99,6 +98,4 @@ private:
     std::unordered_map<CDBusObject*, DisconnectedCallback> m_disconnectedCallbacks;
 };
 
-} // namespace FGSwiftBus
-
-#endif // guard
+} // namespace flightgear::swift

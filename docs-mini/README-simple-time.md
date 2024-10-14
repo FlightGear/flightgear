@@ -21,7 +21,7 @@ There are no configuration settings.
 
 When simple-time is being used, Flightgear always sends its computer's UTC time in multiplayer packets. Received packets' time stamps will always be slightly in the past due to network delays, so multiplayer aircraft are positioned using extrapolation - by predicting where they would be now based on where they were a small time ago, using the velocity information in the MP packet.
 
-So with multiple instances of Flightgear running, as long as their clocks are synchronised to within a few tenths of a second (typically via NTP, Network Time Protocol, the standard way for computers to set their clocks to the global standard) and network delays are similarly not more than a few tenths of a second, each pilot will see a consistent view of all aircraft.
+So with multiple instances of Flightgear running, as long as their clocks are synchronized to within a few tenths of a second (typically via NTP, Network Time Protocol, the standard way for computers to set their clocks to the global standard) and network delays are similarly not more than a few tenths of a second, each pilot will see a consistent view of all aircraft.
 
 
 ## Coping with MP packets from Flightgear instances that are not using simple-time.

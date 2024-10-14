@@ -226,7 +226,7 @@ void PropertyItemModel::append_mapping(QQmlListProperty<PropertyItemModelRoleMap
     }
 }
 
-PropertyItemModelRoleMapping* PropertyItemModel::at_mapping(QQmlListProperty<PropertyItemModelRoleMapping> *list, int index)
+PropertyItemModelRoleMapping* PropertyItemModel::at_mapping(QQmlListProperty<PropertyItemModelRoleMapping>* list, QML_LIST_INDEX_TYPE index)
 {
     PropertyItemModel *model = qobject_cast<PropertyItemModel *>(list->object);
     if (model) {
@@ -235,7 +235,7 @@ PropertyItemModelRoleMapping* PropertyItemModel::at_mapping(QQmlListProperty<Pro
     return 0;
 }
 
-int PropertyItemModel::count_mapping(QQmlListProperty<PropertyItemModelRoleMapping> *list)
+QML_LIST_INDEX_TYPE PropertyItemModel::count_mapping(QQmlListProperty<PropertyItemModelRoleMapping>* list)
 {
     PropertyItemModel *model = qobject_cast<PropertyItemModel *>(list->object);
     if (model) {
@@ -253,5 +253,6 @@ void PropertyItemModel::clear_mapping(QQmlListProperty<PropertyItemModelRoleMapp
         model->rebuild();
     }
 }
+
 
 #include "PropertyItemModel.moc"

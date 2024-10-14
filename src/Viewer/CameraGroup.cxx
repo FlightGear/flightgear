@@ -21,11 +21,11 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx> // for copyProperties
 #include <simgear/structure/exception.hxx>
-#include <simgear/structure/OSGUtils.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/util/ProjectionMatrix.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
+#include <simgear/scene/util/OsgUtils.hxx>
 #include <simgear/scene/viewer/Compositor.hxx>
 #include <simgear/scene/viewer/CompositorUtil.hxx>
 

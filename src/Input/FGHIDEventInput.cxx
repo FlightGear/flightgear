@@ -27,6 +27,7 @@
 #include <cassert>
 #include <algorithm>
 
+#include <Main/fg_props.hxx>
 #include <hidapi/hidapi.h>
 #include <hidapi/hidparse.h>
 
@@ -41,64 +42,325 @@ namespace HID
 {
     enum class UsagePage
     {
-        Undefined = 0,
-        GenericDesktop,
-        Simulation,
-        VR,
-        Sport,
-        Game,
-        GenericDevice,
-        Keyboard,
-        LEDs,
-        Button,
-        Ordinal,
-        Telephony,
-        Consumer,
-        Digitizer,
+        Undefined = 0x00,
+        GenericDesktop = 0x01,
+        Simulation = 0x02,
+        VR = 0x03,
+        Sport =0x04,
+        Game =0x05,
+        GenericDevice = 0x06,
+        Keyboard = 0x07,
+        LEDs = 0x08,
+        Button = 0x09,
+        Ordinal = 0x0A,
+        Telephony = 0x0B,
+        Consumer = 0x0C,
+        Digitizer = 0x0D,
         // reserved 0x0E
-        // PID 0x0f
+        PID = 0x0F,
         Unicode = 0x10,
         AlphanumericDisplay = 0x14,
-
+        MedicalInstruments = 0x40,
+        BarCodeScanner = 0x8C,
+        MagneticStripeReadingDevice = 0x8E,
+        CameraControl = 0x90,
+        Arcade = 0x91,
         VendorDefinedStart = 0xFF00
     };
+
+    enum SimulationUsage
+    {
+        SC_FlightSimulationDevice = 0x01,
+        SC_AutomobileSimulationDevice = 0x02,
+        SC_TankSimulationDevice = 0x03,
+        SC_SpaceShipSimulationDevice = 0x04,
+        SC_SubmarineSimulationDevice = 0x05,
+        SC_SailingSimulationDevice = 0x06,
+        SC_MotorcycleSimulationDevice = 0x07,
+        SC_SportsSimulationDevice = 0x08,
+        SC_AirplaneSimulationDevice = 0x09,
+        SC_HelicopterSimulationDevice = 0x0A,
+        SC_MagicCarpetSimulationDevice = 0x0B,
+        SC_BycicleSimulationDevice = 0x0C,
+        SC_FlightControlStick = 0x20,
+        SC_FlightStick = 0x21,
+        SC_CyclicControl = 0x22,
+        SC_CyclicTrim = 0x23,
+        SC_FlightYoke = 0x24,
+        SC_TrackControl = 0x25,
+        SC_Aileron = 0xB0,
+        SC_AileronTrim = 0xB1,
+        SC_AntiTorqueControl = 0xB2,
+        SC_AutopilotEnable = 0xB3,
+        SC_ChaffRelease = 0xB4,
+        SC_CollectiveControl = 0xB5,
+        SC_DiveBrake = 0xB6,
+        SC_ElectronicCountermeasures = 0xB7,
+        SC_Elevator = 0xB8,
+        SC_ElevatorTrim = 0xB9,
+        SC_Rudder = 0xBA,
+        SC_Throttle = 0xBB,
+        SC_FlightCommunications = 0xBC,
+        SC_FlareRelease = 0xBD,
+        SC_LandingGear = 0xBE,
+        SC_ToeBrake = 0xBF,
+        SC_Trigger = 0xC0,
+        SC_WeaponsArm = 0xC1,
+        SC_WeaponsSelect = 0xC2,
+        SC_WingFlaps = 0xC3,
+        SC_Accelerator = 0xC4,
+        SC_Brake = 0xC5,
+        SC_Clutch = 0xC6,
+        SC_Shifter = 0xC7,
+        SC_Steering = 0xC8,
+        SC_TurretDirection = 0xC9,
+        SC_BarrelElevation = 0xCA,
+        SC_DivePlane = 0xCB,
+        SC_Ballast = 0xCC,
+        SC_BicycleCrank = 0xCD,
+        SC_HandleBars= 0xCE,
+        SC_FrontBrake = 0xCF,
+        SC_RearBrake = 0xD0
+
+    };
+
 
     enum GenericDesktopUsage
     {
         // generic desktop section
+        GD_Undefined= 0x00,
+        GD_Pointer = 0x01,
+        GD_Mouse = 0x02,
+        GD_Reserved03 = 0x03,
         GD_Joystick = 0x04,
         GD_GamePad = 0x05,
         GD_Keyboard = 0x06,
         GD_Keypad = 0x07,
         GD_MultiAxisController = 0x08,
+        GD_TabletPCSysCtrls = 0x09,
+        GD_WaterCoolingDevice = 0x0A,
+        GD_ComputerChassisDevice = 0x0B,
+        GD_WirelessRadioControls = 0x0C,
+        GD_PortableDeviceControl = 0x0D,
+        GD_SystemMultiAxisController = 0x0E,
+        GD_SpatialController = 0x0F,
+        GD_AssistiveControl = 0x10,
+        GD_DeviceDock = 0x11,
+        GD_DockableDevice = 0x12,
+        GD_CallStateManagementControl = 0x13,
+        GD_Reserved14 = 0x14,
+        GD_Reserved15 = 0x15,
+        GD_Reserved16 = 0x16,
+        GD_Reserved17 = 0x17,
+        GD_Reserved18 = 0x18,
+        GD_Reserved19 = 0x19,
+        GD_Reserved1A = 0x1A,
+        GD_Reserved1B = 0x1B,
+        GD_Reserved1C = 0x1C,
+        GD_Reserved1D = 0x1D,
+        GD_Reserved1E = 0x1E,
+        GD_Reserved1F = 0x1F,
+        GD_Reserved20 = 0x20,
+        GD_Reserved21 = 0x21,
+        GD_Reserved22 = 0x22,
+        GD_Reserved23 = 0x23,
+        GD_Reserved24 = 0x24,
+        GD_Reserved25 = 0x25,
+        GD_Reserved26 = 0x26,
+        GD_Reserved27 = 0x27,
+        GD_Reserved28 = 0x28,
+        GD_Reserved29 = 0x29,
+        GD_Reserved2A = 0x2A,
+        GD_Reserved2B = 0x2B,
+        GD_Reserved2C = 0x2C,
+        GD_Reserved2D = 0x2D,
+        GD_Reserved2E = 0x2E,
+        GD_Reserved2F = 0x2F,
         GD_X = 0x30,
-        GD_Y,
-        GD_Z,
-        GD_Rx,
-        GD_Ry,
-        GD_Rz,
-        GD_Slider,
-        GD_Dial,
-        GD_Wheel,
-        GD_Hatswitch,
+        GD_Y = 0x31,
+        GD_Z = 0x32,
+        GD_Rx = 0x33,
+        GD_Ry = 0x34,
+        GD_Rz = 0x35,
+        GD_Slider = 0x36,
+        GD_Dial = 0x37,
+        GD_Wheel = 0x38,
+        GD_Hatswitch = 0x39,
+        GD_CountedBuffer= 0x3A,
+        GD_ByteCount = 0x3B,
+        GD_MotionWakeUp = 0x3C,
+        GD_Start = 0x3D,
+        GD_Select = 0x3E,
+        GD_Reserved3F = 0x3F,
+        GD_Vx = 0x40,
+        GD_Vy = 0x41,
+        GD_Vz = 0x42,
+        GD_Vbrx = 0x43,
+        GD_Vbry = 0x44,
+        GD_Vbrz = 0x45,
+        GD_Vno = 0x46,
+        GD_FeatureNotification = 0x47,
+        GD_ResolutionMultiplier = 0x48,
+        GD_Qx = 0x49,
+        GD_Qy = 0x4A,
+        GD_Qz = 0x4B,
+        GD_Qw = 0x4C,
+        GD_SystemControl = 0x80,
+        GD_SystemPowerDown = 0x81,
+        GD_SystemSleep = 0x82,
+        GD_SystemWakeUp = 0x83,
+        GD_SystemContextMenu = 0x84,
+        GD_SystemMainMenu = 0x85,
+        GD_SystemAppMenu = 0x86,
+        GD_SystemMenuHelp = 0x87,
+        GD_SystemMenuExit = 0x88,
+        GD_SystemMenuSelect = 0x89,
+        GD_SystemMenuRight = 0x8A,
+        GD_SystemMenuLeft = 0x8B,
+        GD_SystemMenuUp= 0x8C,
+        GD_SystemMenuDown = 0x8D,
+        GD_SystemColdRestart = 0x8E,
+        GD_SystemWarmRestart = 0x8F,
         GD_DpadUp = 0x90,
-        GD_DpadDown,
-        GD_DpadRight,
-        GD_DpadLeft
+        GD_DpadDown = 0x91,
+        GD_DpadRight = 0x92,
+        GD_DpadLeft = 0x93,
+        GD_IndexTrigger = 0x94,
+        GD_PalmTrigger = 0x95,
+        GD_Thumbstick = 0x96,
+        GD_SystemFunctionShift = 0x97,
+        GD_SystemFunctionShiftLock = 0x98,
+        GD_SystemFunctionShiftLockIndicator = 0x99,
+        GD_SystemDismissNotification = 0x9A,
+        GD_SystemDoNotDisturb = 0x9B,
+        GD_SystemDock = 0xA0,
+        GD_SystemUndock = 0xA1,
+        GD_SystemSetup  = 0xA2,
+        GD_SystemBreak = 0xA3,
+        GD_SystemDebuggerBreak = 0xA4,
+        GD_ApplicationBreak = 0xA5,
+        GD_ApplicationDebuggerBreak = 0xA6,
+        GD_SystemSpeakerMute = 0xA7,
+        GD_SystemHibernate = 0xA8,
+        GD_SystemMicrophoneMute = 0xA9,
+        GD_SystemDisplayInvert = 0xB0,
+        GD_SystemDisplayInternal = 0xB1,
+        GD_SystemDisplayExternal = 0xB2,
+        GD_SystemDisplayBoth = 0xB3,
+        GD_SystemDisplayDual = 0xB4,
+        GD_SystemDisplayToggleIntExtMode = 0xB5,
+        GD_SystemDisplaySwapPrimarySecondary = 0xB6,
+        GD_SystemDisplayToggleLCDAutoscale = 0xB7,
+        GD_SensorZone = 0xC0,
+        GD_RPM= 0xC1,
+        GD_CoolantLevel = 0xC2,
+        GD_CoolantCriticalLevel = 0xC3,
+        GD_CoolantPump = 0xC4,
+        GD_ChassisEnclosure = 0xC5,
+        GD_WirelessRadioButton = 0xC6,
+        GD_WirelessRadioLED = 0xC7,
+        GD_WirelessRadioSliderSwitch = 0xC8,
+        GD_SystemDisplayRotationLockButton = 0xC9,
+        GD_SystemDisplayRotationLockSliderSwitch = 0xCA,
+        GD_ControlEnable = 0xCB,
+        GD_DockableDeviceUniqueID = 0xD0,
+        GD_DockableDeviceVendorID = 0xD1,
+        GD_DockableDevicePrimaryUsagePage = 0xD2,
+        GD_DockableDevicePrimaryUsageID = 0xD3,
+        GD_DockableDeviceDockingState = 0xD4,
+        GD_DockableDeviceDisplayOcclusion = 0xD5,
+        GD_DockableDeviceObjectType = 0xD6,
+        GD_CallActiveLED = 0xE0,
+        GD_CallMuteToggle = 0xE1,
+        GD_CallMuteLED = 0xE2
     };
 
     enum LEDUsage
     {
         LED_Undefined = 0,
+        LED_NumLock = 0x01,
+        LED_CapsLock = 0x02,
+        LED_ScrollLock = 0x03,
+        LED_Compose = 0x04,
+        LED_Kana = 0x05,
+        LED_Power = 0x06,
+        LED_Shift = 0x07,
+        LED_DoNotDisturb = 0x08,
+        LED_Mute = 0x09,
+        LED_ToneEnable = 0x0A,
+        LED_HighCutFilter = 0x0B,
+        LED_LowCutFilter = 0x0C,
+        LED_EqualizerEnable = 0x0D,
+        LED_SoundFieldOn = 0x0E,
+        LED_SurroundOn = 0x0F,
+        LED_Repeat = 0x10,
+        LED_Stereo = 0x11,
+        LED_SampligRateDetect = 0x12,
+        LED_Spinning = 0x013,
+        LED_CAV = 0x14,
+        LED_CLV = 0x15,
+        LED_RecordingFormatDetect = 0x16,
+        LED_OffHook = 0x17,
+        LED_Ring = 0x18,
+        LED_MessageWaiting= 0x19,
+        LED_DataMode = 0x1A,
+        LED_BatteryOperation = 0x1B,
+        LED_BatteryOk = 0x1C,
+        LED_BatteryLow = 0x1D,
+        LED_Speaker = 0x1E,
+        LED_HeadSet = 0x1F,
+        LED_Hold = 0x20,
+        LED_Microphone = 0x21,
+        LED_Coverage = 0x22,
+        LED_NightMode = 0x23,
+        LED_SendCalls = 0x24,
+        LED_CallPickup = 0x25,
+        LED_Conference = 0x26,
+        LED_StandBy = 0x27,
+        LED_CameraOn = 0x28,
+        LED_CameraOff = 0x29,
+        LED_OnLine = 0x2A,
+        LED_OffLine = 0x2B,
+        LED_Busy = 0x2C,
+        LED_Ready = 0x2D,
+        LED_PaperOut = 0x2E,
+        LED_PaperJam = 0x2F,
+        LED_Remote = 0x30,
+        LED_Forward = 0x31,
+        LED_Reverse = 0x32,
+        LED_Stop = 0x33,
+        LED_Rewind = 0x34,
+        LED_FastForward = 0x35,
         LED_Play = 0x36,
         LED_Pause = 0x37,
-        LED_GenericIndicator = 0x4B
+        LED_Record = 0x38,
+        LED_Error = 0x39,
+        LED_UsageSelectedIndicator = 0x3A,
+        LED_UsageInUseIndicator = 0x3B,
+        LED_UsageMultiModeIndicator = 0x3C,
+        LED_IndicatorOn = 0x3D,
+        LED_IndicatorFlash= 0x3E,
+        LED_IndicatorSlowBlink = 0x3F,
+        LED_IndicatorFastBlink = 0x40,
+        LED_IndicatorOff = 0x41,
+        LED_FlashOnTime = 0x42,
+        LED_SlowBlinkOnTime = 0x43,
+        LED_SlowBlinkOffTime = 0x44,
+        LED_FastBlinkOnTime = 0x45,
+        LED_FastBlinkOfftime = 0x46,
+        LED_UsageIndicatorColor = 0x47,
+        LED_IndicatorRed = 0x48,
+        LED_IndicatorGreen = 0x49,
+        LED_IndicatorAmber = 0x4A,
+        LED_GenericIndicator = 0x4B,
+        LED_SystemSuspend = 0x4C,
+        LED_ExternalPowerConnected = 0x4D
     };
 
-    enum AlphanumericUsage
+    enum AlphanumericDisplayUsage
     {
         AD_AlphanumericDisplay = 0x01,
-        AD_BitmappedDisplay = 0x2,
+        AD_BitmappedDisplay = 0x02,
         AD_DisplayControlReport = 0x24,
         AD_ClearDisplay = 0x25,
         AD_CharacterReport = 0x2B,
@@ -110,6 +372,23 @@ namespace HID
         AD_14SegmentDirectMap = 0x45,
         AD_DisplayBrightness = 0x46,
         AD_DisplayContrast = 0x47
+    };
+
+    enum VRUsage
+    {
+        VR_Undefined = 0x00,
+        VR_Belt = 0x01,
+        VR_BodySuit = 0x02,
+        VR_Flexor = 0x03,
+        VR_Glove = 0x04,
+        VR_HeadTracker = 0x05,
+        VR_HeadMountedDisplay = 0x06,
+        VR_HandTracker = 0x07,
+        VR_Oculometer = 0x08,
+        VR_Vest = 0x09,
+        VR_AnimatronicDevice = 0x0A,
+        VR_StereoEnable = 0x20,
+        VR_DisplayEnable = 0x21
     };
 
     enum class ReportType
@@ -131,22 +410,208 @@ namespace HID
 
         if (enumUsage == UsagePage::GenericDesktop) {
             switch (usage) {
-                case GD_Joystick:          return "joystick";
-                case GD_Wheel:             return "wheel";
-                case GD_Dial:              return "dial";
-                case GD_Hatswitch:         return "hat";
-                case GD_Slider:            return "slider";
-                case GD_Rx:                return "x-rotate";
-                case GD_Ry:                return "y-rotate";
-                case GD_Rz:                return "z-rotate";
-                case GD_X:                 return "x-translate";
-                case GD_Y:                 return "y-translate";
-                case GD_Z:                 return "z-translate";
+                case GD_Undefined:          return "undefined";
+                case GD_Pointer:            return "pointer";
+                case GD_Mouse:              return "mouse";
+                case GD_Reserved03:           return "reserved03";
+                case GD_GamePad:             return "gamepad";
+                case GD_Keyboard:            return "keyboard";
+                case GD_Keypad:              return "keypad";
+                case GD_Joystick:            return "joystick";
+                case GD_Wheel:               return "wheel";
+                case GD_Dial:                return "dial";
+                case GD_Hatswitch:           return "hat";
+                case GD_Slider:              return "slider";
+                case GD_Rx:                  return "x-rotate";
+                case GD_Ry:                  return "y-rotate";
+                case GD_Rz:                  return "z-rotate";
+                case GD_X:                   return "x-translate";
+                case GD_Y:                   return "y-translate";
+                case GD_Z:                   return "z-translate";
+                case GD_WaterCoolingDevice:  return "watercoolingdevice";
+                case GD_MultiAxisController: return "multiaxiscontroller";
+                case GD_TabletPCSysCtrls:    return "tabletpcsysctrls";
+                case GD_CountedBuffer:       return "countedbuffer";
+                case GD_ByteCount:           return "bytecount";
+                case GD_MotionWakeUp:        return "motionwakeup";
+                case GD_Start:               return "start";
+                case GD_Select:              return "select";
+                case GD_Vx:                  return "x-vector";
+                case GD_Vy:                  return "y-vector";
+                case GD_Vz:                  return "z-vector";
+                case GD_Vbrx:                return "relative-x-vector";
+                case GD_Vbry:                return "relative-y-vector";
+                case GD_Vbrz:                return "relative-z-vector";
+                case GD_Vno:                 return "non-oriented-vector";
+                case GD_DpadUp:              return "direction-pad-up";
+                case GD_DpadDown:            return "direction-pad-down";
+                case GD_DpadRight:           return "direction-pad-right";
+                case GD_DpadLeft:            return "direction-pad-left";
+                case GD_ComputerChassisDevice: return "computerchassisdevice";
+                case GD_WirelessRadioControls: return "wirelessradiocontrols";
+                case GD_PortableDeviceControl: return "portabledevicecontrol";
+                case GD_SystemMultiAxisController: return "systemmultiaxiscontroller";
+                case GD_SpatialController:     return "spatialcontroller";
+                case GD_AssistiveControl:    return "assistivecontrol";
+                case GD_DeviceDock:          return "devicedock";
+                case GD_DockableDevice:      return "dockabledevice";
+                case GD_CallStateManagementControl: return "callstatemanagementcontrol";
+                case GD_FeatureNotification: return "featurenotification";
+                case GD_ResolutionMultiplier: return "resolutionmultiplier";
+                case GD_Qx:                   return "qx";
+                case GD_Qy:                   return "qy";
+                case GD_Qz:                   return "qz";
+                case GD_Qw:                   return "qw";
+                case GD_SystemControl:        return "systemcontrol";
+                case GD_SystemPowerDown:      return "systempowerdown";
+                case GD_SystemSleep:          return "systemsleep";
+                case GD_SystemWakeUp:         return "systemwakeup";
+                case GD_SystemContextMenu:    return "systemcontextmenu";
+                case GD_SystemMainMenu:       return "systemmainmenu";
+                case GD_SystemAppMenu:        return "systemappmenu";
+                case GD_SystemMenuHelp:       return "systemmenuhelp";
+                case GD_SystemMenuExit:       return "systemmenuexit";
+                case GD_SystemMenuSelect:     return "systemmenuselect";
+                case GD_SystemMenuRight:      return "systemmenuright";
+                case GD_SystemMenuLeft:       return "systemmenuleft";
+                case GD_SystemMenuUp:         return "systemmenuup";
+                case GD_SystemMenuDown:       return "systemmenudown";
+                case GD_SystemColdRestart:    return "systemcoldrestart";
+                case GD_SystemWarmRestart:    return "systemwarmrestart";
+                case GD_IndexTrigger:         return "indextrigger";
+                case GD_PalmTrigger:          return "palmtrigger";
+                case GD_Thumbstick:           return "thumbstick";
+                case GD_SystemFunctionShift:  return "systemfunctionshift";
+                case GD_SystemFunctionShiftLock:  return "systemfunctinshiftlock";
+                case GD_SystemFunctionShiftLockIndicator: return "systemfunctionshiftlockindicator";
+                case GD_SystemDismissNotification: return "systemdismissnotification";
+                case GD_SystemDoNotDisturb:    return "systemdonotdisturb";
+                case GD_SystemDock:            return "systemdock";
+                case GD_SystemUndock:          return "systemundock";
+                case GD_SystemSetup:           return "systemsetup";
+                case GD_SystemBreak:           return "systembreak";
+                case GD_SystemDebuggerBreak:   return "systemdebuggerbreak";
+                case GD_ApplicationBreak:      return "applicationbreak";
+                case GD_ApplicationDebuggerBreak: return "applicationdebuggerbreak";
+                case GD_SystemSpeakerMute:     return "systemspeakermute";
+                case GD_SystemHibernate:       return "systemhibernate";
+                case GD_SystemMicrophoneMute:  return "systemmicrophonemute";
+                case GD_SystemDisplayInvert:   return "systemdisplayinvert";
+                case GD_SystemDisplayInternal: return "systemdisplayinternal";
+                case GD_SystemDisplayExternal: return "systemdisplayexternal";
+                case GD_SystemDisplayBoth:     return "systemdisplayboth";
+                case GD_SystemDisplayDual:     return "systemdisplaydual";
+                case GD_SystemDisplayToggleIntExtMode: return "systemdisplaytoggleintextmode";
+                case GD_SystemDisplaySwapPrimarySecondary: return "systemdisplayswapprimarysecondary";
+                case GD_SystemDisplayToggleLCDAutoscale: return "systemdisplaytogglelcdautoscale";
+                case GD_SensorZone:            return "SENSORZONE";
+                case GD_RPM:                   return "rpm";
+                case GD_CoolantLevel:          return "coolantlevel";
+                case GD_CoolantCriticalLevel:  return "coolantcriticallevel";
+                case GD_CoolantPump:           return "coolant";
+                case GD_ChassisEnclosure:      return "chassisenclosure";
+                case GD_WirelessRadioButton:   return "wirelessradiobutton";
+                case GD_WirelessRadioLED:      return "wirelessradioled";
+                case GD_WirelessRadioSliderSwitch: return "wirelessradiosliderswitch";
+                case GD_SystemDisplayRotationLockButton: return "systemdisplayrotationlockbutton";
+                case GD_SystemDisplayRotationLockSliderSwitch: return "systemdisplayrotationlocksliderswitch";
+                case GD_ControlEnable:         return "controlenable";
+                case GD_DockableDeviceUniqueID: return "dockabledeviceuniqueid";
+                case GD_DockableDeviceVendorID: return "dockabledevicevendorid";
+                case GD_DockableDevicePrimaryUsagePage: return "dockabledeviceprimaryusagepage";
+                case GD_DockableDevicePrimaryUsageID: return "dockabledeviceprimaryusageid";
+                case GD_DockableDeviceDockingState: return "dockabledevicedockingstate";
+                case GD_DockableDeviceDisplayOcclusion: return "dockabledevicedisplayocclusion";
+                case GD_DockableDeviceObjectType: return "dockabledeviceobjecttype";
+                case GD_CallActiveLED: return "callactiveled";
+                case GD_CallMuteToggle: return "callmutetoggle";
+                case GD_CallMuteLED: return "callmuteled";
+                case GD_Reserved14: return "reserved14";
+                case GD_Reserved15: return "reserved15";
+                case GD_Reserved16: return "reserved16";
+                case GD_Reserved17: return "reserved17";
+                case GD_Reserved18: return "reserved18";
+                case GD_Reserved19: return "reserved19";
+                case GD_Reserved1A: return "reserved1a";
+                case GD_Reserved1B: return "reserved1b";
+                case GD_Reserved1C: return "reserved1c";
+                case GD_Reserved1D: return "reserved1d";
+                case GD_Reserved1E: return "reserved1e";
+                case GD_Reserved1F: return "reserved1f";
+                case GD_Reserved20: return "reserved20";
+                case GD_Reserved21: return "reserved21";
+                case GD_Reserved22: return "reserved22";
+                case GD_Reserved23: return "reserved23";
+                case GD_Reserved24: return "reserved24";
+                case GD_Reserved25: return "reserved25";
+                case GD_Reserved26: return "reserved26";
+                case GD_Reserved27: return "reserved27";
+                case GD_Reserved28: return "reserved28";
+                case GD_Reserved29: return "reserved29";
+                case GD_Reserved2A: return "reserved2a";
+                case GD_Reserved2B: return "reserved2b";
+                case GD_Reserved2C: return "reserved2c";
+                case GD_Reserved2D: return "reserved2d";
+                case GD_Reserved2E: return "reserved2e";
+                case GD_Reserved2F: return "reserved2f";
+                case GD_Reserved3F: return "reserved3f";
+
                 default:
                     SG_LOG(SG_INPUT, SG_WARN, "Unhandled HID generic desktop usage:" << usage);
             }
         } else if (enumUsage == UsagePage::Simulation) {
             switch (usage) {
+                case SC_FlightSimulationDevice:                 return "flightsimulationdevice";
+                case SC_AutomobileSimulationDevice:             return "AutomobileSimulationDevice";
+                case SC_TankSimulationDevice:                   return "tanksimulationdevice";
+                case SC_SpaceShipSimulationDevice:              return "spaceshipsimulationdevice";
+                case SC_SubmarineSimulationDevice:              return "submarinesimulationdevice";
+                case SC_SailingSimulationDevice:                return "sailingsimulationdevice";
+                case SC_MotorcycleSimulationDevice:             return "motorcyclesimulationdevice";
+                case SC_SportsSimulationDevice:                 return "sportssimulationdevice";
+                case SC_AirplaneSimulationDevice:               return "airplanesimulationdevice";
+                case SC_HelicopterSimulationDevice:             return "helicoptersimulationdevice";
+                case SC_MagicCarpetSimulationDevice:            return "magiccarpetsimulationdevice";
+                case SC_BycicleSimulationDevice:                return "byciclesimulationdevice";
+                case SC_FlightControlStick:                     return "flightcontrolstick";
+                case SC_FlightStick:                            return "flightstick";
+                case SC_CyclicControl:                          return "cycliccontrol";
+                case SC_CyclicTrim:                             return "cyclictrim";
+                case SC_FlightYoke:                             return "flightyoke";
+                case SC_TrackControl:                           return "trackcontrol";
+                case SC_Aileron:                                return "aileron";
+                case SC_AileronTrim:                            return "ailerontrim";
+                case SC_AntiTorqueControl:                      return "antitorquecontrol";
+                case SC_AutopilotEnable:                        return "autopilotenable";
+                case SC_ChaffRelease:                           return "chaffrelease";
+                case SC_CollectiveControl:                      return "collectivecontrol";
+                case SC_DiveBrake:                              return "divebrake";
+                case SC_ElectronicCountermeasures:              return "electroniccountermeasures";
+                case SC_Elevator:                               return "elevator";
+                case SC_ElevatorTrim:                           return "elevatortrim";
+                case SC_Rudder:                                 return "rudder";
+                case SC_Throttle:                               return "throttle";
+                case SC_FlightCommunications:                   return "flightcommunications";
+                case SC_FlareRelease:                           return "flarerelease";
+                case SC_LandingGear:                            return "landinggear";
+                case SC_ToeBrake:                               return "toebrake";
+                case SC_Trigger:                                return "trigger";
+                case SC_WeaponsArm:                             return "weaponsarm";
+                case SC_WeaponsSelect:                          return "weaponsselect";
+                case SC_WingFlaps:                              return "wingsflap";
+                case SC_Accelerator:                            return "accelerator";
+                case SC_Brake:                                  return "brake";
+                case SC_Clutch:                                 return "clutch";
+                case SC_Shifter:                                return "shifter";
+                case SC_Steering:                               return "steering";
+                case SC_TurretDirection:                        return "turretdirection";
+                case SC_BarrelElevation:                        return "barrelelevation";
+                case SC_DivePlane:                              return "diveplane";
+                case SC_Ballast:                                return "balast";
+                case SC_BicycleCrank:                           return "bicyclehandle";
+                case SC_HandleBars:                              return "handlebars";
+                case SC_FrontBrake:                             return "frontbrake";
+                case SC_RearBrake:                              return "rearbrake";
                 default:
                     SG_LOG(SG_INPUT, SG_WARN, "Unhandled HID simulation usage:" << usage);
             }
@@ -167,10 +632,104 @@ namespace HID
                 default:
                     SG_LOG(SG_INPUT, SG_WARN, "Unhandled HID alphanumeric usage:" << usage);
             }
+        } else if (enumUsage == UsagePage::AlphanumericDisplay) {
+            switch (usage) {
+                case VR_Undefined:          return "undefined-vr";
+                case VR_Belt:               return "belt-vr";
+                case VR_BodySuit:           return "bodysuit-vr";
+                case VR_Flexor:             return "flexor-vr";
+                case VR_Glove:              return "glove-vr";
+                case VR_HeadTracker:        return "headtracker-vr";
+                case VR_HeadMountedDisplay: return "headmounteddisplay-vr";
+                case VR_HandTracker:        return "handtracker-vr";
+                case VR_Oculometer:         return "oculometer-vr";
+                case VR_Vest:               return "vest-vr";
+                case VR_AnimatronicDevice:  return "animatronicdevice-vr";
+                case VR_StereoEnable:       return "stereoenable-vr";
+                case VR_DisplayEnable:      return "displayenable-vr";
+            default:
+                SG_LOG(SG_INPUT, SG_WARN, "Unhandled HID VR usage:" << usage);
+            }
         } else if (enumUsage == UsagePage::LEDs) {
             switch (usage) {
-                case LED_GenericIndicator:         return "led-misc";
-                case LED_Pause:                    return "led-pause";
+                case LED_Undefined:                 return "undefined-led";
+                case LED_NumLock:                   return "numlock-led";
+                case LED_CapsLock:                  return "capslock-led";
+                case LED_ScrollLock:                return "scrolllock-led";
+                case LED_Compose:                   return "compose-led";
+                case LED_Kana:                      return "kana-led";
+                case LED_Power:                     return "power-led";
+                case LED_Shift:                     return "shift-led";
+                case LED_DoNotDisturb:              return "donotdisturb-led";
+                case LED_Mute:                      return "mute-led";
+                case LED_ToneEnable:                return "toneenable-led";
+                case LED_HighCutFilter:             return "highcutfilter-led";
+                case LED_LowCutFilter:              return "lowcutfilter-led";
+                case LED_EqualizerEnable:           return "equalizerenable-led";
+                case LED_SoundFieldOn:              return "soundfieldon-led";
+                case LED_SurroundOn:                return "surroundon-led";
+                case LED_Repeat:                    return "repeat-led";
+                case LED_Stereo:                    return "stereo-led";
+                case LED_SampligRateDetect:         return "samplingratedetect-led";
+                case LED_Spinning:                  return "spinning-led";
+                case LED_CAV:                       return "cav-led";
+                case LED_CLV:                       return "clv-led";
+                case LED_RecordingFormatDetect:     return "recordingformatdetect-led";
+                case LED_OffHook:                   return "offhook-led";
+                case LED_Ring:                      return "ring-led";
+                case LED_MessageWaiting:            return "messagewaiting-led";
+                case LED_DataMode:                  return "datamode-led";
+                case LED_BatteryOperation:          return "batteryoperation-led";
+                case LED_BatteryOk:                 return "batteryok-led";
+                case LED_BatteryLow:                return "batterylow-led";
+                case LED_Speaker:                   return "speaker-led";
+                case LED_HeadSet:                   return "headset-led";
+                case LED_Hold:                      return "hold-led";
+                case LED_Microphone:                return "microphone-led";
+                case LED_Coverage:                  return "coverage-led";
+                case LED_NightMode:                 return "nightmode-led";
+                case LED_SendCalls:                 return "sendcalls-led";
+                case LED_CallPickup:                return "callpickup-led";
+                case LED_Conference:                return "conference-led";
+                case LED_StandBy:                   return "standby-led";
+                case LED_CameraOn:                  return "cameraon-led";
+                case LED_CameraOff:                 return "cameraoff-led";
+                case LED_OnLine:                    return "online-led";
+                case LED_OffLine:                   return "offline-led";
+                case LED_Busy:                      return "busy-led";
+                case LED_Ready:                     return "ready-led";
+                case LED_PaperOut:                  return "paperout-led";
+                case LED_PaperJam:                  return "paperjam-led";
+                case LED_Remote:                    return "remote-led";
+                case LED_Forward:                   return "forward-led";
+                case LED_Reverse:                   return "reverse-led";
+                case LED_Stop:                      return "stop=led";
+                case LED_Rewind:                    return "rewind-led";
+                case LED_FastForward:               return "fastforward-led";
+                case LED_Play:                      return "play-led";
+                case LED_Pause:                     return "pause-led";
+                case LED_Record:                    return "record-led";
+                case LED_Error:                     return "error-led";
+                case LED_UsageSelectedIndicator:    return "usageselectedindicator-led";
+                case LED_UsageInUseIndicator:       return "usageinuseindicator-led";
+                case LED_UsageMultiModeIndicator:   return "usagemultimodeindicator-led";
+                case LED_IndicatorOn:               return "indicatoron-led";
+                case LED_IndicatorFlash:            return "idicatorflash-led";
+                case LED_IndicatorSlowBlink:        return "indicatorslowblink-led";
+                case LED_IndicatorFastBlink:        return "indicatorfastblink-led";
+                case LED_IndicatorOff:              return "indicatoroff-led";
+                case LED_FlashOnTime:               return "flashontime-led";
+                case LED_SlowBlinkOnTime:           return "slowblinkontime-led";
+                case LED_SlowBlinkOffTime:          return "slowblinkofftime-led";
+                case LED_FastBlinkOnTime:           return "fastblinkontime-led";
+                case LED_FastBlinkOfftime:          return "fastblinkofftime-led";
+                case LED_UsageIndicatorColor:       return "usageindicatorcolor-led";
+                case LED_IndicatorRed:              return "usageindicatorred-led";
+                case LED_IndicatorGreen:            return "usageindicatorgreen-led";
+                case LED_IndicatorAmber:            return "usageindicatoramber-led";
+                case LED_GenericIndicator:          return "usagegenericindicator-led";
+                case LED_SystemSuspend:             return "usagesystemsuspend-led";
+                case LED_ExternalPowerConnected:    return "externalpowerconnected-led";
                 default:
                     SG_LOG(SG_INPUT, SG_WARN, "Unhandled HID LED usage:" << usage);
 
@@ -347,7 +906,7 @@ FGHIDDevice::FGHIDDevice(hid_device_info *devInfo, FGHIDEventInput *)
 
     std::wstring manufacturerName, productName;
     productName = devInfo->product_string ? std::wstring(devInfo->product_string)
-                                          : L"unknown HID";
+                                          : L"unknown HID device";
 
     if (devInfo->manufacturer_string) {
         manufacturerName = std::wstring(devInfo->manufacturer_string);
@@ -364,7 +923,7 @@ FGHIDDevice::FGHIDDevice(hid_device_info *devInfo, FGHIDEventInput *)
         SetSerialNumber(simgear::strutils::convertWStringToUtf8(serial));
     }
 
-    SG_LOG(SG_INPUT, SG_DEBUG, "Found HID '" << GetName() << "' at path " << _hidPath);
+    SG_LOG(SG_INPUT, SG_DEBUG, "HID device:" << GetName() << " at path " << _hidPath);
 }
 
 FGHIDDevice::~FGHIDDevice()
@@ -376,10 +935,6 @@ FGHIDDevice::~FGHIDDevice()
 
 void FGHIDDevice::Configure(SGPropertyNode_ptr node)
 {
-    // mark as hid-device
-    if (!node->hasChild("is-hid")) {
-        node->getNode("is-hid", true)->setBoolValue(true);
-    }
     // base class first
     FGInputDevice::Configure(node);
 
@@ -411,18 +966,17 @@ bool FGHIDDevice::Open()
     SG_LOG(SG_INPUT, SG_INFO, "HID open " << GetUniqueName());
     _device = hid_open_path(_hidPath.c_str());
     if (_device == nullptr) {
-        SG_LOG(SG_INPUT, SG_WARN, "Failed to open:" << _hidPath);
+        SG_LOG(SG_INPUT, SG_WARN, GetUniqueName() << ": HID: Failed to open:" << _hidPath);
         SG_LOG(SG_INPUT, SG_WARN, "\tnote on Linux you may need to adjust permissions of the device using UDev rules.");
         return false;
     }
-
 
 #if !defined(SG_WINDOWS)
     if (_rawXMLDescriptor.empty()) {
         _rawXMLDescriptor.resize(2048);
         int descriptorSize = hid_get_descriptor(_device, _rawXMLDescriptor.data(), _rawXMLDescriptor.size());
         if (descriptorSize <= 0) {
-           SG_LOG(SG_INPUT, SG_WARN, "HID: failed to read descriptor for " << GetUniqueName());
+           SG_LOG(SG_INPUT, SG_WARN, "HID: " << GetUniqueName() << " failed to read HID descriptor");
            return false;
         }
 
@@ -439,13 +993,13 @@ bool FGHIDDevice::Open()
     for (auto& v : handledEvents) {
         auto reportItem = itemWithName(v.first);
         if (!reportItem.second) {
-            SG_LOG(SG_INPUT, SG_WARN, "\tno item defined for event: " << v.first);
+            SG_LOG(SG_INPUT, SG_WARN, "HID device:" << GetUniqueName() << " has no element for event:" << v.first);
             continue;
         }
 
         FGInputEvent_ptr event = v.second;
         if (debugEvents) {
-            SG_LOG(SG_INPUT, SG_INFO, "\tfound item for event: " << v.first);
+            SG_LOG(SG_INPUT, SG_INFO, "\tfound item for event:" << v.first);
         }
 
         reportItem.second->event = event;
@@ -458,7 +1012,7 @@ bool FGHIDDevice::parseUSBHIDDescriptor()
 {
 #if defined(SG_WINDOWS)
     if (_rawXMLDescriptor.empty()) {
-        SG_LOG(SG_INPUT, SG_ALERT, GetUniqueName() << ": on Windows, there is no way to extract the USB-HID report descriptor. "
+        SG_LOG(SG_INPUT, SG_ALERT, GetUniqueName() << ": on Windows, there is no way to extract the UDB-HID report descriptor. "
                << "\nPlease supply the report descriptor in the device XML configuration.");
         SG_LOG(SG_INPUT, SG_ALERT, "See this page:<> for information on extracting the report descriptor on Windows");
         return false;
@@ -470,7 +1024,7 @@ bool FGHIDDevice::parseUSBHIDDescriptor()
         {
             std::ostringstream byteString;
 
-            for (unsigned i=0; i<_rawXMLDescriptor.size(); ++i) {
+            for (size_t i = 0; i < _rawXMLDescriptor.size(); ++i) {
                 byteString << hexTable[_rawXMLDescriptor[i] >> 4];
                 byteString << hexTable[_rawXMLDescriptor[i] & 0x0f];
                 byteString << " ";
@@ -482,7 +1036,7 @@ bool FGHIDDevice::parseUSBHIDDescriptor()
     hid_item* rootItem = nullptr;
     hid_parse_reportdesc(_rawXMLDescriptor.data(), _rawXMLDescriptor.size(), &rootItem);
     if (debugEvents) {
-        SG_LOG(SG_INPUT, SG_DEBUG, "\tHID scan for: " << GetUniqueName());
+        SG_LOG(SG_INPUT, SG_INFO, "\nHID: scan for:" << GetUniqueName());
     }
 
     parseCollection(rootItem);
@@ -599,7 +1153,7 @@ void FGHIDDevice::parseItem(hid_item* item)
     uint32_t bitOffset = report->currentBitSize();
 
     if (debugEvents) {
-        SG_LOG(SG_INPUT, SG_DEBUG, "\thas: " << name << ", bits: " << bitOffset << ":" << (int) item->report_size
+        SG_LOG(SG_INPUT, SG_INFO, GetUniqueName() << ": add:" << name << ", bits: " << bitOffset << ":" << (int) item->report_size
             << ", report=" << (int) item->report_id);
     }
 
@@ -707,7 +1261,7 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
                                      double dt, int keyModifiers)
 {
     if (_debugRaw) {
-        SG_LOG(SG_INPUT, SG_INFO, GetName() << " FGHIDDevice received input report:" << (int) report->number << ", len=" << length);
+        SG_LOG(SG_INPUT, SG_INFO, GetName() << " FGHIDDeivce received input report:" << (int) report->number << ", len=" << length);
         {
             std::ostringstream byteString;
             for (size_t i=0; i<length; ++i) {
@@ -774,7 +1328,7 @@ void FGHIDDevice::SendFeatureReport(unsigned int reportId, const std::string& da
     size_t len = std::min(data.length() + 1, sizeof(buf));
     buf[0] = reportId;
     memcpy(buf + 1, data.data(), len - 1);
-    int r = hid_send_feature_report(_device, buf, len);
+    size_t r = hid_send_feature_report(_device, buf, len);
     if (r < 0) {
         SG_LOG(SG_INPUT, SG_WARN, GetName() << ": FGHIDDevice: Sending feature report failed, error-string is:\n"
                << simgear::strutils::error_string(errno));
@@ -908,22 +1462,14 @@ void writeBits(uint8_t* bytes, size_t bitOffset, size_t bitSize, int value)
     }
 }
 
-FGHIDEventInput::FGHIDEventInput() :
-    FGEventInput(),
-    d(new FGHIDEventInputPrivate)
+FGHIDEventInput::FGHIDEventInput() : FGEventInput("Input/HID", "/input/hid"),
+                                     d(new FGHIDEventInputPrivate)
 {
     d->p = this; // store back pointer to outer object on pimpl
 }
 
 FGHIDEventInput::~FGHIDEventInput()
 {
-}
-
-void FGHIDEventInput::init()
-{
-    FGEventInput::init();
-    // have to wait until postinit since loading config files
-    // requires Nasal to be running
 }
 
 void FGHIDEventInput::reinit()

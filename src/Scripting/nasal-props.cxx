@@ -1,6 +1,6 @@
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+#include "config.h"
 
 #include <cstring>
 
@@ -11,6 +11,7 @@
 #include <Main/globals.hxx>
 
 #include "NasalSys.hxx"
+#include "NasalSys_private.hxx"
 
 using namespace std;
 
@@ -41,7 +42,7 @@ naRef propNodeGhostCreate(naContext c, SGPropertyNode* ghost)
 
 naRef FGNasalSys::propNodeGhost(SGPropertyNode* handle)
 {
-    return propNodeGhostCreate(_context, handle);
+    return propNodeGhostCreate(d->_context, handle);
 }
 
 SGPropertyNode* ghostToPropNode(naRef ref)
@@ -918,10 +919,10 @@ static struct {
 
 naRef FGNasalSys::genPropsModule()
 {
-    naRef namespc = naNewHash(_context);
+    naRef namespc = naNewHash(d->_context);
     for(int i=0; propfuncs[i].name; i++)
         hashset(namespc, propfuncs[i].name,
-                naNewFunc(_context, naNewCCode(_context, propfuncs[i].func)));
+                naNewFunc(d->_context, naNewCCode(d->_context, propfuncs[i].func)));
     return namespc;
 }
 

@@ -41,10 +41,80 @@ mapPOITypeToFGPType(int aTy)
 namespace flightgear
 {
 
-    const int LINES_IN_POI_DAT = 769019;
+// Duplicate POIs with the same ident will be removed if the disance
+// between them is less than this.
+static const double DUPLICATE_DETECTION_RADIUS_NM = 10;
 
-static PositionedID readPOIFromStream(std::istream& aStream, NavDataCache* cache,
-                                        FGPositioned::Type type = FGPositioned::INVALID)
+static const double DUPLICATE_DETECTION_RADIUS_SQR_M = DUPLICATE_DETECTION_RADIUS_NM * DUPLICATE_DETECTION_RADIUS_NM * SG_NM_TO_METER * SG_NM_TO_METER;
+
+static bool isNearby(const SGVec3d& pos1, const SGVec3d& pos2) 
+{
+  const double d = distSqr(pos1, pos2);
+  return d <= DUPLICATE_DETECTION_RADIUS_SQR_M;
+}
+
+POILoader::POILoader() : 
+  _cache(NavDataCache::instance())
+{ 
+
+}
+
+
+void POILoader::loadPOIs(const NavDataCache::SceneryLocation& sceneryLocation,
+                            std::size_t bytesReadSoFar,
+                            std::size_t totalSizeOfAllDatFiles)
+{
+    _path = sceneryLocation.datPath;
+    sg_gzifstream in( _path );
+    const std::string utf8path = _path.utf8Str();
+
+    if ( !in.is_open() ) {
+      throw sg_io_exception(
+        "Cannot open file (" + simgear::strutils::error_string(errno) + ")",
+        sg_location(_path));
+    }
+
+    // Skip the first two lines
+    for (int i = 0; i < 2; i++) {
+      std::string line;
+      std::getline(in, line);
+      throwExceptionIfStreamError(in);
+    }
+
+
+    unsigned int lineNumber = 3;
+
+  // read in each remaining line of the file
+  for (std::string line; !in.eof(); lineNumber++) {
+
+    readPOIFromStream(in, lineNumber);
+
+    ++lineNumber;
+    if ((lineNumber % 100) == 0) {
+      // every 100 lines
+      unsigned int percent = ((bytesReadSoFar + in.approxOffset()) * 100)
+        / totalSizeOfAllDatFiles;
+      _cache->setRebuildPhaseProgress(NavDataCache::REBUILD_POIS, percent);
+    }
+  } // of line iteration
+
+  throwExceptionIfStreamError(in);
+}
+
+void POILoader::throwExceptionIfStreamError(const sg_gzifstream& input_stream)
+{
+  if (input_stream.bad()) {
+    const std::string errMsg = simgear::strutils::error_string(errno);
+
+    SG_LOG(SG_NAVAID, SG_ALERT,
+           "Error while reading '" << _path.utf8Str() << "': " << errMsg);
+    throw sg_io_exception("POILoader: error reading file (" + errMsg + ")",
+                          sg_location(_path));
+  }
+}
+
+PositionedID POILoader::readPOIFromStream(std::istream& aStream,
+                                        unsigned int lineNumber,FGPositioned::Type type)
 {
     if (aStream.eof()) {
         return 0;
@@ -75,32 +145,23 @@ static PositionedID readPOIFromStream(std::istream& aStream, NavDataCache* cache
     return 0;
   }
 
-  return cache->createPOI(type, name, pos, name, false);
-}
+  const auto cartPos = SGVec3d::fromGeod(pos);
 
-// load and initialize the POI database
-bool poiDBInit(const SGPath& path)
-{
-    sg_gzifstream in( path );
-    if ( !in.is_open() ) {
-        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path );
-      return false;
+  // de-duplication
+  const auto key = std::make_tuple(type, name);
+  auto matching = _loadedPOIs.equal_range(key);
+  for (auto it = matching.first; it != matching.second; ++it) {
+    if (isNearby(cartPos, it->second)) {
+      SG_LOG(SG_NAVAID, SG_INFO,
+             _path.utf8Str() << ":"  << lineNumber << ": skipping POI '" <<
+             name << "' (already defined nearby)");
+      return 0;
     }
+  }
 
-    unsigned int lineNumber = 0;
-    NavDataCache* cache = NavDataCache::instance();
-    while (!in.eof()) {
-      readPOIFromStream(in, cache);
-
-        ++lineNumber;
-        if ((lineNumber % 100) == 0) {
-            // every 100 lines
-            unsigned int percent = (lineNumber * 100) / LINES_IN_POI_DAT;
-            cache->setRebuildPhaseProgress(NavDataCache::REBUILD_POIS, percent);
-        }
-    } // of stream data loop
-
-    return true;
+  _loadedPOIs.emplace(key, cartPos);
+  return _cache->createPOI(type, name, pos, name, false);
 }
+
 
 } // of namespace flightgear

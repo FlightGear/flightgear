@@ -4,13 +4,12 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#ifndef BLACKSIM_FGSWIFTBUS_DBUSERROR_H
-#define BLACKSIM_FGSWIFTBUS_DBUSERROR_H
+#pragma once
 
 #include <dbus/dbus.h>
 #include <string>
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
 
 //! DBus error
 class CDBusError
@@ -22,7 +21,7 @@ public:
         Other
     };
 
-    //! Default constructur
+    //! Default constructor
     CDBusError() = default;
 
     //! Constructor
@@ -37,6 +36,4 @@ private:
     std::string m_message;
 };
 
-} // namespace FGSwiftBus
-
-#endif // guard
+} // namespace flightgear::swift

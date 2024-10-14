@@ -2,7 +2,7 @@ Using Extensions
 ----------------
 
 
-To use an OpenGL extension in the code is is necessary to include a refference
+To use an OpenGL extension in the code is is necessary to include a reference
 to the extensions.hxx header file and add the following to the code (as an
 example):
 
@@ -66,7 +66,7 @@ Currently there are two extensions supported:
 * glPointParameterf
 * glActiveTexture
 
-Adding a new extension involves adding the defines assosiated with the extension
+Adding a new extension involves adding the defines associated with the extension
 (surrounded by the appropriate extension test):
 
 
@@ -86,6 +86,6 @@ typedef void (APIENTRY * glPointParameterfProc)(GLenum pname, GLfloat param);
 
 
 
-The APIENTRY refference is only used by windows machines but is defined empty
-for all other platforms and hence needs to be added for cross platfrom
-compatibillity.
+The APIENTRY reference is only used by windows machines but is defined empty
+for all other platforms and hence needs to be added for cross platform
+compatibility.

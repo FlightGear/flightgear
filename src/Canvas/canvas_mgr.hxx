@@ -26,6 +26,7 @@ class CanvasMgr : public simgear::canvas::CanvasMgr
 {
 public:
     CanvasMgr();
+    virtual ~CanvasMgr() = default;
 
     // Subsystem API.
     void init() override;

@@ -83,12 +83,12 @@ void OptionsTests::testOptionAircraftWithAircraftDir()
 
     CPPUNIT_ASSERT_EQUAL("ufo"s, string{fgGetString("/sim/aircraft")});
     CPPUNIT_ASSERT_EQUAL("ufo"s, string{fgGetString("/sim/aircraft-id")});
-    CPPUNIT_ASSERT_EQUAL(adPath.utf8Str(), string{fgGetString("/sim/aircraft-dir")});
+    CPPUNIT_ASSERT_EQUAL(adPath.realpath().utf8Str(), string{fgGetString("/sim/aircraft-dir")});
 }
 
 void OptionsTests::testOptionAircraftWithFGAircraft()
 {
-    const auto customFGAircraftPath = SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "customAircraftDir";
+    const auto customFGAircraftPath = SGPath::fromUtf8(FG_TEST_SUITE_DATA).realpath() / "customAircraftDir";
 
     {
         const string fgAircraftArg = "--fg-aircraft=" + customFGAircraftPath.utf8Str();

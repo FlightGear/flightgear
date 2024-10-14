@@ -16,8 +16,51 @@
 struct AircraftItem;
 typedef QSharedPointer<AircraftItem> AircraftItemPtr;
 
-class StatesModel;
+struct AircraftStateInfo {
+    string_list tags;
+    QString name;        // human-readable name, or blank if we auto-generate this
+    QString description; // human-readable description
 
+    std::string primaryTag() const
+    {
+        return tags.front();
+    }
+};
+
+using AircraftStateVec = std::vector<AircraftStateInfo>;
+
+class StatesModel : public QAbstractListModel
+{
+    Q_OBJECT
+
+public:
+    StatesModel(QObject* pr);
+
+    void clear();
+
+    void initWithStates(const AircraftStateVec& states);
+
+    Q_INVOKABLE int indexForTag(QString s) const;
+    int indexForTag(const std::string& tag) const;
+
+    int rowCount(const QModelIndex&) const override;
+
+    QVariant data(const QModelIndex& index, int role) const override;
+    QHash<int, QByteArray> roleNames() const override;
+
+    Q_INVOKABLE QString descriptionForState(int row) const;
+    Q_INVOKABLE QString tagForState(int row) const;
+
+    bool hasExplicitAuto() const;
+    bool isEmpty() const;
+    bool hasState(QString st) const;
+
+private:
+    bool makeSafeIndex(int row, size_t& t) const;
+
+    AircraftStateVec _data;
+    bool _explicitAutoState = false;
+};
 class QmlAircraftInfo : public QObject
 {
     Q_OBJECT

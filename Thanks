@@ -111,7 +111,7 @@ Bernhard H. Buckel <buckel@mail.uni-wuerzburg.de>
 
 Gene Buckle <geneb@deltasoft.com>
   Gene has done a lot of work getting FG to compile with the MSVC++
-  compiler.  Also, he has pushed, proded, and bugged me endlessly to
+  compiler.  Also, he has pushed, prodded, and bugged me endlessly to
   do my stuff right.  (I mean that in a good way, because sometimes
   when the little nudge in the right direction isn't working, I need
   a good hard shove.) :-)
@@ -385,7 +385,7 @@ Lewis Magruder <blackhawk96@hotmail.com>
 Christian Mayer <flightgear@christianmayer.de>
   Working on a multi-lingual conversion tools for fgfs 
   as a demonstration of technology ;-)
-  Contributed code to read msfs formated texture files.
+  Contributed code to read msfs formatted texture files.
   Working on a completely new weather subsystem.
   Working on a balloon simulator.
 
@@ -421,8 +421,8 @@ Cameron Moore <cameron@unbeatenpath.net>
 Tim Moore <>
   Many innovations to the OpenSceneGraph based graphics system.
   Counseling of other developers toward learning OSG
-  Maintaing a GIT repository containing a mirror of FlightGear's
-  source code, speficially for bugfix releases.
+  Maintains a GIT repository containing a mirror of FlightGear's
+  source code, specifically for bugfix releases.
 
 
 Anders Morken <amrken@online.no>

@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#ifndef BLACKSIM_FGSWIFTBUS_DBUSASYNCCALLBACKS_H
-#define BLACKSIM_FGSWIFTBUS_DBUSASYNCCALLBACKS_H
+#pragma once
 
 #include <dbus/dbus.h>
 #include <functional>
 
-namespace FGSwiftBus {
-//! \cond PRIVATE
+namespace flightgear::swift {
+
 template <typename T>
 class DBusAsyncCallbacks
 {
@@ -44,8 +43,5 @@ private:
     std::function<void(T*)> m_removeHandler;
     std::function<void(T*)> m_toggledHandler;
 };
-//! \endcond
 
-} // namespace FGSwiftBus
-
-#endif // guard
+} // namespace flightgear::swift

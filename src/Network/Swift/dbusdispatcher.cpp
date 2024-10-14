@@ -8,7 +8,7 @@
 #include "dbusconnection.h"
 #include <algorithm>
 
-namespace { // anonymosu namespace
+namespace { // anonymous namespace
 
 template <typename T, typename... Args>
 std::unique_ptr<T> our_make_unique(Args&&... args)
@@ -18,7 +18,7 @@ std::unique_ptr<T> our_make_unique(Args&&... args)
 
 } // end of anonymous namespace
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
 
 //! Functor struct deleteing an event
 struct EventDeleter {
@@ -239,4 +239,4 @@ void CDBusDispatcher::dbusTimeoutToggled(DBusTimeout* timeout)
         dbusRemoveTimeout(timeout);
 }
 
-} // namespace FGSwiftBus
+} // namespace flightgear::swift

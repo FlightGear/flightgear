@@ -43,11 +43,7 @@ class ClipboardCocoa: public NasalClipboard
       if( type == CLIPBOARD )
       {
        NSPasteboard* pboard = [NSPasteboard generalPasteboard];
-       #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
-         NSString* nstext = [pboard stringForType:NSStringPboardType];
-       #else // > 10.5
-         NSString* nstext = [pboard stringForType:NSPasteboardTypeString];
-       #endif // MAC_OS_X_VERSION_MIN_REQUIRED
+      NSString* nstext = [pboard stringForType:NSPasteboardTypeString];
        return stdStringFromCocoa(nstext);
       }
       
@@ -65,16 +61,8 @@ class ClipboardCocoa: public NasalClipboard
       {
         NSPasteboard* pboard = [NSPasteboard generalPasteboard];
         NSString* nstext = stdStringToCocoa(text);
-        #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
-          NSString* type = NSStringPboardType;
-          NSArray* types = [NSArray arrayWithObjects: type, nil];
-          [pboard declareTypes:types owner:nil];
-          [pboard setString:nstext forType: NSStringPboardType];
-        #else // > 10.5
-          NSString* type = NSPasteboardTypeString;
-          [pboard clearContents];
-          [pboard setString:nstext forType:NSPasteboardTypeString];
-        #endif // MAC_OS_X_VERSION_MIN_REQUIRED
+        [pboard clearContents];
+        [pboard setString:nstext forType:NSPasteboardTypeString];
         return true;
       }
       

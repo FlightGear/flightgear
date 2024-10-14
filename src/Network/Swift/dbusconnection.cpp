@@ -7,11 +7,9 @@
 #include "dbusconnection.h"
 #include "dbusobject.h"
 
-#include <algorithm>
 #include <cassert>
-#include <memory>
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
 
 CDBusConnection::CDBusConnection()
 {
@@ -171,4 +169,4 @@ DBusHandlerResult CDBusConnection::filterDisconnectedFunction(DBusConnection* co
     return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
-} // namespace FGSwiftBus
+} // namespace flightgear::swift

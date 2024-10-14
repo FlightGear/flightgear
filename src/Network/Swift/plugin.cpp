@@ -13,12 +13,13 @@
 #include <functional>
 #include <iostream>
 #include <simgear/structure/commands.hxx>
-#include <thread>
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
+
 CPlugin::CPlugin()
 {
     startServer();
+    fgSetBool("/sim/swift/serverRunning", true);
 }
 
 CPlugin::~CPlugin()
@@ -26,8 +27,8 @@ CPlugin::~CPlugin()
     if (m_dbusConnection) {
         m_dbusConnection->close();
     }
-    m_shouldStop = true;
     if (m_dbusThread.joinable()) { m_dbusThread.join(); }
+    fgSetBool("/sim/swift/serverRunning", false);
 }
 
 void CPlugin::startServer()
@@ -64,4 +65,4 @@ void CPlugin::fastLoop()
     this->m_traffic->process();
     this->m_traffic->emitSimFrame();
 }
-} // namespace FGSwiftBus
+} // namespace flightgear::swift

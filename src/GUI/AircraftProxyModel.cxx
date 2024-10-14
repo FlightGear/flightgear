@@ -47,9 +47,9 @@ void AircraftProxyModel::setAircraftFilterString(QString s)
     m_filterProps = new SGPropertyNode;
     int index = 0;
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-    Q_FOREACH(QString term, s.split(QRegExp("\\W+"), Qt::SkipEmptyParts)) {
+    Q_FOREACH (QString term, s.split(QRegularExpression("\\W+"), Qt::SkipEmptyParts)) {
 #else
-    Q_FOREACH(QString term, s.split(QRegExp("\\W+"), QString::SkipEmptyParts)) {
+    Q_FOREACH (QString term, s.split(QRegularExpression("\\W+"), QString::SkipEmptyParts)) {
 #endif
         m_filterProps->getNode("all-of/text", index++, true)->setStringValue(term.toStdString());
     }

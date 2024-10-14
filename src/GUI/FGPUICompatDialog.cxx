@@ -133,6 +133,8 @@ void FGPUICompatDialog::close()
         nas->deleteModule(_module.c_str());
     }
 
+    _root->recursiveOnDelete();
+
     _peer.clear();
 }
 

@@ -33,7 +33,6 @@
 #include <fstream>
 #include <sstream>
 
-#include <simgear/debug/BufferedLogCallback.hxx>
 #include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -62,7 +61,6 @@
 #include "NasalCondition.hxx"
 #include "NasalFlightPlan.hxx"
 #include "NasalHTTP.hxx"
-#include "NasalModelData.hxx"
 #include "NasalPositioned.hxx"
 #include "NasalSGPath.hxx"
 #include "NasalString.hxx"
@@ -278,18 +276,22 @@ typedef nasal::Ghost<TimeStampObjRef> NasalTimeStampObj;
 
 ///////////////////////////////////////////////////////////////////////////
 
-FGNasalSys::FGNasalSys() :
-    _inited(false)
+NasalSysPrivate::~NasalSysPrivate()
 {
-     nasalSys = this;
-    _context = 0;
-    _globals = naNil();
-    _string = naNil();
-    _wrappedNodeFunc = naNil();
+}
 
-    _log.reset(new simgear::BufferedLogCallback(SG_NASAL, SG_INFO));
-    _log->truncateAt(255);
-    sglog().addCallback(_log.get());
+///////////////////////////////////////////////////////////////////////////
+
+FGNasalSys::FGNasalSys() : d(new NasalSysPrivate)
+{
+    nasalSys = this;
+    d->_globals = naNil();
+    d->_string = naNil();
+    d->_wrappedNodeFunc = naNil();
+
+    d->_log.reset(new simgear::BufferedLogCallback(SG_NASAL, SG_INFO));
+    d->_log->truncateAt(255);
+    sglog().addCallback(d->_log.get());
 
     naSetErrorHandler(&logError);
 }
@@ -298,14 +300,14 @@ FGNasalSys::FGNasalSys() :
 // string object.
 void FGNasalSys::hashset(naRef hash, const char* key, naRef val)
 {
-    naRef s = naNewString(_context);
+    naRef s = naNewString(d->_context);
     naStr_fromdata(s, (char*)key, strlen(key));
     naHash_set(hash, s, val);
 }
 
 void FGNasalSys::globalsSet(const char* key, naRef val)
 {
-  hashset(_globals, key, val);
+    hashset(d->_globals, key, val);
 }
 
 naRef FGNasalSys::call(naRef code, int argc, naRef* args, naRef locals)
@@ -350,10 +352,10 @@ naRef FGNasalSys::callMethodWithContext(naContext ctx, naRef code, naRef self, i
 
 FGNasalSys::~FGNasalSys()
 {
-    if (_inited) {
+    if (d->_inited) {
         SG_LOG(SG_GENERAL, SG_ALERT, "Nasal was not shutdown");
     }
-    sglog().removeCallback(_log.get());
+    sglog().removeCallback(d->_log.get());
 
     nasalSys = nullptr;
 }
@@ -1056,89 +1058,89 @@ static struct { const char* name; naCFunction func;
 
 naRef FGNasalSys::cmdArgGhost()
 {
-    return propNodeGhost(_cmdArg);
+    return propNodeGhost(d->_cmdArg);
 }
 
 void FGNasalSys::initLogLevelConstants()
 {
-    hashset(_globals, "LOG_BULK", naNum(SG_BULK));
-    hashset(_globals, "LOG_WARN", naNum(SG_WARN));
-    hashset(_globals, "LOG_DEBUG", naNum(SG_DEBUG));
-    hashset(_globals, "LOG_INFO", naNum(SG_INFO));
-    hashset(_globals, "LOG_ALERT", naNum(SG_ALERT));
-    hashset(_globals, "DEV_WARN", naNum(SG_DEV_WARN));
-    hashset(_globals, "DEV_ALERT", naNum(SG_DEV_ALERT));
-    hashset(_globals, "MANDATORY_INFO", naNum(SG_MANDATORY_INFO));
+    hashset(d->_globals, "LOG_BULK", naNum(SG_BULK));
+    hashset(d->_globals, "LOG_WARN", naNum(SG_WARN));
+    hashset(d->_globals, "LOG_DEBUG", naNum(SG_DEBUG));
+    hashset(d->_globals, "LOG_INFO", naNum(SG_INFO));
+    hashset(d->_globals, "LOG_ALERT", naNum(SG_ALERT));
+    hashset(d->_globals, "DEV_WARN", naNum(SG_DEV_WARN));
+    hashset(d->_globals, "DEV_ALERT", naNum(SG_DEV_ALERT));
+    hashset(d->_globals, "MANDATORY_INFO", naNum(SG_MANDATORY_INFO));
 }
 
 void FGNasalSys::setCmdArg(SGPropertyNode* aNode)
 {
-    _cmdArg = aNode;
+    d->_cmdArg = aNode;
 }
 
 void FGNasalSys::init()
 {
-    if (_inited) {
+    if (d->_inited) {
         SG_LOG(SG_GENERAL, SG_ALERT, "duplicate init of Nasal");
     }
     int i;
 
-    _context = naNewContext();
+    d->_context = naNewContext();
 
     // Start with globals.  Add it to itself as a recursive
     // sub-reference under the name "globals".  This gives client-code
     // write access to the namespace if someone wants to do something
     // fancy.
-    _globals = naInit_std(_context);
-    naSave(_context, _globals);
-    hashset(_globals, "globals", _globals);
+    d->_globals = naInit_std(d->_context);
+    naSave(d->_context, d->_globals);
+    hashset(d->_globals, "globals", d->_globals);
 
-    hashset(_globals, "math", naInit_math(_context));
-    hashset(_globals, "bits", naInit_bits(_context));
-    hashset(_globals, "io", naInit_io(_context));
-    hashset(_globals, "thread", naInit_thread(_context));
-    hashset(_globals, "utf8", naInit_utf8(_context));
-    hashset(_globals, "sqlite", naInit_sqlite(_context));
+    hashset(d->_globals, "math", naInit_math(d->_context));
+    hashset(d->_globals, "bits", naInit_bits(d->_context));
+    hashset(d->_globals, "io", naInit_io(d->_context));
+    hashset(d->_globals, "thread", naInit_thread(d->_context));
+    hashset(d->_globals, "utf8", naInit_utf8(d->_context));
+    hashset(d->_globals, "sqlite", naInit_sqlite(d->_context));
 
     initLogLevelConstants();
 
     // Add our custom extension functions:
     for(i=0; funcs[i].name; i++)
-        hashset(_globals, funcs[i].name,
-                naNewFunc(_context, naNewCCode(_context, funcs[i].func)));
+        hashset(d->_globals, funcs[i].name,
+                naNewFunc(d->_context, naNewCCode(d->_context, funcs[i].func)));
     nasal::Hash io_module = getGlobals().get<nasal::Hash>("io");
     io_module.set("open", f_open);
     io_module.set("stat", f_custom_stat);
 
     // And our SGPropertyNode wrapper
-    hashset(_globals, "props", genPropsModule());
+    hashset(d->_globals, "props", genPropsModule());
 
     // Add string methods
-    _string = naInit_string(_context);
-    naSave(_context, _string);
-    initNasalString(_globals, _string, _context);
+    d->_string = naInit_string(d->_context);
+    naSave(d->_context, d->_string);
+    initNasalString(d->_globals, d->_string, d->_context);
 
 #if defined (BUILDING_TESTSUITE)
-    initNasalUnitTestCppUnit(_globals, _context);
+    initNasalUnitTestCppUnit(d->_globals, d->_context);
 #else
-    initNasalUnitTestInSim(_globals, _context);
+    initNasalUnitTestInSim(d->_globals, d->_context);
 #endif
 
     if (!global_nasalMinimalInit) {
-        initNasalPositioned(_globals, _context);
-        initNasalFlightPlan(_globals, _context);
-        initNasalPositioned_cppbind(_globals, _context);
-        initNasalAircraft(_globals, _context);
+        initNasalPositioned(d->_globals, d->_context);
+        initNasalFlightPlan(d->_globals, d->_context);
+        initNasalPositioned_cppbind(d->_globals, d->_context);
+        initNasalAircraft(d->_globals, d->_context);
 
 #if !defined (BUILDING_TESTSUITE)
         // on Linux, clipboard init crashes in headless mode (DISPLAY no set)
         // so don't do this for testing.
         NasalClipboard::init(this);
 #endif
-        initNasalCanvas(_globals, _context);
-        initNasalCondition(_globals, _context);
-        initNasalHTTP(_globals, _context);
-        initNasalSGPath(_globals, _context);
+        initNasalCanvas(d->_globals, d->_context);
+        initNasalCondition(d->_globals, d->_context);
+        initNasalHTTP(d->_globals, d->_context);
+        initNasalSGPath(d->_globals, d->_context);
     }
 
     NasalTimerObj::init("Timer")
@@ -1158,11 +1160,11 @@ void FGNasalSys::init()
     // everything after here, skip if we're doing minimal init, so
     // we don'tload FG_DATA/Nasal or add-ons
     if (global_nasalMinimalInit) {
-        _inited = true;
+        d->_inited = true;
         return;
     }
 
-    flightgear::addons::initAddonClassesForNasal(_globals, _context);
+    flightgear::addons::initAddonClassesForNasal(d->_globals, d->_context);
 
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
@@ -1192,15 +1194,15 @@ void FGNasalSys::init()
     loadPropertyScripts();
 
     // now Nasal modules are loaded, we can do some delayed work
-    postinitNasalPositioned(_globals, _context);
-    postinitNasalGUI(_globals, _context);
+    postinitNasalPositioned(d->_globals, d->_context);
+    postinitNasalGUI(d->_globals, d->_context);
 
-    _inited = true;
+    d->_inited = true;
 }
 
 void FGNasalSys::shutdown()
 {
-    if (!_inited) {
+    if (!d->_inited) {
         return;
     }
 
@@ -1208,34 +1210,34 @@ void FGNasalSys::shutdown()
     shutdownNasalFlightPlan();
     shutdownNasalUnitTestInSim();
 
-    for (auto l : _listener)
+    for (auto l : d->_listener)
         delete l.second;
-    _listener.clear();
+    d->_listener.clear();
 
-    for (auto c : _commands) {
+    for (auto c : d->_commands) {
         globals->get_commands()->removeCommand(c.first);
     }
-    _commands.clear();
+    d->_commands.clear();
 
-    for(auto ml : _moduleListeners)
+    for (auto ml : d->_moduleListeners)
         delete ml;
-    _moduleListeners.clear();
+    d->_moduleListeners.clear();
 
-    for (auto t : _nasalTimers) {
+    for (auto t : d->_nasalTimers) {
         delete t;
     }
-    _nasalTimers.clear();
+    d->_nasalTimers.clear();
 
     naClearSaved();
 
-    _string = naNil(); // will be freed by _context
-    naFreeContext(_context);
+    d->_string = naNil(); // will be freed by _context
+    naFreeContext(d->_context);
 
-    //setWatchedRef(_globals);
+    //setWatchedRef(d->_globals);
 
     // remove the recursive reference in globals
-    hashset(_globals, "globals", naNil());
-    _globals = naNil();
+    hashset(d->_globals, "globals", naNil());
+    d->_globals = naNil();
 
     naGC();
 
@@ -1243,28 +1245,28 @@ void FGNasalSys::shutdown()
     // destroyed now.
     nasal::ghostProcessDestroyList();
 
-    if (!_persistentTimers.empty()) {
-        SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant persistent timer count:" << _persistentTimers.size());
+    if (!d->_persistentTimers.empty()) {
+        SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant persistent timer count:" << d->_persistentTimers.size());
 
-        for (auto pt : _persistentTimers) {
+        for (auto pt : d->_persistentTimers) {
             SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant:" << pt << " : " << pt->name());
         }
     }
 
-    _inited = false;
+    d->_inited = false;
 }
 
 naRef FGNasalSys::wrappedPropsNode(SGPropertyNode* aProps)
 {
-    if (naIsNil(_wrappedNodeFunc)) {
+    if (naIsNil(d->_wrappedNodeFunc)) {
         nasal::Hash props = getGlobals().get<nasal::Hash>("props");
-        _wrappedNodeFunc = props.get("wrapNode");
+        d->_wrappedNodeFunc = props.get("wrapNode");
     }
 
     naRef args[1];
     args[0] = propNodeGhost(aProps);
     naContext ctx = naNewContext();
-    naRef wrapped = naCallMethodCtx(ctx, _wrappedNodeFunc, naNil(), 1, args, naNil());
+    naRef wrapped = naCallMethodCtx(ctx, d->_wrappedNodeFunc, naNil(), 1, args, naNil());
     naFreeContext(ctx);
     return wrapped;
 }
@@ -1274,24 +1276,20 @@ void FGNasalSys::update(double)
     if( NasalClipboard::getInstance() )
         NasalClipboard::getInstance()->update();
 
-    std::for_each(_dead_listener.begin(), _dead_listener.end(),
-                  []( FGNasalListener* l) { delete l; });
-    _dead_listener.clear();
+    std::for_each(d->_dead_listener.begin(), d->_dead_listener.end(),
+                  [](FGNasalListener* l) { delete l; });
+    d->_dead_listener.clear();
 
-    if (!_loadList.empty())
-    {
-        if( _delay_load )
-          _delay_load = false;
+    if (!d->_loadList.empty()) {
+        if (d->_delay_load)
+            d->_delay_load = false;
         else
           // process Nasal load hook (only one per update loop to avoid excessive lags)
-          _loadList.pop()->load();
-    }
-    else
-    if (!_unloadList.empty())
-    {
+          d->_loadList.pop()->load();
+    } else if (!d->_unloadList.empty()) {
         // process pending Nasal unload hooks after _all_ load hooks were processed
         // (only unload one per update loop to avoid excessive lags)
-        _unloadList.pop()->unload();
+        d->_unloadList.pop()->unload();
     }
     // Destroy all queued ghosts
     nasal::ghostProcessDestroyList();
@@ -1306,8 +1304,8 @@ void FGNasalSys::update(double)
     // cases and eliminate _context entirely.  But that's more work,
     // and this works fine (yes, they say "New" and "Free", but
     // they're very fast, just trust me). -Andy
-    naFreeContext(_context);
-    _context = naNewContext();
+    naFreeContext(d->_context);
+    d->_context = naNewContext();
 }
 
 bool pathSortPredicate(const SGPath& p1, const SGPath& p2)
@@ -1447,7 +1445,7 @@ void FGNasalSys::loadPropertyScripts(SGPropertyNode* n)
         if (enable)
         {
             FGNasalModuleListener* listener = new FGNasalModuleListener(n);
-            _moduleListeners.push_back(listener);
+            d->_moduleListeners.push_back(listener);
             enable->addChangeListener(listener, false);
         }
     }
@@ -1552,17 +1550,17 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
     naRef locals;
     naRef modname = naNewString(ctx);
     naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
-    if (naIsNil(_globals))
+    if (naIsNil(d->_globals))
         return false;
 
-    if (!naHash_get(_globals, modname, &locals)) {
+    if (!naHash_get(d->_globals, modname, &locals)) {
         // if we are re-creating the module for canvas, ensure the C++
         // pieces are re-defined first. As far as I can see, Canvas is the only
         // hybrid module where C++ pieces and Nasal code are combined.
         const auto isCanvas = strcmp(moduleName, "canvas") == 0;
         if (isCanvas) {
-            initNasalCanvas(_globals, _context);
-            naHash_get(_globals, modname, &locals);
+            initNasalCanvas(d->_globals, d->_context);
+            naHash_get(d->_globals, modname, &locals);
         } else {
             locals = naNewHash(ctx);
         }
@@ -1576,9 +1574,9 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
     naStr_fromdata(modFilePath, (char*)fileName, strlen(fileName));
     hashset(locals, "__moduleFilePath", modFilePath);
 
-    _cmdArg = (SGPropertyNode*)cmdarg;
+    d->_cmdArg = (SGPropertyNode*)cmdarg;
     callWithContext(ctx, code, argc, args, locals);
-    hashset(_globals, moduleName, locals);
+    hashset(d->_globals, moduleName, locals);
 
     naFreeContext(ctx);
     return true;
@@ -1586,7 +1584,7 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
 
 void FGNasalSys::deleteModule(const char* moduleName)
 {
-    if (!_inited || naIsNil(_globals)) {
+    if (!d->_inited || naIsNil(d->_globals)) {
         // can occur on shutdown due to us being shutdown first, but other
         // subsystems having Nasal objects.
         return;
@@ -1605,14 +1603,14 @@ void FGNasalSys::deleteModule(const char* moduleName)
     naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
 
     naRef locals;
-    if (naHash_get(_globals, modname, &locals)) {
+    if (naHash_get(d->_globals, modname, &locals)) {
         naRef unloadFunc = naHash_cget(locals, (char*)"unload");
         if (naIsFunc(unloadFunc)) {
             callWithContext(ctx, unloadFunc, 0, nullptr, locals);
         }
 
         // now delete the module hash
-        naHash_delete(_globals, modname);
+        naHash_delete(d->_globals, modname);
     }
 
     naFreeContext(ctx);
@@ -1620,11 +1618,11 @@ void FGNasalSys::deleteModule(const char* moduleName)
 
 bool FGNasalSys::reloadModuleFromFile(const std::string& moduleName)
 {
-    if (!_inited || naIsNil(_globals)) {
+    if (!d->_inited || naIsNil(d->_globals)) {
         return false;
     }
 
-    naRef locals = naHash_cget(_globals, (char*)moduleName.c_str());
+    naRef locals = naHash_cget(d->_globals, (char*)moduleName.c_str());
     if (naIsNil(locals)) {
         // no such module
         return false;
@@ -1655,13 +1653,13 @@ bool FGNasalSys::reloadModuleFromFile(const std::string& moduleName)
 
 naRef FGNasalSys::getModule(const std::string& moduleName) const
 {
-    naRef mod = naHash_cget(_globals, (char*)moduleName.c_str());
+    naRef mod = naHash_cget(d->_globals, (char*)moduleName.c_str());
     return mod;
 }
 
 naRef FGNasalSys::getModule(const char* moduleName)
 {
-    naRef mod = naHash_cget(_globals, (char*) moduleName);
+    naRef mod = naHash_cget(d->_globals, (char*)moduleName);
     return mod;
 }
 
@@ -1706,7 +1704,7 @@ naRef FGNasalSys::parse(naContext ctx, const char* filename,
     }
 
     // Bind to the global namespace before returning
-    return naBindFunction(ctx, code, _globals);
+    return naBindFunction(ctx, code, d->_globals);
 }
 
 bool FGNasalSys::handleCommand( const char* moduleName,
@@ -1730,16 +1728,16 @@ bool FGNasalSys::handleCommand( const char* moduleName,
     if(moduleName[0]) {
         naRef modname = naNewString(ctx);
         naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
-        if(!naHash_get(_globals, modname, &locals)) {
+        if (!naHash_get(d->_globals, modname, &locals)) {
             locals = naNewHash(ctx);
-            naHash_set(_globals, modname, locals);
+            naHash_set(d->_globals, modname, locals);
         }
     }
 
     // Cache this command's argument for inspection via cmdarg().  For
     // performance reasons, we won't bother with it if the invoked
     // code doesn't need it.
-    _cmdArg = (SGPropertyNode*)arg;
+    d->_cmdArg = (SGPropertyNode*)arg;
 
     callWithContext(ctx, code, 0, 0, locals);
     naFreeContext(ctx);
@@ -1793,7 +1791,7 @@ void FGNasalSys::setTimer(naContext c, int argc, naRef* args)
 
     // Generate and register a C++ timer handler
     NasalTimer* t = new NasalTimer(handler, this);
-    _nasalTimers.push_back(t);
+    d->_nasalTimers.push_back(t);
     globals->get_event_mgr()->addEvent(name,
                                        [t](){ t->timerExpired(); },
                                        delta.num, simtime);
@@ -1802,9 +1800,9 @@ void FGNasalSys::setTimer(naContext c, int argc, naRef* args)
 void FGNasalSys::handleTimer(NasalTimer* t)
 {
     call(t->handler, 0, 0, naNil());
-    auto it =  std::find(_nasalTimers.begin(), _nasalTimers.end(), t);
-    assert(it != _nasalTimers.end());
-    _nasalTimers.erase(it);
+    auto it = std::find(d->_nasalTimers.begin(), d->_nasalTimers.end(), t);
+    assert(it != d->_nasalTimers.end());
+    d->_nasalTimers.erase(it);
     delete t;
 }
 
@@ -1841,7 +1839,7 @@ void NasalTimer::timerExpired()
 }
 
 
-int FGNasalSys::_listenerId = 0;
+int NasalSysPrivate::_listenerId = 0;
 
 // setlistener(<property>, <func> [, <initial=0> [, <persistent=1>]])
 // Attaches a callback function to a property (specified as a global
@@ -1880,13 +1878,13 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
 
     int init = argc > 2 && naIsNum(args[2]) ? int(args[2].num) : 0; // do not trigger when created
     int type = argc > 3 && naIsNum(args[3]) ? int(args[3].num) : 1; // trigger will always be triggered when the property is written
-    FGNasalListener *nl = new FGNasalListener(node, code, this,
-            gcSave(code), _listenerId, init, type);
+    FGNasalListener* nl = new FGNasalListener(node, code, this,
+                                              gcSave(code), d->_listenerId, init, type);
 
     node->addChangeListener(nl, init != 0);
 
-    _listener[_listenerId] = nl;
-    return naNum(_listenerId++);
+    d->_listener[d->_listenerId] = nl;
+    return naNum(d->_listenerId++);
 }
 
 // removelistener(int) extension function. The argument is the id of
@@ -1894,66 +1892,66 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
 naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
 {
     naRef id = argc > 0 ? args[0] : naNil();
-    auto it = _listener.find(int(id.num));
-    if(!naIsNum(id) || it == _listener.end() || it->second->_dead) {
+    auto it = d->_listener.find(int(id.num));
+    if (!naIsNum(id) || it == d->_listener.end() || it->second->_dead) {
         naRuntimeError(c, "removelistener() with invalid listener id");
         return naNil();
     }
 
     it->second->_dead = true;
-    _dead_listener.push_back(it->second);
-    _listener.erase(it);
-    return naNum(_listener.size());
+    d->_dead_listener.push_back(it->second);
+    d->_listener.erase(it);
+    return naNum(d->_listener.size());
 }
 
 void FGNasalSys::registerToLoad(FGNasalModelData *data)
 {
-  if( _loadList.empty() )
-    _delay_load = true;
-  _loadList.push(data);
+    if (d->_loadList.empty())
+        d->_delay_load = true;
+    d->_loadList.push(data);
 }
 
 void FGNasalSys::registerToUnload(FGNasalModelData *data)
 {
-    _unloadList.push(data);
+    d->_unloadList.push(data);
 }
 
 bool FGNasalSys::addCommand(naRef func, const std::string& name)
 {
-    if (_commands.find(name) != _commands.end()) {
+    if (d->_commands.find(name) != d->_commands.end()) {
         SG_LOG(SG_NASAL, SG_WARN, "duplicate add of command:" << name);
         return false;
     }
 
     NasalCommand* cmd = new NasalCommand(this, func, name);
-    _commands[name] = cmd;
+    d->_commands[name] = cmd;
     return true;
 }
 
 bool FGNasalSys::removeCommand(const std::string& name)
 {
-    auto it = _commands.find(name);
-    if (it == _commands.end()) {
+    auto it = d->_commands.find(name);
+    if (it == d->_commands.end()) {
         SG_LOG(SG_NASAL, SG_WARN, "remove of unknwon command:" << name);
         return false;
     }
 
     // will delete the NasalCommand instance
     bool ok = globals->get_commands()->removeCommand(name);
-    _commands.erase(it);
+    d->_commands.erase(it);
     return ok;
 }
 
 void FGNasalSys::addPersistentTimer(TimerObj* pto)
 {
-    _persistentTimers.push_back(pto);
+    d->_persistentTimers.push_back(pto);
 }
 
 void FGNasalSys::removePersistentTimer(TimerObj* obj)
 {
-    auto it = std::find(_persistentTimers.begin(), _persistentTimers.end(), obj);
-    assert(it != _persistentTimers.end());
-    _persistentTimers.erase(it);
+    auto it = std::find(d->_persistentTimers.begin(), d->_persistentTimers.end(), obj);
+    assert(it != d->_persistentTimers.end());
+    d->_persistentTimers.erase(it);
 }
 
 // Register the subsystem.
@@ -2160,4 +2158,19 @@ int nasalStructEqual(naContext ctx, naRef a, naRef b)
     }
 
     return naEqual(a, b);
+}
+
+simgear::BufferedLogCallback* FGNasalSys::log() const
+{
+    return d->_log.get();
+}
+
+naRef FGNasalSys::nasalGlobals() const
+{
+    return d->_globals;
+}
+
+nasal::Hash FGNasalSys::getGlobals() const
+{
+    return nasal::Hash(d->_globals, d->_context);
 }

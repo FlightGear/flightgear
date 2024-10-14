@@ -7,7 +7,7 @@
 
 #include "testMonostable.hxx"
 
-#include <strstream>
+#include <sstream>
 
 #include "test_suite/FGTestApi/testGlobals.hxx"
 

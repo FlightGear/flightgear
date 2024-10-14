@@ -251,27 +251,22 @@ bool FGAIGroundVehicle::getPitch() {
         if (prev->getAltitude() == 0 || curr->getAltitude() == 0)
             return false;
 
-        static double distance;
-        static double curr_alt;
-        static double prev_alt;
-
         if (_new_waypoint){
-            curr_alt = curr->getAltitude();
-            prev_alt = prev->getAltitude();
-
-            static double d_alt = (curr_alt - prev_alt) * SG_METER_TO_FEET;
-            distance = SGGeodesy::distanceM(SGGeod::fromDeg(prev->getLongitude(), prev->getLatitude()),
-            SGGeod::fromDeg(curr->getLongitude(), curr->getLatitude()));
-            _pitch = atan2(d_alt, distance * SG_METER_TO_FEET) * SG_RADIANS_TO_DEGREES;
+            _tunnel_start_alt = prev->getAltitude();
+            _tunnel_end_alt = curr->getAltitude();
+            _tunnel_distance = SGGeodesy::distanceM(SGGeod::fromDeg(prev->getLongitude(), prev->getLatitude()),
+                                                    SGGeod::fromDeg(curr->getLongitude(), curr->getLatitude()));
+            double d_alt = (_tunnel_end_alt - _tunnel_start_alt) * SG_METER_TO_FEET;
+            _pitch = atan2(d_alt, _tunnel_distance * SG_METER_TO_FEET) * SG_RADIANS_TO_DEGREES;
         }
 
         double distance_to_go = SGGeodesy::distanceM(SGGeod::fromDeg(pos.getLongitudeDeg(), pos.getLatitudeDeg()),
-            SGGeod::fromDeg(curr->getLongitude(), curr->getLatitude()));
+                                                     SGGeod::fromDeg(curr->getLongitude(), curr->getLatitude()));
 
-        if (distance_to_go > distance)
-            _elevation = prev_alt;
+        if (distance_to_go > _tunnel_distance)
+            _elevation = _tunnel_start_alt;
         else
-            _elevation = curr_alt - (tan(_pitch * SG_DEGREES_TO_RADIANS) * distance_to_go * SG_METER_TO_FEET);
+            _elevation = _tunnel_end_alt - (tan(_pitch * SG_DEGREES_TO_RADIANS) * distance_to_go * SG_METER_TO_FEET);
     }
 
     return true;

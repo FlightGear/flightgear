@@ -101,6 +101,13 @@ flightgear::lowPassPeriodicDegreesSigned(double current, double target, double t
     return SGMiscd::normalizePeriodic(-180.0, 180.0, innerLowPassPeriodic(current, target, timeratio));
 }
 
+double
+flightgear::filterExponential(double current, double target, double timeratio)
+{
+   double factor = 2.0 / (timeratio + 1.0);
+   return (target - current) * factor + current;
+}
+
 
 /**
  * Allowed paths here are absolute, and may contain _one_ *,

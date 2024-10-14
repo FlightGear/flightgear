@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: (C) 2020 James Turner
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "testGC.hxx"
+#include "testNasalLib.hxx"
 
 #include "test_suite/FGTestApi/testGlobals.hxx"
 
@@ -15,27 +15,26 @@
 extern bool global_nasalMinimalInit;
 
 // Set up function for each test.
-void NasalGCTests::setUp()
+void NasalLibTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("NasalGC");
 
     fgInitAllowedPaths();
-    auto nasalNode = globals->get_props()->getNode("nasal", true);
 
     globals->get_subsystem_mgr()->add<FGInterpolator>();
 
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
-    
+
     global_nasalMinimalInit = true;
     globals->get_subsystem_mgr()->add<FGNasalSys>();
-    
+
     globals->get_subsystem_mgr()->postinit();
 }
 
 
 // Clean up after each test.
-void NasalGCTests::tearDown()
+void NasalLibTests::tearDown()
 {
     global_nasalMinimalInit = false;
     FGTestApi::tearDown::shutdownTestGlobals();
@@ -43,17 +42,28 @@ void NasalGCTests::tearDown()
 
 
 // Test test
-void NasalGCTests::testDummy()
+void NasalLibTests::testVector()
 {
     bool ok = FGTestApi::executeNasal(R"(
-     var foo = {
-      "name": "PFD-Test",
-          "size": [512, 512],
-          "view": [768, 1024],
-          "mipmapping": 1
-        };
-                                      
-      globals.foo1 = foo;
+
+        var v1 = ['apples', 'pears', 'lemons', 'strawberries'];
+        append(v1, 'melons');
+        unitTest.assert_equal(size(v1), 5);
+
+        var item = removeat(v1, 2);
+        unitTest.assert_equal(size(v1), 4);
+        unitTest.assert_equal(item,'lemons');
+        unitTest.assert_equal(v1[2], 'strawberries');
+
+        remove(v1, 'carrots');
+        unitTest.assert_equal(size(v1), 4); # nothing changes
+
+        remove(v1, 'pears');
+        unitTest.assert_equal(size(v1), 3); 
+        unitTest.assert_equal(v1[2], 'melons');
+
+        unitTest.assert(contains(v1, 'pears') == 0);
+
     )");
     CPPUNIT_ASSERT(ok);
 }

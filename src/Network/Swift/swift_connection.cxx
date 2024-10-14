@@ -16,70 +16,53 @@
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
-namespace {
-inline std::string fgswiftbusServiceName()
+namespace flightgear::swift {
+
+bool SwiftConnection::startServer([[maybe_unused]] const SGPropertyNode*, [[maybe_unused]] SGPropertyNode* root)
 {
-    return std::string("org.swift-project.fgswiftbus");
-}
-} // namespace
-
-bool SwiftConnection::startServer(const SGPropertyNode* arg, SGPropertyNode* root)
-{
-    SwiftConnection::plug = std::make_unique<FGSwiftBus::CPlugin>();
-
-    serverRunning = true;
-    fgSetBool("/sim/swift/serverRunning", true);
-
+    m_plugin = std::make_unique<CPlugin>();
     return true;
 }
 
-bool SwiftConnection::stopServer(const SGPropertyNode* arg, SGPropertyNode* root)
+bool SwiftConnection::stopServer([[maybe_unused]] const SGPropertyNode* arg, [[maybe_unused]] SGPropertyNode* root)
 {
-    fgSetBool("/sim/swift/serverRunning", false);
-    serverRunning = false;
-
-    SwiftConnection::plug.reset();
-
+    m_plugin.reset();
     return true;
-}
-
-SwiftConnection::SwiftConnection()
-{
-    init();
 }
 
 SwiftConnection::~SwiftConnection()
 {
-    shutdown();
-
-    if (serverRunning) {
-        SwiftConnection::plug.reset();
-    }
+    shutdownSwift();
 }
 
 void SwiftConnection::init()
 {
-    if (!initialized) {
+    if (!m_initialized) {
         globals->get_commands()->addCommand("swiftStart", this, &SwiftConnection::startServer);
         globals->get_commands()->addCommand("swiftStop", this, &SwiftConnection::stopServer);
 
         fgSetBool("/sim/swift/available", true);
-        initialized = true;
+        m_initialized = true;
     }
 }
 
 void SwiftConnection::update(double delta_time_sec)
 {
-    if (serverRunning) {
-        SwiftConnection::plug->fastLoop();
+    if (m_plugin) {
+        m_plugin->fastLoop();
     }
 }
 
 void SwiftConnection::shutdown()
 {
-    if (initialized) {
+    shutdownSwift();
+}
+
+void SwiftConnection::shutdownSwift()
+{
+    if (m_initialized) {
         fgSetBool("/sim/swift/available", false);
-        initialized = false;
+        m_initialized = false;
 
         globals->get_commands()->removeCommand("swiftStart");
         globals->get_commands()->removeCommand("swiftStop");
@@ -92,6 +75,8 @@ void SwiftConnection::reinit()
     init();
 }
 
+} // namespace flightgear::swift
+
 // Register the subsystem.
-SGSubsystemMgr::Registrant<SwiftConnection> registrantSwiftConnection(
+SGSubsystemMgr::Registrant<flightgear::swift::SwiftConnection> registrantSwiftConnection(
     SGSubsystemMgr::POST_FDM);

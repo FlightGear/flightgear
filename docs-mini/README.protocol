@@ -114,7 +114,7 @@ Both <input> and <output> block can contain a list of <chunk> specs,
 each of which describes the properties of on variable to write/read.
 
 
-  <name>        for ease of use (not tranferred)
+  <name>        for ease of use (not transferred)
   <node>        the property tree node which provides the data
   <type>        the value type (needed for formatting)
                 one of string, float, bool, int (default: int)
@@ -129,13 +129,13 @@ each of which describes the properties of on variable to write/read.
   <factor>      an optional multiplication factor which can be used for
                 unit conversion. (for example, radians to degrees).
   <offset>      an optional offset which can be used for unit conversion.
-                (for example, degrees Celcius to degrees Fahrenheit).
+                (for example, degrees Celsius to degrees Fahrenheit).
 
 For input chunks there exist some more options:
 
   <rel>         optional boolean parameter to enable handling of incoming values
                 as relative changes (default: false)
-                (Can be eg. used to realise up/down buttons by just sending 1 or
+                (Can be eg. used to realize up/down buttons by just sending 1 or
                 -1 respectively)
 
   <min>         an optional minimum limit for the value to be clamped to. This
@@ -144,8 +144,8 @@ For input chunks there exist some more options:
   <max>         an optional upper limit for the input value to be clamped to. If
                 <min> equals <max> no limit is applied. (default: 0)
   <wrap>        instead of clamping to minimum and maximum limits, wrap values
-                around. Values will be in [min, max[ (default: false)
-                (Usefull for eg. heading selector to start again with 1 for
+                around. Values will be in [min, max] (default: false)
+                (Useful for eg. heading selector to start again with 1 for
                 values higher than 360)
 
 <rel>, <min>, <max> and <wrap> are only used for numeric data types. <rel> can
@@ -286,7 +286,7 @@ Generic binary output protocol packet description:
    0 |    4 |    int |            | indicated speed (kt)
    4 |    4 |  float |            | pitch att (deg)
    8 |    4 |  float |            | magnetic heading (deg)
-  12 |    4 |    int |            | outside air temperarure (degF)
+  12 |    4 |    int |            | outside air temperature (degF)
   16 |    1 |   bool |            | autocoord
 
 total package size: 17 bytes

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#ifndef BLACKSIM_FGSWIFTBUS_DBUSDISPATCHER_H
-#define BLACKSIM_FGSWIFTBUS_DBUSDISPATCHER_H
+#pragma once
 
 #include "dbuscallbacks.h"
 
@@ -16,7 +15,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
 
 class WatchHandler;
 class TimeoutHandler;
@@ -94,6 +93,4 @@ private:
 
     std::vector<IDispatchable*> m_dispatchList;
 };
-} // namespace FGSwiftBus
-
-#endif
+} // namespace flightgear::swift

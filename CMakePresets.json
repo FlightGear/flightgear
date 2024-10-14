@@ -1,0 +1,30 @@
+{
+    "version": 9,
+    "configurePresets": [
+        {
+            "name": "configure-base",
+            "hidden": true,
+            "generator": "Ninja Multi-Config",
+            "cacheVariables": {
+                "ENABLE_PUICOMPAT":"ON"
+            },
+            "installDir":"${sourceParentDir}/dist",
+            "binaryDir": "${sourceParentDir}/fgbuild"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "build-debug",
+            "displayName": "Debug",
+            "configurePreset": "configure-base",
+            "configuration":"Debug"
+        },
+        {
+            "name": "build-release",
+            "displayName": "Release (with synbols)",
+            "configurePreset": "configure-base",
+            "configuration":"RelWithDebInfo"
+        }
+    ],
+    "testPresets": []
+}

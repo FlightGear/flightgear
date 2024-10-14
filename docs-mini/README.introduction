@@ -104,7 +104,7 @@ frame. dt is the time (in seconds) elapsed since the last call.
 Scripting
 ---------
 
-The scripting langage Nasal can also read and modify properties but it can also
+The scripting language Nasal can also read and modify properties but it can also
 be incorporated into the menu system. The documentation for Nasal can be found
 here:  http://www.plausible.org/nasal/flightgear.html
 

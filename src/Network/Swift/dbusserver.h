@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#ifndef BLACKSIM_FGSWIFTBUS_DBUSSERVER_H
-#define BLACKSIM_FGSWIFTBUS_DBUSSERVER_H
+#pragma once
 
 #include "dbuscallbacks.h"
 #include "dbusdispatcher.h"
@@ -20,7 +19,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
 
 class CDBusObject;
 
@@ -35,7 +34,7 @@ public:
     CDBusServer();
 
     //! Destructor
-    ~CDBusServer();
+    ~CDBusServer() override;
 
     //! Set the dispatcher
     void setDispatcher(CDBusDispatcher* dispatcher);
@@ -74,6 +73,4 @@ private:
     NewConnectionFunc m_newConnectionFunc;
 };
 
-} // namespace FGSwiftBus
-
-#endif // guard
+} // namespace flightgear::swift

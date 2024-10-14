@@ -313,8 +313,8 @@ zero or more actions. Base dimensions are specified as follows:
  <h-base>128</h-base>            <!-- required height spec-->
   <layers>                       <!-- begins layers section -->
 
-Height and width can be overriden in the top level panel.xml by
-specifying <w> and <h>. Transformations are caculated against the base
+Height and width can be overridden in the top level panel.xml by
+specifying <w> and <h>. Transformations are calculated against the base
 size regardless of the display size. This ensures that instruments
 remain calibrated
 
@@ -341,7 +341,7 @@ A texture layer looks like this:
     <y1>0.51</y1>              <!-- left boundary  for texture cropping-->
     <x2>0.49</x2>              <!-- upper boundary  for texture cropping-->
     <y2>1.0</y2>               <!-- right boundary  for texture cropping-->
-   </texture>                  <!-- closing texure tag -->
+   </texture>                  <!-- closing texture tag -->
   </layer>                     <!-- closing layer tag -->
 
 The texture cropping specification is represented as a decimal. There
@@ -446,7 +446,7 @@ degrees equal to the airspeed. X and y shifts are relative to the
 center of the instrument. Each specified transformation type takes an
 <offset>.  Offsets are relative to the center of the instrument. A
 shift without an offset has no effect. For example, let's say we have
-a texure that is a circle. If we use this texture in two layers, one
+a texture that is a circle. If we use this texture in two layers, one
 defined as having a size of 128x128 and the second layer is defined as
 64x64 and neither is supplied a shift and offset the net result
 appears as 2 concentric circles.

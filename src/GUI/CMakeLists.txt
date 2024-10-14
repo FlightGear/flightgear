@@ -84,14 +84,31 @@ if (HAVE_PUI)
 endif()
 
 if (HAVE_QT)
-    qt5_wrap_ui(uic_sources SetupRootDialog.ui
-                            InstallSceneryDialog.ui
-                            )
-    qt5_add_resources(qrc_sources resources.qrc)
+    if (QT_VERSION_MAJOR EQUAL "5")
+      message(STATUS "Using Qt5 version of the macros")
+      # Qt < 5.15 
+      qt5_wrap_ui(uic_sources SetupRootDialog.ui
+        InstallSceneryDialog.ui
+        )
+      qt5_add_resources(qrc_sources resources.qrc)
 
-    if (TARGET fgfs_qm_files)
-      qt5_add_resources(qrc_sources ${PROJECT_BINARY_DIR}/translations.qrc)
+      if (TARGET fgfs_qm_files)
+        qt5_add_resources(qrc_sources ${PROJECT_BINARY_DIR}/translations.qrc)
+      endif()
+    else()
+      message(STATUS "Using Qt6 version of the macros")
+      # Qt 6 versions
+      qt_wrap_ui(uic_sources SetupRootDialog.ui
+        InstallSceneryDialog.ui
+        )
+      qt_add_resources(qrc_sources resources.qrc)
+
+      if (TARGET fgfs_qm_files)
+        qt_add_resources(qrc_sources ${PROJECT_BINARY_DIR}/translations.qrc)
+      endif()
     endif()
+
+
 
     add_library(fglauncher QtLauncher.cxx
                             QtLauncher.hxx
@@ -158,30 +175,22 @@ if (HAVE_QT)
                             ${qml_sources})
 
     set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
-    target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI )
+    target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI 
+      ${CMAKE_CURRENT_SOURCE_DIR})
 
     # we include WindowBuilder.h which needs this
     target_include_directories(fglauncher PRIVATE ${OPENSCENEGRAPH_INCLUDE_DIRS})
 
-    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network Qt5::Qml Qt5::Quick Qt5::Svg SimGearCore)
-
-    if (ENABLE_QQ_UI)
-      set(QQUI_SOURCES 
-        QQuickDrawable.cxx
-        QQuickDrawable.hxx
-        OSGQtAdaption.cxx
-        OSGQtAdaption.hxx
-        )
-
-        # we need an Objective-C++ file to bridge between OSG-Cocoa and the Qt OpenGL wrapper
-        if (APPLE)
-          list(APPEND QQUI_SOURCES OSGCocoaAdaption.mm)
-        endif()
-    endif()
+    target_link_libraries(fglauncher 
+        Qt${QT_VERSION_MAJOR}::Core 
+        Qt${QT_VERSION_MAJOR}::Widgets 
+        Qt${QT_VERSION_MAJOR}::Network 
+        Qt${QT_VERSION_MAJOR}::Qml 
+        Qt${QT_VERSION_MAJOR}::Quick 
+        Qt${QT_VERSION_MAJOR}::Svg 
+        SimGearCore)
 
     add_library(fgqmlui 
-                        QtQuickFGCanvasItem.cxx
-                        QtQuickFGCanvasItem.hxx
                         PropertyItemModel.cxx
                         PropertyItemModel.hxx
                         FGQmlInstance.cxx
@@ -220,8 +229,6 @@ if (HAVE_QT)
                         ModelDataExtractor.hxx
                         HoverArea.cxx
                         HoverArea.hxx
-                        FGQQWindowManager.cxx
-                        FGQQWindowManager.hxx
                         PathUrlHelper.cxx
                         PathUrlHelper.hxx
                         DialogStateController.cxx
@@ -236,21 +243,19 @@ if (HAVE_QT)
                         GettingStartedScope.cxx
                         QmlColoredImageProvider.hxx
                         QmlColoredImageProvider.cxx
-                        ${QQUI_SOURCES}
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)
-    target_link_libraries(fgqmlui Qt5::Quick Qt5::Widgets Qt5::Network Qt5::Qml Qt5::Gui SimGearCore)
-    target_include_directories(fgqmlui PRIVATE ${PROJECT_BINARY_DIR}/src/GUI ${OPENSCENEGRAPH_INCLUDE_DIRS})
+    target_link_libraries(fgqmlui 
+        Qt${QT_VERSION_MAJOR}::Widgets 
+        Qt${QT_VERSION_MAJOR}::Network 
+        Qt${QT_VERSION_MAJOR}::Qml 
+        Qt${QT_VERSION_MAJOR}::Quick 
+        Qt${QT_VERSION_MAJOR}::Svg 
+        SimGearCore)
+
+    target_include_directories(fgqmlui PRIVATE ${PROJECT_BINARY_DIR}/src/GUI ${OPENSCENEGRAPH_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
     
-    if (ENABLE_QQ_UI)
-      # this is a headers-only dependency, so we can include <private/qopenglcontext_p.h>
-      target_link_libraries(fgqmlui Qt5::GuiPrivate )
-
-	    # for QtPlatformHeaders
-	    target_include_directories(fgqmlui PRIVATE ${FG_QT_ROOT_DIR}/include)
-    endif()
-
     if (TARGET fgfs_qm_files)
       add_dependencies(fglauncher fgfs_qm_files)
       add_dependencies(fgqmlui fgfs_qm_files)

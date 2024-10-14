@@ -1,6 +1,6 @@
 #pragma once
 
-const int SCHEMA_VERSION = 25;
+const int SCHEMA_VERSION = 27;
 
 #define SCHEMA_SQL                                                                              \
     "CREATE TABLE properties (key VARCHAR, value VARCHAR);"                                     \

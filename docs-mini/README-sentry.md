@@ -5,7 +5,7 @@ account provided gratis by Sentry; for access to this, ask on the developer list
 
 ## Error conditions
 
-If FlightGear crahses, Sentry will automatically submit a report. For non-crash errors,
+If FlightGear crashes, Sentry will automatically submit a report. For non-crash errors,
 we manually submit an exception report. At present this is done whenever we trigger the
 `fatalMessageBox`, and in other serious situations. Deciding where is appropriate (or not)
 to report the error to Sentry is a key challenge of the system, since we don't want to
@@ -41,7 +41,7 @@ user changing position, or scenery being reloaded.
 
 `WARN` and `ALERT` level `SG_LOG` messages are currently included as breadcrumbs automatically;
 this means it's important not to casually add messages at the levels for non-serious conditions.
-The integration code has a list of commonly ocurring but non-useful messages which are
+The integration code has a list of commonly occurring but non-useful messages which are
 skipped from sending; especially some OSG ones related to PNG and AC3D data issues.
 
 Adding new tags or breadcrumbs should be done with care, but is generally useful, and

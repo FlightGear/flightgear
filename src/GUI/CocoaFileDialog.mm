@@ -129,7 +129,7 @@ void CocoaFileDialog::exec()
 
     [d->panel beginSheetModalForWindow:cocoaWindow completionHandler:^(NSInteger result)
     {
-        if (result == NSFileHandlingPanelOKButton) {
+        if (result == NSModalResponseOK) {
             completion_path = [[d->panel URL] path];
             //NSLog(@"the URL is: %@", d->panel URL]);
             completion_sgpath = SGPath::fromUtf8([completion_path UTF8String]);

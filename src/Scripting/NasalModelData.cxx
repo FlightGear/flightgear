@@ -21,9 +21,6 @@
 // destructor the <unload> script. The latter happens when the model branch
 // is removed from the scene graph.
 
-unsigned int FGNasalModelData::_max_module_id = 0;
-FGNasalModelDataList FGNasalModelData::_loaded_models;
-
 typedef osg::ref_ptr<osg::Node> NodeRef;
 typedef nasal::Ghost<NodeRef> NasalNode;
 
@@ -76,9 +73,10 @@ FGNasalModelData::FGNasalModelData( SGPropertyNode *root,
   _path(path),
   _root(root), _prop(prop),
   _load(load), _unload(unload),
-  _branch(branch),
-  _module_id( _max_module_id++ )
+  _branch(branch)
 {
+  const std::lock_guard<std::mutex> lock(FGNasalModelData::_loaded_models_mutex);
+  _module_id = _max_module_id++;
   _loaded_models.push_back(this);
 
   SG_LOG
@@ -94,6 +92,7 @@ FGNasalModelData::FGNasalModelData( SGPropertyNode *root,
 //------------------------------------------------------------------------------
 FGNasalModelData::~FGNasalModelData()
 {
+  const std::lock_guard<std::mutex> lock(FGNasalModelData::_loaded_models_mutex);
   _loaded_models.remove(this);
 
   SG_LOG
@@ -165,6 +164,7 @@ osg::Node* FGNasalModelData::getNode()
 //------------------------------------------------------------------------------
 FGNasalModelData* FGNasalModelData::getByModuleId(unsigned int id)
 {
+  const std::lock_guard<std::mutex> lock(FGNasalModelData::_loaded_models_mutex);
   FGNasalModelDataList::iterator it = std::find_if
   (
     _loaded_models.begin(),

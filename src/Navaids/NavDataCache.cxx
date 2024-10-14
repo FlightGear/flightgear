@@ -1000,7 +1000,7 @@ public:
     sqlite3_stmt_ptr beginTransactionStmt, commitTransactionStmt, rollbackTransactionStmt;
 
     std::map<DatFileType, NavDataCache::DatFilesGroupInfo> datFilesInfo;
-    SGPath metarDatPath, poiDatPath,
+    SGPath metarDatPath,
         carrierDatPath, airwayDatPath;
 
     sqlite3_stmt_ptr readPropertyQuery, writePropertyQuery,
@@ -1453,14 +1453,15 @@ void NavDataCache::updateListsOfDatFiles() {
   // paths, plus $FG_ROOT/Navaids/{nav,fix}.dat.gz (order matters).
   d->findDatFiles(DATFILETYPE_NAV);
   d->findDatFiles(DATFILETYPE_FIX);
+  d->findDatFiles(DATFILETYPE_POI);
 
   // These ones are still managed the "old" way (no search through scenery
   // paths).
   d->metarDatPath = SGPath(globals->get_fg_root());
   d->metarDatPath.append("Airports/metar.dat.gz");
 
-  d->poiDatPath = SGPath(globals->get_fg_root());
-  d->poiDatPath.append("Navaids/poi.dat.gz");
+  // d->poiDatPath = SGPath(globals->get_fg_root());
+  // d->poiDatPath.append("Navaids/poi.dat.gz");
 
   d->carrierDatPath = SGPath(globals->get_fg_root());
   d->carrierDatPath.append("Navaids/carrier_nav.dat.gz");
@@ -1510,7 +1511,7 @@ bool NavDataCache::isRebuildRequired()
       d->areDatFilesModified(DATFILETYPE_NAV, true) ||
       d->areDatFilesModified(DATFILETYPE_FIX, true) ||
       d->isCachedFileModified(d->carrierDatPath, true) ||
-      d->isCachedFileModified(d->poiDatPath, true) ||
+      d->areDatFilesModified(DATFILETYPE_POI, true) ||
       d->isCachedFileModified(d->airwayDatPath, true))
   {
     if (dontRebuildFlag) {
@@ -1784,15 +1785,16 @@ void NavDataCache::doRebuild()
         SG_LOG(SG_NAVCACHE, SG_INFO, "stage 1 commit took:" << st.elapsedMSec());
     }
 
-#if 0
-      SG_LOG(SG_NAVCACHE, SG_MANDATORY_INFO, "SKIPPING POI load on Windows");
-#else
       {
           Transaction txn(this);
+          POILoader poisLoader;
+
+          using namespace std::placeholders;  // for _1, _2, _3...
 
           st.stamp();
-          poiDBInit(d->poiDatPath);
-          stampCacheFile(d->poiDatPath);
+          loadDatFiles(DATFILETYPE_POI,
+                     std::bind(&POILoader::loadPOIs, &poisLoader, _1, _2, _3));
+
           SG_LOG(SG_NAVCACHE, SG_INFO, "poi.dat load took:" << st.elapsedMSec());
 
           setRebuildPhaseProgress(REBUILD_UNKNOWN);
@@ -1800,7 +1802,6 @@ void NavDataCache::doRebuild()
           txn.commit();
           SG_LOG(SG_NAVCACHE, SG_INFO, "POI commit took:" << st.elapsedMSec());
       }
-#endif
 
       {
           Transaction txn(this);

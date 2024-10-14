@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
+#pragma once
+
 #include <AIModel/AIManager.hxx>
 #include <AIModel/AISwiftAircraft.h>
 #include <Scenery/scenery.hxx>
@@ -12,8 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
-#ifndef FGSWIFTAIRCRAFTMANAGER_H
-#define FGSWIFTAIRCRAFTMANAGER_H
+namespace flightgear::swift {
 
 struct SwiftPlaneUpdate {
     std::string callsign;
@@ -45,4 +46,5 @@ private:
     std::unordered_map<std::string, FGAISwiftAircraftPtr> aircraftByCallsign;
     bool m_initialized = false;
 };
-#endif
+
+} // namespace flightgear::swift

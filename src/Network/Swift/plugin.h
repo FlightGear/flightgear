@@ -4,19 +4,9 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#ifndef BLACKSIM_FGSWIFTBUS_PLUGIN_H
-#define BLACKSIM_FGSWIFTBUS_PLUGIN_H
+#pragma once
 
-//! \file
 
-/*!
- * \namespace FGSwiftBus
- * Plugin loaded by Flightgear which publishes a DBus service
- */
-
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 
 #include "config.h"
 #include "dbusconnection.h"
@@ -25,13 +15,13 @@
 #include <memory>
 #include <thread>
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
 class CService;
 class CTraffic;
 
 /*!
-     * Main plugin class
-     */
+ * Plugin loaded by Flightgear which publishes a DBus service
+ */
 class CPlugin
 {
 public:
@@ -50,8 +40,5 @@ private:
     std::unique_ptr<CTraffic> m_traffic;
 
     std::thread m_dbusThread;
-    bool m_shouldStop = false;
 };
-} // namespace FGSwiftBus
-
-#endif // BLACKSIM_FGSWIFTBUS_PLUGIN_H
+} // namespace flightgear::swift

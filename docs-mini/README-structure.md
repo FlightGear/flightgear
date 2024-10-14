@@ -28,12 +28,12 @@ and a subsystem (etc) should check this in its `update()` method.
 
 Tied properties allow a property to be defined by a C++ memory location (such as a class
 member variable) or by callback functions implementation the get/set operations. This
-is very convenient for the implementating code. However, by default it has the
+is very convenient for the implementing code. However, by default it has the
 problematic side-effect that listeners do not correctly, since they have no way to be
-notified thst the underlying value (or result of invoking the getter) has changed.
+notified that the underlying value (or result of invoking the getter) has changed.
 
 It is therefore critical, when using tied properties, to _manually_ invoke `fireValueChanged`
-on dependent proeprties, when updating the internal state producing them. Care should be 
+on dependent properties, when updating the internal state producing them. Care should be 
 taken to only fire the change, when the result of the getters would actually change; it is
 _not_ acceptable to simply call `fireValueChanged` each iteration, since any connected
 listener will be run at the simulation rate.
@@ -41,7 +41,7 @@ listener will be run at the simulation rate.
 ### Conditions
 
 _Conditions_ are  predicates which can be evaluated on demand. They can contain
-logical operations such as 'and' and 'or', and comparisoms: for example checking that
+logical operations such as 'and' and 'or', and comparisons: for example checking that
 a property is equal to a constant value, or that a property is less than another
 property.
 
@@ -54,7 +54,7 @@ element.
 _Bindings_ are a command invocation with associated arguments. In the simplest case
 this might be invoking the `property-set` command with an argument of 42. At its
 most complex, the command might invoke a Nasal script, supplied as part of the
-binding, and substituing a runtime value into the Nasal logic.
+binding, and substituting a runtime value into the Nasal logic.
 
 Bindings are typically used in response to user actions, such as a menu item, key
 press or interacting with a cockpit control, to update some part of the simulator
@@ -63,7 +63,7 @@ state.
 ## Structural Components
 
 Most code within FlightGear is organized into subsystems. Subsystems are isolated from each other;
-a well designed subsytem can be added, remove or restarting independently. Many subystems do not
+a well designed subsystem can be added, remove or restarting independently. Many subsystems do not
 full conform to these goals, especially regarding runtime adding and removal, but an increasing
 number do support it.
 
@@ -74,4 +74,4 @@ number do support it.
 
 ## Finding data files
 
-## Subsysterm Lifecycle
+## Subsystem Lifecycle

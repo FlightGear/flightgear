@@ -33,7 +33,7 @@ void SwiftAircraftManagerTest::testAircraftManager()
     globals->get_subsystem<FGAIManager>()->bind();
     globals->get_subsystem<FGAIManager>()->init();
 
-    FGSwiftAircraftManager acm;
+    flightgear::swift::FGSwiftAircraftManager acm;
     acm.addPlane("BER123", "PATH_TO_MODEL");
     CPPUNIT_ASSERT_EQUAL(globals->get_subsystem<FGAIManager>()->get_ai_list().size(), (size_t)1);
 

@@ -163,31 +163,10 @@ static void videoEncodingPopup(const std::string& message, int delay)
 static void vidoEncodingUpdateStatus(const std::string& path)
 {
     fgSetString("/sim/video/encoding-path", path);
+
+    // For enable/disable Start and Stop buttons in video control dialog
     bool encoding = (path != "");
-    SGPropertyNode* node = fgGetNode("/sim/menubar/default");
-    
-    /* Enable/disable menu items 'File/Video encode start' and 'File/Video
-    encode stop'. */
-    for (auto a: node->getChildren("menu"))
-    {
-        std::string name = a->getStringValue("name");
-        if (name == "file")
-        {
-            for (auto b: a->getChildren("item"))
-            {
-                std::string name = b->getStringValue("name");
-                if (name == "video-start")
-                {
-                    b->setBoolValue("enabled", !encoding);
-                }
-                if (name == "video-stop")
-                {
-                    b->setBoolValue("enabled", encoding);
-                }
-            }
-            break;
-        }
-    }
+    fgSetBool("/sim/video/is-encoding", encoding);
 }
 
 static void videoEncodingError(const std::string& message)

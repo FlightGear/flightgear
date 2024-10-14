@@ -25,6 +25,11 @@ PUICompatObject::PUICompatObject(naRef impl, const std::string& type) : nasal::O
 
 PUICompatObject::~PUICompatObject()
 {
+    auto labelNode = _config->getChild("label");
+    if (labelNode) {
+        labelNode->removeChangeListener(this);
+    }
+
     if (_value) {
         _value->removeChangeListener(this);
     }
@@ -85,6 +90,7 @@ void PUICompatObject::init()
 
     _name = _config->getStringValue("name");
     _label = _config->getStringValue("label");
+    _live = _config->getBoolValue("live");
 
     int parentWidth = 800;
     int parentHeight = 600;
@@ -106,6 +112,10 @@ void PUICompatObject::init()
         _enableCondition = sgReadCondition(globals->get_props(), _config->getChild("enable"));
     }
 
+    if (_config->hasChild("label")) {
+        _config->getChild("label")->addChangeListener(this);
+    }
+
     if (_config->hasValue("property")) {
         _value = fgGetNode(_config->getStringValue("property"), true);
         _value->addChangeListener(this);
@@ -113,11 +123,6 @@ void PUICompatObject::init()
 
     const auto bindings = _config->getChildren("binding");
     if (!bindings.empty()) {
-        //        info->key = props->getIntValue("keynum", -1);
-        //        if (props->hasValue("key"))
-        //            info->key = getKeyCode(props->getStringValue("key", ""));
-
-
         for (auto bindingNode : bindings) {
             const auto cmd = bindingNode->getStringValue("command");
             if (cmd == "nasal") {
@@ -178,8 +183,8 @@ bool PUICompatObject::isNodeAChildObject(const std::string& nm)
         "button", "one-shot", "slider", "dial",
         "text", "input",
         "combo", "textbox", "select",
-        "hrule", "vrule", "group", "frame"
-                                   "checkbox"};
+        "hrule", "vrule", "group", "frame",
+        "checkbox"};
 
     auto it = std::find(typeNames.begin(), typeNames.end(), nm);
     return it != typeNames.end();
@@ -201,6 +206,11 @@ void PUICompatObject::update()
             _visible = e;
             callMethod<void, bool>("visibleChanged", e);
         }
+    }
+
+    if (_labelChanged) {
+        _labelChanged = false;
+        callMethod<void, std::string>("labelChanged", _label);
     }
 
     // read property value if live
@@ -251,17 +261,17 @@ naRef PUICompatObject::nasalGetConfigValue(const nasal::CallContext ctx) const
 
 void PUICompatObject::valueChanged(SGPropertyNode* node)
 {
+    if (node->getNameString() == "label") {
+        _labelChanged = true;
+        _label = node->getStringValue();
+        return;
+    }
+
     if (!_live)
         return;
 
     // don't fire Nasal callback now, might cause recursion
     _valueChanged = true;
-}
-
-void PUICompatObject::createNasalPeer()
-{
-    //
-    //    _nasalPeer = ;
 }
 
 void PUICompatObject::activateBindings()
@@ -348,6 +358,16 @@ void PUICompatObject::recursiveApply(const std::string& objectName)
     for (auto child : _children) {
         child->recursiveApply(objectName);
     }
+}
+
+void PUICompatObject::recursiveOnDelete()
+{
+    // bottom up call of del()
+    for (auto child : _children) {
+        child->recursiveOnDelete();
+    }
+
+    callMethod<void>("del");
 }
 
 void PUICompatObject::setDialog(PUICompatDialogRef dialog)

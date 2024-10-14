@@ -4,11 +4,16 @@
 #include <QObject>
 #include <QStringList>
 
+#include "AddonsModel.hxx"
+#include "PathListModel.hxx"
+
 class CatalogListModel;
-class AddonsModel;
 class LauncherMainWindow;
-class PathListModel;
 class LaunchConfig;
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+Q_MOC_INCLUDE("CatalogListModel.hxx")
+#endif
 
 class AddOnsController : public QObject
 {

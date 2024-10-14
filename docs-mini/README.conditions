@@ -138,7 +138,7 @@ and then
   </condition>
 
 It's verbose, but it works nicely within existing property-based
-formats and provides a lot of flexiblity.
+formats and provides a lot of flexibility.
 
 
 5. Syntax Summary

@@ -14,7 +14,10 @@
 
 #define FGSWIFTBUS_API_VERSION 3;
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
+
+static const std::string k_fgswiftbus_service_interfacename = "org.swift_project.fgswiftbus.service";
+static const std::string k_fgswiftbus_service_objectpath = "/fgswiftbus/service";
 
 CService::CService()
 {
@@ -65,14 +68,12 @@ CService::CService()
 
 const std::string& CService::InterfaceName()
 {
-    static const std::string s(FGSWIFTBUS_SERVICE_INTERFACENAME);
-    return s;
+    return k_fgswiftbus_service_interfacename;
 }
 
 const std::string& CService::ObjectPath()
 {
-    static const std::string s(FGSWIFTBUS_SERVICE_OBJECTPATH);
-    return s;
+    return k_fgswiftbus_service_objectpath;
 }
 
 // Static method
@@ -367,7 +368,7 @@ DBusHandlerResult CService::dbusMessageHandler(const CDBusMessage& message_)
         if (message.getMethodName() == "Introspect") {
             sendDBusReply(sender, serial, introspection_service);
         }
-    } else if (message.getInterfaceName() == FGSWIFTBUS_SERVICE_INTERFACENAME) {
+    } else if (message.getInterfaceName() == k_fgswiftbus_service_interfacename) {
         if (message.getMethodName() == "addTextMessage") {
             maybeSendEmptyDBusReply(wantsReply, sender, serial);
             std::string text;
@@ -630,4 +631,4 @@ int CService::process()
     return 1;
 }
 
-} // namespace FGSwiftBus
+} // namespace flightgear::swift

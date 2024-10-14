@@ -65,8 +65,6 @@ public:
 protected:
     PUICompatObject(naRef impl, const std::string& type);
 
-    virtual void createNasalPeer();
-
     virtual void activateBindings();
 
     virtual void updateGeometry(const SGRectd& newGeom);
@@ -87,6 +85,7 @@ private:
 
     void recursiveUpdate(const std::string& objectName = {});
     void recursiveApply(const std::string& objectName = {});
+    void recursiveOnDelete();
 
     void doActivate();
     
@@ -109,6 +108,7 @@ private:
     bool _valueChanged = false;
     bool _visible = true;
     bool _enabled = true;
+    bool _labelChanged = false;
 
     SGConditionRef _visibleCondition;
     SGConditionRef _enableCondition;

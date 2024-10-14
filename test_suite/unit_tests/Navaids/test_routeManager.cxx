@@ -985,6 +985,21 @@ void RouteManagerTests::testsSelectWaypoint2()
     rmNode->setStringValue("input", "@INSERT1:ALM");
     auto leg = f->legAtIndex(1);
     auto wp1 = leg->waypoint();
-    CPPUNIT_ASSERT_EQUAL(wp1->ident(), string{"ALM"});
+    CPPUNIT_ASSERT_EQUAL(string{"ALM"}, wp1->ident());
    // CPPUNIT_ASSERT_EQUAL(wp1->source()->name(), string{"ALMATY VOR-DME"});
+}
+
+void RouteManagerTests::testAppendWaypoint() {
+    // https://sourceforge.net/p/flightgear/codetickets/2829/
+    
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    FlightPlanRef f = FlightPlan::create();
+    rm->setFlightPlan(f);
+    auto rmNode = globals->get_props()->getNode("autopilot/route-manager", true);
+    rmNode->setStringValue("input", "LFOH");
+    rmNode->setStringValue("input", "NK");
+    rmNode->setStringValue("input", "@INSERT2:NK");
+
+    CPPUNIT_ASSERT_EQUAL(string{"NK"}, f->legAtIndex(1)->waypoint()->source()->name());
+    CPPUNIT_ASSERT_EQUAL(string{"NK"}, f->legAtIndex(2)->waypoint()->source()->name());
 }

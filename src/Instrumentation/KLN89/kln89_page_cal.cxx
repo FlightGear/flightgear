@@ -147,7 +147,7 @@ void KLN89CalPage::Update(double dt) {
 				// when past 9:59 on the kln89 sim.
 				_kln89->DrawText("-:--", 2, 11, 0);
 			} else {
-				snprintf(buf, 5, "%01i:%02i", te.hr(), te.min());
+				snprintf(buf, 12, "%01i:%02i", te.hr(), te.min());
 				_kln89->DrawText((string)buf, 2, 11, 0);
 			}
 		}

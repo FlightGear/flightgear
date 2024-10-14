@@ -6,11 +6,7 @@
 #pragma once
 
 #include <memory>
-#include <thread>
 
-#include <Main/fg_props.hxx>
-#include <simgear/compiler.h>
-#include <simgear/io/raw_socket.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
@@ -19,14 +15,12 @@
 #include "dbusserver.h"
 #include "plugin.h"
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
+namespace flightgear::swift {
 
 class SwiftConnection : public SGSubsystem
 {
 public:
-    SwiftConnection();
+    SwiftConnection() = default;
     ~SwiftConnection();
 
     // Subsystem API.
@@ -38,12 +32,14 @@ public:
     // Subsystem identification.
     static const char* staticSubsystemClassId() { return "swift"; }
 
+private:
     bool startServer(const SGPropertyNode* arg, SGPropertyNode* root);
     bool stopServer(const SGPropertyNode* arg, SGPropertyNode* root);
 
-    std::unique_ptr<FGSwiftBus::CPlugin> plug{};
+    // non-virtual shutdown function to avoid calling a virtual function from dtor for proper cleanup
+    void shutdownSwift();
 
-private:
-    bool serverRunning = false;
-    bool initialized = false;
+    std::unique_ptr<CPlugin> m_plugin;
+    bool m_initialized = false;
 };
+} // namespace flightgear::swift

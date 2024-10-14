@@ -367,9 +367,13 @@ void FGInputDevice::SendFeatureReport(unsigned int reportId, const std::string& 
 }
 
 
-const char * FGEventInput::PROPERTY_ROOT = "/input/event";
-
 FGEventInput::FGEventInput()
+{
+}
+
+FGEventInput::FGEventInput(const char* filePath, const char* propertyRoot):
+  filePath(filePath),
+  propertyRoot(propertyRoot)
 {
 }
 
@@ -381,18 +385,16 @@ FGEventInput::~FGEventInput()
 void FGEventInput::shutdown()
 {
     SG_LOG(SG_INPUT, SG_DEBUG, "FGEventInput::shutdown()");
-    auto tmp = input_devices;
+    auto tmp = inputDevices;
     for (auto it : tmp) {
       RemoveDevice(it.first);
     }
-    input_devices.clear();
+    inputDevices.clear();
 }
 
 void FGEventInput::init( )
 {
-    configMap = FGDeviceConfigurationMap( "Input/Event",
-                                          fgGetNode(PROPERTY_ROOT, true),
-                                          "device-named");
+  configMap = FGDeviceConfigurationMap(filePath, fgGetNode(propertyRoot, true), "device-named");
 }
 
 void FGEventInput::postinit ()
@@ -401,7 +403,7 @@ void FGEventInput::postinit ()
 
 void FGEventInput::update( double dt )
 {
-    for (auto it : input_devices) {
+    for (auto it : inputDevices) {
         it.second->update(dt);
     }
 }
@@ -410,7 +412,7 @@ std::string FGEventInput::computeDeviceIndexName(FGInputDevice* dev) const
 {
     int count = 0;
     const auto devName = dev->GetName();
-    for (auto it : input_devices) {
+    for (auto it : inputDevices) {
         if (it.second->GetName() == devName) {
             ++count;
         }
@@ -423,7 +425,7 @@ std::string FGEventInput::computeDeviceIndexName(FGInputDevice* dev) const
 
 unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
 {
-  SGPropertyNode_ptr baseNode = fgGetNode( PROPERTY_ROOT, true );
+  SGPropertyNode_ptr baseNode = fgGetNode( propertyRoot, true );
   SGPropertyNode_ptr deviceNode = nullptr;
 
   const string deviceName = inputDevice->GetName();
@@ -489,7 +491,7 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
         return INVALID_DEVICE_INDEX;
     }
 
-    input_devices[deviceNode->getIndex()] = inputDevice;
+    inputDevices[deviceNode->getIndex()] = inputDevice;
 
     SG_LOG(SG_INPUT, SG_INFO, inputDevice->class_id << "::AddDevice '" << inputDevice->GetUniqueName() << "' s/n: " << inputDevice->GetSerialNumber() );
     return deviceNode->getIndex();
@@ -498,15 +500,15 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
 void FGEventInput::RemoveDevice( unsigned index )
 {
   // not fully implemented yet
-  SGPropertyNode_ptr baseNode = fgGetNode( PROPERTY_ROOT, true );
+  SGPropertyNode_ptr baseNode = fgGetNode( propertyRoot, true );
   SGPropertyNode_ptr deviceNode = NULL;
 
   SG_LOG(SG_INPUT, SG_DEBUG, "FGEventInput::RemoveDevice(" << index << ") ");
-  FGInputDevice *inputDevice = input_devices[index];
+  FGInputDevice *inputDevice = inputDevices[index];
   if (inputDevice) {
     SG_LOG(SG_INPUT, SG_DEBUG, "\tremoving (" << index << ") " << inputDevice->GetUniqueName());
     inputDevice->Close();
-    input_devices.erase(index);
+    inputDevices.erase(index);
     delete inputDevice;
   }
   deviceNode = baseNode->removeChild("device", index);

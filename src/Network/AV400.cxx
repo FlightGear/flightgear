@@ -45,10 +45,10 @@ bool FGAV400::gen_message() {
     double min;
 
     // create msg_z
-    sprintf( msg_z, "z%05.0f\r\n", fdm.get_Altitude() );
+    snprintf( msg_z, sizeof(msg_z), "z%05.0f\r\n", fdm.get_Altitude() );
 
     // create msg_A
-    sprintf( msg_A, "A");
+    snprintf( msg_A, sizeof(msg_A), "A");
 
     double latd = fdm.get_Latitude() * SGD_RADIANS_TO_DEGREES;
     if ( latd < 0.0 ) {

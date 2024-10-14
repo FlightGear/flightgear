@@ -274,7 +274,6 @@ class FGScenery::ElevationMeshListener : public SGPropertyChangeListener
 {
 protected:
     const char* root_node_path = "/scenery/elevation-mesh";
-    const char* lod_node_path = "/sim/rendering/static-lod";
 public:
     ElevationMeshListener()
     {
@@ -282,12 +281,6 @@ public:
         setupPropertyListener(elevationMeshNode, "constraint-gap-m");
         setupPropertyListener(elevationMeshNode, "sample-ratio");
         setupPropertyListener(elevationMeshNode, "vertical-scale");
-
-        // We also need to set the maximum range based on the LOD ranges
-        SGPropertyNode_ptr lodNode = fgGetNode(lod_node_path, true);
-        setupPropertyListener(lodNode, "detailed");
-        setupPropertyListener(lodNode, "rough-delta");
-        setupPropertyListener(lodNode, "bare-delta");
     }
 
     ~ElevationMeshListener()

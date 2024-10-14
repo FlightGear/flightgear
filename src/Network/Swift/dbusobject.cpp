@@ -5,12 +5,11 @@
  */
 
 #include "dbusobject.h"
+
+#include <algorithm>
 #include <cassert>
 
-namespace FGSwiftBus {
-CDBusObject::CDBusObject()
-{
-}
+namespace flightgear::swift {
 
 CDBusObject::~CDBusObject()
 {
@@ -57,16 +56,15 @@ void CDBusObject::maybeSendEmptyDBusReply(bool wantsReply, const std::string& de
 void CDBusObject::queueDBusCall(const std::function<void()>& func)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_qeuedDBusCalls.push_back(func);
+    m_queuedDBusCalls.push_back(func);
 }
 
 void CDBusObject::invokeQueuedDBusCalls()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    while (m_qeuedDBusCalls.size() > 0) {
-        m_qeuedDBusCalls.front()();
-        m_qeuedDBusCalls.pop_front();
-    }
+    std::for_each(m_queuedDBusCalls.begin(), m_queuedDBusCalls.end(),
+                  [](const auto& dbusCall) { dbusCall(); });
+    m_queuedDBusCalls.clear();
 }
 
 void CDBusObject::dbusObjectPathUnregisterFunction(DBusConnection* connection, void* data)
@@ -88,4 +86,4 @@ DBusHandlerResult CDBusObject::dbusObjectPathMessageFunction(DBusConnection* con
     return obj->dbusMessageHandler(dbusMessage);
 }
 
-} // namespace FGSwiftBus
+} // namespace flightgear::swift

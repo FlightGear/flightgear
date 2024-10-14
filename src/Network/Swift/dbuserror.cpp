@@ -6,11 +6,11 @@
 
 #include "dbuserror.h"
 
-namespace FGSwiftBus {
+namespace flightgear::swift {
 
 CDBusError::CDBusError(const DBusError* error)
     : m_name(error->name), m_message(error->message)
 {
 }
 
-} // namespace FGSwiftBus
+} // namespace flightgear::swift

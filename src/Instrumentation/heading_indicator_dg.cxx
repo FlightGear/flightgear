@@ -40,15 +40,20 @@ HeadingIndicatorDG::HeadingIndicatorDG(SGPropertyNode* node) : _last_heading_deg
         _minVacuum = node->getDoubleValue("minimum-vacuum", _minVacuum);
     }
 
+    _heading_in_nodePath = node->getStringValue("heading-source", "/orientation/heading-deg");
+
     SGPropertyNode* gyro_cfg = node->getChild("gyro", 0, true);
     _minSpin = gyro_cfg->getDoubleValue("minimum-spin-norm", 0.9);
     _gyro_spin_up = gyro_cfg->getDoubleValue("spin-up-sec", 4.0);
     _gyro_spin_down = gyro_cfg->getDoubleValue("spin-down-sec", 180.0);
 
     SGPropertyNode* limits_cfg = node->getChild("limits", 0, true);
+    _yaw_rate_nodePath = limits_cfg->getStringValue("yaw-rate-source", "/orientation/yaw-rate-degps");
     _yaw_error_factor = limits_cfg->getDoubleValue("yaw-error-factor", 0.033);
     _yaw_limit_rate = limits_cfg->getDoubleValue("yaw-limit-rate", 5.0);
     _g_error_factor = limits_cfg->getDoubleValue("g-error-factor", 0.033);
+    _gnodePath     = limits_cfg->getStringValue("g-node", "/accelerations/pilot-g");
+    _g_filtertime = limits_cfg->getDoubleValue("g-filter-time", 10.0);
     _g_limit_lower = limits_cfg->getDoubleValue("g-limit-lower", -0.5);
     _g_limit_upper = limits_cfg->getDoubleValue("g-limit-upper", 1.5);
     _g_limit_tumble = limits_cfg->getDoubleValue("g-limit-tumble-factor", 1.5);
@@ -65,9 +70,9 @@ HeadingIndicatorDG::init ()
 {
     std::string branch = nodePath();
 
-    _heading_in_node = fgGetNode("/orientation/heading-deg", true);
-    _yaw_rate_node   = fgGetNode("/orientation/yaw-rate-degps", true);
-    _g_node = fgGetNode("/accelerations/pilot-g", true);
+    _heading_in_node = fgGetNode(_heading_in_nodePath, true);
+    _yaw_rate_node   = fgGetNode(_yaw_rate_nodePath, true);
+    _g_node = fgGetNode(_gnodePath, true);
     _we_speed_node = fgGetNode("/velocities/east-relground-fps", true);
 
     SGPropertyNode *node    = fgGetNode(branch, true );
@@ -97,6 +102,7 @@ HeadingIndicatorDG::init ()
     SGPropertyNode* limits_node = node->getChild("limits", 0, true);
     _yaw_error_factor_node = limits_node->getChild("yaw-error-factor", 0, true);
     _yaw_limit_rate_node = limits_node->getChild("yaw-limit-rate", 0, true);
+    _g_filtertime_node = limits_node->getChild("g-filter-time", 0.0, true);
     _g_error_factor_node = limits_node->getChild("g-error-factor", 0, true);
     _g_limit_lower_node = limits_node->getChild("g-limit-lower", 0, true);
     _g_limit_upper_node = limits_node->getChild("g-limit-upper", 0, true);
@@ -129,10 +135,12 @@ HeadingIndicatorDG::reinit (void)
 
     _yaw_error_factor_node->setDoubleValue(_yaw_error_factor);
     _yaw_limit_rate_node->setDoubleValue(_yaw_limit_rate);
+    _g_filtertime_node->setDoubleValue(_g_filtertime);
     _g_error_factor_node->setDoubleValue(_g_error_factor);
     _g_limit_lower_node->setDoubleValue(_g_limit_lower);
     _g_limit_upper_node->setDoubleValue(_g_limit_upper);
     _g_limit_tumble_node->setDoubleValue(_g_limit_tumble);
+    _last_g = _g_node->getDoubleValue();
 
     _tumble_flag_node->setBoolValue(0);
     _tumble_node->setDoubleValue(0.0);
@@ -236,6 +244,11 @@ HeadingIndicatorDG::update (double dt)
     _g_limit_lower = _g_limit_lower_node->getDoubleValue();
     _g_limit_upper = _g_limit_upper_node->getDoubleValue();
     double g = _g_node->getDoubleValue();
+    _g_filtertime = _g_filtertime_node->getDoubleValue();
+    if (_g_filtertime > 0.0) {
+        g = fgGetLowPass(_last_g, g, dt * _g_filtertime);
+    }
+    _last_g = g;
     if (g > _g_limit_upper || g < _g_limit_lower) {
         error += _g_error_factor * g * dt * factor;
     }

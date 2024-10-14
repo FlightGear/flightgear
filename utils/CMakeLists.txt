@@ -36,11 +36,7 @@ if(ENABLE_TRAFFIC)
 endif()
 
 if (ENABLE_FGQCANVAS)
-    if(Qt5Core_VERSION VERSION_EQUAL 5.7 OR Qt5Core_VERSION VERSION_GREATER 5.7)
-        add_subdirectory(fgqcanvas)
-    else()
-        message(WARNING "FGQCanvas enabled, but Qt >= 5.7 is required for this feature")
-    endif()
+    add_subdirectory(fgqcanvas)
 endif()
 
 if(ENABLE_DEMCONVERT)

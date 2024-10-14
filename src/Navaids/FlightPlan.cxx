@@ -1439,7 +1439,7 @@ double FlightPlan::magvarDegAt(const SGGeod& pos) const
 
 SGGeod FlightPlan::vicinityForInsertIndex(int aIndex) const
 {
-    if (aIndex < 0) { // appending, not inserting
+    if (aIndex < 0 || aIndex >= numLegs()) { // appending, not inserting
         const int n = numLegs();
         if (n > 0) {
             // if we have at least one existing leg, use its position

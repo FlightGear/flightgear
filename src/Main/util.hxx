@@ -73,6 +73,15 @@ namespace flightgear
      * @param timeratio - 
      */
     double lowPassPeriodicDegreesPositive(double current, double target, double timeratio);
+
+    /**
+    * @brief exponential filter
+    * 
+    * @param current - current value
+    * @param target  - target (new) value
+    * @param timeratio - 
+    */
+    double filterExponential(double current, double target, double timeratio);
 }
 
 #endif // __UTIL_HXX

@@ -226,7 +226,7 @@ QString AircraftItem::description() const
 QString AircraftItem::baseName() const
 {
     QString fn = QFileInfo(path).fileName();
-    fn.truncate(fn.count() - 8);
+    fn.truncate(fn.size() - 8);
     return fn;
 }
 

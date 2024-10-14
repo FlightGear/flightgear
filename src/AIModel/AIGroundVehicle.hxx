@@ -99,4 +99,8 @@ private:
     double _hitch_y_offset_m = 0.0;
     double _hitch_z_offset_m = 0.0;
     double _break_count = 0.0;
+
+    double _tunnel_start_alt = 0.0;
+    double _tunnel_end_alt   = 0.0;
+    double _tunnel_distance  = 0.0;
 };

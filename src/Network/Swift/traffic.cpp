@@ -5,11 +5,6 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-//! \cond PRIVATE
-
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 
 #include "traffic.h"
 #include "SwiftAircraftManager.h"
@@ -18,9 +13,10 @@
 #include <iostream>
 
 
-// clazy:excludeall=reserve-candidates
+namespace flightgear::swift {
 
-namespace FGSwiftBus {
+static const std::string k_fgswiftbus_traffic_interfacename = "org.swift_project.fgswiftbus.traffic";
+static const std::string k_fgswiftbus_traffic_objectpath = "/fgswiftbus/traffic";
 
 CTraffic::CTraffic()
 {
@@ -35,14 +31,12 @@ CTraffic::~CTraffic()
 
 const std::string& CTraffic::InterfaceName()
 {
-    static std::string s(FGSWIFTBUS_TRAFFIC_INTERFACENAME);
-    return s;
+    return k_fgswiftbus_traffic_interfacename;
 }
 
 const std::string& CTraffic::ObjectPath()
 {
-    static std::string s(FGSWIFTBUS_TRAFFIC_OBJECTPATH);
-    return s;
+    return k_fgswiftbus_traffic_objectpath;
 }
 
 bool CTraffic::initialize()
@@ -59,7 +53,7 @@ void CTraffic::emitSimFrame()
 
 void CTraffic::emitPlaneAdded(const std::string& callsign)
 {
-    CDBusMessage signalPlaneAdded = CDBusMessage::createSignal(FGSWIFTBUS_TRAFFIC_OBJECTPATH, FGSWIFTBUS_TRAFFIC_INTERFACENAME, "remoteAircraftAdded");
+    CDBusMessage signalPlaneAdded = CDBusMessage::createSignal(k_fgswiftbus_traffic_objectpath, k_fgswiftbus_traffic_interfacename, "remoteAircraftAdded");
     signalPlaneAdded.beginArgumentWrite();
     signalPlaneAdded.appendArgument(callsign);
     sendDBusMessage(signalPlaneAdded);
@@ -89,7 +83,7 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
         if (message.getMethodName() == "Introspect") {
             sendDBusReply(sender, serial, introspection_traffic);
         }
-    } else if (message.getInterfaceName() == FGSWIFTBUS_TRAFFIC_INTERFACENAME) {
+    } else if (message.getInterfaceName() == k_fgswiftbus_traffic_interfacename) {
         if (message.getMethodName() == "acquireMultiplayerPlanes") {
             queueDBusCall([=]() {
                 std::string owner;
@@ -294,6 +288,4 @@ int CTraffic::process()
     return 1;
 }
 
-} // namespace FGSwiftBus
-
-//! \endcond
+} // namespace flightgear::swift

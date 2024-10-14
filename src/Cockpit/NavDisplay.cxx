@@ -41,7 +41,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/structure/OSGUtils.hxx>
+#include <simgear/scene/util/OsgUtils.hxx>
 
 #include <cstdio>
 #include <sstream>

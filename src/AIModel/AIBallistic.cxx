@@ -700,7 +700,10 @@ void FGAIBallistic::Run(double dt) {
     // using Standard Atmosphere (sealevel temperature 15C)
     // acceleration = drag/mass;
     // adjust speed by drag
-    speed -= (Cdm * 0.5 * rho * speed * speed * _drag_area/_mass) * dt;
+    //
+    // speed is in kt, rest is in ft and sec, so we convert speed^2 to fps (* SG_KT_TO_FPS^2)
+    // then the result back to kt (/ SG_KT_TO_FPS), which is the same as just * SG_KT_TO_FPS.
+    speed -= (Cdm * 0.5 * rho * speed * speed * _drag_area/_mass) * dt * SG_KT_TO_FPS;
 
     // don't let speed become negative
     if (speed < 0.0)

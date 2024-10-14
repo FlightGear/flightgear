@@ -103,7 +103,7 @@ ListHeaderBox
                 }
 
                 RatingSlider {
-                    label: qsTr("Minimum flight-model (FDM) rating:")
+                    label: qsTr("Minimum flight-model (FDM) rating")
                     ratings: _launcher.browseAircraftModel.ratings
                     ratingIndex: 0
                 }

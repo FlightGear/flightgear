@@ -12,7 +12,7 @@ Both appear in the "Multiplayer Settings" dialogue, from menu "Multiplayer/Multi
 
     This is true by default.
     
-    When an MP carriers appear, we automatically enable the matching AI scenerio so that it will
+    When an MP carriers appear, we automatically enable the matching AI scenario so that it will
     be visible to the user.
 
 * `/sim/mp-carriers/latch-always`

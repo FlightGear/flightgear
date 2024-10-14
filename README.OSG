@@ -43,7 +43,7 @@ only for 64-bit systems, or higher as, and when available.
 
 The default is /usr/local/lib64 or $prefix/lib64 in
 64-bit systems. This may cause problems with the auto-conf 
-tools when configuring and compiling FlighGear, since
+tools when configuring and compiling FlightGear, since
 even using the configure option --with-osg=$prefix 
 will not 'fix' the problem.
 

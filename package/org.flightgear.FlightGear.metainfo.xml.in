@@ -136,7 +136,9 @@
 	<content_rating type="oars-1.1">
 		<content_attribute id="social-chat">intense</content_attribute>
 	</content_rating>
-	<developer_name>FlightGear Developers</developer_name>
+	<developer id="org.flightgear">
+		<name>The FlightGear Developers</name>
+  	</developer>
 	<url type="homepage">https://www.flightgear.org/</url>
 	<url type="bugtracker">https://sourceforge.net/p/flightgear/codetickets/</url>
 	<url type="faq">https://wiki.flightgear.org/Frequently_asked_questions</url>
