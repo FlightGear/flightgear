@@ -6,11 +6,18 @@
 string(TIMESTAMP FG_CMAKE_TIMESTAMP "%Y-%m-%d")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    # our .desktop file specifies --launcher, so only install it for
-    # a build with the launcher enabled.
+    set(DEKSTOP_FILE_VERSION "1.0")
+    
     if (ENABLE_QT)
-        install(FILES org.flightgear.FlightGear.desktop DESTINATION share/applications)
+        set(DESKTOP_FILE_RUN_ARGS "--launcher")
     endif()
+
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/org.flightgear.FlightGear.desktop.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/org.flightgear.FlightGear.desktop"
+    )
+
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/org.flightgear.FlightGear.desktop" 
+    DESTINATION share/applications)
 
     # generate a metainfo file corresponding to this release
     configure_file (

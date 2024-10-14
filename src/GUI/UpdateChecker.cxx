@@ -84,7 +84,7 @@ UpdateChecker::UpdateChecker(QObject *parent) : QObject(parent)
     QSettings settings;
     QDate nextCheck = settings.value("next-update-check").toDate();
     if (!nextCheck.isValid()) {
-        // check tomorrow, so we don't nag immediately after insstallaion
+        // check tomorrow, so we don't nag immediately after installaion
         const QDate n = QDate::currentDate().addDays(1);
         settings.setValue("next-update-check", n);
 
