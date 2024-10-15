@@ -6,28 +6,27 @@
 variables:
   BUILD_DIR: "$CI_PROJECT_DIR/build"
   PREFIX_DIR: "$CI_PROJECT_DIR/dist"
-  
+  OSG_REF: release/2024-build
+  BRANCH_REF: next
   # create a root dir *above* the Simgear checkout, otherwise CMake
   # complains about INTERFACE_INCLUDE_DIRECTORIES being the source dir
   WIN_FG_DIR: $CI_BUILDS_DIR\flightgear
 
-  # FIXME detect this using vswhere 
-  VS160COMNTOOLS: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\Common7\\Tools"
-  VCVARSALL: "${VS160COMNTOOLS}\\..\\..\\VC\\Auxiliary\\Build\\vcvarsall.bat"
-  VCVARSPLATFORM: "x64"
-  VCVARSVERSION: "14.29.30133"
-
+  MAC_IMAGE: macos-14-xcode-15
 
 linux-build:
-  image: registry.gitlab.com/flightgear/flightgear
+  image: registry.gitlab.com/flightgear/flightgear/stable-build
   stage: build
-  rules:
-    - if: $CI_PIPELINE_SOURCE != "schedule"
   script:
+    - rm -f $BUILD_DIR/CMakeCache.txt
+    # --fresh would be ideal here to avoid the line above, but needs CMake 3.25
     - cmake -B $BUILD_DIR -S $CI_PROJECT_DIR -G Ninja 
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo 
-      -DCMAKE_INSTALL_PREFIX=$PREFIX_DIR
+      -D CMAKE_BUILD_TYPE=RelWithDebInfo 
+      -D CMAKE_INSTALL_PREFIX=$PREFIX_DIR
+      -D CMAKE_PREFIX_PATH="$CI_PROJECT_DIR/simgear-dist;$CI_PROJECT_DIR/osg-dist"
+
     - cmake --build $BUILD_DIR
+    - cmake --build $BUILD_DIR --target fgfs_test_suite
     - cmake --build $BUILD_DIR --target install
   artifacts:
     paths:
@@ -36,33 +35,50 @@ linux-build:
     - project: flightgear/simgear
       job: linux-build
       artifacts: true
-      ref: next
-
+      ref: $BRANCH_REF
+    - project: flightgear/openscenegraph
+      job: linux-build
+      ref: $OSG_REF
+      artifacts: true
+  cache:
+    paths:
+      - $BUILD_DIR
 
 windows-build:
   stage: build
   tags:
-    - windows
+    - saas-windows-medium-amd64
   before_script:
-    - Invoke-Expression -Command .gitlab\vcvarsall.ps1
-
+    - C:\"Program Files (x86)\Microsoft Visual Studio"\2022\BuildTools\Common7\Tools\Launch-VsDevShell -SkipAutomaticLocation -Arch amd64
   # relocate our upstream deps outside the source dir, otherwise
   # CMake gets sad.
     - Move-Item -Path $CI_PROJECT_DIR\boost $WIN_FG_DIR\boost
     - Move-Item -Path $CI_PROJECT_DIR\msvc140 $WIN_FG_DIR\msvc140
-    - ls
+
   script:
-    - cmake -B $env:BUILD_DIR -S $env:CI_PROJECT_DIR -G Ninja 
-      -D CMAKE_BUILD_TYPE=RelWithDebInfo
+    # should ideally be done inside CMake but this works for now
+    # 
+    - $Env:PATH += ";$WIN_FG_DIR\msvc140\3rdparty.x64\bin"
+    #  -D CMAKE_BUILD_TYPE=RelWithDebInfo
+
+    - cmake -B $env:BUILD_DIR -S $env:CI_PROJECT_DIR 
+      -G "Visual Studio 17 2022" -A x64
+      --fresh
       -D CMAKE_INSTALL_PREFIX=$env:PREFIX_DIR
       -D MSVC_3RDPARTY_ROOT=$WIN_FG_DIR
-      -DOSG_FSTREAM_EXPORT_FIXED:BOOL=ON
-    - cmake --build $BUILD_DIR
-    - cmake --build $BUILD_DIR --target install
+      -D OSG_FSTREAM_EXPORT_FIXED:BOOL=ON
+      -D CMAKE_PREFIX_PATH="$env:CI_PROJECT_DIR\simgear-dist;$env:CI_PROJECT_DIR\osg-dist"
+
+    - cmake --build $BUILD_DIR --config RelWithDebInfo
+    - cmake --build $BUILD_DIR --config RelWithDebInfo --target install
   needs:
     - project: flightgear/simgear
       job: windows-build
-      ref: next
+      ref: $BRANCH_REF
+      artifacts: true
+    - project: flightgear/openscenegraph
+      job: windows_build
+      ref: $OSG_REF
       artifacts: true
     - project: flightgear/windows-3rd-party
       job: windows_build_msvc140
@@ -76,24 +92,36 @@ macos-build:
   stage: build
   tags:
     - saas-macos-medium-m1
-  image: macos-12-xcode-14
-  rules:
-    - if: $CI_PIPELINE_SOURCE != "schedule"
+  image: $MAC_IMAGE
   before_script:
       - export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
       - export HOMEBREW_NO_INSTALL_CLEANUP=1
       - brew install ninja cmake boost
   script:
+    # ensure we use our FreeType and not the one from Homebrew
+    # ours is UB, HomeBrew's is not
+    - export FREETYPE_DIR=$CI_PROJECT_DIR/dist
     - cmake -B $BUILD_DIR -S $CI_PROJECT_DIR -G Ninja 
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo 
-      -DCMAKE_INSTALL_PREFIX=$PREFIX_DIR
-      -DCMAKE_OSX_ARCHITECTURES=arm64
+      --fresh
+      -D CMAKE_BUILD_TYPE=RelWithDebInfo 
+      -D CMAKE_INSTALL_PREFIX=$PREFIX_DIR
+      -D CMAKE_OSX_ARCHITECTURES=arm64
+      -D CMAKE_PREFIX_PATH="$CI_PROJECT_DIR/osg-dist;$CI_PROJECT_DIR/simgear-dist"
+      
     - cmake --build $BUILD_DIR
     - cmake --build $BUILD_DIR --target install
   needs:
     - project: flightgear/simgear
       job: macos-build
-      ref: next
+      ref: $BRANCH_REF
+      artifacts: true
+    - project: flightgear/openscenegraph
+      job: macos-build
+      ref: $OSG_REF
+      artifacts: true
+    - project: flightgear/macos-3rd-party
+      job: macos-build
+      ref: main
       artifacts: true
   artifacts:
     paths:
@@ -106,25 +134,36 @@ macos-x64-build:
   stage: build
   tags:
     - saas-macos-medium-m1
-  image: macos-12-xcode-14
-  rules:
-    - if: $CI_PIPELINE_SOURCE != "schedule"
+  image: $MAC_IMAGE
   before_script:
       - export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
       - export HOMEBREW_NO_INSTALL_CLEANUP=1
       - brew install ninja cmake boost
   script:
+    # ensure we use our FreeType and not the one from Homebrew
+    # ours is UB, HomeBrew's is not
+    - export FREETYPE_DIR=$CI_PROJECT_DIR/dist
     - cmake -B $BUILD_DIR -S $CI_PROJECT_DIR -G Ninja 
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo 
-      -DCMAKE_INSTALL_PREFIX=$PREFIX_DIR
-      -DCMAKE_OSX_ARCHITECTURES=x86_64
+      --fresh
+      -D CMAKE_BUILD_TYPE=RelWithDebInfo 
+      -D CMAKE_INSTALL_PREFIX=$PREFIX_DIR
+      -D CMAKE_OSX_ARCHITECTURES=x86_64
+      -D CMAKE_PREFIX_PATH="$CI_PROJECT_DIR/osg-dist;$CI_PROJECT_DIR/simgear-dist"
 
     - cmake --build $BUILD_DIR
     - cmake --build $BUILD_DIR --target install
   needs:
     - project: flightgear/simgear
       job: macos-x64-build
-      ref: next
+      ref: $BRANCH_REF
+      artifacts: true
+    - project: flightgear/openscenegraph
+      job: macos-build
+      ref: $OSG_REF
+      artifacts: true
+    - project: flightgear/macos-3rd-party
+      job: macos-build
+      ref: main
       artifacts: true
   artifacts:
     paths:
@@ -133,30 +172,25 @@ macos-x64-build:
     paths:
       - $BUILD_DIR
 
-# test:doc:
-#   image: registry.gitlab.com/ahayzen/home-dash-alpha-g1
-#   stage: test
-#   rules:
-#     - if: $CI_PIPELINE_SOURCE != "schedule"
-#   script:
-#     - cargo test --all-features --doc
-#     - cargo test --all-features --all-targets
-#   cache:
-#     paths:
-#       - .cargo
-#     policy: pull
-#   dependencies:
-#     - build
-
-
-# run tests using the binary built before
 test:
   image: registry.gitlab.com/flightgear/flightgear
   stage: test
-  needs:
-    - job: linux-build
   script:
     - cd $BUILD_DIR
-    - ls
-    - ./bin/fgfs_test_suite
+    - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CI_PROJECT_DIR/osg-dist/lib
+    - ./test_suite/fgfs_test_suite --fg-root $CI_PROJECT_DIR/testFGData
+  needs:
+    - job: linux-build
+      artifacts: false
+    - project: flightgear/fgdata
+      job: create-test-data
+      ref: $BRANCH_REF
+      artifacts: true
+    - project: flightgear/openscenegraph
+      job: linux-build
+      ref: $OSG_REF
+      artifacts: true
+  cache:
+    paths:
+      - $BUILD_DIR
 
