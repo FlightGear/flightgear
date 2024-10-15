@@ -7,7 +7,7 @@ variables:
   BUILD_DIR: "$CI_PROJECT_DIR/build"
   PREFIX_DIR: "$CI_PROJECT_DIR/dist"
   OSG_REF: release/2024-build
-  BRANCH_REF: next
+  BRANCH_REF: release/2024.1
   # create a root dir *above* the Simgear checkout, otherwise CMake
   # complains about INTERFACE_INCLUDE_DIRECTORIES being the source dir
   WIN_FG_DIR: $CI_BUILDS_DIR\flightgear
@@ -18,9 +18,8 @@ linux-build:
   image: registry.gitlab.com/flightgear/flightgear/stable-build
   stage: build
   script:
-    - rm -f $BUILD_DIR/CMakeCache.txt
-    # --fresh would be ideal here to avoid the line above, but needs CMake 3.25
     - cmake -B $BUILD_DIR -S $CI_PROJECT_DIR -G Ninja 
+      --fresh
       -D CMAKE_BUILD_TYPE=RelWithDebInfo 
       -D CMAKE_INSTALL_PREFIX=$PREFIX_DIR
       -D CMAKE_PREFIX_PATH="$CI_PROJECT_DIR/simgear-dist;$CI_PROJECT_DIR/osg-dist"
@@ -173,7 +172,7 @@ macos-x64-build:
       - $BUILD_DIR
 
 test:
-  image: registry.gitlab.com/flightgear/flightgear
+  image: registry.gitlab.com/flightgear/flightgear/stable-build
   stage: test
   script:
     - cd $BUILD_DIR
