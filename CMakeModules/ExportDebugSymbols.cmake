@@ -33,7 +33,7 @@ function(export_debug_symbols target)
 
     if (MSVC)
         set_property(TARGET ${target} PROPERTY PDB_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/symbols)
-        install(FILES $<TARGET_PDB_NAME:${target}>
+        install(FILES $<TARGET_PDB_FILE:${target}>
             DESTINATION symbols OPTIONAL
             COMPONENT symbols EXCLUDE_FROM_ALL)
     endif()
