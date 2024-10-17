@@ -7,12 +7,25 @@ add_custom_target(
 
 function(export_debug_symbols target)
 
+
     if (APPLE)
-        add_custom_target(${target}.dSYM
-            COMMENT "Generating dSYM files for ${target}"
-            COMMAND dsymutil --out=${CMAKE_BINARY_DIR}/symbols ${target}.dSYM $<TARGET_FILE:${target}>
-            DEPENDS $<TARGET_FILE:${target}>
-        ) 
+        # workaround because we adjust the bundle name in some cases, and
+        # TARGET_FILE seems to have a bug of assuming the executable name matches
+        if (isBundle) 
+            add_custom_target(${target}.dSYM
+                COMMENT "Generating dSYM files for ${target}"
+                COMMAND dsymutil --out=${CMAKE_BINARY_DIR}/symbols/${target}.dSYM $<TARGET_BUNDLE_CONTENT_DIR:${target}>/MacOS/$<TARGET_NAME:${target}>
+                DEPENDS ${target}
+            ) 
+        else()
+            add_custom_target(${target}.dSYM
+                COMMENT "Generating dSYM files for ${target}"
+                COMMAND dsymutil --out=${CMAKE_BINARY_DIR}/symbols/${target}.dSYM $<TARGET_FILE:${target}>
+                DEPENDS ${target}
+            ) 
+        endif()
+
+
 
         install(DIRECTORY ${CMAKE_BINARY_DIR}/symbols/${target}.dSYM DESTINATION symbols OPTIONAL)
 
