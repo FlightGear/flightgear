@@ -81,7 +81,7 @@ string(TIMESTAMP iss_config_timestamp)
 #endif()
 
 # OSG libs
-foreach (osglib OSG OpenThreads osgUtils osgText osgGA osgSim osgParticle osgTerrain osgViewer osgDB)
+foreach (osglib OSG OpenThreads osgUtil osgText osgGA osgSim osgParticle osgTerrain osgViewer osgDB)
     if (APPLE)
         install(FILES
                 $<TARGET_FILE:OSG::${osglib}>  
