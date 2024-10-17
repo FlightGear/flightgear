@@ -80,9 +80,24 @@ string(TIMESTAMP iss_config_timestamp)
         COMPONENT packaging EXCLUDE_FROM_ALL)
 #endif()
 
-if (APPLE)
-    # OSG libs
+# OSG libs
+foreach (osglib OSG OpenThreads osgUtils osgText osgGA osgSim osgParticle osgTerrain osgViewer osgDB)
+    if (APPLE)
+        install(FILES
+                $<TARGET_FILE:OSG::${osglib}>  
+            DESTINATION 
+                $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/Frameworks
+        )
+    endif()
 
+    if (LINUX)
+        install(FILES $<TARGET_FILE:OSG::${osglib}>  
+            DESTINATION appdir/usr/lib
+            COMPONENT packaging EXCLUDE_FROM_ALL)
+    endif()
+endforeach()
+
+if (APPLE)
     # OSG plugins
     install(DIRECTORY ${OSG_PLUGINS_DIR}/osgPlugins DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/PlugIns)
 
@@ -111,6 +126,8 @@ if (LINUX)
     install(TARGETS fgcom fgjs fgelev fgfs 
         DESTINATION appdir/usr/bin 
         COMPONENT packaging EXCLUDE_FROM_ALL)
+
+    # TODO: things under share/
 endif()
 
 
