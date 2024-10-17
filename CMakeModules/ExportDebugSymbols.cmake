@@ -25,15 +25,18 @@ function(export_debug_symbols target)
             ) 
         endif()
 
-
-
-        install(DIRECTORY ${CMAKE_BINARY_DIR}/symbols/${target}.dSYM DESTINATION symbols OPTIONAL)
+        install(DIRECTORY ${CMAKE_BINARY_DIR}/symbols/${target}.dSYM 
+            DESTINATION symbols OPTIONAL
+            COMPONENT symbols EXCLUDE_FROM_ALL)
 
         add_dependencies(debug_symbols ${target}.dSYM)
     endif()
 
     if (MSVC)
         set_property(TARGET ${target} PROPERTY PDB_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/symbols)
+        install(FILES $<TARGET_PDB_NAME:${target}>
+            DESTINATION symbols OPTIONAL
+            COMPONENT symbols EXCLUDE_FROM_ALL)
     endif()
 endfunction()
 
