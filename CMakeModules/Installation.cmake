@@ -14,6 +14,8 @@ if (HAVE_QT)
     include (QtDeployment)
 endif()
 
+########################################################################################
+# OSG plugin detection
 
 if (MSVC)
     set(OSG_PLUGIN_SUFFIX "bin")
@@ -26,22 +28,30 @@ else()
     endif()
 endif()
 
-find_path(OSG_PLUGINS_DIR
-    NAMES osgPlugins 
-        osgPlugins-${OPENSCENEGRAPH_VERSION}
-    PATHS 
-        ${FINAL_MSVC_3RDPARTY_DIR}
-    PATH_SUFFIXES
-        ${OSG_PLUGIN_SUFFIX}
-)
+# we can't use NAMES plural because we need to know which name was found
+# so instead do a manual loop
+foreach(osgPluginDirName osgPlugins osgPlugins-${OPENSCENEGRAPH_VERSION})
+    find_path(osgPluginLocation
+        NAMES ${osgPluginDirName} 
+            
+        PATHS 
+            ${FINAL_MSVC_3RDPARTY_DIR}
+        PATH_SUFFIXES
+            ${OSG_PLUGIN_SUFFIX}
+    )
+
+    if (osgPluginLocation)
+        set(OSG_PLUGINS_DIR "${osgPluginLocation}/${osgPluginDirName}")
+        get_filename_component(OSG_BASE_DIR ${osgPluginLocation} DIRECTORY)
+        break()
+    endif()
+endforeach()
 
 if (NOT OSG_PLUGINS_DIR)
     message(FATAL_ERROR "Couldn't find osgPlugins directory")
 endif()
 
-message(STATUS "OSG plugins at: ${OSG_PLUGINS_DIR}/osgPlugins")
-
-get_filename_component(OSG_BASE_DIR ${OSG_PLUGINS_DIR} DIRECTORY)
+message(STATUS "OSG plugins at: ${OSG_PLUGINS_DIR}")
 
 ########################################################################################
 # find OpenThreads and OpenSceneGraph DLL versions
@@ -99,7 +109,7 @@ endforeach()
 
 if (APPLE)
     # OSG plugins
-    install(DIRECTORY ${OSG_PLUGINS_DIR}/osgPlugins DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/PlugIns)
+    install(DIRECTORY ${OSG_PLUGINS_DIR} DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/PlugIns)
 
     # add extra utilites to the bundle
     install(TARGETS fgcom fgjs fgelev DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/MacOS)
@@ -120,7 +130,7 @@ endif()
 
 if (LINUX)
     
-    install(DIRECTORY ${OSG_PLUGINS_DIR}/osgPlugins 
+    install(DIRECTORY ${OSG_PLUGINS_DIR} 
         DESTINATION appdir/usr/lib 
         COMPONENT packaging EXCLUDE_FROM_ALL)
     install(TARGETS fgcom fgjs fgelev fgfs 
