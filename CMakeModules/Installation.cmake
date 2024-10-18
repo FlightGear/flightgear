@@ -74,8 +74,8 @@ string(TIMESTAMP iss_config_timestamp)
 ########################################################################################
 
 #if (MSVC)
-    configure_file(${CMAKE_SOURCE_DIR}/package/windows/BuildConfig.iss.in ${CMAKE_BINARY_DIR}/BuildConfig.iss)
-    install(FILES ${CMAKE_BINARY_DIR}/BuildConfig.iss 
+    configure_file(${CMAKE_SOURCE_DIR}/package/windows/InstallConfig.iss.in ${CMAKE_BINARY_DIR}/InstallConfig.iss)
+    install(FILES ${CMAKE_BINARY_DIR}/InstallConfig.iss 
         DESTINATION . 
         COMPONENT packaging EXCLUDE_FROM_ALL)
 #endif()
