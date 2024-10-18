@@ -84,6 +84,11 @@ string(TIMESTAMP iss_config_timestamp)
 ########################################################################################
 
 #if (MSVC)
+    # iscc.exe only accepts Windows style-paths, so explicitly convert
+    file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}" FG_WINDOWS_INSTALL_PREFIX)
+    file(TO_NATIVE_PATH "${OSG_BASE_DIR}" INNO_SETUP_OSG_BASE_DIR)
+    file(TO_NATIVE_PATH "${FINAL_MSVC_3RDPARTY_DIR}" INNO_SETUP_3RDPARTY_DIR)
+
     configure_file(${CMAKE_SOURCE_DIR}/package/windows/InstallConfig.iss.in ${CMAKE_BINARY_DIR}/InstallConfig.iss)
     install(FILES ${CMAKE_BINARY_DIR}/InstallConfig.iss 
         DESTINATION . 
