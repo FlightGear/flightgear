@@ -71,11 +71,11 @@ void NavRadioTests::testBasic()
 static const struct  {
   int    nvType; 
   double nvLat, nvLon, nvAlt, nvFreq, nvRnge, nvTwst;
-  const  string& nvIden; 
+  const std::string nvIden;
   double onRose, atDstNM, atAltFt, atHdg, rSele; 
   bool   vOpnl, vToFlag;
   double vSigNorm, vSigTolr, vHdgDefl, vDeflTolr, vHdgNorm, vDefnTolr, xtkTolr;
-  const  string& tDesc;
+  const std::string tDesc;
 }  CDITestRoll[] = {  
   //
   //  Test Items: Add test cases here:
@@ -111,7 +111,7 @@ void NavRadioTests::callNavRadioCDI() {
     int tale = sizeof(CDITestRoll) / sizeof(CDITestRoll[0]);
     for (int i = 0; (i < tale); i++) {
         // prep error message
-        const string& itemDesc = "   navradioCDI Item " + CDITestRoll[i].tDesc + " @ ";
+        const std::string itemDesc = "   navradioCDI Item " + CDITestRoll[i].tDesc + " @ ";
         // Txmitting navaid
         node->setDoubleValue("frequencies/selected-mhz", CDITestRoll[i].nvFreq);
         node->setDoubleValue("radials/selected-deg", CDITestRoll[i].rSele);
@@ -134,7 +134,7 @@ void NavRadioTests::callNavRadioCDI() {
         // calc XTrack error
         double xtkE = sin((CDITestRoll[i].rSele - CDITestRoll[i].onRose) * SG_DEGREES_TO_RADIANS) * (CDITestRoll[i].atDstNM * SG_NM_TO_METER);
         // Verify expected vs Result
-        string tMesg = itemDesc + "VOR type";
+        std::string tMesg = itemDesc + "VOR type";
         CPPUNIT_ASSERT_MESSAGE(tMesg, nav->type() == FGPositioned::VOR);
         tMesg = itemDesc + "Operable";
         CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, CDITestRoll[i].vOpnl, node->getBoolValue("operable"));
@@ -148,7 +148,7 @@ void NavRadioTests::callNavRadioCDI() {
         //tbd VOR seems to not set selected-mhz-fmt
         // Converting nvFreq to string results in trailing zeros
         tMesg = itemDesc + "selected-mhz-fmt";
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, formatFrequency(CDITestRoll[i].nvFreq), string{node->getStringValue("frequencies/selected-mhz-fmt")});
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, formatFrequency(CDITestRoll[i].nvFreq), node->getStringValue("frequencies/selected-mhz-fmt"));
         // actual-deg means: bearing seen on intstrument's dial:  actual == onRose
         tMesg = itemDesc + "actual-deg";
         CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(tMesg, CDITestRoll[i].onRose, node->getDoubleValue("radials/actual-deg"), CDITestRoll[i].vDefnTolr);
@@ -188,7 +188,7 @@ void NavRadioTests::callNewNavRadioCDI()
     int tale = sizeof(CDITestRoll) / sizeof(CDITestRoll[0]);
     for (int i = 0; (i < tale); i++) {
         // prep error message
-        const string& itemDesc = "   navradioCDI Item " + CDITestRoll[i].tDesc + " @ ";
+        const std::string itemDesc = "   navradioCDI Item " + CDITestRoll[i].tDesc + " @ ";
         // Txmitting navaid
         node->setDoubleValue("frequencies/selected-mhz", CDITestRoll[i].nvFreq);
         node->setDoubleValue("radials/selected-deg", CDITestRoll[i].rSele);
@@ -211,7 +211,7 @@ void NavRadioTests::callNewNavRadioCDI()
         // calc XTrack error
         double xtkE = sin((CDITestRoll[i].rSele - CDITestRoll[i].onRose) * SG_DEGREES_TO_RADIANS) * (CDITestRoll[i].atDstNM * SG_NM_TO_METER);
         // Verify expected vs Result
-        string tMesg = itemDesc + "VOR type";
+        std::string tMesg = itemDesc + "VOR type";
         CPPUNIT_ASSERT_MESSAGE(tMesg, nav->type() == FGPositioned::VOR);
         tMesg = itemDesc + "Operable";
         CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, CDITestRoll[i].vOpnl, node->getBoolValue("operable"));
@@ -221,11 +221,11 @@ void NavRadioTests::callNewNavRadioCDI()
         CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, CDITestRoll[i].vToFlag, !node->getBoolValue("from-flag"));
         //
         tMesg = itemDesc + "nav-id";
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, CDITestRoll[i].nvIden, string{node->getStringValue("nav-id")});
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, CDITestRoll[i].nvIden, node->getStringValue("nav-id"));
 
         // Converting nvFreq to string results in trailing zeros
         tMesg = itemDesc + "selected-mhz-fmt";
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, formatFrequency(CDITestRoll[i].nvFreq), string{node->getStringValue("frequencies/selected-mhz-fmt")});
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, formatFrequency(CDITestRoll[i].nvFreq), node->getStringValue("frequencies/selected-mhz-fmt"));
 
         // actual-deg means: bearing seen on intstrument's dial:  actual == onRose
         tMesg = itemDesc + "actual-deg";
@@ -248,11 +248,11 @@ void NavRadioTests::callNewNavRadioCDI()
 static const struct {
     int nvType;
     double nvLat, nvLon, nvAlt, nvFreq, nvRnge, nvTwst;
-    const string& nvIden;
+    const std::string nvIden;
     double onRose, atDstNM, atAltFt, atHdg, rSele;
     bool vOpnl, vToFlag;
     double vSigNorm, vSigTolr, vHdgDefl, vDeflTolr, vHdgNorm, vDefnTolr, xtkTolr;
-    const string& tDesc;
+    const std::string tDesc;
 
 } ILSTestRoll[] = {
     //
@@ -293,7 +293,7 @@ void NavRadioTests::callNavRadioILS()
     int tale = sizeof(ILSTestRoll) / sizeof(ILSTestRoll[0]);
     for (int i = 0; (i < tale); i++) {
         // prep error message
-        const string& itemDesc = "   navRadioILS Item " + ILSTestRoll[i].tDesc + " @ ";
+        const std::string itemDesc = "   navRadioILS Item " + ILSTestRoll[i].tDesc + " @ ";
         // Txmitting navaid
         node->setDoubleValue("frequencies/selected-mhz", ILSTestRoll[i].nvFreq);
         node->setDoubleValue("radials/selected-deg", ILSTestRoll[i].rSele);
@@ -316,7 +316,7 @@ void NavRadioTests::callNavRadioILS()
         xpecDefl = (xpecDefl < -10) ? -10 : xpecDefl;
         //
         // Verify expected: Operational and To flags
-        string tMesg = itemDesc + "ILS type";
+        std::string tMesg = itemDesc + "ILS type";
         CPPUNIT_ASSERT_MESSAGE(tMesg, nav->type() == FGPositioned::ILS);
         tMesg = itemDesc + "Operable";
         CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, ILSTestRoll[i].vOpnl, node->getBoolValue("operable"));
@@ -328,10 +328,10 @@ void NavRadioTests::callNavRadioILS()
         tMesg = itemDesc + "heading-deg";
         CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(tMesg, bngToNavaid, node->getDoubleValue("heading-deg"), 1);
         tMesg = itemDesc + "nav-id";
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, ILSTestRoll[i].nvIden, string{node->getStringValue("nav-id")});
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, ILSTestRoll[i].nvIden, node->getStringValue("nav-id"));
         // Converting nvFreq to string results in trailing zeros
         tMesg = itemDesc + "selected-mhz-fmt";
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, formatFrequency(ILSTestRoll[i].nvFreq), string{node->getStringValue("frequencies/selected-mhz-fmt")});
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, formatFrequency(ILSTestRoll[i].nvFreq), node->getStringValue("frequencies/selected-mhz-fmt"));
 
         // actual-deg means: bearing seen on intstrument's dial:  actual == onRose
         tMesg = itemDesc + "actual-deg";
@@ -366,7 +366,7 @@ void NavRadioTests::callNewNavRadioILS()
     int tale = sizeof(ILSTestRoll) / sizeof(ILSTestRoll[0]);
     for (int i = 0; (i < tale); i++) {
       // prep error message
-      const string & itemDesc = "newNavRadioILS Item " +  ILSTestRoll[i].tDesc + " @ ";
+      const std::string itemDesc = "newNavRadioILS Item " + ILSTestRoll[i].tDesc + " @ ";
       // Txmitting navaid
       node->setDoubleValue("frequencies/selected-mhz", ILSTestRoll[i].nvFreq);
       node->setDoubleValue("radials/selected-deg",     ILSTestRoll[i].rSele);
@@ -390,44 +390,44 @@ void NavRadioTests::callNewNavRadioILS()
              xpecDefl = ( xpecDefl < -10 ) ? -10 : xpecDefl;
       //                
       // Verify expected: Operational and To flags
-      string tMesg = itemDesc + "ILS type";
-      CPPUNIT_ASSERT_MESSAGE( tMesg,       nav->type() == FGPositioned::ILS);
-      tMesg = itemDesc + "Operable";
-      CPPUNIT_ASSERT_EQUAL_MESSAGE( tMesg, ILSTestRoll[i].vOpnl,              node->getBoolValue("operable"));
-      tMesg = itemDesc + "TO Flag";
-      CPPUNIT_ASSERT_EQUAL_MESSAGE( tMesg, ILSTestRoll[i].vToFlag,            node->getBoolValue("to-flag"));
-      tMesg = itemDesc + "FROM Flag";
-      CPPUNIT_ASSERT_EQUAL_MESSAGE( tMesg, ILSTestRoll[i].vToFlag,           !node->getBoolValue("from-flag"));
-      //
-      tMesg = itemDesc + "heading-deg";
-      CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( tMesg, bngToNavaid,               node->getDoubleValue("heading-deg"), 1);
-      tMesg = itemDesc + "nav-id";
-        CPPUNIT_ASSERT_EQUAL_MESSAGE( tMesg, ILSTestRoll[i].nvIden, string{node->getStringValue("nav-id")});
-      // Converting nvFreq to string results in trailing zeros
-      tMesg = itemDesc + "selected-mhz-fmt";
-      CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, formatFrequency(ILSTestRoll[i].nvFreq), string{node->getStringValue("frequencies/selected-mhz-fmt")});
-      // actual-deg means: bearing seen on intstrument's dial:  actual == onRose                          
-      tMesg = itemDesc + "actual-deg";
-      CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( tMesg, ILSTestRoll[i].onRose,     node->getDoubleValue("radials/actual-deg"), ILSTestRoll[i].vDefnTolr);
-      tMesg = itemDesc + "Sig Norm";
-      CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( tMesg, ILSTestRoll[i].vSigNorm,   node->getDoubleValue("signal-quality-norm"), ILSTestRoll[i].vSigTolr);
-      tMesg = itemDesc + "needle defl";
-      CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( tMesg, xpecDefl,                  node->getDoubleValue("heading-needle-deflection"), ILSTestRoll[i].vDeflTolr);
-      tMesg = itemDesc + "defl norm";
-      CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( tMesg, (xpecDefl * 0.1 ),         node->getDoubleValue("heading-needle-deflection-norm"), ILSTestRoll[i].vDefnTolr);
-      tMesg = itemDesc + "xTrack error";
-      CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( tMesg, xtkE,                      node->getDoubleValue("crosstrack-error-m"), ILSTestRoll[i].xtkTolr);
+             std::string tMesg = itemDesc + "ILS type";
+             CPPUNIT_ASSERT_MESSAGE(tMesg, nav->type() == FGPositioned::ILS);
+             tMesg = itemDesc + "Operable";
+             CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, ILSTestRoll[i].vOpnl, node->getBoolValue("operable"));
+             tMesg = itemDesc + "TO Flag";
+             CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, ILSTestRoll[i].vToFlag, node->getBoolValue("to-flag"));
+             tMesg = itemDesc + "FROM Flag";
+             CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, ILSTestRoll[i].vToFlag, !node->getBoolValue("from-flag"));
+             //
+             tMesg = itemDesc + "heading-deg";
+             CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(tMesg, bngToNavaid, node->getDoubleValue("heading-deg"), 1);
+             tMesg = itemDesc + "nav-id";
+             CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, ILSTestRoll[i].nvIden, node->getStringValue("nav-id"));
+             // Converting nvFreq to string results in trailing zeros
+             tMesg = itemDesc + "selected-mhz-fmt";
+             CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, formatFrequency(ILSTestRoll[i].nvFreq), node->getStringValue("frequencies/selected-mhz-fmt"));
+             // actual-deg means: bearing seen on intstrument's dial:  actual == onRose
+             tMesg = itemDesc + "actual-deg";
+             CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(tMesg, ILSTestRoll[i].onRose, node->getDoubleValue("radials/actual-deg"), ILSTestRoll[i].vDefnTolr);
+             tMesg = itemDesc + "Sig Norm";
+             CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(tMesg, ILSTestRoll[i].vSigNorm, node->getDoubleValue("signal-quality-norm"), ILSTestRoll[i].vSigTolr);
+             tMesg = itemDesc + "needle defl";
+             CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(tMesg, xpecDefl, node->getDoubleValue("heading-needle-deflection"), ILSTestRoll[i].vDeflTolr);
+             tMesg = itemDesc + "defl norm";
+             CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(tMesg, (xpecDefl * 0.1), node->getDoubleValue("heading-needle-deflection-norm"), ILSTestRoll[i].vDefnTolr);
+             tMesg = itemDesc + "xTrack error";
+             CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(tMesg, xtkE, node->getDoubleValue("crosstrack-error-m"), ILSTestRoll[i].xtkTolr);
     }
   }    
 
 static const struct  {
   int    nvType; 
   double nvLat, nvLon, nvAlt, nvFreq, nvRnge, nvAzim;
-  const  string& nvIden; 
+  const std::string nvIden;
   double onRose, atDstNM, atAltFt, plusDeg, atHdg, rTruDeg; 
   bool   vInRnge, vFalse;
   double vSigNorm, vSigTolr, vGSDefl, vDeflTolr, vGSDefn, vDefnTolr;
-  const  string& tDesc;
+  const std::string tDesc;
 } GSTestRoll[] = {  
   //  
   //  Test Items: Add test cases here:
@@ -468,7 +468,7 @@ void NavRadioTests::callNavRadioGS() {
     int tale = sizeof(GSTestRoll) / sizeof(GSTestRoll[0]);
     for (int i = 0; (i < tale); i++) {
         // prep error message
-        const string& itemDesc = "   navRadioGS Item " + GSTestRoll[i].tDesc + " @ ";
+        const std::string itemDesc = "   navRadioGS Item " + GSTestRoll[i].tDesc + " @ ";
         // Txmitting navaid
         node->setDoubleValue("frequencies/selected-mhz", GSTestRoll[i].nvFreq);
         node->setDoubleValue("radials/selected-deg", GSTestRoll[i].rTruDeg);
@@ -477,7 +477,7 @@ void NavRadioTests::callNavRadioGS() {
                                                                                                SGGeod::fromDeg(GSTestRoll[i].nvLon, GSTestRoll[i].nvLat), &f));
 
         // Check for proper nav type befor doing GS things
-        string tMesg = itemDesc + "GS Type ?";
+        std::string tMesg = itemDesc + "GS Type ?";
         CPPUNIT_ASSERT_MESSAGE(tMesg, nav->type() == FGPositioned::GS);
         /////////////
         // derive the GS geometry in cartesian vectors, to match what navradio.cxx does
@@ -533,7 +533,7 @@ void NavRadioTests::callNavRadioGS() {
         tMesg = itemDesc + "Operable";
         CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, GSTestRoll[i].vInRnge, node->getBoolValue("operable"));
         tMesg = itemDesc + "nav-id";
-        string dddbug = node->getStringValue("nav-id");
+        auto dddbug = node->getStringValue("nav-id");
         CPPUNIT_ASSERT_MESSAGE(tMesg, node->getStringValue("nav-id") == GSTestRoll[i].nvIden);
         tMesg = itemDesc + "Sig Norm";
         CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(tMesg, GSTestRoll[i].vSigNorm, node->getDoubleValue("signal-quality-norm"), GSTestRoll[i].vSigTolr);
@@ -571,7 +571,7 @@ void NavRadioTests::callNewNavRadioGS()
     int tale = sizeof(GSTestRoll) / sizeof(GSTestRoll[0]);
     for (int i = 0; (i < tale); i++) {
         // prep error message
-        const string& itemDesc = "newnavRadioGS Item " + GSTestRoll[i].tDesc + " @ ";
+        const std::string itemDesc = "newnavRadioGS Item " + GSTestRoll[i].tDesc + " @ ";
         // Txmitting navaid
         node->setDoubleValue("frequencies/selected-mhz", GSTestRoll[i].nvFreq);
         node->setDoubleValue("radials/selected-deg", GSTestRoll[i].rTruDeg);
@@ -580,7 +580,7 @@ void NavRadioTests::callNewNavRadioGS()
                                                                                                SGGeod::fromDeg(GSTestRoll[i].nvLon, GSTestRoll[i].nvLat), &f));
 
         // Check for proper nav type befor doing GS things
-        string tMesg = itemDesc + "GS Type ?";
+        std::string tMesg = itemDesc + "GS Type ?";
         CPPUNIT_ASSERT_MESSAGE(tMesg, nav->type() == FGPositioned::GS);
         /////////////
         // derive the GS geometry in cartesian vectors, to match what navradio.cxx does
@@ -636,7 +636,7 @@ void NavRadioTests::callNewNavRadioGS()
         tMesg = itemDesc + "Operable";
         CPPUNIT_ASSERT_EQUAL_MESSAGE(tMesg, GSTestRoll[i].vInRnge, node->getBoolValue("operable"));
         tMesg = itemDesc + "nav-id";
-        string dddbug = node->getStringValue("nav-id");
+        auto dddbug = node->getStringValue("nav-id");
         CPPUNIT_ASSERT_MESSAGE(tMesg, node->getStringValue("nav-id") == GSTestRoll[i].nvIden);
         tMesg = itemDesc + "Sig Norm";
         CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(tMesg, GSTestRoll[i].vSigNorm, node->getDoubleValue("signal-quality-norm"), GSTestRoll[i].vSigTolr);

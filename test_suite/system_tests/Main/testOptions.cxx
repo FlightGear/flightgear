@@ -55,7 +55,7 @@ void OptionsTests::testLoadDefaultAircraft()
     const auto customFGAircraftPath = SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "customAircraftDir";
 
     {
-        const string fgAircraftArg = "--fg-aircraft=" + customFGAircraftPath.utf8Str();
+        const std::string fgAircraftArg = "--fg-aircraft=" + customFGAircraftPath.utf8Str();
         const char* args[] = {"dummypath", fgAircraftArg.c_str(), nullptr};
         runProcessOptions(args);
     }
@@ -63,9 +63,9 @@ void OptionsTests::testLoadDefaultAircraft()
     fgInitAircraftPaths(false);
     fgInitAircraft(false, false);
 
-    CPPUNIT_ASSERT_EQUAL("c172p"s, string{fgGetString("/sim/aircraft")});
-    CPPUNIT_ASSERT_EQUAL("c172p"s, string{fgGetString("/sim/aircraft-id")});
-    //CPPUNIT_ASSERT_EQUAL(adPath.utf8Str(), string{fgGetString("/sim/aircraft-dir")});
+    CPPUNIT_ASSERT_EQUAL("c172p"s, fgGetString("/sim/aircraft"));
+    CPPUNIT_ASSERT_EQUAL("c172p"s, fgGetString("/sim/aircraft-id"));
+    //CPPUNIT_ASSERT_EQUAL(adPath.utf8Str(), fgGetString("/sim/aircraft-dir"));
 }
 
 void OptionsTests::testOptionAircraftWithAircraftDir()
@@ -73,7 +73,7 @@ void OptionsTests::testOptionAircraftWithAircraftDir()
     const auto adPath = SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "customAircraftDir" / "overrideUfo";
 
     {
-        const string aircraftDirArg = "--aircraft-dir=" + adPath.utf8Str();
+        const std::string aircraftDirArg = "--aircraft-dir=" + adPath.utf8Str();
         const char* args[] = {"dummypath", "--aircraft=ufo", aircraftDirArg.c_str(), nullptr};
         runProcessOptions(args);
     }
@@ -81,9 +81,9 @@ void OptionsTests::testOptionAircraftWithAircraftDir()
     fgInitAircraftPaths(false);
     fgInitAircraft(false, false);
 
-    CPPUNIT_ASSERT_EQUAL("ufo"s, string{fgGetString("/sim/aircraft")});
-    CPPUNIT_ASSERT_EQUAL("ufo"s, string{fgGetString("/sim/aircraft-id")});
-    CPPUNIT_ASSERT_EQUAL(adPath.realpath().utf8Str(), string{fgGetString("/sim/aircraft-dir")});
+    CPPUNIT_ASSERT_EQUAL("ufo"s, fgGetString("/sim/aircraft"));
+    CPPUNIT_ASSERT_EQUAL("ufo"s, fgGetString("/sim/aircraft-id"));
+    CPPUNIT_ASSERT_EQUAL(adPath.realpath().utf8Str(), fgGetString("/sim/aircraft-dir"));
 }
 
 void OptionsTests::testOptionAircraftWithFGAircraft()
@@ -91,7 +91,7 @@ void OptionsTests::testOptionAircraftWithFGAircraft()
     const auto customFGAircraftPath = SGPath::fromUtf8(FG_TEST_SUITE_DATA).realpath() / "customAircraftDir";
 
     {
-        const string fgAircraftArg = "--fg-aircraft=" + customFGAircraftPath.utf8Str();
+        const auto fgAircraftArg = "--fg-aircraft=" + customFGAircraftPath.utf8Str();
         const char* args[] = {"dummypath", "--aircraft=ufo", fgAircraftArg.c_str(), nullptr};
         runProcessOptions(args);
     }
@@ -99,11 +99,11 @@ void OptionsTests::testOptionAircraftWithFGAircraft()
     fgInitAircraftPaths(false);
     fgInitAircraft(false, false);
 
-    CPPUNIT_ASSERT_EQUAL("ufo"s, string{fgGetString("/sim/aircraft")});
-    CPPUNIT_ASSERT_EQUAL("ufo"s, string{fgGetString("/sim/aircraft-id")});
+    CPPUNIT_ASSERT_EQUAL("ufo"s, fgGetString("/sim/aircraft"));
+    CPPUNIT_ASSERT_EQUAL("ufo"s, fgGetString("/sim/aircraft-id"));
 
     const auto correctDir = (customFGAircraftPath / "overrideUfo").utf8Str();
-    CPPUNIT_ASSERT_EQUAL(correctDir, string{fgGetString("/sim/aircraft-dir")});
+    CPPUNIT_ASSERT_EQUAL(correctDir, fgGetString("/sim/aircraft-dir"));
 }
 
 void OptionsTests::testOptionAircraftUnqualified()
@@ -120,11 +120,11 @@ void OptionsTests::testOptionAircraftUnqualified()
     fgInitAircraftPaths(false);
     fgInitAircraft(false, false);
 
-    CPPUNIT_ASSERT_EQUAL("bob"s, string{fgGetString("/sim/aircraft")});
-    CPPUNIT_ASSERT_EQUAL("org.fg.test.catalog1.bob"s, string{fgGetString("/sim/aircraft-id")});
+    CPPUNIT_ASSERT_EQUAL("bob"s, fgGetString("/sim/aircraft"));
+    CPPUNIT_ASSERT_EQUAL("org.fg.test.catalog1.bob"s, fgGetString("/sim/aircraft-id"));
 
     const auto correctDir = (packageAircraftDir / "org.fg.test.catalog1" / "Aircraft" / "bobCraft").utf8Str();
-    CPPUNIT_ASSERT_EQUAL(correctDir, string{fgGetString("/sim/aircraft-dir")});
+    CPPUNIT_ASSERT_EQUAL(correctDir, fgGetString("/sim/aircraft-dir"));
 }
 
 void OptionsTests::testOptionAircraftFullyQualified()
@@ -141,11 +141,11 @@ void OptionsTests::testOptionAircraftFullyQualified()
     fgInitAircraftPaths(false);
     fgInitAircraft(false, false);
 
-    CPPUNIT_ASSERT_EQUAL("bob"s, string{fgGetString("/sim/aircraft")});
-    CPPUNIT_ASSERT_EQUAL("org.fg.test.catalog1.bob"s, string{fgGetString("/sim/aircraft-id")});
+    CPPUNIT_ASSERT_EQUAL("bob"s, fgGetString("/sim/aircraft"));
+    CPPUNIT_ASSERT_EQUAL("org.fg.test.catalog1.bob"s, fgGetString("/sim/aircraft-id"));
 
     const auto correctDir = (packageAircraftDir / "org.fg.test.catalog1" / "Aircraft" / "bobCraft").utf8Str();
-    CPPUNIT_ASSERT_EQUAL(correctDir, string{fgGetString("/sim/aircraft-dir")});
+    CPPUNIT_ASSERT_EQUAL(correctDir, fgGetString("/sim/aircraft-dir"));
 }
 
 Options* OptionsTests::runProcessOptions(const char* argv[])
@@ -465,7 +465,7 @@ void OptionsTests::testPropWithEqualSeparator()
     const char* args[] = {"dummypath", "--prop:string:/sim/multiplay/chat=Greetings pilots", nullptr};
     runProcessOptions(args);
 
-    CPPUNIT_ASSERT_EQUAL("Greetings pilots"s, string{fgGetString("/sim/multiplay/chat")});
+    CPPUNIT_ASSERT_EQUAL("Greetings pilots"s, fgGetString("/sim/multiplay/chat"));
 }
 
 void OptionsTests::testPropWithSpaceSeparator()
@@ -473,7 +473,7 @@ void OptionsTests::testPropWithSpaceSeparator()
     const char* args[] = {"dummypath", "--prop:string:/sim/multiplay/chat", "Morning pilots", nullptr};
     runProcessOptions(args);
 
-    CPPUNIT_ASSERT_EQUAL("Morning pilots"s, string{fgGetString("/sim/multiplay/chat")});
+    CPPUNIT_ASSERT_EQUAL("Morning pilots"s, fgGetString("/sim/multiplay/chat"));
 }
 
 void OptionsTests::testMetarWithEqualSeparator()
@@ -481,7 +481,7 @@ void OptionsTests::testMetarWithEqualSeparator()
     const char* args[] = {"dummypath", "--metar=XXXX 012345Z 00000KT 0800 FG NCD 08/08 A3030", nullptr};
     runProcessOptions(args);
 
-    CPPUNIT_ASSERT_EQUAL("XXXX 012345Z 00000KT 0800 FG NCD 08/08 A3030"s, string{fgGetString("/environment/metar/data")});
+    CPPUNIT_ASSERT_EQUAL("XXXX 012345Z 00000KT 0800 FG NCD 08/08 A3030"s, fgGetString("/environment/metar/data"));
 }
 
 void OptionsTests::testMetarWithSpaceSeparator()
@@ -489,7 +489,7 @@ void OptionsTests::testMetarWithSpaceSeparator()
     const char* args[] = {"dummypath", "--metar", "XXXX 012345Z 00000KT 0800 FG NCD 08/08 A3030", nullptr};
     runProcessOptions(args);
 
-    CPPUNIT_ASSERT_EQUAL("XXXX 012345Z 00000KT 0800 FG NCD 08/08 A3030"s, string{fgGetString("/environment/metar/data")});
+    CPPUNIT_ASSERT_EQUAL("XXXX 012345Z 00000KT 0800 FG NCD 08/08 A3030"s, fgGetString("/environment/metar/data"));
 }
 
 void OptionsTests::testXmlFileBetweenOptions()

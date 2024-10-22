@@ -69,10 +69,10 @@ void CommRadioTests::testBasic()
     r->update(1.0);
 
     //   CPPUNIT_ASSERT_DOUBLES_EQUAL(25, n->getDoubleValue("frequencies/selected-channel-width-khz"), 1e-3);
-    CPPUNIT_ASSERT_EQUAL("123.12"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+    CPPUNIT_ASSERT_EQUAL("123.12"s, n->getStringValue("frequencies/selected-mhz-fmt"));
 
-    CPPUNIT_ASSERT_EQUAL("EDDM"s, string{n->getStringValue("airport-id")});
-    CPPUNIT_ASSERT_EQUAL("ATIS"s, string{n->getStringValue("station-name")});
+    CPPUNIT_ASSERT_EQUAL("EDDM"s, n->getStringValue("airport-id"));
+    CPPUNIT_ASSERT_EQUAL("ATIS"s, n->getStringValue("station-name"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, n->getDoubleValue("slant-distance-m"), 1e-6);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, n->getDoubleValue("signal-quality-norm"), 1e-6);
 
@@ -80,10 +80,10 @@ void CommRadioTests::testBasic()
     n->setDoubleValue("frequencies/selected-mhz", 121.72);
     r->update(1.0);
 
-    CPPUNIT_ASSERT_EQUAL("121.72"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+    CPPUNIT_ASSERT_EQUAL("121.72"s, n->getStringValue("frequencies/selected-mhz-fmt"));
 
-    CPPUNIT_ASSERT_EQUAL("EDDM"s, string{n->getStringValue("airport-id")});
-    CPPUNIT_ASSERT_EQUAL("CLNC DEL"s, string{n->getStringValue("station-name")});
+    CPPUNIT_ASSERT_EQUAL("EDDM"s, n->getStringValue("airport-id"));
+    CPPUNIT_ASSERT_EQUAL("CLNC DEL"s, n->getStringValue("station-name"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, n->getDoubleValue("slant-distance-m"), 1e-6);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, n->getDoubleValue("signal-quality-norm"), 1e-6);
 }
@@ -104,14 +104,14 @@ void CommRadioTests::testEightPointThree()
     r->update(1.0);
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL(25, n->getDoubleValue("frequencies/selected-channel-width-khz"), 1e-3);
-    CPPUNIT_ASSERT_EQUAL("136.525"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+    CPPUNIT_ASSERT_EQUAL("136.525"s, n->getStringValue("frequencies/selected-mhz-fmt"));
 
     // random 8.3Khz station
 
     n->setDoubleValue("frequencies/selected-mhz", 120.11);
     r->update(1.0);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(8.33, n->getDoubleValue("frequencies/selected-channel-width-khz"), 1e-3);
-    CPPUNIT_ASSERT_EQUAL("120.110"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+    CPPUNIT_ASSERT_EQUAL("120.110"s, n->getStringValue("frequencies/selected-mhz-fmt"));
     CPPUNIT_ASSERT_EQUAL(338, n->getIntValue("frequencies/selected-channel"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(120.10833, n->getDoubleValue("frequencies/selected-real-frequency-mhz"), 1e-6);
 
@@ -119,7 +119,7 @@ void CommRadioTests::testEightPointThree()
     n->setIntValue("frequencies/selected-channel", 2561);
     r->update(1.0);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(8.33, n->getDoubleValue("frequencies/selected-channel-width-khz"), 1e-3);
-    CPPUNIT_ASSERT_EQUAL("134.005"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+    CPPUNIT_ASSERT_EQUAL("134.005"s, n->getStringValue("frequencies/selected-mhz-fmt"));
     CPPUNIT_ASSERT_EQUAL(2561, n->getIntValue("frequencies/selected-channel"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(134.000, n->getDoubleValue("frequencies/selected-real-frequency-mhz"), 1e-6);
 
@@ -127,7 +127,7 @@ void CommRadioTests::testEightPointThree()
     n->setIntValue("frequencies/selected-channel", 2560);
     r->update(1.0);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(25, n->getDoubleValue("frequencies/selected-channel-width-khz"), 1e-3);
-    CPPUNIT_ASSERT_EQUAL("134.000"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+    CPPUNIT_ASSERT_EQUAL("134.000"s, n->getStringValue("frequencies/selected-mhz-fmt"));
     CPPUNIT_ASSERT_EQUAL(2560, n->getIntValue("frequencies/selected-channel"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(134.000, n->getDoubleValue("frequencies/selected-real-frequency-mhz"), 1e-6);
 
@@ -135,7 +135,7 @@ void CommRadioTests::testEightPointThree()
     n->setDoubleValue("frequencies/selected-mhz", 120.035);
     r->update(1.0);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(8.33, n->getDoubleValue("frequencies/selected-channel-width-khz"), 1e-3);
-    CPPUNIT_ASSERT_EQUAL("120.035"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+    CPPUNIT_ASSERT_EQUAL("120.035"s, n->getStringValue("frequencies/selected-mhz-fmt"));
     CPPUNIT_ASSERT_EQUAL(326, n->getIntValue("frequencies/selected-channel"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(120.03333, n->getDoubleValue("frequencies/selected-real-frequency-mhz"), 1e-6);
 
@@ -148,7 +148,7 @@ void CommRadioTests::testEightPointThree()
     n->setDoubleValue("frequencies/selected-mhz", 118.705);
     r->update(1.0);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(8.33, n->getDoubleValue("frequencies/selected-channel-width-khz"), 1e-3);
-    CPPUNIT_ASSERT_EQUAL("118.705"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+    CPPUNIT_ASSERT_EQUAL("118.705"s, n->getStringValue("frequencies/selected-mhz-fmt"));
     CPPUNIT_ASSERT_EQUAL(113, n->getIntValue("frequencies/selected-channel"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(118.700, n->getDoubleValue("frequencies/selected-real-frequency-mhz"), 1e-6);
 
@@ -156,7 +156,7 @@ void CommRadioTests::testEightPointThree()
     n->setDoubleValue("frequencies/selected-mhz", 137.000);
     r->update(1.0);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(8.33, n->getDoubleValue("frequencies/selected-channel-width-khz"), 1e-3);
-    CPPUNIT_ASSERT_EQUAL("136.990"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+    CPPUNIT_ASSERT_EQUAL("136.990"s, n->getStringValue("frequencies/selected-mhz-fmt"));
     CPPUNIT_ASSERT_EQUAL(3039, n->getIntValue("frequencies/selected-channel"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(136.99166, n->getDoubleValue("frequencies/selected-real-frequency-mhz"), 1e-6);
 }
@@ -176,8 +176,8 @@ void CommRadioTests::testEPLLTuning833()
     n->setDoubleValue("frequencies/selected-mhz", 124.225);
     r->update(1.0);
 
-    CPPUNIT_ASSERT_EQUAL("EPLL"s, string{n->getStringValue("airport-id")});
-    CPPUNIT_ASSERT_EQUAL("Lodz TOWER"s, string{n->getStringValue("station-name")});
+    CPPUNIT_ASSERT_EQUAL("EPLL"s, n->getStringValue("airport-id"));
+    CPPUNIT_ASSERT_EQUAL("Lodz TOWER"s, n->getStringValue("station-name"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, n->getDoubleValue("slant-distance-m"), 1e-6);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, n->getDoubleValue("signal-quality-norm"), 1e-6);
 }
@@ -195,7 +195,7 @@ void CommRadioTests::testEPLLTuning25()
     r->update(1.0);
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL(124.23, n->getDoubleValue("frequencies/selected-mhz"), 1e-6);
-    CPPUNIT_ASSERT_EQUAL("124.22"s, string{n->getStringValue("frequencies/selected-mhz-fmt")});
+    CPPUNIT_ASSERT_EQUAL("124.22"s, n->getStringValue("frequencies/selected-mhz-fmt"));
 
     // fail for now
 #if 0

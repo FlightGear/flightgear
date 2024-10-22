@@ -91,7 +91,7 @@ void ViewsTests::testBasic()
     auto c = vm->get_current_view();
     CPPUNIT_ASSERT(c);
     CPPUNIT_ASSERT_EQUAL(true, c->getInternal());
-    CPPUNIT_ASSERT_EQUAL(string{"AView"}, c->getName());
+    CPPUNIT_ASSERT_EQUAL(std::string{"AView"}, c->getName());
     CPPUNIT_ASSERT_EQUAL(flightgear::View::FG_LOOKAT, c->getType());
 
     fgSetInt("/sim/current-view/view-number", 1);
@@ -99,7 +99,7 @@ void ViewsTests::testBasic()
 
     c = vm->get_current_view();
     CPPUNIT_ASSERT_EQUAL(false, c->getInternal());
-    CPPUNIT_ASSERT_EQUAL(string{"BView"}, c->getName());
+    CPPUNIT_ASSERT_EQUAL(std::string{"BView"}, c->getName());
     CPPUNIT_ASSERT_EQUAL(flightgear::View::FG_LOOKFROM, c->getType());
 
     // disabled by James, since this asserts inside FGViewMgr::setCurrentViewIndex

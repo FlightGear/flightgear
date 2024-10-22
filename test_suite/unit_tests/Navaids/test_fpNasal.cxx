@@ -20,6 +20,7 @@
 #include <Main/globals.hxx>
 
 using namespace flightgear;
+using namespace std::string_literals;
 
 static bool static_haveProcedures = false;
 
@@ -94,8 +95,8 @@ void FPNasalTests::testBasic()
         fp.insertWPAfter(newWP, 2);
     )");
     CPPUNIT_ASSERT(ok);
-    
-    CPPUNIT_ASSERT_EQUAL(string{"COSTA VOR-DME"}, fp1->legAtIndex(3)->waypoint()->source()->name());
+
+    CPPUNIT_ASSERT_EQUAL("COSTA VOR-DME"s, fp1->legAtIndex(3)->waypoint()->source()->name());
 
     ok = FGTestApi::executeNasal(R"(
         var fp = flightplan();
@@ -261,12 +262,12 @@ void FPNasalTests::testSIDTransitionAPI()
     CPPUNIT_ASSERT(fp->departureRunway());
     CPPUNIT_ASSERT(fp->sid());
     CPPUNIT_ASSERT(fp->sidTransition());
-    
-    CPPUNIT_ASSERT_EQUAL(fp->departureRunway()->ident(), string{"13L"});
-    CPPUNIT_ASSERT_EQUAL(fp->sid()->ident(), string{"DEEZZ5.13L"});
-    CPPUNIT_ASSERT_EQUAL(fp->sidTransition()->ident(), string{"CANDR"});
-    
-// test specify SID via transition in Nasal
+
+    CPPUNIT_ASSERT_EQUAL(fp->departureRunway()->ident(), "13L"s);
+    CPPUNIT_ASSERT_EQUAL(fp->sid()->ident(), "DEEZZ5.13L"s);
+    CPPUNIT_ASSERT_EQUAL(fp->sidTransition()->ident(), "CANDR"s);
+
+    // test specify SID via transition in Nasal
     rm->setFlightPlan(FlightPlan::create());
     
     ok = FGTestApi::executeNasal(R"(
@@ -286,12 +287,10 @@ void FPNasalTests::testSIDTransitionAPI()
     CPPUNIT_ASSERT(fp->departureRunway());
     CPPUNIT_ASSERT(fp->sid());
     CPPUNIT_ASSERT(fp->sidTransition());
-    
-    CPPUNIT_ASSERT_EQUAL(fp->departureRunway()->ident(), string{"13L"});
-    CPPUNIT_ASSERT_EQUAL(fp->sid()->ident(), string{"DEEZZ5.13L"});
-    CPPUNIT_ASSERT_EQUAL(fp->sidTransition()->ident(), string{"CANDR"});
-    
-    
+
+    CPPUNIT_ASSERT_EQUAL(fp->departureRunway()->ident(), "13L"s);
+    CPPUNIT_ASSERT_EQUAL(fp->sid()->ident(), "DEEZZ5.13L"s);
+    CPPUNIT_ASSERT_EQUAL(fp->sidTransition()->ident(), "CANDR"s);
 }
 
 void FPNasalTests::testSTARTransitionAPI()
@@ -323,8 +322,8 @@ void FPNasalTests::testSTARTransitionAPI()
     
     CPPUNIT_ASSERT(fp->star());
     CPPUNIT_ASSERT(fp->starTransition() == nullptr);
-    
-    CPPUNIT_ASSERT_EQUAL(fp->star()->ident(), string{"RIXE3A.26L"});
+
+    CPPUNIT_ASSERT_EQUAL(fp->star()->ident(), "RIXE3A.26L"s);
 }
 
 void FPNasalTests::testApproachTransitionAPI()
@@ -369,8 +368,8 @@ void FPNasalTests::testApproachTransitionAPI()
     auto fp = rm->flightPlan();
 
     CPPUNIT_ASSERT(fp->approach());
-    CPPUNIT_ASSERT_EQUAL(string{"LUL1C"}, fp->approachTransition()->ident());
-    CPPUNIT_ASSERT_EQUAL(string{"ILS08L"}, fp->approach()->ident());
+    CPPUNIT_ASSERT_EQUAL("LUL1C"s, fp->approachTransition()->ident());
+    CPPUNIT_ASSERT_EQUAL("ILS08L"s, fp->approach()->ident());
 }
 
 void FPNasalTests::testApproachTransitionAPIWithCloning()
@@ -406,12 +405,12 @@ void FPNasalTests::testApproachTransitionAPIWithCloning()
     auto fp = rm->flightPlan();
 
     CPPUNIT_ASSERT(fp->approach());
-    CPPUNIT_ASSERT_EQUAL(string{"SUG2A"}, fp->approachTransition()->ident());
-    CPPUNIT_ASSERT_EQUAL(string{"ILS06"}, fp->approach()->ident());
-    
+    CPPUNIT_ASSERT_EQUAL("SUG2A"s, fp->approachTransition()->ident());
+    CPPUNIT_ASSERT_EQUAL("ILS06"s, fp->approach()->ident());
+
     auto fp2 = fp->clone("testplan2");
-    CPPUNIT_ASSERT_EQUAL(string{"ILS06"}, fp2->approach()->ident());
-    CPPUNIT_ASSERT_EQUAL(string{"SUG2A"}, fp2->approachTransition()->ident());
+    CPPUNIT_ASSERT_EQUAL("ILS06"s, fp2->approach()->ident());
+    CPPUNIT_ASSERT_EQUAL("SUG2A"s, fp2->approachTransition()->ident());
 }
 
 void FPNasalTests::testAirwaysAPI()

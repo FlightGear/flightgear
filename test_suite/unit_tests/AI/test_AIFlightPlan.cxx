@@ -38,7 +38,7 @@
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
 
-
+using std::string;
 using namespace flightgear;
 
 /////////////////////////////////////////////////////////////////////////////
