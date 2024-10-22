@@ -105,7 +105,7 @@ FGPUICompatDialog::FGPUICompatDialog(SGPropertyNode* props) : FGDialog(props),
                                                               _props(props),
                                                               _needsRelayout(false)
 {
-    _module = string("__dlg:") + props->getStringValue("name", "[unnamed]");
+    _module = "__dlg:" + props->getStringValue("name", "[unnamed]");
     _name = props->getStringValue("name", "[unnamed]");
 }
 
