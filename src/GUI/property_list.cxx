@@ -35,6 +35,7 @@
 using std::string;
 using std::cout;
 using std::endl;
+using std::string;
 
 typedef string stdString;      // puObject has a "string" member
 
