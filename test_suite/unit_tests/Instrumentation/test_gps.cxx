@@ -38,6 +38,7 @@
 #include <Autopilot/route_mgr.hxx>
 
 using namespace flightgear;
+using namespace std::string_literals;
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -1418,7 +1419,7 @@ void GPSTests::testRadialIntercept()
     
     fp->setCurrentIndex(2);
 
-    CPPUNIT_ASSERT_EQUAL(string{"BUNAX"}, string{gpsNode->getStringValue("wp/wp[1]/ID")});
+    CPPUNIT_ASSERT_EQUAL("BUNAX"s, gpsNode->getStringValue("wp/wp[1]/ID"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(312, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
 
   
@@ -1446,7 +1447,7 @@ void GPSTests::testRadialIntercept()
   fp->setCurrentIndex(2);
     gpsNode->setStringValue("command", "leg");
 
-  CPPUNIT_ASSERT_EQUAL(string{"BUNAX"}, string{gpsNode->getStringValue("wp/wp[1]/ID")});
+  CPPUNIT_ASSERT_EQUAL(std::string{"BUNAX"}, std::string{gpsNode->getStringValue("wp/wp[1]/ID")});
   CPPUNIT_ASSERT_DOUBLES_EQUAL(312, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
 
 
@@ -1513,9 +1514,9 @@ void GPSTests::testDMEIntercept()
     gpsNode->setStringValue("command", "leg");
     
     fp->setCurrentIndex(2);
-    
-    CPPUNIT_ASSERT_EQUAL(string{"TLA"}, string{gpsNode->getStringValue("wp/wp[1]/ID")});
-   // CPPUNIT_ASSERT_DOUBLES_EQUAL(312, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
+
+    CPPUNIT_ASSERT_EQUAL("TLA"s, gpsNode->getStringValue("wp/wp[1]/ID"));
+    // CPPUNIT_ASSERT_DOUBLES_EQUAL(312, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
     
     auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
     pilot->resetAtPosition(initPos);

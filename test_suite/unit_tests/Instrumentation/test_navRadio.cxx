@@ -284,7 +284,6 @@ void NavRadioTests::testILSBasic()
 }
 
 
-
 void NavRadioTests::testGS()
 {
     // radio setup
