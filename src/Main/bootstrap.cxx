@@ -157,19 +157,19 @@ bool checkUniversalCRTVersion()
 	UINT                puLenFileInfo = 0;
 
 	// Get the version information for the file requested
-	dwSize = GetFileVersionInfoSize("ucrtbase.dll", NULL);
-	if (dwSize == 0) {
+    dwSize = GetFileVersionInfoSizeA("ucrtbase.dll", NULL);
+    if (dwSize == 0) {
 		return false;
 	}
 
 	std::vector<BYTE> versionInfo;
 	versionInfo.resize(dwSize);
 
-	if (!GetFileVersionInfo("ucrtbase.dll", 0, dwSize, versionInfo.data())) {
-		return false;
-	}
+    if (!GetFileVersionInfoA("ucrtbase.dll", 0, dwSize, versionInfo.data())) {
+        return false;
+    }
 
-	if (!VerQueryValue(versionInfo.data(), TEXT("\\"), (LPVOID*)&pFileInfo, &puLenFileInfo)) {
+    if (!VerQueryValue(versionInfo.data(), TEXT("\\"), (LPVOID*)&pFileInfo, &puLenFileInfo)) {
 		return false;
 	}
 

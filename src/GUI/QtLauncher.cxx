@@ -83,6 +83,10 @@
 #include <GUI/CocoaHelpers.h>
 #endif
 
+#if defined(Q_OS_WIN)
+#include <windows.h> // for GetAsyncKeyState and VK_ constants
+#endif
+
 using namespace flightgear;
 using namespace simgear::pkg;
 using std::string;
