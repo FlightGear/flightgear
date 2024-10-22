@@ -83,7 +83,7 @@ string(TIMESTAMP iss_config_timestamp)
 
 ########################################################################################
 
-#if (MSVC)
+if (MSVC)
     # iscc.exe only accepts Windows style-paths, so explicitly convert
     file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}" FG_WINDOWS_INSTALL_PREFIX)
     file(TO_NATIVE_PATH "${OSG_BASE_DIR}" INNO_SETUP_OSG_BASE_DIR)
@@ -93,7 +93,7 @@ string(TIMESTAMP iss_config_timestamp)
     install(FILES ${CMAKE_BINARY_DIR}/InstallConfig.iss 
         DESTINATION . 
         COMPONENT packaging EXCLUDE_FROM_ALL)
-#endif()
+endif()
 
 # OSG libs
 foreach (osglib OSG OpenThreads osgUtil osgText osgGA osgSim osgParticle osgTerrain osgViewer osgDB)
@@ -122,7 +122,7 @@ if (APPLE)
     # FIXME: this copies the fully version file name, need to rename to the non-versioned one
     install(FILES 
             $<TARGET_FILE:OpenAL::OpenAL>  
-            $<TARGET_FILE:LibLZMA::LibLZMA> 
+            # don't copy libLZMA for now, we need to see if it's system defined or not
         DESTINATION 
             $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/Frameworks
     )
