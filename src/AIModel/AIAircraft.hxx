@@ -232,6 +232,7 @@ private:
     double prev_dist_to_go;
 
     bool holdPos = false;
+    int waitsForId = 0;
 
     const char* _getTransponderCode() const;
 

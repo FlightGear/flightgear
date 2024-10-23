@@ -349,11 +349,14 @@ class Node {
                 if (childBox.contains(queryBox.getMin().x(), queryBox.getMin().y()) ||
                     childBox.contains(queryBox.getMin().x(), queryBox.getMax().y()) || 
                     childBox.contains(queryBox.getMax().x(), queryBox.getMax().y()) ||
-                    childBox.contains(queryBox.getMax().x(), queryBox.getMin().y())) {
+                    childBox.contains(queryBox.getMax().x(), queryBox.getMin().y()) ||
+                    childBox.contains(queryBox.getMin().x() + queryBox.width() / 2, queryBox.getMin().y()+ queryBox.height() / 2)) {
                     children[i].get()->query(queryBox, getBoxFunction, values);
-                } else {
+                }/* else {
                     SG_LOG(SG_ATC, SG_DEBUG, "Query Quadtree center " << i << " not found " );
-                }
+                    SG_LOG(SG_ATC, SG_DEBUG, "QueryBox " << queryBox.getMin().x() << "," << queryBox.getMin().y() << "\t" << queryBox.getMax().x() << "," << queryBox.getMax().y() );
+                    SG_LOG(SG_ATC, SG_DEBUG, "ChildBox " << childBox.getMin().x() << "," << childBox.getMin().y() << "\t" << childBox.getMax().x() << "," << childBox.getMax().y() );
+                }*/
             }
         }
     };

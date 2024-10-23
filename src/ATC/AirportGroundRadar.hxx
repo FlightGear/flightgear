@@ -49,6 +49,7 @@ public:
 
 private:
     const double QUERY_BOX_SIZE = 0.1;
+	const int SEPARATION = 4;
 	QuadTree<FGTrafficRecord, decltype(&getBox), decltype(&equal)> index;
 	SGGeod min;
 	FGAirportRef airport;

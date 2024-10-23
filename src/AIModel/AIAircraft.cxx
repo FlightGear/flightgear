@@ -781,6 +781,8 @@ void FGAIAircraft::processATC(const FGATCInstruction& instruction)
         //holdtime = instruction.getHoldTime();
     }
 
+    waitsForId = instruction.getWaitsForId();
+
     // Hold Position
     if (instruction.getHoldPosition()) {
         holdPos = true;
@@ -1739,6 +1741,8 @@ void FGAIAircraft::dumpCSVHeader(const std::unique_ptr<sg_ofstream>& o)
     (*o) << "roll\t";
     (*o) << "repositioned\t";
     (*o) << "stuckCounter\t";
+    (*o) << "blockerId\t";
+    (*o) << "holdPos\t";
     (*o) << std::endl;
 }
 
@@ -1813,6 +1817,8 @@ void FGAIAircraft::dumpCSV(const std::unique_ptr<sg_ofstream>& o, int lineIndex)
     (*o) << roll << "\t";
     (*o) << repositioned << "\t";
     (*o) << stuckCounter << "\t";
+    (*o) << waitsForId << "\t";
+    (*o) << holdPos << "\t";
     (*o) << std::endl;
 }
 

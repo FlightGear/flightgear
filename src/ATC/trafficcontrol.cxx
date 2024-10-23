@@ -250,7 +250,7 @@ void ActiveRunway::addToDepartureQueue(FGAIAircraft *ac)
  **************************************************************************/
 
 FGTrafficRecord::FGTrafficRecord():
-        id(0), waitsForId(0),
+        id(0),
         currentPos(0),
         leg(0),
         frequencyId(0),
@@ -539,13 +539,8 @@ bool FGTrafficRecord::isActive(int margin) const
 
 void FGTrafficRecord::setSpeedAdjustment(double spd)
 {
-    if (spd!=0) {
-        instruction.setChangeSpeed(true);
-        instruction.setSpeed(spd);
-        instruction.setHoldPosition(false);
-    } else {
-        instruction.setHoldPosition(true);
-    }
+    instruction.setChangeSpeed(true);
+    instruction.setSpeed(spd);
 }
 
 void FGTrafficRecord::setHeadingAdjustment(double heading)
@@ -578,6 +573,7 @@ FGATCInstruction::FGATCInstruction()
     speed = 0;
     heading = 0;
     alt = 0;
+    waitsForId = 0;
 }
 
 bool FGATCInstruction::hasInstruction() const

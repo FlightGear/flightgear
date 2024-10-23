@@ -53,7 +53,6 @@ bool AirportGroundRadar::add(SGSharedPtr<FGTrafficRecord> aiObject) {
 		SG_LOG(SG_ATC, SG_DEBUG, "Added Aircraft " << aiObject->getId() );	
 		index.printPath(aiObject);
 	} else {
-
 		double distM = SGGeodesy::distanceM(aiObject->getPos(), airport->geod());
 		SG_LOG(SG_ATC, SG_ALERT, "Couldn't add Aircraft " << aiObject->getId() << "Dist " << distM  );	
 	}
@@ -79,7 +78,7 @@ bool AirportGroundRadar::remove(SGSharedPtr<FGTrafficRecord> aiObject)
 size_t AirportGroundRadar::size(){return index.size();}
 
 int AirportGroundRadar::getSize(SGSharedPtr<FGTrafficRecord> aiObject){
-  	return 100;
+  	return (*aiObject).getRadius();
 }
 
 bool AirportGroundRadar::isBlocked(SGSharedPtr<FGTrafficRecord> aiObject)
@@ -100,7 +99,7 @@ bool AirportGroundRadar::isBlocked(SGSharedPtr<FGTrafficRecord> aiObject)
             const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, aiObject->getHeading() - courseTowardOther);
             const double otherHeadingDiff = SGMiscd::normalizePeriodic(-180, 180, other->getHeading() - courseTowardOther);
             SG_LOG(SG_ATC, SG_DEBUG, "Found " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff << " courseTowardOther " << courseTowardOther);
-			const int threshold = getSize(aiObject) + getSize(other);
+			const int threshold = getSize(aiObject) + getSize(other) + SEPARATION;
 			if ( distM < threshold ) {				
 			    if (headingDiff < 0 && aiObject->getSpeed() > 0 && abs(headingDiff) < 90){
 					// from the right and in front or other is stopped
@@ -140,8 +139,8 @@ bool AirportGroundRadar::isBlockedForPushback(SGSharedPtr<FGTrafficRecord> aiObj
             // For right before left priority
             const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, aiObject->getHeading() - courseTowardOther);
             const double otherHeadingDiff = SGMiscd::normalizePeriodic(-180, 180, other->getHeading() - courseTowardOther);
-//            SG_LOG(SG_ATC, SG_DEBUG, "Found " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
-			const int threshold = getSize(aiObject) + getSize(other);
+            SG_LOG(SG_ATC, SG_DEBUG, "Found " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
+			const int threshold = getSize(aiObject) + getSize(other) + SEPARATION;
 			if ( distM < threshold && (abs(headingDiff) > 90) ){
 				// from the right and in front or other is stopped
                 SG_LOG(SG_ATC, SG_DEBUG, aiObject->getId() << " blocked for pushback by " << other->getId());

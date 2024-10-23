@@ -104,7 +104,6 @@ void FGStartupController::announcePosition(int id,
         airportGroundRadar->move(SGRect<double>(lat, lon), *i);
         (*i)->setPositionAndIntentions(currentPosition, intendedRoute);
         (*i)->setPositionAndHeading(lat, lon, heading, speed, alt);
-
     }
 }
 

@@ -63,15 +63,18 @@ typedef std::vector<int>::iterator intVecIterator;
 class FGATCInstruction
 {
 private:
-    bool holdPattern;
+    bool holdPattern = false;
     int  requestedArrivalTime{0};
-    bool holdPosition;
-    bool changeSpeed;
-    bool changeHeading;
-    bool changeAltitude;
-    bool resolveCircularWait;
+    bool holdPosition = false;
+    bool requestHoldPosition = false;
+    bool resumeTaxi = false;
+    bool changeSpeed = false;
+    bool changeHeading = false;
+    bool changeAltitude = false;
+    bool resolveCircularWait = false;
+    int waitsForId;
 
-    double speed;
+    double speed = std::numeric_limits<double>::max();
     double heading;
     double alt;
 public:
@@ -90,6 +93,13 @@ public:
     bool getHoldPosition  () const {
         return holdPosition;
     };
+    bool getRequestHoldPosition  () const {
+        return requestHoldPosition;
+    };
+    bool getResumeTaxi() const {
+        return resumeTaxi;
+    };
+    
     bool getChangeSpeed   () const {
         return changeSpeed;
     };
@@ -113,11 +123,21 @@ public:
         return alt;
     };
 
+    int getWaitsForId  () const {
+        return waitsForId;
+    };
+
     void setHoldPattern   (bool val) {
         holdPattern    = val;
     };
     void setHoldPosition  (bool val) {
         holdPosition   = val;
+    };
+    void setRequestHoldPosition  (bool val) {
+        requestHoldPosition   = val;
+    };
+    void setResumeTaxi  (bool val) {
+        resumeTaxi   = val;
     };
     void setChangeSpeed   (bool val) {
         changeSpeed    = val;
@@ -141,6 +161,11 @@ public:
     void setAlt         (double val) {
         alt     = val;
     };
+
+    void setWaitsForId(int id) {
+        waitsForId = id;
+    };
+
 };
 
 
@@ -152,7 +177,6 @@ class FGTrafficRecord : public SGReferenced
 {
 private:
     int id;
-    int waitsForId;
     int currentPos;
     int leg;
     int frequencyId;
@@ -160,12 +184,15 @@ private:
     bool allowTransmission;
     bool allowPushback;
     int priority;
-    int  plannedArrivalTime{0};
+    int plannedArrivalTime{0};
     time_t timer;
     intVec intentions;
     FGATCInstruction instruction;
     SGGeod pos;
-    double heading, speed, altitude, radius;
+    double heading;
+    double speed;
+    double altitude;
+    double radius;
     std::string callsign;
     std::string runway;
     SGSharedPtr<FGAIAircraft> aircraft;
@@ -257,7 +284,7 @@ public:
     };
 
     int getWaitsForId  () const {
-        return waitsForId;
+        return instruction.getWaitsForId();
     };
 
     void setSpeedAdjustment(double spd);
@@ -275,14 +302,26 @@ public:
     bool hasHoldPosition() const {
         return instruction.getHoldPosition();
     };
+    bool getRequestHoldPosition() const {
+        return instruction.getRequestHoldPosition();
+    };
+    bool getResumeTaxi() const {
+        return instruction.getResumeTaxi();
+    };
     void setHoldPosition (bool inst) {
         instruction.setHoldPosition(inst);
     };
+    void setRequestHoldPosition (bool inst) {
+        instruction.setRequestHoldPosition(inst);
+    };
+    void setResumeTaxi (bool inst) {
+        instruction.setResumeTaxi(inst);
+    };
     int getWaitsForId() {
-        return waitsForId;
+        return instruction.getWaitsForId();
     }
     void setWaitsForId(int id) {
-        waitsForId = id;
+        instruction.setWaitsForId(id);
     };
 
     void setResolveCircularWait()   {

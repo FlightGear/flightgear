@@ -189,9 +189,9 @@ void FGGroundController::updateAircraftInformation(int id, SGGeod geod,
     bool needsTaxiClearance = (*current)->getAircraft()->getTaxiClearanceRequest();
     if (!needsTaxiClearance) {
         checkHoldPosition(id, geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
-        //if (checkForCircularWaits(id)) {
-        //    (*i)->setResolveCircularWait();
-        //}
+        if (checkForCircularWaits(id)) {
+            (*i)->setResolveCircularWait();
+        }
     } else {
         (*current)->setHoldPosition(true);
         int state = (*current)->getState();
@@ -249,18 +249,26 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
 
     auto blocker = airportGroundRadar->getBlockedBy(*i);
     if (blocker!=nullptr) {
+        int oldWaitsForId = (*i)->getWaitsForId();
         (*i)->setWaitsForId(blocker->getId());
         double distM = SGGeodesy::distanceM((*i)->getPos(), blocker->getPos());
         int newSpeed = blocker->getSpeed() * (distM / 100);
         SG_LOG(SG_ATC, SG_DEBUG,
             (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") new speed " << newSpeed);
-        (*i)->setSpeedAdjustment(newSpeed);
+        if (newSpeed!=0) {        
+            (*i)->setSpeedAdjustment(newSpeed);
+        } else {
+            if (oldWaitsForId!=blocker->getId()) {
+                (*i)->setRequestHoldPosition(true);
+            }
+        }
         return;
     } else {
         int oldWaitsForId = (*i)->getWaitsForId();
         if (oldWaitsForId>0) {
             SG_LOG(SG_ATC, SG_DEBUG,
                 (*i)->getCallsign() << "(" << (*i)->getId() << ") cleared of blocker " << oldWaitsForId);
+            (*i)->setResumeTaxi(true);                
         }
         (*i)->clearSpeedAdjustment();
         (*i)->setWaitsForId(0);
@@ -438,73 +446,29 @@ void FGGroundController::checkHoldPosition(int id, double lat,
         (*current)->clearSpeedAdjustment();
         return;
     }
-    bool origStatus = (*current)->hasHoldPosition();
-    (*current)->setHoldPosition(false);
-    //SGGeod curr(SGGeod::fromDegM(lon, lat, alt));
-    int currentRoute = (*i)->getCurrentPosition();
-    int nextRoute;
-    if ((*i)->getIntentions().size()) {
-        nextRoute    = (*((*i)->getIntentions().begin()));
-    } else {
-        nextRoute = 0;
-    }
-    if (currentRoute > 0) {
-        FGTaxiSegment *tx = network->findSegment(currentRoute);
-        FGTaxiSegment *nx;
-        if (nextRoute) {
-            nx = network->findSegment(nextRoute);
-        } else {
-            nx = tx;
-        }
-        //if (tx->hasBlock(now) || nx->hasBlock(now) ) {
-        //   (*current)->setHoldPosition(true);
-        //}
-        SGGeod start = (*i)->getPos();
-        SGGeod end  (nx->getStart()->geod());
-
-        double distance = SGGeodesy::distanceM(start, end);
-        if (nx->hasBlock(now) && (distance < (*i)->getRadius() * 4)) {
-            (*current)->setHoldPosition(true);
-        } else {
-            intVecIterator ivi = (*i)->getIntentions().begin();
-            while (ivi != (*i)->getIntentions().end()) {
-                if ((*ivi) > 0) {
-                    FGTaxiSegment* seg = network->findSegment(*ivi);
-                    distance += seg->getLength();
-                    if ((seg->hasBlock(now)) && (distance < (*i)->getRadius() * 4)) {
-                        (*current)->setHoldPosition(true);
-                        break;
-                    }
-                }
-                ivi++;
-            }
-        }
-    }
-    bool currStatus = (*current)->hasHoldPosition();
-    (*current)->setHoldPosition(origStatus);
-    // Either a Hold Position or a resume taxi transmission has been issued
     if ((now - lastTransmission) > 2) {
         available = true;
     }
-    if ((*current)->getState() == ATCMessageState::NORMAL) {
-        if ((origStatus != currStatus) && available) {
-            SG_LOG(SG_ATC, SG_DEBUG, "Issuing hold short instruction " << currStatus << " " << available);
-            if (currStatus == true) { // No has a hold short instruction
-                transmit((*current), parent, MSG_HOLD_POSITION, ATC_GROUND_TO_AIR, true);
-                SG_LOG(SG_ATC, SG_DEBUG, "Transmitting hold short instruction " << currStatus << " " << available);
-                (*current)->setState(ATCMessageState::ACK_HOLD);
-            } else {
-                transmit((*current), parent, MSG_RESUME_TAXI, ATC_GROUND_TO_AIR, true);
-                SG_LOG(SG_ATC, SG_DEBUG, "Transmitting resume instruction " << currStatus << " " << available);
-                (*current)->setState(ATCMessageState::ACK_RESUME_TAXI);
-            }
-            lastTransmission = now;
-            available = false;
-            // Don't act on the changed instruction until the transmission is confirmed
-            // So set back to original status
-            SG_LOG(SG_ATC, SG_DEBUG, "Current state " << (*current)->getState());
+    if ((*current)->getState() == ATCMessageState::NORMAL && available) {
+        if ((*current)->getRequestHoldPosition()) { // No has a hold short instruction
+            transmit((*current), parent, MSG_HOLD_POSITION, ATC_GROUND_TO_AIR, true);
+            SG_LOG(SG_ATC, SG_DEBUG, "Transmitting hold short instruction ");
+            (*current)->setState(ATCMessageState::ACK_HOLD);
+            (*current)->setRequestHoldPosition(false);
+            (*current)->setHoldPosition(true);
         }
-
+        if ((*current)->getResumeTaxi()) { // No has a hold short instruction
+            transmit((*current), parent, MSG_RESUME_TAXI, ATC_GROUND_TO_AIR, true);
+            SG_LOG(SG_ATC, SG_DEBUG, "Transmitting resume instruction ");
+            (*current)->setState(ATCMessageState::ACK_RESUME_TAXI);
+            (*current)->setResumeTaxi(false);
+            (*current)->setHoldPosition(false);
+        }
+        lastTransmission = now;
+        available = false;
+        // Don't act on the changed instruction until the transmission is confirmed
+        // So set back to original status
+        SG_LOG(SG_ATC, SG_DEBUG, "Current state " << (*current)->getState());
     }
     // 6 = Report runway
     // 7 = Acknowledge report runway
@@ -585,6 +549,7 @@ bool FGGroundController::checkForCircularWaits(int id)
 
     while ((target > 0) && (target != id) && counter++ < trafficSize) {
         //printed = true;
+        //FIXME Move to GroundRadar
         TrafficVectorIterator iter = activeTraffic.begin();
         if (trafficSize) {
             while (iter != activeTraffic.end()) {
@@ -600,7 +565,7 @@ bool FGGroundController::checkForCircularWaits(int id)
         if (iter == activeTraffic.end()) {
             SG_LOG(SG_ATC, SG_DEBUG, "[Waiting for traffic at Runway: DONE] ");
             // The target id is not found on the current network, which means it's at the tower
-            SG_LOG(SG_ATC, SG_ALERT, "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkForCircularWaits");
+            SG_LOG(SG_ATC, SG_ALERT, "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkForCircularWaits Id : " << target);
             return false;
         }
 
@@ -615,7 +580,7 @@ bool FGGroundController::checkForCircularWaits(int id)
     }
 
     //if (printed)
-        SG_LOG(SG_ATC, SG_DEBUG, "[done] ");
+    SG_LOG(SG_ATC, SG_DEBUG, "[done] ");
     if (id == target) {
         SG_LOG(SG_ATC, SG_WARN,
                "Detected circular wait condition: Id = " << id <<
