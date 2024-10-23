@@ -90,7 +90,7 @@ void PUICompatObject::init()
 
     _name = _config->getStringValue("name");
     _label = _config->getStringValue("label");
-    _live = _config->getBoolValue("live");
+    bool isLive = _config->getBoolValue("live");
 
     int parentWidth = 800;
     int parentHeight = 600;
@@ -118,7 +118,23 @@ void PUICompatObject::init()
 
     if (_config->hasValue("property")) {
         _value = fgGetNode(_config->getStringValue("property"), true);
-        _value->addChangeListener(this);
+
+        if (isLive) {
+            _live = LiveValueMode::Listener;
+            if (_value->isTied() || _value->isAlias()) {
+                const auto isSafe = _value->getAttribute(SGPropertyNode::LISTENER_SAFE);
+                if (!isSafe) {
+                    SG_LOG(SG_GUI, SG_DEV_WARN, "Requested live updating of unsafe tied property: " << _value->getPath() << "; please fix this propertty to be non-tied or make it listener-safe explicitly.");
+
+                    // we are kind, support polled mode for now
+                    _live = LiveValueMode::Polled;
+                }
+            }
+
+            if (_live == LiveValueMode::Listener) {
+                _value->addChangeListener(this);
+            }
+        }
     }
 
     const auto bindings = _config->getChildren("binding");
@@ -213,11 +229,21 @@ void PUICompatObject::update()
         callMethod<void, std::string>("labelChanged", _label);
     }
 
-    // read property value if live
-    // check if it's changed
-    if (_valueChanged) {
-        _valueChanged = false;
-        callMethod<void>("valueChanged");
+    if (_value) {
+        if (_live == LiveValueMode::Polled) {
+            // this is a bit heavy, especailly for double-valued numerical
+            // properties. Lets's see how it goes.
+            const auto nv = _value->getStringValue();
+            if (nv != _oldPolledValue) {
+                _valueChanged = true;
+                _oldPolledValue = nv;
+            }
+        }
+
+        if (_valueChanged) {
+            _valueChanged = false;
+            callMethod<void>("valueChanged");
+        }
     }
 }
 
@@ -267,7 +293,7 @@ void PUICompatObject::valueChanged(SGPropertyNode* node)
         return;
     }
 
-    if (!_live)
+    if (_live == LiveValueMode::OnApply)
         return;
 
     // don't fire Nasal callback now, might cause recursion

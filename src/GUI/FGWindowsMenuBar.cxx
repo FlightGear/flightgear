@@ -134,7 +134,7 @@ void FGWindowsMenuBar::init()
         bool enabled = n->getBoolValue("enabled");
 
 		UINT flags = MF_POPUP;
-		AppendMenu(p->menuBar, flags, (UINT) menuItems, label.c_str());
+        AppendMenuA(p->menuBar, flags, (UINT)menuItems, label.c_str());
 
         // submenu
         int subMenuIndex = 0;
@@ -154,7 +154,7 @@ void FGWindowsMenuBar::init()
 			p->itemBindings.push_back(bl);
 
             if (labelIsSeparator(label2)) {
-                AppendMenu(menuItems, MF_SEPARATOR, NULL, NULL);
+                AppendMenuA(menuItems, MF_SEPARATOR, NULL, NULL);
             } else {
                 if (!shortcut.empty()) {
                     label2 += "\t"+shortcut;
@@ -162,7 +162,7 @@ void FGWindowsMenuBar::init()
                 BOOL enabled = n2->getBoolValue("enabled");
 
 				UINT flags = MF_STRING;
-				AppendMenu(menuItems, flags, commandId, label2.c_str());
+                AppendMenuA(menuItems, flags, commandId, label2.c_str());
             }
             subMenuIndex++;
         }

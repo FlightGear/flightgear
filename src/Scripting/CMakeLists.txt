@@ -40,6 +40,12 @@ if(WIN32)
   list(APPEND SOURCES ClipboardWindows.cxx)
 elseif(APPLE)
     list(APPEND SOURCES ClipboardCocoa.mm)
+
+    # PCH doesn't work for Objective-C++
+    set_property(SOURCE ClipboardCocoa.mm
+      TARGET_DIRECTORY fgfsObjects
+      PROPERTY SKIP_PRECOMPILE_HEADERS ON)
+
 else()
   find_package(X11)
   if(X11_FOUND)
@@ -48,6 +54,7 @@ else()
     list(APPEND SOURCES ClipboardFallback.cxx)
   endif()
 endif()
+
 
 # NasalSys.cxx is passed as TEST_SOURCES since we need to compile it
 # seperately when building the test_suite

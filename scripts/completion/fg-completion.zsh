@@ -72,7 +72,7 @@ _fgfs_options=(
 	'--dme=[Slave the ADF to one of the NAV radios, or set its internal frequency]' \
 	'--download-dir=[Store aircraft and scenery downloaded via the simulator in path]:Directories:_directories' \
 	'--failure=[Fail the pitot, static, vacuum, or electrical system]:Failure system:(pitot static vaccum electical)'
-	'--fdm=[Select the core flight dynamics model]:Core flight dynamics model:(jsb larcsim yasim magic balloon ada external)' \
+	'--fdm=[Select the core flight dynamics model]:Core flight dynamics model:(jsb yasim magic balloon ada external)' \
 	'--fg-aircraft=[Specify additional aircraft directory path(s)]:Directories:_directories' \
 	'--fgcom[Enable/disable built-in FGCom]:Boolean values:(true false 1 0 yes no)' \
 		'--enable-fgcom[Enable built-in FGCom]' \

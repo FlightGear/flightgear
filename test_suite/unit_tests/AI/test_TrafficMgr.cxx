@@ -77,7 +77,7 @@ void TrafficMgrTests::testParse() {
 
     int counter = 0;
     for (FGScheduledFlightVecIterator i = fltBegin; i != fltEnd; i++) {
-        cout << (*i)->getCallSign() << counter++ << endl;
+        std::cout << (*i)->getCallSign() << counter++ << std::endl;
     }
     CPPUNIT_ASSERT_EQUAL(2, counter);
 }
@@ -145,7 +145,7 @@ void TrafficMgrTests::testTrafficManager()
 
     int counter = 0;
     for (FGScheduledFlightVecIterator i = fltBegin; i != fltEnd; i++) {
-        cout << (*i)->getDepartureAirport()->getId() << "\t" << (*i)->getArrivalAirport()->getId() << "\t" << (*i)->getDepartureTime() << "\n";
+        std::cout << (*i)->getDepartureAirport()->getId() << "\t" << (*i)->getArrivalAirport()->getId() << "\t" << (*i)->getDepartureTime() << "\n";
         counter++;
     }
    CPPUNIT_ASSERT_EQUAL(25, counter);

@@ -39,8 +39,6 @@
 
 #include <flightgearBuildId.h>
 
-using namespace std;
-
 bool doesStringMatchPrefixes(const std::string& s, const std::initializer_list<const char*>& prefixes)
 {
     if (s.empty())
@@ -97,7 +95,7 @@ void sentryTraceSimgearThrow(const std::string& msg, const std::string& origin, 
     sentry_value_t exc = sentry_value_new_object();
     sentry_value_set_by_key(exc, "type", sentry_value_new_string("Exception"));
 
-    string message = msg;
+    std::string message = msg;
     sentry_value_t info = sentry_value_new_object();
     if (!origin.empty()) {
         sentry_value_set_by_key(info, "origin", sentry_value_new_string(origin.c_str()));
@@ -158,7 +156,7 @@ private:
     int _lastLoggedCount = 0;
 };
 
-const auto missingShaderPrefix = string{"Missing shader"};
+const auto missingShaderPrefix = std::string{"Missing shader"};
 
 string_list anon_missingShaderList;
 
@@ -173,7 +171,7 @@ bool isNewMissingShader(const std::string& path)
     return true;
 }
 
-void sentrySimgearReportCallback(const string& msg, const string& more, bool isFatal)
+void sentrySimgearReportCallback(const std::string& msg, const std::string& more, bool isFatal)
 {
     // don't duplicate reports for missing shaders, once per sessions
     // is sufficient
@@ -232,7 +230,7 @@ bool sentryReportCommand(const SGPropertyNode* args, SGPropertyNode* root)
     sentry_value_t exc = sentry_value_new_object();
     sentry_value_set_by_key(exc, "type", sentry_value_new_string("Report"));
 
-    const string message = args->getStringValue("message");
+    const auto message = args->getStringValue("message");
     sentry_value_set_by_key(exc, "value", sentry_value_new_string(message.c_str()));
 
     sentry_value_t event = sentry_value_new_event();
@@ -322,7 +320,7 @@ void initSentry()
         uuid = std::string{bytes};
         // write it back to disk for next time
         sg_ofstream f(uuidPath);
-        f << uuid << endl;
+        f << uuid << std::endl;
     }
 
     if (sentry_init(options) == 0) {

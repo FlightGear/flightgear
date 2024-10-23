@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test_ls_matrix.hxx"
 #include "testAeroElement.hxx"
 #include "testYASimAtmosphere.hxx"
 #include "testYASimGear.hxx"
@@ -25,6 +24,5 @@
 
 // Set up the unit tests.
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AeroElementTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(LaRCSimMatrixTests, "Unit tests");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(YASimAtmosphereTests, "Unit tests");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(YASimGearTests, "Unit tests");

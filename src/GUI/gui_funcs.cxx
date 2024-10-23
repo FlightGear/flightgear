@@ -201,8 +201,8 @@ bool openBrowser(const std::string& aAddress)
 # else
     strncpy(win32_name,address.c_str(), 1024);
 # endif
-    ShellExecute ( NULL, "open", win32_name, NULL, NULL,
-                   SW_SHOWNORMAL ) ;
+    ShellExecuteA(NULL, "open", win32_name, NULL, NULL,
+                  SW_SHOWNORMAL);
 #else
     // Linux, BSD, SGI etc
     string command = globals->get_browser();

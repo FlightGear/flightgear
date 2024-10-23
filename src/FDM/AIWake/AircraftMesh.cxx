@@ -33,9 +33,6 @@
 #include <FDM/flight.hxx>
 #include "AIWakeGroup.hxx"
 #include "AIModel/AIAircraft.hxx"
-extern "C" {
-#include "../LaRCsim/ls_matrix.h"
-}
 
 AircraftMesh::AircraftMesh(double _span, double _chord, const std::string& name)
     : WakeMesh(_span, _chord, name)

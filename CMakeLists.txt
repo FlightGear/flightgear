@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.10)
+cmake_minimum_required (VERSION 3.20)
 
 include (CheckFunctionExists)
 include (CheckVariableExists)
@@ -14,19 +14,19 @@ if(POLICY CMP0072)
     set(OpenGL_GL_PREFERENCE "LEGACY") # using libGL.so
 endif()
 
-if(POLICY CMP0116)
-    cmake_policy(SET CMP0116 NEW)
-endif()
-
 if(POLICY CMP0145)
   cmake_policy(SET CMP0145 NEW)
 endif()
 
+# Boost 'does Boost ship with its own BoostConfig or not' policy
 if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
 
-message("CMAKE Build type: ${CMAKE_BUILD_TYPE}")
+if (CMAKE_BUILD_TYPE)  
+    message("CMAKE Build type: ${CMAKE_BUILD_TYPE}")
+endif()
+
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to 'Debug' as none was specified.")
@@ -179,8 +179,6 @@ endif()
 option(LOGGING           "Set to ON to build FlightGear with logging support (default)" ON)
 option(JSBSIM_TERRAIN    "Set to ON to build FlightGear with JSBSim terrain handling code" ON)
 option(SP_FDMS           "Set to ON to build FlightGear with special-purpose FDMs" ON)
-option(ENABLE_UIUC_MODEL "Set to ON to build FlightGear with UIUCModel FDM" ON)
-option(ENABLE_LARCSIM    "Set to ON to build FlightGear with LaRCsim FDM" ON)
 option(ENABLE_YASIM      "Set to ON to build FlightGear with YASIM FDM (default)" ON)
 option(ENABLE_JSBSIM     "Set to ON to build FlightGear with JSBSim FDM (default)" ON)
 option(EVENT_INPUT       "Set to ON to build FlightGear with event-based Input support" ${EVENT_INPUT_DEFAULT})
@@ -299,13 +297,13 @@ find_package(OpenSceneGraph 3.6.0 REQUIRED
 ##############################################################################
 ## Sentry.io setup
 if (ENABLE_SENTRY)
-find_package(sentry QUIET)
+    find_package(sentry QUIET)
 
-set(sentry_api_key "https://b10d9504e71244a7a86ba6c93acf6412@o372956.ingest.sentry.io/5188535")
-if (TARGET sentry::sentry)
-    message(STATUS "Sentry.io crash reporting enabled")
-    set(HAVE_SENTRY 1)
-endif()
+    set(sentry_api_key "https://b10d9504e71244a7a86ba6c93acf6412@o372956.ingest.sentry.io/5188535")
+    if (TARGET sentry::sentry)
+        message(STATUS "Sentry.io crash reporting enabled")
+        set(HAVE_SENTRY 1)
+    endif()
 endif (ENABLE_SENTRY)
 
 ##############################################################################
@@ -493,7 +491,7 @@ if(WIN32)
         set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/Zi /O2 /Ob2 /D NDEBUG")
         set(CMAKE_C_FLAGS_RELWITHDEBINFO "/Zi /O2 /Ob2 /D NDEBUG")
 
-        set(MSVC_FLAGS "/bigobj -DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS -D_HAS_STD_BYTE=0")
+        set(MSVC_FLAGS "/bigobj -DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS")
         if (X86)
             set(SIMD_COMPILER_FLAGS "/arch:SSE /arch:SSE2")
         endif()
@@ -568,6 +566,9 @@ add_dependencies(fgfsObjects buildId)
 # remove once we use CMake 3.12, since then the dependency will be explicit
 add_dependencies(fgfsObjects fgembeddedresources)
 
+target_precompile_headers(fgfsObjects PRIVATE 
+        "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/src/Include/flightgear_precompile.h>")
+
 ########################################################################
 
 add_subdirectory(3rdparty)
@@ -579,9 +580,7 @@ add_subdirectory(man)
 add_subdirectory(package)
 add_subdirectory(scripts)
 
-# Set up the include search paths for the object library : has to be done
-# after targets are fully defined
-setup_fgfs_library_includes(fgfsObjects)
+setup_fgfs_libraries(fgfsObjects)
 setup_fgfs_includes(fgfsObjects)
 
 #----------------------------------------------------------------------------

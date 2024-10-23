@@ -67,7 +67,7 @@ WindowsFileDialog::~WindowsFileDialog()
 void WindowsFileDialog::exec()
 {
     char Filestring[MAX_PATH] = "\0";
-    OPENFILENAME opf={0};
+    OPENFILENAMEA opf = {0};
     opf.lStructSize = sizeof(OPENFILENAME);
     opf.lpstrFile = Filestring;
     opf.lpstrTitle = const_cast<char *>(_title.c_str());
@@ -122,9 +122,9 @@ void WindowsFileDialog::chooseDir()
 
 	char pathBuf[MAX_PATH] = "\0";
 
-	BROWSEINFO binfo;
-	memset(&binfo, 0, sizeof(BROWSEINFO));
-	binfo.hwndOwner = getMainViewerHWND();
+    BROWSEINFOA binfo;
+    memset(&binfo, 0, sizeof(BROWSEINFOA));
+    binfo.hwndOwner = getMainViewerHWND();
 	binfo.ulFlags = BIF_USENEWUI | BIF_RETURNONLYFSDIRS | BIF_EDITBOX;
 
 	binfo.pidlRoot = NULL; // can browse anywhere
@@ -132,14 +132,14 @@ void WindowsFileDialog::chooseDir()
 	binfo.lpfn = BrowseFolderCallback;
 	binfo.lParam = reinterpret_cast<LPARAM>(this);
 
-	PIDLIST_ABSOLUTE results = SHBrowseForFolder(&binfo);
-	if (results == NULL) {
+    PIDLIST_ABSOLUTE results = SHBrowseForFolderA(&binfo);
+    if (results == NULL) {
 		// user cancelled
 		return;
 	}
 
-	SHGetPathFromIDList(results, pathBuf);
-	CoTaskMemFree(results);
+    SHGetPathFromIDListA(results, pathBuf);
+    CoTaskMemFree(results);
 
 	_callback->onFileDialogDone(this, SGPath(pathBuf));
 }

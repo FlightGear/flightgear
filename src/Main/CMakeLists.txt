@@ -4,7 +4,6 @@ include(SetupFGFSBundle)
 include(SetupFGFSEmbeddedResources)
 include(SetupFGFSIncludes)
 include(SetupFGFSLibraries)
-include(SetupMSVCGrouping)
 
 # Set up the Main FG file sources and headers (excluding bootstrap.cxx and its main() function).
 if(MSVC)
@@ -67,9 +66,6 @@ set(MAIN_SOURCE
 # Set up the embedded resources.
 setup_fgfs_embedded_resources()
 
-# Sort the sources and headers for MSVC.
-setup_msvc_grouping()
-
 # souerces which are different for fgfs vs the test-suite
 get_property(TEST_SOURCES GLOBAL PROPERTY FG_TEST_SOURCES)
 
@@ -83,8 +79,10 @@ add_executable(fgfs
     MACOSX_BUNDLE
     ${MAIN_SOURCE}
     ${TEST_SOURCES}
-    $<TARGET_OBJECTS:fgfsObjects>
 )
+
+# link to our OBJECT library
+target_link_libraries(fgfs fgfsObjects)
 
 add_dependencies(fgfs buildId)
 # explicitly disable automoc for main fgfs target
@@ -94,6 +92,9 @@ set_property(TARGET fgfs PROPERTY AUTOMOC OFF)
 if(APPLE)
     setup_fgfs_bundle(fgfs)
 endif()
+
+target_precompile_headers(fgfs PRIVATE 
+        "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/src/Include/flightgear_precompile.h>")
 
 # Set up the target links.
 setup_fgfs_libraries(fgfs)

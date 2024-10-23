@@ -20,9 +20,7 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <cassert>
 #include <simgear/structure/exception.hxx>
@@ -36,6 +34,7 @@
 #include <Scenery/scenery.hxx>
 #include "AIModel/AIManager.hxx"
 #include "AIModel/AIAircraft.hxx"
+#include "simgear/debug/debug_types.h"
 
 // all the FDMs, since we are the factory method
 #ifdef ENABLE_SP_FDM
@@ -50,10 +49,6 @@
 
 #ifdef ENABLE_JSBSIM
 #include <FDM/JSBSim/JSBSim.hxx>
-#endif
-
-#ifdef ENABLE_LARCSIM
-#include <FDM/LaRCsim/LaRCsim.hxx>
 #endif
 
 #include <FDM/UFO.hxx>
@@ -359,11 +354,8 @@ void FDMShell::createImplementation()
     _impl = new FGNullFDM( dt );
   }
     else if ( model == "larcsim" ) {
-#ifdef ENABLE_LARCSIM
-        _impl = new FGLaRCsim( dt );
-#else
+        SG_LOG(SG_FLIGHT, SG_ALERT, "LaRCsim/UIUC support is removed from this version of FlightGear. Please use the 2024.1 release instead.");
         fdmUnavailable = true;
-#endif
     }
     else if ( model == "jsb" ) {
 #ifdef ENABLE_JSBSIM

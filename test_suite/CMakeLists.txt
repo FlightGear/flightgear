@@ -2,7 +2,6 @@
 include(SetupFGFSEmbeddedResources)
 include(SetupFGFSIncludes)
 include(SetupFGFSLibraries)
-include(SetupMSVCGrouping)
 
 # Add each test suite category.
 foreach(test_category
@@ -108,8 +107,6 @@ add_test(SimgearPropsSimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --
 # Set up the embedded resources.
 setup_fgfs_embedded_resources()
 
-# Sort the sources and headers for MSVC.
-setup_msvc_grouping()
 
 # most object files come from fgfsObjects target: this property
 # contains all the sources which need to be compiled seperately
@@ -123,8 +120,9 @@ add_executable(fgfs_test_suite
     ${TEST_SOURCES}
     ${TESTSUITE_SOURCES}
     ${TESTSUITE_HEADERS}
-    $<TARGET_OBJECTS:fgfsObjects>
 )
+
+target_link_libraries(fgfs_test_suite fgfsObjects)
 
 add_dependencies(fgfs_test_suite buildId)
 set_target_properties(fgfs_test_suite

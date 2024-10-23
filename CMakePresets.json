@@ -21,7 +21,7 @@
         },
         {
             "name": "build-release",
-            "displayName": "Release (with synbols)",
+            "displayName": "Release (with symbols)",
             "configurePreset": "configure-base",
             "configuration":"RelWithDebInfo"
         }

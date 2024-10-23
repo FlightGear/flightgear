@@ -187,20 +187,20 @@ void TimeManagerTests::testETCTimeZones()
     SGPropertyNode_ptr tzNameNode = fgGetNode("/sim/time/local-timezone", true);
 
     CPPUNIT_ASSERT_EQUAL((time_t)-36000, globals->get_time_params()->get_local_offset());
-    CPPUNIT_ASSERT_EQUAL("Pacific/Honolulu"s, string{tzNameNode->getStringValue()});
+    CPPUNIT_ASSERT_EQUAL("Pacific/Honolulu"s, tzNameNode->getStringValue());
 
     auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
     pilot->setSpeedKts(1000);
     pilot->setCourseTrue(320.0);
 
     bool ok = FGTestApi::runForTimeWithCheck(600.0, [tzNameNode]() {
-        const string tz = tzNameNode->getStringValue();
+        const auto tz = tzNameNode->getStringValue();
         return tz == "Etc/GMT+10"s;
     });
     CPPUNIT_ASSERT(ok);
 
     ok = FGTestApi::runForTimeWithCheck(600.0, [tzNameNode]() {
-        const string tz = tzNameNode->getStringValue();
+        const auto tz = tzNameNode->getStringValue();
         return tz == "Pacific/Honolulu"s;
     });
     CPPUNIT_ASSERT(ok);

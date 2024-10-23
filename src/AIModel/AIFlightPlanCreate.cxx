@@ -25,7 +25,6 @@
 
 #include <Environment/environment.hxx>
 #include <Environment/environment_mgr.hxx>
-#include <FDM/LaRCsim/basic_aero.h>
 #include <Main/fg_props.hxx>
 #include <Navaids/navrecord.hxx>
 #include <Traffic/Schedule.hxx>

@@ -89,7 +89,7 @@ public:
             f.open(QIODevice::ReadOnly);
             QByteArray firstData = f.read(8192);
 
-            auto archiveType = simgear::ArchiveExtractor::determineType((uint8_t*) firstData.data(), firstData.count());
+            auto archiveType = simgear::ArchiveExtractor::determineType((uint8_t*) firstData.data(), firstData.size());
             if (archiveType == simgear::ArchiveExtractor::Invalid) {
                 emit extractionError(path,tr("file does not appear to be a scenery archive."));
                 m_error = true;

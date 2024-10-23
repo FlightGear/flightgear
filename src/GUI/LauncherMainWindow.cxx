@@ -218,7 +218,8 @@ void LauncherMainWindow::renderTheadSceneGraphInitialized()
 {
     auto qContext = QOpenGLContext::currentContext();
     if (!qContext) {
-        qWarning() << Q_FUNC_INFO << "No current OpenGL context";
+        // can happen with alternative QML backends
+        qInfo() << Q_FUNC_INFO << "No current OpenGL context: Metal/D3D QML backend probably active.";
         return;
     }
 

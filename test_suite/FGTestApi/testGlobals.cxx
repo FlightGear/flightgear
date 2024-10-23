@@ -255,22 +255,22 @@ void populateFPWithNasal(flightgear::FlightPlanRef f,
         if (!global_lineStringOpen) {
             beginLineString({});
         }
-        
-        global_kmlStream << pos.getLongitudeDeg() << "," << pos.getLatitudeDeg() << " " << endl;
+
+        global_kmlStream << pos.getLongitudeDeg() << "," << pos.getLatitudeDeg() << " " << std::endl;
     }
 
     void rawLogCoordinate(const SGGeod& pos)
     {
-        global_kmlStream << pos.getLongitudeDeg() << "," << pos.getLatitudeDeg() << " " << endl;
+        global_kmlStream << pos.getLongitudeDeg() << "," << pos.getLatitudeDeg() << " " << std::endl;
     }
 
     void endCurrentLineString()
     {
         global_lineStringOpen = false;
-        global_kmlStream <<
-            "</coordinates>\n"
-            "</LineString>\n"
-            "</Placemark>\n" << endl;
+        global_kmlStream << "</coordinates>\n"
+                            "</LineString>\n"
+                            "</Placemark>\n"
+                         << std::endl;
     }
     
 void setPosition(const SGGeod& g)
@@ -484,7 +484,8 @@ void shutdownTestGlobals()
         }
         // post-amble
         global_kmlStream << "</Document>\n"
-        "</kml>" << endl;
+                            "</kml>"
+                         << std::endl;
         global_kmlStream.close();
         global_loggingToKML = false;
     }

@@ -105,7 +105,7 @@ macos-build:
       --fresh
       -D CMAKE_BUILD_TYPE=RelWithDebInfo 
       -D CMAKE_INSTALL_PREFIX=$PREFIX_DIR
-      -D CMAKE_OSX_ARCHITECTURES=arm64
+      -D CMAKE_OSX_ARCHITECTURES="arm64;x86_64"
       -D CMAKE_PREFIX_PATH="$CI_PROJECT_DIR/osg-dist;$CI_PROJECT_DIR/simgear-dist"
       
     - cmake --build $BUILD_DIR
@@ -129,49 +129,6 @@ macos-build:
   cache:
     paths:
       - $BUILD_DIR
-
-macos-x64-build:
-  stage: build
-  tags:
-    - saas-macos-medium-m1
-  image: $MAC_IMAGE
-  before_script:
-      - export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
-      - export HOMEBREW_NO_INSTALL_CLEANUP=1
-      - brew install ninja cmake boost
-  script:
-    # ensure we use our FreeType and not the one from Homebrew
-    # ours is UB, HomeBrew's is not
-    - export FREETYPE_DIR=$CI_PROJECT_DIR/dist
-    - cmake -B $BUILD_DIR -S $CI_PROJECT_DIR -G Ninja 
-      --fresh
-      -D CMAKE_BUILD_TYPE=RelWithDebInfo 
-      -D CMAKE_INSTALL_PREFIX=$PREFIX_DIR
-      -D CMAKE_OSX_ARCHITECTURES=x86_64
-      -D CMAKE_PREFIX_PATH="$CI_PROJECT_DIR/osg-dist;$CI_PROJECT_DIR/simgear-dist"
-
-    - cmake --build $BUILD_DIR
-    - cmake --build $BUILD_DIR --target install
-  needs:
-    - project: flightgear/simgear
-      job: macos-x64-build
-      ref: $BRANCH_REF
-      artifacts: true
-    - project: flightgear/openscenegraph
-      job: macos-build
-      ref: $OSG_REF
-      artifacts: true
-    - project: flightgear/macos-3rd-party
-      job: macos-build
-      ref: main
-      artifacts: true
-  artifacts:
-    paths:
-      - dist
-  cache:
-    paths:
-      - $BUILD_DIR
-
 test:
   image: registry.gitlab.com/flightgear/flightgear
   stage: test

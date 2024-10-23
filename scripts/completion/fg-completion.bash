@@ -353,7 +353,7 @@ BEGIN { carrier=0; name=0; parkpos=0; }
             COMPREPLY=( $(compgen -W "$(zcat "$root/Navaids/fix.dat.gz" | awk '{ print substr($3,0,5) }')" -- ${cur}) )
             return 0 ;;
         --fdm)
-            COMPREPLY=( $(compgen -W "ada acms aisim balloon jsb larcsim magic network pipe ufo yasim external null" -- ${cur}) )
+            COMPREPLY=( $(compgen -W "ada acms aisim balloon jsb magic network pipe ufo yasim external null" -- ${cur}) )
             return 0 ;;
         --min-status)
             COMPREPLY=( $(compgen -W "alpha beta early-production production advanced-production" -- ${cur}) )
@@ -409,14 +409,6 @@ BEGIN { carrier=0; name=0; parkpos=0; }
             COMPREPLY=( $(compgen -W "bluemarble raster debug" -- ${cur}) )
             return 0 ;;
         --aero)
-            _get_fdm
-
-            if [ "${fdm}" == "larcsim" ]
-            then
-                COMPREPLY=( $(compgen -W "basic c172 cherokee navion uiuc" -- ${cur}) )
-                return 0
-            fi
-            
             return 0 ;;
         --compositor)
             COMPREPLY=( $(compgen -W "Compositor/default Compositor/Classic/classic Compositor/HDR/hdr" -- ${cur}) )

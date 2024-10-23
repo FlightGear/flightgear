@@ -18,6 +18,7 @@
 
 using std::cout;
 using std::endl;
+using std::string;
 
 #include <Main/fg_os.hxx>      // fgGetKeyModifiers()
 #include <Main/fg_props.hxx>

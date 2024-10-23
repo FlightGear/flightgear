@@ -14,29 +14,44 @@ if (HAVE_QT)
     include (QtDeployment)
 endif()
 
+########################################################################################
+# OSG plugin detection
 
 if (MSVC)
     set(OSG_PLUGIN_SUFFIX "bin")
 else()
     set(OSG_PLUGIN_SUFFIX "lib")
+
+    # needed for Debian where the plugins might be at /usr/lib/x86_64-linux-gnu
+    if (CMAKE_LIBRARY_ARCHITECTURE) 
+        list(APPEND OSG_PLUGIN_SUFFIX "lib/${CMAKE_LIBRARY_ARCHITECTURE}")
+    endif()
 endif()
 
-find_path(OSG_PLUGINS_DIR
-    NAMES osgPlugins 
-        osgPlugins-${OPENSCENEGRAPH_VERSION}
-    PATHS 
-        ${FINAL_MSVC_3RDPARTY_DIR}
-    PATH_SUFFIXES
-        ${OSG_PLUGIN_SUFFIX}
-)
+# we can't use NAMES plural because we need to know which name was found
+# so instead do a manual loop
+foreach(osgPluginDirName osgPlugins osgPlugins-${OPENSCENEGRAPH_VERSION})
+    find_path(osgPluginLocation
+        NAMES ${osgPluginDirName} 
+            
+        PATHS 
+            ${FINAL_MSVC_3RDPARTY_DIR}
+        PATH_SUFFIXES
+            ${OSG_PLUGIN_SUFFIX}
+    )
+
+    if (osgPluginLocation)
+        set(OSG_PLUGINS_DIR "${osgPluginLocation}/${osgPluginDirName}")
+        get_filename_component(OSG_BASE_DIR ${osgPluginLocation} DIRECTORY)
+        break()
+    endif()
+endforeach()
 
 if (NOT OSG_PLUGINS_DIR)
     message(FATAL_ERROR "Couldn't find osgPlugins directory")
 endif()
 
-message(STATUS "OSG plugins at: ${OSG_PLUGINS_DIR}/osgPlugins")
-
-get_filename_component(OSG_BASE_DIR ${OSG_PLUGINS_DIR} DIRECTORY)
+message(STATUS "OSG plugins at: ${OSG_PLUGINS_DIR}")
 
 ########################################################################################
 # find OpenThreads and OpenSceneGraph DLL versions
@@ -69,15 +84,37 @@ string(TIMESTAMP iss_config_timestamp)
 ########################################################################################
 
 #if (MSVC)
-    configure_file(${CMAKE_SOURCE_DIR}/package/windows/BuildConfig.iss.in ${CMAKE_BINARY_DIR}/BuildConfig.iss)
-    install(FILES ${CMAKE_BINARY_DIR}/BuildConfig.iss DESTINATION .)
+    # iscc.exe only accepts Windows style-paths, so explicitly convert
+    file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}" FG_WINDOWS_INSTALL_PREFIX)
+    file(TO_NATIVE_PATH "${OSG_BASE_DIR}" INNO_SETUP_OSG_BASE_DIR)
+    file(TO_NATIVE_PATH "${FINAL_MSVC_3RDPARTY_DIR}" INNO_SETUP_3RDPARTY_DIR)
+
+    configure_file(${CMAKE_SOURCE_DIR}/package/windows/InstallConfig.iss.in ${CMAKE_BINARY_DIR}/InstallConfig.iss)
+    install(FILES ${CMAKE_BINARY_DIR}/InstallConfig.iss 
+        DESTINATION . 
+        COMPONENT packaging EXCLUDE_FROM_ALL)
 #endif()
 
-if (APPLE)
-    # OSG libs
+# OSG libs
+foreach (osglib OSG OpenThreads osgUtil osgText osgGA osgSim osgParticle osgTerrain osgViewer osgDB)
+    if (APPLE)
+        install(FILES
+                $<TARGET_FILE:OSG::${osglib}>  
+            DESTINATION 
+                $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/Frameworks
+        )
+    endif()
 
+    if (LINUX)
+        install(FILES $<TARGET_FILE:OSG::${osglib}>  
+            DESTINATION appdir/usr/lib
+            COMPONENT packaging EXCLUDE_FROM_ALL)
+    endif()
+endforeach()
+
+if (APPLE)
     # OSG plugins
-    install(DIRECTORY ${OSG_PLUGINS_DIR}/osgPlugins DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/PlugIns)
+    install(DIRECTORY ${OSG_PLUGINS_DIR} DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/PlugIns)
 
     # add extra utilites to the bundle
     install(TARGETS fgcom fgjs fgelev DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/MacOS)
@@ -93,6 +130,21 @@ if (APPLE)
     install(FILES ${CMAKE_SOURCE_DIR}/package/mac/FlightGear.icns DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/Resources)
 endif()
  
+########################################################################################
+# AppDir creation for Linux AppImage
+
+if (LINUX)
+    
+    install(DIRECTORY ${OSG_PLUGINS_DIR} 
+        DESTINATION appdir/usr/lib 
+        COMPONENT packaging EXCLUDE_FROM_ALL)
+    install(TARGETS fgcom fgjs fgelev fgfs 
+        DESTINATION appdir/usr/bin 
+        COMPONENT packaging EXCLUDE_FROM_ALL)
+
+    # TODO: things under share/
+endif()
+
 
 #-----------------------------------------------------------------------------
 ### uninstall target

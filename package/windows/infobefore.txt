@@ -1,3 +1,0 @@
-=== INSTRUCTIONS BEFORE INSTALLATION ===
-
-Please take care to disable your antivirus during installation.

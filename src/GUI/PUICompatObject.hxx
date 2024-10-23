@@ -76,6 +76,12 @@ protected:
     static bool isNodeAChildObject(const std::string& nm);
 
 private:
+    enum class LiveValueMode {
+        OnApply,  ///< not live, only update on explicit apply()
+        Listener, ///< live, via SGPropertyListener::valueChanged
+        Polled    ///< live, used for tied, non-listener-safe properties
+    };
+
     friend class FGPUICompatDialog;
 
     friend naRef f_makeCompatObjectPeer(const nasal::CallContext& ctx);
@@ -101,10 +107,12 @@ private:
     std::string _type;
     std::string _label;
     std::string _name;
+    std::string _oldPolledValue;
+
     SGPropertyNode_ptr _value;
     SGRectd _geometry;
 
-    bool _live = false;
+    LiveValueMode _live = LiveValueMode::OnApply;
     bool _valueChanged = false;
     bool _visible = true;
     bool _enabled = true;

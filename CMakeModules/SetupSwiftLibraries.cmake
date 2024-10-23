@@ -10,7 +10,7 @@ if (ENABLE_SWIFT)
     find_package(DBus)
     find_package(LibEvent)
 
-    if (TARGET ${dbus_target} AND TARGET ${libEvent_target})
+    if (TARGET DBus::DBus AND TARGET libEvent::libEvent)
         message(STATUS "SWIFT support enabled")
     else()
         message(STATUS "SWIFT support disabled, dbus and/or LibEvent not found")

@@ -133,14 +133,14 @@ void printArgs(SGMetar *m, double airport_elevation)
 	int i;
 
 	// ICAO id
-	sprintf(buf, "--airport=%s ", m->getId());
-	args.push_back(buf);
+    snprintf(buf, 256, "--airport=%s ", m->getId());
+    args.push_back(buf);
 
 	// report time
-	sprintf(buf, "--start-date-gmt=%4d:%02d:%02d:%02d:%02d:00 ",
-			m->getYear(), m->getMonth(), m->getDay(),
-			m->getHour(), m->getMinute());
-	args.push_back(buf);
+    snprintf(buf, 256, "--start-date-gmt=%4d:%02d:%02d:%02d:%02d:00 ",
+             m->getYear(), m->getMonth(), m->getDay(),
+             m->getHour(), m->getMinute());
+    args.push_back(buf);
 
 	// cloud layers
 	const char *coverage_string[5] = {
@@ -156,12 +156,12 @@ void printArgs(SGMetar *m, double airport_elevation)
 			altitude = coverage ? cloud->getAltitude_ft() + airport_elevation : -99999;
 			cloud++;
 		}
-		sprintf(buf, "--prop:/environment/clouds/layer[%d]/coverage=%s ", i, coverage_string[coverage]);
-		args.push_back(buf);
-		sprintf(buf, "--prop:/environment/clouds/layer[%d]/elevation-ft=%.0lf ", i, altitude);
-		args.push_back(buf);
-		sprintf(buf, "--prop:/environment/clouds/layer[%d]/thickness-ft=500 ", i);
-		args.push_back(buf);
+        snprintf(buf, 256, "--prop:/environment/clouds/layer[%d]/coverage=%s ", i, coverage_string[coverage]);
+        args.push_back(buf);
+        snprintf(buf, 256, "--prop:/environment/clouds/layer[%d]/elevation-ft=%.0lf ", i, altitude);
+        args.push_back(buf);
+        snprintf(buf, 256, "--prop:/environment/clouds/layer[%d]/thickness-ft=500 ", i);
+        args.push_back(buf);
 	}
 
 	// environment (temperature, dewpoint, visibility, pressure)
@@ -175,37 +175,38 @@ void printArgs(SGMetar *m, double airport_elevation)
 	double wind_speed = m->getWindSpeed_kt();
 	double elevation = -100;
 	for (i = 0; i < 3; i++, elevation += 2000.0) {
-		sprintf(buf, "--prop:/environment/config/boundary/entry[%d]/", i);
-		int pos = strlen(buf);
+        snprintf(buf, 256, "--prop:/environment/config/boundary/entry[%d]/", i);
+        int pos = strlen(buf);
+        const int rem = 256 - pos;
 
-		sprintf(&buf[pos], "elevation-ft=%.0lf", elevation);
-		args.push_back(buf);
-		sprintf(&buf[pos], "turbulence-norm=%.0lf", 0.0);
-		args.push_back(buf);
+        snprintf(&buf[pos], rem, "elevation-ft=%.0lf", elevation);
+        args.push_back(buf);
+        snprintf(&buf[pos], rem, "turbulence-norm=%.0lf", 0.0);
+        args.push_back(buf);
 
 		if (visibility != NaN) {
-			sprintf(&buf[pos], "visibility-m=%.0lf", visibility);
-			args.push_back(buf);
+            snprintf(&buf[pos], rem, "visibility-m=%.0lf", visibility);
+            args.push_back(buf);
 		}
 		if (temperature != NaN) {
-			sprintf(&buf[pos], "temperature-degc=%.0lf", temperature);
-			args.push_back(buf);
+            snprintf(&buf[pos], rem, "temperature-degc=%.0lf", temperature);
+            args.push_back(buf);
 		}
 		if (dewpoint != NaN) {
-			sprintf(&buf[pos], "dewpoint-degc=%.0lf", dewpoint);
-			args.push_back(buf);
+            snprintf(&buf[pos], rem, "dewpoint-degc=%.0lf", dewpoint);
+            args.push_back(buf);
 		}
 		if (pressure != NaN) {
-			sprintf(&buf[pos], "pressure-sea-level-inhg=%.0lf", pressure);
-			args.push_back(buf);
+            snprintf(&buf[pos], rem, "pressure-sea-level-inhg=%.0lf", pressure);
+            args.push_back(buf);
 		}
 		if (wind_dir != NaN) {
-			sprintf(&buf[pos], "wind-from-heading-deg=%d", wind_dir);
-			args.push_back(buf);
+            snprintf(&buf[pos], rem, "wind-from-heading-deg=%d", wind_dir);
+            args.push_back(buf);
 		}
 		if (wind_speed != NaN) {
-			sprintf(&buf[pos], "wind-speed-kt=%.0lf", wind_speed);
-			args.push_back(buf);
+            snprintf(&buf[pos], rem, "wind-speed-kt=%.0lf", wind_speed);
+            args.push_back(buf);
 		}
 	}
 
@@ -214,16 +215,20 @@ void printArgs(SGMetar *m, double airport_elevation)
 	int range_to = m->getWindRangeTo();
 	double gust_speed = m->getGustSpeed_kt();
 	if (wind_speed != NaN && wind_dir != -1) {
-		strcpy(buf, "--wind=");
-		if (range_from != -1 && range_to != -1)
-			sprintf(&buf[strlen(buf)], "%d:%d", range_from, range_to);
-		else
-			sprintf(&buf[strlen(buf)], "%d", wind_dir);
-		sprintf(&buf[strlen(buf)], "@%.0lf", wind_speed);
-		if (gust_speed != NaN)
-			sprintf(&buf[strlen(buf)], ":%.0lf", gust_speed);
-		args.push_back(buf);
-	}
+        std::ostringstream os;
+        os << "--wind=";
+
+        if (range_from != -1 && range_to != -1) {
+            os << range_from << ":" << range_to;
+        } else {
+            os << wind_dir;
+        }
+
+        os << std::setw(3) << "@" << wind_speed;
+        if (gust_speed != NaN)
+            os << ":" << gust_speed;
+        args.push_back(os.str());
+    }
 
 
 	// output everything

@@ -149,7 +149,7 @@ void TrafficTests::testPushback()
     aiAircraft->setBank(0);
 
 
-    const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
+    const auto flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
@@ -203,7 +203,7 @@ void TrafficTests::testPushbackCargo()
     aiAircraft->setSpeed(0);
     aiAircraft->setBank(0);
 
-    const string flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
+    const auto flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
 
     const int radius = 16.0;
     const int cruiseAltFt = 32000;
@@ -265,7 +265,7 @@ void TrafficTests::testPushbackCargoInProgress()
     aiAircraft->setBank(0);
     aiAircraft->setHeading(crs);
 
-    const string flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
+    const auto flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
 
     const int radius = 16.0;
     const int cruiseAltFt = 32000;
@@ -326,7 +326,7 @@ void TrafficTests::testPushbackCargoInProgressDownWindEast()
     aiAircraft->setBank(0);
     aiAircraft->setHeading(crs);
 
-    const string flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
+    const auto flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
 
     const int radius = 16.0;
     const int cruiseAltFt = 32000;
@@ -387,7 +387,7 @@ void TrafficTests::testPushbackCargoInProgressDownWindWest()
     aiAircraft->setBank(0);
     aiAircraft->setHeading(crs);
 
-    const string flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
+    const auto flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
 
     const int radius = 16.0;
     const int cruiseAltFt = 32000;
@@ -449,7 +449,7 @@ void TrafficTests::testPushbackCargoInProgressNotBeyond()
     aiAircraft->setBank(0);
     aiAircraft->setHeading(crs);
 
-    const string flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
+    const auto flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
 
     const int radius = 16.0;
     const int cruiseAltFt = 32000;
@@ -511,7 +511,7 @@ void TrafficTests::testPushbackCargoInProgressNotBeyondNorth()
     aiAircraft->setBank(0);
     aiAircraft->setHeading(crs);
 
-    const string flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
+    const auto flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
 
     const int radius = 16.0;
     const int cruiseAltFt = 32000;
@@ -574,7 +574,7 @@ void TrafficTests::testPushbackCargoInProgressBeyond()
     aiAircraft->setBank(0);
     aiAircraft->setHeading(crs);
 
-    const string flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
+    const auto flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
 
     const int radius = 16.0;
     const int cruiseAltFt = 32000;
@@ -637,7 +637,7 @@ void TrafficTests::testPushbackCargoInProgressBeyondNorth()
     aiAircraft->setBank(0);
     aiAircraft->setHeading(crs);
 
-    const string flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
+    const auto flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
 
     const int radius = 16.0;
     const int cruiseAltFt = 32000;
@@ -701,7 +701,7 @@ void TrafficTests::testChangeRunway()
     aiAircraft->setSpeed(0);
     aiAircraft->setBank(0);
 
-    const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
+    const auto flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
@@ -760,7 +760,7 @@ void TrafficTests::testPushforward()
     aiAircraft->setSpeed(0);
     aiAircraft->setBank(0);
 
-    const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
+    const auto flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
@@ -818,7 +818,7 @@ void TrafficTests::testPushforwardSpeedy()
     aiAircraft->setSpeed(0);
     aiAircraft->setBank(0);
 
-    const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
+    const auto flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
@@ -877,7 +877,7 @@ void TrafficTests::testPushforwardParkYBBN()
     aiAircraft->setSpeed(0);
     aiAircraft->setBank(0);
 
-    const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
+    const auto flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
@@ -959,7 +959,7 @@ void TrafficTests::testPushforwardParkYBBNRepeatGa()
     aiAircraft->setSpeed(0);
     aiAircraft->setBank(0);
 
-    const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
+    const auto flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
@@ -1035,7 +1035,7 @@ void TrafficTests::testPushforwardParkYBBNRepeatGaDelayed()
     aiAircraft->setSpeed(0);
     aiAircraft->setBank(0);
 
-    const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
+    const auto flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();
@@ -1132,7 +1132,7 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
     aiAircraft->setSpeed(0);
     aiAircraft->setBank(0);
 
-    const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
+    const auto flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
     const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
     time_t departureTime = globals->get_time_params()->get_cur_time();

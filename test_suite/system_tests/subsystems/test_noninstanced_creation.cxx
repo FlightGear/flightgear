@@ -94,7 +94,6 @@ void NonInstancedSubsystemTests::testFGIO()                       { create("io")
 void NonInstancedSubsystemTests::testFGJoystickInput()            { create("input-joystick"); }
 void NonInstancedSubsystemTests::testFGJSBsim()                   { create("jsb"); }
 void NonInstancedSubsystemTests::testFGKeyboardInput()            { create("input-keyboard"); }
-void NonInstancedSubsystemTests::testFGLaRCsim()                  { create("larcsim"); }
 void NonInstancedSubsystemTests::testFGLight()                    { create("lighting"); }
 void NonInstancedSubsystemTests::testFGLinuxEventInput()          { create("input-event"); }
 void NonInstancedSubsystemTests::testFGLogger()                   { create("logger"); }

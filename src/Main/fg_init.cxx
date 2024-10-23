@@ -1429,7 +1429,7 @@ void fgStartNewReset()
 
     sgUserDataInit( globals->get_props() );
 
-    unsigned int numDBPagerThreads = max(fgGetNode("/sim/rendering/database-pager/threads", true)->getIntValue(1), 1);
+    unsigned int numDBPagerThreads = std::max(fgGetNode("/sim/rendering/database-pager/threads", true)->getIntValue(1), 1);
 
     if (composite_viewer) {
         composite_viewer_view->setDatabasePager(FGScenery::getPagerSingleton());

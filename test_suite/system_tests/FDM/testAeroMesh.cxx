@@ -22,8 +22,9 @@
 #include <AIModel/performancedb.hxx>
 #include "FDM/AIWake/AircraftMesh.hxx"
 #include "FDM/AIWake/AIWakeGroup.hxx"
+
 extern "C" {
-#include "src/FDM/LaRCsim/ls_matrix.h"
+#include "src/FDM/ls_matrix.h"
 }
 
 #include "FDM/JSBSim/math/FGLocation.h"

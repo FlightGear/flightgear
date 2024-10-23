@@ -26,6 +26,7 @@
 #include <Autopilot/route_mgr.hxx>
 
 using namespace flightgear;
+using namespace std::string_literals;
 
 static bool static_haveProcedures = false;
 
@@ -726,22 +727,22 @@ void RouteManagerTests::testRouteWithProcedures()
     // let's check what we got
     
     auto endOfSID = f->legAtIndex(f->indexOfFirstNonDepartureWaypoint() - 1);
-    CPPUNIT_ASSERT_EQUAL(endOfSID->waypoint()->ident(), string{"CANDR"});
-    
+    CPPUNIT_ASSERT_EQUAL(endOfSID->waypoint()->ident(), "CANDR"s);
+
     auto startOfSTAR = f->legAtIndex(f->indexOfFirstArrivalWaypoint());
-    CPPUNIT_ASSERT_EQUAL(startOfSTAR->waypoint()->ident(), string{"BEDUM"});
-    
+    CPPUNIT_ASSERT_EQUAL(startOfSTAR->waypoint()->ident(), "BEDUM"s);
+
     auto endOfSTAR = f->legAtIndex(f->indexOfFirstApproachWaypoint() - 1);
-    CPPUNIT_ASSERT_EQUAL(endOfSTAR->waypoint()->ident(), string{"ARTIP"});
-    
+    CPPUNIT_ASSERT_EQUAL(endOfSTAR->waypoint()->ident(), "ARTIP"s);
+
     auto startOfApproach = f->legAtIndex(f->indexOfFirstApproachWaypoint());
-    CPPUNIT_ASSERT_EQUAL(startOfApproach->waypoint()->ident(), string{"D070O"});
-    
+    CPPUNIT_ASSERT_EQUAL(startOfApproach->waypoint()->ident(), "D070O"s);
+
     auto landingRunway = f->legAtIndex(f->indexOfDestinationRunwayWaypoint());
     CPPUNIT_ASSERT(landingRunway->waypoint()->source() == f->destinationRunway());
     
     auto firstMiss = f->legAtIndex(f->indexOfDestinationRunwayWaypoint() + 1);
-    CPPUNIT_ASSERT_EQUAL(firstMiss->waypoint()->ident(), string{"(461)"});
+    CPPUNIT_ASSERT_EQUAL(firstMiss->waypoint()->ident(), "(461)"s);
 
     // check it in Nasal too
     bool ok = FGTestApi::executeNasal(
@@ -793,16 +794,16 @@ void RouteManagerTests::testRouteWithApproachProcedures()
     // let's check what we got
 
     auto startOfSTAR = f->legAtIndex(f->indexOfFirstArrivalWaypoint());
-    CPPUNIT_ASSERT_EQUAL(startOfSTAR->waypoint()->ident(), string{"ABGAS"});
+    CPPUNIT_ASSERT_EQUAL(startOfSTAR->waypoint()->ident(), "ABGAS"s);
 
     auto endOfSTAR = f->legAtIndex(f->indexOfFirstApproachWaypoint() - 1);
-    CPPUNIT_ASSERT_EQUAL(endOfSTAR->waypoint()->ident(), string{"MIQ"});
+    CPPUNIT_ASSERT_EQUAL(endOfSTAR->waypoint()->ident(), "MIQ"s);
 
     auto startOfApproach = f->legAtIndex(f->indexOfFirstApproachWaypoint());
-    CPPUNIT_ASSERT_EQUAL(startOfApproach->waypoint()->ident(), string{"NAPSA"});
+    CPPUNIT_ASSERT_EQUAL(startOfApproach->waypoint()->ident(), "NAPSA"s);
 
     auto startOfCoreApproach = f->legAtIndex(f->indexOfFirstApproachWaypoint() + 6);
-    CPPUNIT_ASSERT_EQUAL(startOfCoreApproach->waypoint()->ident(), string{"BEGEN"});
+    CPPUNIT_ASSERT_EQUAL(startOfCoreApproach->waypoint()->ident(), "BEGEN"s);
 
     auto landingRunway = f->legAtIndex(f->indexOfDestinationRunwayWaypoint());
     CPPUNIT_ASSERT(landingRunway->waypoint()->source() == f->destinationRunway());
@@ -853,16 +854,16 @@ void RouteManagerTests::testsSelectNavaid()
 
     auto leg = f->legAtIndex(2);
     auto wp1 = leg->waypoint();
-    CPPUNIT_ASSERT_EQUAL(wp1->ident(), string{"IP"});
-    CPPUNIT_ASSERT_EQUAL(wp1->source()->name(), string{"ZAKHAROVKA NDB"});
+    CPPUNIT_ASSERT_EQUAL(wp1->ident(), "IP"s);
+    CPPUNIT_ASSERT_EQUAL(wp1->source()->name(), "ZAKHAROVKA NDB"s);
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL(227, leg->courseDeg(), 0.5);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(59, leg->distanceNm(), 0.5);
 
     leg = f->legAtIndex(3);
     auto wp2 = leg->waypoint();
-    CPPUNIT_ASSERT_EQUAL(wp2->ident(), string{"OD"});
-    CPPUNIT_ASSERT_EQUAL(wp2->source()->name(), string{"BRYANSK NDB"});
+    CPPUNIT_ASSERT_EQUAL(wp2->ident(), "OD"s);
+    CPPUNIT_ASSERT_EQUAL(wp2->source()->name(), "BRYANSK NDB"s);
 }
 
 void RouteManagerTests::testsSelectWaypoint()
@@ -883,16 +884,16 @@ void RouteManagerTests::testsSelectWaypoint()
 
     auto leg = f->legAtIndex(1);
     auto wp1 = leg->waypoint();
-    CPPUNIT_ASSERT_EQUAL(wp1->ident(), string{"OSS"});
-    CPPUNIT_ASSERT_EQUAL(wp1->source()->name(), string{"OSTERSUND VOR-DME"});
+    CPPUNIT_ASSERT_EQUAL(wp1->ident(), "OSS"s);
+    CPPUNIT_ASSERT_EQUAL(wp1->source()->name(), "OSTERSUND VOR-DME"s);
 
     //   CPPUNIT_ASSERT_DOUBLES_EQUAL(227, leg->courseDeg(), 0.5);
     //  CPPUNIT_ASSERT_DOUBLES_EQUAL(59, leg->distanceNm(), 0.5);
 
     leg = f->legAtIndex(2);
     auto wp2 = leg->waypoint();
-    CPPUNIT_ASSERT_EQUAL(wp2->ident(), string{"BOR"});
-    CPPUNIT_ASSERT_EQUAL(wp2->source()->name(), string{"BORLANGE VOR-DME"});
+    CPPUNIT_ASSERT_EQUAL(wp2->ident(), "BOR"s);
+    CPPUNIT_ASSERT_EQUAL(wp2->source()->name(), "BORLANGE VOR-DME"s);
 }
 
 void RouteManagerTests::testCommandAPI()
@@ -943,7 +944,7 @@ void RouteManagerTests::testCommandAPI()
 
     auto waldaWpt = f->legAtIndex(4)->waypoint();
     auto waldaVOR = waldaWpt->source();
-    CPPUNIT_ASSERT_EQUAL(string{"WALDA VOR-DME"}, waldaVOR->name());
+    CPPUNIT_ASSERT_EQUAL("WALDA VOR-DME"s, waldaVOR->name());
 
     auto d = SGGeodesy::distanceNm(waldaVOR->geod(), waldaWpt->position());
     CPPUNIT_ASSERT_DOUBLES_EQUAL(10.0, d, 0.1);
@@ -985,8 +986,8 @@ void RouteManagerTests::testsSelectWaypoint2()
     rmNode->setStringValue("input", "@INSERT1:ALM");
     auto leg = f->legAtIndex(1);
     auto wp1 = leg->waypoint();
-    CPPUNIT_ASSERT_EQUAL(string{"ALM"}, wp1->ident());
-   // CPPUNIT_ASSERT_EQUAL(wp1->source()->name(), string{"ALMATY VOR-DME"});
+    CPPUNIT_ASSERT_EQUAL("ALM"s, wp1->ident());
+    // CPPUNIT_ASSERT_EQUAL(wp1->source()->name(), string{"ALMATY VOR-DME"});
 }
 
 void RouteManagerTests::testAppendWaypoint() {
@@ -1000,6 +1001,6 @@ void RouteManagerTests::testAppendWaypoint() {
     rmNode->setStringValue("input", "NK");
     rmNode->setStringValue("input", "@INSERT2:NK");
 
-    CPPUNIT_ASSERT_EQUAL(string{"NK"}, f->legAtIndex(1)->waypoint()->source()->name());
-    CPPUNIT_ASSERT_EQUAL(string{"NK"}, f->legAtIndex(2)->waypoint()->source()->name());
+    CPPUNIT_ASSERT_EQUAL("NK"s, f->legAtIndex(1)->waypoint()->source()->name());
+    CPPUNIT_ASSERT_EQUAL("NK"s, f->legAtIndex(2)->waypoint()->source()->name());
 }
