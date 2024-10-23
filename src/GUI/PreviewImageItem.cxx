@@ -109,9 +109,13 @@ void PreviewImageItem::startDownload()
     QNetworkReply* reply = global_previewNetAccess->get(request);
     connect(reply, &QNetworkReply::finished, this, &PreviewImageItem::onFinished);
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    connect(reply, &QNetworkReply::errorOccurred,
+            this, &PreviewImageItem::onDownloadError);
+#else
     connect(reply, SIGNAL(error(QNetworkReply::NetworkError)),
             this, SLOT(onDownloadError(QNetworkReply::NetworkError)));
-
+#endif
     m_requestActive = true;
     emit isLoadingChanged();
 }
