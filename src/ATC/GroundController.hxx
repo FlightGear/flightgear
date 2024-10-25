@@ -31,6 +31,7 @@
 #include <ATC/TowerController.hxx>
 
 class FGAirportDynamics;
+class AirportGroundRadar;
 
 
 /**************************************************************************************
@@ -39,7 +40,6 @@ class FGAirportDynamics;
 class FGGroundController : public FGATCController
 {
 private:
-
     bool hasNetwork;
     bool networkInitialized;
     int count;
@@ -50,6 +50,7 @@ private:
     int getFrequency();
 
 
+    void             signOff(int id);
     void checkSpeedAdjustment(int id, double lat, double lon,
                               double heading, double speed, double alt);
     void checkHoldPosition(int id, double lat, double lon,

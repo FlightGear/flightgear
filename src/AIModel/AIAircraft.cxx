@@ -721,6 +721,7 @@ void FGAIAircraft::announcePositionToController()
             controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundController();
         break;
     default:
+        SG_LOG(SG_AI, SG_DEBUG, "AILeg " << leg << " not covered");        
         if (prevController) {
             SG_LOG(SG_AI, SG_BULK, "Will be signing off from " << prevController->getName());
         }
@@ -779,6 +780,8 @@ void FGAIAircraft::processATC(const FGATCInstruction& instruction)
     if (instruction.getHoldPattern()) {
         //holdtime = instruction.getHoldTime();
     }
+
+    waitsForId = instruction.getWaitsForId();
 
     // Hold Position
     if (instruction.getHoldPosition()) {
@@ -1006,7 +1009,9 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int 
         prev_dist_to_go = HUGE_VAL;
         return true;
     } else {
-        if (prev_dist_to_go == dist_to_go_m && fabs(groundTargetSpeed) > 0 && this->atGate().empty()) {
+        if (prev_dist_to_go == dist_to_go_m 
+            && fabs(groundTargetSpeed) > 0 
+            && this->atGate().empty()) {
             //FIXME must be suppressed when parked
             SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Aircraft stuck. Speed " << speed);
             stuckCounter++;
@@ -1736,6 +1741,8 @@ void FGAIAircraft::dumpCSVHeader(const std::unique_ptr<sg_ofstream>& o)
     (*o) << "roll\t";
     (*o) << "repositioned\t";
     (*o) << "stuckCounter\t";
+    (*o) << "blockerId\t";
+    (*o) << "holdPos\t";
     (*o) << std::endl;
 }
 
@@ -1810,6 +1817,8 @@ void FGAIAircraft::dumpCSV(const std::unique_ptr<sg_ofstream>& o, int lineIndex)
     (*o) << roll << "\t";
     (*o) << repositioned << "\t";
     (*o) << stuckCounter << "\t";
+    (*o) << waitsForId << "\t";
+    (*o) << holdPos << "\t";
     (*o) << std::endl;
 }
 

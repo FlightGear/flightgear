@@ -220,7 +220,7 @@ private:
     int spinCounter;
 
     /**Kills a flight when it's stuck */
-    const int AI_STUCK_LIMIT = 100;
+    const int AI_STUCK_LIMIT = 100000;
     int stuckCounter = 0;
     bool tracked = false;
     /**
@@ -232,6 +232,7 @@ private:
     double prev_dist_to_go;
 
     bool holdPos = false;
+    int waitsForId = 0;
 
     const char* _getTransponderCode() const;
 

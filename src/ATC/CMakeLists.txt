@@ -1,6 +1,7 @@
 include(FlightGearComponent)
 
 set(SOURCES
+        AirportGroundRadar.cxx
 	atc_mgr.cxx
 	trafficcontrol.cxx
 	CommStation.cxx
@@ -15,6 +16,7 @@ set(SOURCES
 	)
 
 set(HEADERS
+        AirportGroundRadar.hxx
 	atc_mgr.hxx
 	trafficcontrol.hxx
 	CommStation.hxx
@@ -26,6 +28,7 @@ set(HEADERS
         GroundController.hxx
         StartupController.hxx
         TowerController.hxx
+        QuadTree.hxx
 	)
     	
 flightgear_component(ATC "${SOURCES}" "${HEADERS}")

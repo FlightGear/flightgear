@@ -33,6 +33,7 @@
 #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 
+#include <ATC/AirportGroundRadar.hxx>
 #include <ATC/trafficcontrol.hxx>
 
 namespace ATCMessageState
@@ -91,6 +92,9 @@ protected:
     double dt_count;
     osg::Group* group;
     FGAirportDynamics *parent = nullptr;
+    /*Shared Groundradar. All controllers of an airport share it.*/
+    SGSharedPtr<AirportGroundRadar> airportGroundRadar;
+
 
     std::string formatATCFrequency3_2(int );
     std::string genTransponderCode(const std::string& fltRules);
@@ -138,9 +142,11 @@ public:
         ATC_AIR_TO_GROUND,
         ATC_GROUND_TO_AIR
     } AtcMsgDir;
+
     FGATCController();
     virtual ~FGATCController();
     void init();
+    void setAirportGroundRadar(SGSharedPtr<AirportGroundRadar> groundRadar);
 
     virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                   double lat, double lon,

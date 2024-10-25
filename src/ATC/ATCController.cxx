@@ -77,6 +77,11 @@ void FGATCController::init()
     }
 }
 
+void FGATCController::setAirportGroundRadar(SGSharedPtr<AirportGroundRadar> groundRadar)
+{
+    airportGroundRadar = groundRadar;
+}
+
 string FGATCController::getGateName(FGAIAircraft* ref)
 {
     return ref->atGate();
@@ -90,10 +95,10 @@ bool FGATCController::isUserAircraft(FGAIAircraft* ac)
 bool FGATCController::checkTransmissionState(int minState, int maxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
                                              AtcMsgDir msgDir)
 {
-    int state = i->getState();
+    int state = (*i)->getState();
     if ((state >= minState) && (state <= maxState) && available) {
-        if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
-            SG_LOG(SG_ATC, SG_BULK, "Checking state " << state << " for " << i->getAircraft()->getCallSign());
+        if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft((*i)->getAircraft())) {
+            SG_LOG(SG_ATC, SG_BULK, "Checking state " << state << " for " << (*i)->getAircraft()->getCallSign());
             SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
             int n = trans_num->getIntValue();
             if (n == 0) {
@@ -103,13 +108,13 @@ bool FGATCController::checkTransmissionState(int minState, int maxState, Traffic
                 //auto atc = globals->get_subsystem<FGATCManager>();
                 //FGATCDialogNew::instance()->removeEntry(1);
             } else {
-                SG_LOG(SG_ATC, SG_BULK, "Sending message for " << i->getAircraft()->getCallSign());
-                transmit(&(*i), parent, msgId, msgDir, false);
+                SG_LOG(SG_ATC, SG_BULK, "Sending message for " << (*i)->getAircraft()->getCallSign());
+                transmit(*i, parent, msgId, msgDir, false);
                 return false;
             }
         }
-        transmit(&(*i), parent, msgId, msgDir, true);
-        i->updateState();
+        transmit(*i, parent, msgId, msgDir, true);
+        (*i)->updateState();
         lastTransmission = now;
         available = false;
         return true;
@@ -351,7 +356,7 @@ void FGATCController::transmit(FGTrafficRecord* rec, FGAirportDynamics* parent, 
             fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
         int onBoardRadioFreqI0 = (int)floor(onBoardRadioFreq0 * 100 + 0.5);
         int onBoardRadioFreqI1 = (int)floor(onBoardRadioFreq1 * 100 + 0.5);
-        SG_LOG(SG_ATC, SG_DEBUG, "Using " << onBoardRadioFreq0 << ", " << onBoardRadioFreq1 << " and " << stationFreq << " for " << text << std::endl);
+        SG_LOG(SG_ATC, SG_DEBUG, "COM1 : " << onBoardRadioFreq0 << " COM2 : " << onBoardRadioFreq1 << " Sending " << formatATCFrequency3_2(stationFreq) << " for " << text );
         if (stationFreq == 0) {
             SG_LOG(SG_ATC, SG_DEBUG, getName() << " stationFreq not found");
         }
@@ -401,11 +406,19 @@ void FGATCController::signOff(int id)
                "AI error: Aircraft without traffic record is signing off from " << getName() << " at " << SG_ORIGIN << " list " << activeTraffic.empty());
         return;
     }
-    SG_LOG(SG_ATC, SG_DEBUG, i->getCallsign() << " (" << i->getId() << ") signing off from " << getName() << "(" << getFrequency() << ")");
+    // if taken off or parked 
+    if (((*i)->getLeg() > AILeg::TAKEOFF && (*i)->getLeg() < AILeg::APPROACH) ||
+        ((*i)->getLeg() > AILeg::PARKING_TAXI)) {
+        airportGroundRadar->remove(*i);
+        SG_LOG(SG_ATC, SG_DEBUG, (*i)->getCallsign() << " (" << (*i)->getId() << ") signing off from " << getName() << "(" << getFrequency() << ") and removed from AirportGroundradar");
+    } else {
+        SG_LOG(SG_ATC, SG_DEBUG, (*i)->getCallsign() << " (" << (*i)->getId() << ") signing off from " << getName() << "(" << getFrequency() << ")");
+    }
+
     int oldSize = activeTraffic.size();
     activeTraffic.erase(i);
     if ((oldSize - activeTraffic.size()) != 1) {
-        SG_LOG(SG_ATC, SG_WARN, i->getCallsign() << " not removed ");
+        SG_LOG(SG_ATC, SG_WARN, (*i)->getCallsign() << " not removed ");
     }
 }
 
@@ -418,7 +431,7 @@ bool FGATCController::hasInstruction(int id)
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: checking ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
-        return i->hasInstruction();
+        return (*i)->hasInstruction();
     }
     return false;
 }
@@ -431,7 +444,7 @@ FGATCInstruction FGATCController::getInstruction(int id)
         TrafficVectorIterator i = searchActiveTraffic(id);
 
         if (i != activeTraffic.end())
-            return i->getInstruction();
+            return (*i)->getInstruction();
     }
 
     SG_LOG(SG_ATC, SG_ALERT, "AI error: requesting ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
@@ -471,29 +484,33 @@ string FGATCController::genTransponderCode(const string& fltRules)
 
 void FGATCController::eraseDeadTraffic()
 {
-    auto it = std::remove_if(activeTraffic.begin(), activeTraffic.end(), [](const FGTrafficRecord& traffic) {
-        if (traffic.isDead()) {
-            SG_LOG(SG_ATC, SG_DEBUG, "Remove dead " << traffic.getId() << " " << traffic.isDead());
+    auto it = std::remove_if(activeTraffic.begin(), activeTraffic.end(), [](const FGTrafficRecord* traffic) {
+        if (traffic->isDead()) {
+            SG_LOG(SG_ATC, SG_DEBUG, "Remove dead " << traffic->getId() << " " << traffic->isDead());
         }
-        return traffic.isDead();
+        return traffic->isDead();
     });
     activeTraffic.erase(it, activeTraffic.end());
 }
 
-/*
+/**
 * Search activeTraffic vector to find matching id
 * @param id integer to search for in the vector
 * @return the matching item OR activeTraffic.end()
 */
 TrafficVectorIterator FGATCController::searchActiveTraffic(int id)
 {
+    if (activeTraffic.empty()) {
+        SG_LOG(SG_ATC, SG_DEBUG, "searchActiveTraffic empty list");
+        return activeTraffic.end();
+    }
     return std::find_if(activeTraffic.begin(), activeTraffic.end(),
-                        [id](const FGTrafficRecord& rec) { return rec.getId() == id; });
+                        [id](const FGTrafficRecord* rec) { return rec->getId() == id; });
 }
 
 void FGATCController::clearTrafficControllers()
 {
     for (const auto& traffic : activeTraffic) {
-        traffic.clearATCController();
+        traffic->clearATCController();
     }
 }
