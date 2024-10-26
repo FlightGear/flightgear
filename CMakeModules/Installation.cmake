@@ -79,21 +79,23 @@ string(REGEX REPLACE ".*#define OPENTHREADS_SOVERSION[ \t]+([0-9]+).*"
 message(STATUS "OSG SO version: ${osg_soversion}")
 message(STATUS "OpenThreads SO version: ${openthreads_soversion}")
 
-string(TIMESTAMP iss_config_timestamp)
 
-########################################################################################
+find_package(Git)
 
 if (MSVC)
-    # iscc.exe only accepts Windows style-paths, so explicitly convert
-    file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}" FG_WINDOWS_INSTALL_PREFIX)
-    file(TO_NATIVE_PATH "${OSG_BASE_DIR}" INNO_SETUP_OSG_BASE_DIR)
-    file(TO_NATIVE_PATH "${FINAL_MSVC_3RDPARTY_DIR}" INNO_SETUP_3RDPARTY_DIR)
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/generateInnoSetupConfig.cmake.in 
+        ${CMAKE_BINARY_DIR}/generateInnoSetupConfig.cmake
+        @ONLY)
 
-    configure_file(${CMAKE_SOURCE_DIR}/package/windows/InstallConfig.iss.in ${CMAKE_BINARY_DIR}/InstallConfig.iss)
-    install(FILES ${CMAKE_BINARY_DIR}/InstallConfig.iss 
-        DESTINATION . 
-        COMPONENT packaging EXCLUDE_FROM_ALL)
+    install(SCRIPT ${CMAKE_BINARY_DIR}/generateInnoSetupConfig.cmake COMPONENT packaging )
+
+    # important we use install() here so that passing a custom prefix to
+    # 'cmake --install --prefix FOO' works correctly to put the file somewhere special
+    install(FILES ${CMAKE_BINARY_DIR}/InstallConfig.iss DESTINATION . COMPONENT packaging )
 endif()
+
+
+########################################################################################
 
 # OSG libs
 foreach (osglib OSG OpenThreads osgUtil osgText osgGA osgSim osgParticle osgTerrain osgViewer osgDB)

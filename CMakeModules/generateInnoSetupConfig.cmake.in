@@ -1,0 +1,42 @@
+
+# okay, take a deep breath :)
+# This is a template file, processed at CMake *configure* time, to produce a script
+# in the build tree, which we run at *install* time.
+# The install time action produces the file "InstallConfig.iss' from the template
+# in flightgear/package/windows
+#
+# We need to generate the install config at *install* time to get the correct date 
+# (for a nightly build) or Git SHA (for a dev build). But we need to populate it with
+# many values we only know at CMake-configure time. Hence this two-stage generation.
+
+ # iscc.exe only accepts Windows style-paths, so explicitly convert
+file(TO_NATIVE_PATH "@CMAKE_INSTALL_PREFIX@" FG_WINDOWS_INSTALL_PREFIX)
+file(TO_NATIVE_PATH "@OSG_BASE_DIR@" INNO_SETUP_OSG_BASE_DIR)
+file(TO_NATIVE_PATH "@FINAL_MSVC_3RDPARTY_DIR@" INNO_SETUP_3RDPARTY_DIR)
+
+set(buildType @FG_BUILD_TYPE@)
+set(version @FLIGHTGEAR_VERSION@)
+set(version_major @FG_VERSION_MAJOR@)
+set(version_minor @FG_VERSION_MINOR@)
+set(osg_version @OPENSCENEGRAPH_VERSION@)
+set(osg_soversion @osg_soversion@)
+set(openthreads_soversion @openthreads_soversion@)
+
+if (buildType STREQUAL "Release")
+    set(INNO_SETUP_OUT_NAME "FlightGear-${FLIGHTGEAR_VERSION}")
+elseif(buildType STREQUAL "Nightly")
+    string(TIMESTAMP currentDate "%Y%m%d")
+    set(INNO_SETUP_OUT_NAME "FlightGear-${currentDate}-nightly")
+else()
+    execute_process(COMMAND "@GIT_EXECUTABLE@" --git-dir "@CMAKE_SOURCE_DIR@/.git" rev-parse --short HEAD
+        OUTPUT_VARIABLE REVISION
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    message(STATUS "Git revision is ${REVISION}")
+
+    set(INNO_SETUP_OUT_NAME "FlightGear-${REVISION}-dev")
+endif()
+
+string(TIMESTAMP iss_config_timestamp)
+
+configure_file(@CMAKE_SOURCE_DIR@/package/windows/InstallConfig.iss.in @CMAKE_BINARY_DIR@/InstallConfig.iss)
+
