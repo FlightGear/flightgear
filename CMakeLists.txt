@@ -626,15 +626,7 @@ add_subdirectory(scripts)
 ### MSVC startup project - ensure you can just hit build & run in MSVC
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT fgfs)
 
-#-----------------------------------------------------------------------------
-### uninstall target
-#-----------------------------------------------------------------------------
-CONFIGURE_FILE(
-    "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/cmake_uninstall.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-    IMMEDIATE @ONLY)
-ADD_CUSTOM_TARGET(uninstall
-    "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+include(Installation)
 
 # The test suite.
 enable_testing()
