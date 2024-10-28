@@ -119,10 +119,24 @@ if (APPLE)
     # add extra utilites to the bundle
     install(TARGETS fgcom fgjs fgelev DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/MacOS)
 
+    if (TARGET sentry::sentry)
+        install(FILES $<TARGET_FILE:sentry::sentry> DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/Frameworks)
+    endif()
+
+    if (TARGET sentry_crashpad::handler)
+        install(FILES $<TARGET_FILE:sentry_crashpad::handler> DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/MacOS)
+    endif()
+
+    if (TARGET DBus::DBus)
+        #get_target_property(dbusLib DBus::DBus IMPORTED_LOCATION)
+        #message(STATUS "DBus library at: ${dbusLib}")
+        #install(FILES ${dbusLib} DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/MacOS)
+        install(FILES $<TARGET_FILE:DBus::DBus> DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/Frameworks)
+    endif()
+
     # FIXME: this copies the fully version file name, need to rename to the non-versioned one
     install(FILES 
             $<TARGET_FILE:OpenAL::OpenAL>  
-            # don't copy libLZMA for now, we need to see if it's system defined or not
         DESTINATION 
             $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/Frameworks
     )
@@ -143,6 +157,17 @@ if (LINUX)
         COMPONENT packaging EXCLUDE_FROM_ALL)
 
     # TODO: things under share/
+endif()
+
+
+########################################################################################
+# actual app installation: this needs to happen late, after the various TARGET_BUNDLE_CONTENT_DIR
+# rules are applied
+
+if (APPLE)
+    install(TARGETS fgfs BUNDLE DESTINATION .)
+else()
+    install(TARGETS fgfs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 
