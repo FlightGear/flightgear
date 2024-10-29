@@ -24,13 +24,6 @@ set(HEADERS
 	viewmgr.hxx
 	)
 
-if (Qt5Core_FOUND)
-    list(APPEND HEADERS GraphicsWindowQt5.hxx 
-					    OSGQtAdaption.hxx)
-    list(APPEND SOURCES GraphicsWindowQt5.cpp 
-						OSGQtAdaption.cxx)
-endif()
-
 if (YES)
     list(APPEND HEADERS PUICamera.hxx)
     list(APPEND SOURCES PUICamera.cxx)

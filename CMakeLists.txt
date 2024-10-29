@@ -56,7 +56,7 @@ endif()
 
 # let's use & require C++11 - note these are only functional with CMake 3.1
 # we do manual fallbacks for CMake 3.0 in the compilers section
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
@@ -538,7 +538,7 @@ if(WIN32)
     set(NOMINMAX 1)
 endif(WIN32)
 
-set (BOOST_CXX_FLAGS "-DBOOST_BIMAP_DISABLE_SERIALIZATION -DBOOST_NO_STDLIB_CONFIG")
+set (BOOST_CXX_FLAGS "-DBOOST_BIMAP_DISABLE_SERIALIZATION -DBOOST_NO_STDLIB_CONFIG -DBOOST_NO_AUTO_PTR -DBOOST_NO_CXX98_BINDERS")
 
 # append the SIMD flags if requested
 if (ENABLE_SIMD)

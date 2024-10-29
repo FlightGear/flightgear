@@ -252,7 +252,7 @@ bool sentryReportCommand(const SGPropertyNode* args, SGPropertyNode* root)
     sentry_value_set_by_key(exc, "type", sentry_value_new_string("Report"));
 
     const auto message = args->getStringValue("message");
-    sentry_value_set_by_key(exc, "value", sentry_value_new_string(message.c_str()));
+    sentry_value_set_by_key(exc, "value", sentry_value_new_string(message));
 
     sentry_value_t event = sentry_value_new_event();
     sentry_value_set_by_key(event, "exception", exc);

@@ -165,9 +165,11 @@ if (HAVE_QT)
     target_include_directories(fglauncher PRIVATE ${OPENSCENEGRAPH_INCLUDE_DIRS})
 
     target_link_libraries(fglauncher 
+        PUBLIC 
         Qt${QT_VERSION_MAJOR}::Core 
         Qt${QT_VERSION_MAJOR}::Widgets 
         Qt${QT_VERSION_MAJOR}::Network 
+        PRIVATE
         Qt${QT_VERSION_MAJOR}::Qml 
         Qt${QT_VERSION_MAJOR}::Quick 
         Qt${QT_VERSION_MAJOR}::Svg 
@@ -224,8 +226,6 @@ if (HAVE_QT)
                         TipBackgroundBox.hxx
                         GettingStartedScope.hxx
                         GettingStartedScope.cxx
-                        QmlColoredImageProvider.hxx
-                        QmlColoredImageProvider.cxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)

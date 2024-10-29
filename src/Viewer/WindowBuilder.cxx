@@ -30,10 +30,6 @@
     #include <osgViewer/api/Cocoa/GraphicsWindowCocoa>
 #endif
 
-#if defined(HAVE_QT)
-    #include "GraphicsWindowQt5.hxx"
-#endif
-
 
 using namespace std;
 using namespace osg;
@@ -72,13 +68,6 @@ void WindowBuilder::makeDefaultTraits(bool stencil)
 {
     GraphicsContext::WindowingSystemInterface* wsi
         = osg::GraphicsContext::getWindowingSystemInterface();
-#if defined(HAVE_QT) && OSG_VERSION_GREATER_THAN(3, 5, 9)
-    if (usingQtGraphicsWindow) {
-        // use the correct WSI for OpenSceneGraph >= 3.6
-        wsi = osg::GraphicsContext::getWindowingSystemInterface("FlightGearQt5");
-    }
-#endif
-
 
     defaultTraits = new osg::GraphicsContext::Traits;
     auto traits = defaultTraits.get();
@@ -107,31 +96,7 @@ void WindowBuilder::makeDefaultTraits(bool stencil)
     traits->vsync = fgGetBool("/sim/rendering/vsync-enable", traits->vsync);
     
     const bool wantFullscreen = fgGetBool("/sim/startup/fullscreen");
-    if (usingQtGraphicsWindow) {
-#if defined(HAVE_QT)
-        // fullscreen is handled by Qt natively
-        // we will check and set fullscreen mode when building
-        // the window instance
-        auto data = new GraphicsWindowQt5::WindowData;
-        data->createFullscreen = wantFullscreen;
-        data->isPrimaryWindow = true;
-
-#if OSG_VERSION_GREATER_THAN(3, 5, 9)
-        traits->windowingSystemPreference = "FlightGearQt5";
-#endif
-        traits->inheritedWindowData = data;
-        traits->windowDecoration = true;
-        traits->supportsResize = true;
-        traits->width = fgGetInt("/sim/startup/xsize");
-        traits->height = fgGetInt("/sim/startup/ysize");
-        
-        // these are marker values to tell GraphicsWindowQt5 to use default x/y
-        traits->x = std::numeric_limits<int>::max();
-        traits->y = std::numeric_limits<int>::max();
-#else
-        SG_LOG(SG_VIEW,SG_ALERT,"requested Qt GraphicsWindow in non-Qt build");
-#endif
-    } else {
+    {
         unsigned screenwidth = 0;
         unsigned screenheight = 0;
         // this is a deprecated method, should be screen-aware.
@@ -212,15 +177,7 @@ void WindowBuilder::setFullscreenTraits(const SGPropertyNode* winNode, GraphicsC
     bool overrideRedirect = orrNode && orrNode->getBoolValue();
     traits->overrideRedirect = overrideRedirect;
 
-#if defined(HAVE_QT)
-    if (usingQtGraphicsWindow) {
-        auto data = new GraphicsWindowQt5::WindowData;
-        data->createFullscreen = true;
-        traits->inheritedWindowData = data;
-        traits->windowDecoration = winNode->getBoolValue("decoration");
-    } else
-#endif
-    // this codepath is mandatory on non-Qt builds
+
     {
         traits->windowDecoration = false;
         
@@ -239,19 +196,7 @@ void WindowBuilder::setFullscreenTraits(const SGPropertyNode* winNode, GraphicsC
 bool WindowBuilder::setWindowedTraits(const SGPropertyNode* winNode, GraphicsContext::Traits* traits)
 {
     bool customTraits = false;
-#if defined(HAVE_QT)
-    if (usingQtGraphicsWindow) {
-        if (winNode->hasValue("fullscreen")) {
-            auto data = new GraphicsWindowQt5::WindowData;
-            data->createFullscreen = false;
-            traits->inheritedWindowData = data;
-            customTraits = true;
-        }
-        customTraits |= setFromProperty(traits->windowDecoration, winNode, "decoration");
-        customTraits |= setFromProperty(traits->width, winNode, "width");
-        customTraits |= setFromProperty(traits->height, winNode, "height");
-    } else
-#endif
+
     {
         int resizable = 0;
         const SGPropertyNode* fullscreenNode = winNode->getNode("fullscreen");
@@ -331,13 +276,7 @@ GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode)
     bool drawGUI = false;
     traitsSet |= setFromProperty(drawGUI, winNode, "gui");
     if (traitsSet) {
-#if defined (HAVE_QT)
-        if (usingQtGraphicsWindow) {
-            // this assumes the user only sets the 'gui' flag on one window, not ideal
-            auto data = static_cast<GraphicsWindowQt5::WindowData*>(traits->inheritedWindowData.get());
-            data->isPrimaryWindow = drawGUI;
-        }
-#endif
+
         
         GraphicsContext* gc = GraphicsContext::createGraphicsContext(traits);
         if (gc) {

@@ -29,8 +29,8 @@
 #include <simgear/package/Package.hxx>
 #include <simgear/package/Catalog.hxx>
 
-#include "AircraftItemModel.hxx"
-#include "AircraftProxyModel.hxx"
+#include "AircraftModel.hxx"
+#include "AircraftSearchFilterModel.hxx"
 #include "FlightPlanController.hxx"
 #include "LocationController.hxx"
 #include "MPServersModel.h"

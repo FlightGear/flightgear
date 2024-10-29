@@ -115,13 +115,6 @@ if (APPLE)
         install(FILES $<TARGET_FILE:sentry_crashpad::handler> DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/MacOS)
     endif()
 
-    if (TARGET DBus::DBus)
-        #get_target_property(dbusLib DBus::DBus IMPORTED_LOCATION)
-        #message(STATUS "DBus library at: ${dbusLib}")
-        #install(FILES ${dbusLib} DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/MacOS)
-        install(FILES $<TARGET_FILE:DBus::DBus> DESTINATION $<TARGET_BUNDLE_CONTENT_DIR:fgfs>/Frameworks)
-    endif()
-
     # FIXME: this copies the fully version file name, need to rename to the non-versioned one
     install(FILES 
             $<TARGET_FILE:OpenAL::OpenAL>  

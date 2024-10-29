@@ -57,9 +57,7 @@
 #include <Main/sentryIntegration.hxx>
 
 #if defined(HAVE_QT)
-#include "GraphicsWindowQt5.hxx"
 #include <GUI/QtLauncher.hxx>
-#include <QCoreApplication>
 #endif
 
 #if defined(SG_MAC)
@@ -362,17 +360,10 @@ void fgWarpMouse(int x, int y)
 
 void fgOSInit(int* argc, char** argv)
 {
-#if defined(HAVE_QT)
-    global_usingGraphicsWindowQt = fgGetBool("/sim/rendering/graphics-window-qt", false);
-    if (global_usingGraphicsWindowQt) {
-        SG_LOG(SG_GL, SG_INFO, "Using Qt implementation of GraphicsWindow");
-        flightgear::initQtWindowingSystem();
-    } else {
-        // stock OSG windows are not Hi-DPI aware
-        fgSetDouble("/sim/rendering/gui-pixel-ratio", 1.0);
-        SG_LOG(SG_GL, SG_INFO, "Using stock OSG implementation of GraphicsWindow");
-    }
-#endif
+    // stock OSG windows are not Hi-DPI aware
+    fgSetDouble("/sim/rendering/gui-pixel-ratio", 1.0);
+
+
 #if defined(SG_MAC)
     cocoaRegisterTerminateHandler();
 #endif
@@ -410,18 +401,6 @@ void fgOSFullScreen()
      * The other windows should use fixed setup from the camera.xml file anyway. */
     osgViewer::GraphicsWindow* window = windows[0];
 
-#if defined(HAVE_QT)
-    if (global_usingGraphicsWindowQt) {
-        const bool wasFullscreen = fgGetBool("/sim/startup/fullscreen");
-        auto qtWin = static_cast<flightgear::GraphicsWindowQt5*>(window);
-        qtWin->setFullscreen(!wasFullscreen);
-        fgSetBool("/sim/startup/fullscreen", !wasFullscreen);
-
-        // FIXME tell lies here for HiDPI sizing?
-        fgSetInt("/sim/startup/xsize", qtWin->getGLWindow()->width());
-        fgSetInt("/sim/startup/ysize", qtWin->getGLWindow()->height());
-    } else
-#endif
     {
         osg::GraphicsContext::WindowingSystemInterface    *wsi = osg::GraphicsContext::getWindowingSystemInterface();
         if (wsi == NULL)

@@ -1,6 +1,12 @@
 set(name fgcom)
 
-find_package(OpenAL REQUIRED)
+# on macOS, force CONFIG mode to ensure we use OpenAL-soft and not the (deprecated)
+  # system OpenAL
+  if (APPLE)
+      find_package(OpenAL CONFIG REQUIRED)
+  else()
+    find_package(OpenAL REQUIRED)
+  endif()
 
 # Copy positions.txt content in const char* _positionsData[];
 file(READ utils/positions.txt POSITIONS_DATA)

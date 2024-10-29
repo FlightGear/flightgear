@@ -45,7 +45,7 @@ struct GuiFont
     puFont *font;
 };
 
-const GuiFont guifonts[] = {
+const std::initializer_list<GuiFont> guiFonts = {
     { "default",      &PUFONT_HELVETICA_12 },
     { "FIXED_8x13",   &PUFONT_8_BY_13 },
     { "FIXED_9x15",   &PUFONT_9_BY_15 },
@@ -58,7 +58,7 @@ const GuiFont guifonts[] = {
     { "SANS_12B",     &FONT_SANS_12B },
     { 0 }
 };
-}
+} // of anonymous namespace
 
 FGFontCache* FGFontCache::instance()
 {

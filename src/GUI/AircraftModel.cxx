@@ -151,7 +151,7 @@ void PackageDelegate::catalogRefreshed(CatalogRef aCatalog, StatusCode aReason)
         // silent about this
     } else if (aCatalog) {
         qWarning() << "failed refresh of"
-            << QString::fromStdString(aCatalog->url()) << ":" << aReason << endl;
+            << QString::fromStdString(aCatalog->url()) << ":" << aReason;
     }
 }
 

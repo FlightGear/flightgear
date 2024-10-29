@@ -78,8 +78,8 @@ function(setup_fgfs_libraries target)
         target_link_libraries(${target} flite_hts hts_engine)
     endif()
 
-    if(Qt5Core_FOUND)
-        target_link_libraries(${target} Qt5::Core Qt5::Widgets fglauncher fgqmlui)
+    if(HAVE_QT)
+        target_link_libraries(${target} Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets fglauncher fgqmlui)
         set_property(TARGET ${target} PROPERTY AUTOMOC ON)
     endif()
 
