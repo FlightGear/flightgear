@@ -5,7 +5,7 @@
 
 set(dbus_target "_no_target_")
 
-if(WIN32)
+if(WIN32 OR APPLE)
 	FIND_PATH(DBUS_INCLUDE_DIRS dbus/dbus.h PATH_SUFFIXES include HINTS ${ADDITIONAL_LIBRARY_PATHS})
 	FIND_LIBRARY(DBUS_LIBRARIES NAMES dbus-1 PATH_SUFFIXES lib HINTS ${ADDITIONAL_LIBRARY_PATHS})
 
@@ -34,4 +34,4 @@ else()
 		# use a global property instead
 		set(dbus_target "PkgConfig::DBUS")
 	endif(DBUS_FOUND)
-endif(WIN32)
+endif()
