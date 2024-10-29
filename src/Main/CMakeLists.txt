@@ -101,13 +101,6 @@ export_debug_symbols(fgfs)
 # Additional search paths for includes.
 setup_fgfs_includes(fgfs)
 
-# this has to live here for compatability with older CMake versions
-if (APPLE)
-    install(TARGETS fgfs BUNDLE DESTINATION .)
-else()
-    install(TARGETS fgfs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif()
-
 add_executable(nasal
     nasal-bin.cxx
     ${CMAKE_SOURCE_DIR}/src/Scripting/sqlitelib.cxx

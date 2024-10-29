@@ -21,14 +21,11 @@ if (WIN32)
     )
 endif()
 
-# disabled for now, because we want to run code-signing
-# and other steps with macdeployqt
-
-# if (APPLE)
-#     add_custom_target(TARGET fgfs
-#         POST_BUILD
-#         COMMENT "Running macdeployqt on FGFS"
-#         COMMAND Qt::macdeployqt  "$<TARGET_FILE_DIR:fgfs>/$<TARGET_FILE_NAME:fgfs>" --qmldir ${QMLDIR} 
-#     )
-# endif()
+if (APPLE)
+    add_custom_target(macdeploy
+        COMMENT "Running macdeployqt on FGFS"
+        #COMMAND set PATH=%PATH%$<SEMICOLON>${qt5_install_prefix}/bin
+        COMMAND ${FG_QT_BIN_DIR}/macdeployqt "$<TARGET_BUNDLE_DIR:fgfs>" -qmldir=${QMLDIR}
+    )
+endif()
 
