@@ -20,7 +20,7 @@ endif()
 if (MSVC)
     set(OSG_PLUGIN_SUFFIX "bin")
 else()
-    set(OSG_PLUGIN_SUFFIX "lib")
+    set(OSG_PLUGIN_SUFFIX "lib" "lib64")
 
     # needed for Debian where the plugins might be at /usr/lib/x86_64-linux-gnu
     if (CMAKE_LIBRARY_ARCHITECTURE) 
