@@ -73,13 +73,13 @@ class Node {
             SG_LOG(SG_ATC, SG_ALERT, "Resizing Quadtree with data not supported");
         }
         this->bounds = bounds;
-        SG_LOG(SG_ATC, SG_DEBUG , "Resizing Quadtree " << quadrant << " to " << bounds.x() << "\t" << bounds.y() << "\t Width : " << bounds.width() << "\t Height : " << bounds.height());
+        SG_LOG(SG_ATC, SG_BULK , "Resizing Quadtree " << quadrant << " to " << bounds.x() << "\t" << bounds.y() << "\t Width : " << bounds.width() << "\t Height : " << bounds.height());
     }
 
     bool add(const SGRectd& pos, SGSharedPtr<T> value, const Equal& equalFkt, const GetBox& getBoxFunction)
     {
         if (equalFkt==nullptr || getBoxFunction==nullptr) {
-            SG_LOG(SG_ATC, SG_DEBUG , "equalFkt " << equalFkt << " getBoxFunction " << getBoxFunction);
+            SG_LOG(SG_ATC, SG_BULK , "equalFkt " << equalFkt << " getBoxFunction " << getBoxFunction);
         }
         if (isLeaf())
         {
@@ -89,7 +89,7 @@ class Node {
             }
             if (depth >= MAX_DEPTH || data.size() < SPLIT_THRESHOLD) {
                 if (depth >= MAX_DEPTH) {
-                    SG_LOG(SG_ATC, SG_DEBUG , "Max Depth reached");
+                    SG_LOG(SG_ATC, SG_BULK , "Max Depth reached");
                 }
                 // 
                 auto it = std::find_if(std::begin(data), std::end(data),
@@ -98,7 +98,7 @@ class Node {
                     data.push_back(value);
                     return true;
                 } else {
-                    SG_LOG(SG_ATC, SG_DEBUG , "Not readded" );
+                    SG_LOG(SG_ATC, SG_BULK , "Not readded" );
                     return false;
                 }
             }
@@ -127,7 +127,7 @@ class Node {
 
     bool move(const SGRectd& newPos, const SGRectd& pos, SGSharedPtr<T> value, const Equal& equalFkt, const GetBox& getBoxFunction)
     {
-        SG_LOG(SG_ATC, SG_DEBUG,
+        SG_LOG(SG_ATC, SG_BULK,
                "Moving  " << pos.x() << ":" << pos.y() << " to " << newPos.x() << ":" << newPos.y() << (isLeaf()?" leaf ":" "));
 
         // finding 
@@ -143,7 +143,7 @@ class Node {
             auto newQuadrant = getQuadrant(bounds, newPos);
             if (oldQuadrant != UNKNOWN) {
                 if (oldQuadrant != newQuadrant) {
-                    SG_LOG(SG_ATC, SG_DEBUG,
+                    SG_LOG(SG_ATC, SG_BULK,
                       "Moving from quadrant " << oldQuadrant << " to quadrant " << newQuadrant << " Level " << depth );
                     children[static_cast<std::size_t>(oldQuadrant)].get()->remove(pos, value, equalFkt);    
                     children[static_cast<std::size_t>(newQuadrant)].get()->add(newPos, value, equalFkt, getBoxFunction);    
@@ -178,13 +178,13 @@ class Node {
         } else {
             // Remove the value in a child if the value is entirely contained in it
             auto i = getQuadrant(bounds, pos);
-            SG_LOG(SG_ATC, SG_DEBUG , "Remove from quadrant " << i << " Depth " << depth);
+            SG_LOG(SG_ATC, SG_BULK , "Remove from quadrant " << i << " Depth " << depth);
             if (i != UNKNOWN) {                
                 if (children[static_cast<std::size_t>(i)].get()->remove(computeBox(pos, i), value, equalFunction)) {
                     return tryMerge();
                 } else {
                     bool found = children[static_cast<std::size_t>(i)].get()->findFullScan(value, equalFunction, "Error /");
-                    SG_LOG(SG_ATC, SG_DEBUG , "Trying to find misplaced data " << found);
+                    SG_LOG(SG_ATC, SG_BULK , "Trying to find misplaced data " << found);
                 }
             // Otherwise, we remove the value from the current node
             } else {
@@ -207,7 +207,7 @@ class Node {
 //                SG_LOG(SG_ATC, SG_ALERT , "Not found " << path << " " );
                 return false;
             } else {
-                SG_LOG(SG_ATC, SG_DEBUG , "Found in path node " << path << " " );
+                SG_LOG(SG_ATC, SG_BULK , "Found in path node " << path << " " );
                 return true;
             }
         } else {
@@ -225,7 +225,7 @@ class Node {
 
     bool printPath(const SGRectd& pos, SGSharedPtr<T> value, const Equal& equalFkt, const std::string& path) {
         if (isLeaf()) {
-            SG_LOG(SG_ATC, SG_DEBUG , path );
+            SG_LOG(SG_ATC, SG_BULK , path );
             auto it = std::find_if(std::begin(data), std::end(data),
                 [equalFkt, value](auto rhs){ return equalFkt(value, rhs); });
             if (it == std::end(data)) {
@@ -254,14 +254,14 @@ class Node {
               return true;
             nbValues += child.get()->size();
         }
-        SG_LOG(SG_ATC, SG_DEBUG , "Trying to merge Quadtree " << nbValues);
+        SG_LOG(SG_ATC, SG_BULK , "Trying to merge Quadtree " << nbValues);
         return true;
     }
 
 
     int split(const SGRectd& pos, const Equal& equalFkt, const GetBox& getBoxFunction) {
         // Create children
-        SG_LOG(SG_ATC, SG_DEBUG, "Splitting Quadtree Size : " << data.size() << " Depth : " << depth);
+        SG_LOG(SG_ATC, SG_BULK, "Splitting Quadtree Size : " << data.size() << " Depth : " << depth);
 
         for (size_t i = 0; i < 4; i++) {
             children[i] = std::make_unique<Node>(depth+1, i);
@@ -327,14 +327,14 @@ class Node {
 
     void query(const SGRectd& queryBox, const GetBox& getBoxFunction, std::vector<SGSharedPtr<T>>& values)
     {
-        SG_LOG(SG_ATC, SG_DEBUG, "Query Quadtree " << queryBox.getMin().x() << "\t" << queryBox.getMin().y() << "\t" 
+        SG_LOG(SG_ATC, SG_BULK, "Query Quadtree " << queryBox.getMin().x() << "\t" << queryBox.getMin().y() << "\t" 
         << queryBox.getMax().x() << "\t" << queryBox.getMax().y()
         << " depth " << depth << " Leaf : " << (isLeaf()?"true":"false"));
         assert(queryBox.contains(bounds.x(), bounds.y()));
         for (auto value : data)
         {
             auto pos = getBoxFunction(value);
-            SG_LOG(SG_ATC, SG_DEBUG, "Query Quadtree " << pos.x() << "\t" << pos.y());
+            SG_LOG(SG_ATC, SG_BULK, "Query Quadtree " << pos.x() << "\t" << pos.y());
             if (queryBox.contains(pos.x(), pos.y())) {
                 values.push_back(value);
             }
@@ -345,7 +345,7 @@ class Node {
             {
                 //FIXME
                 auto childBox = computeBox(bounds, static_cast<int>(i));
-                SG_LOG(SG_ATC, SG_DEBUG, "Query Quadtree center " << i << "\t" << childBox.x() << "\t" << childBox.y() << "\t" << childBox.width() << "\t" << childBox.height() );
+                SG_LOG(SG_ATC, SG_BULK, "Query Quadtree center " << i << "\t" << childBox.x() << "\t" << childBox.y() << "\t" << childBox.width() << "\t" << childBox.height() );
                 if (childBox.contains(queryBox.getMin().x(), queryBox.getMin().y()) ||
                     childBox.contains(queryBox.getMin().x(), queryBox.getMax().y()) || 
                     childBox.contains(queryBox.getMax().x(), queryBox.getMax().y()) ||
@@ -353,9 +353,9 @@ class Node {
                     childBox.contains(queryBox.getMin().x() + queryBox.width() / 2, queryBox.getMin().y()+ queryBox.height() / 2)) {
                     children[i].get()->query(queryBox, getBoxFunction, values);
                 }/* else {
-                    SG_LOG(SG_ATC, SG_DEBUG, "Query Quadtree center " << i << " not found " );
-                    SG_LOG(SG_ATC, SG_DEBUG, "QueryBox " << queryBox.getMin().x() << "," << queryBox.getMin().y() << "\t" << queryBox.getMax().x() << "," << queryBox.getMax().y() );
-                    SG_LOG(SG_ATC, SG_DEBUG, "ChildBox " << childBox.getMin().x() << "," << childBox.getMin().y() << "\t" << childBox.getMax().x() << "," << childBox.getMax().y() );
+                    SG_LOG(SG_ATC, SG_BULK, "Query Quadtree center " << i << " not found " );
+                    SG_LOG(SG_ATC, SG_BULK, "QueryBox " << queryBox.getMin().x() << "," << queryBox.getMin().y() << "\t" << queryBox.getMax().x() << "," << queryBox.getMax().y() );
+                    SG_LOG(SG_ATC, SG_BULK, "ChildBox " << childBox.getMin().x() << "," << childBox.getMin().y() << "\t" << childBox.getMax().x() << "," << childBox.getMax().y() );
                 }*/
             }
         }

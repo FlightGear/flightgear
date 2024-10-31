@@ -23,6 +23,7 @@
 #include <simgear/math/SGGeod.hxx>
 #include <Airports/airport.hxx>
 #include <Airports/pavement.hxx>
+#include <AIModel/AIConstants.hxx>
 #include <AIModel/VectorMath.hxx>
 
 
@@ -50,7 +51,7 @@ AirportGroundRadar::~AirportGroundRadar() {
 bool AirportGroundRadar::add(SGSharedPtr<FGTrafficRecord> aiObject) {
 	bool ret = index.add(aiObject);
 	if (ret) {
-		SG_LOG(SG_ATC, SG_DEBUG, "Added Aircraft " << aiObject->getId() );	
+		SG_LOG(SG_ATC, SG_BULK, "Added Aircraft " << aiObject->getId() );	
 		index.printPath(aiObject);
 	} else {
 		double distM = SGGeodesy::distanceM(aiObject->getPos(), airport->geod());
@@ -71,14 +72,15 @@ bool AirportGroundRadar::remove(SGSharedPtr<FGTrafficRecord> aiObject)
 	if (!ret) {
 		SG_LOG(SG_ATC, SG_ALERT, "Couldn't remove " << aiObject->getId());	
 	}
-	SG_LOG(SG_ATC, SG_DEBUG, "Removed Aircraft " << aiObject->getId());	
+	SG_LOG(SG_ATC, SG_BULK, "Removed Aircraft " << aiObject->getId());	
 	return ret;
 }
 
 size_t AirportGroundRadar::size(){return index.size();}
 
 int AirportGroundRadar::getSize(SGSharedPtr<FGTrafficRecord> aiObject){
-  	return (*aiObject).getRadius();
+	int speedCorrection = (*aiObject).getSpeed()!=0?2*(*aiObject).getSpeed():20; 
+  	return (*aiObject).getRadius() + speedCorrection;
 }
 
 bool AirportGroundRadar::isBlocked(SGSharedPtr<FGTrafficRecord> aiObject)
@@ -89,7 +91,7 @@ bool AirportGroundRadar::isBlocked(SGSharedPtr<FGTrafficRecord> aiObject)
 	QUERY_BOX_SIZE,
 	QUERY_BOX_SIZE);
 	index.query(queryBox, values);
-    SG_LOG(SG_ATC, SG_DEBUG, "Search Id : " << aiObject->getId() <<  " Index Size : " << index.size() << " Result Size : " << values.size() );
+    SG_LOG(SG_ATC, SG_BULK, "Search Id : " << aiObject->getId() <<  " Index Size : " << index.size() << " Result Size : " << values.size() );
 	for (SGSharedPtr<FGTrafficRecord> other: values) {
         if (other->getId()!=aiObject->getId()){
 			double distM = SGGeodesy::distanceM(aiObject->getPos(), other->getPos());
@@ -98,22 +100,22 @@ bool AirportGroundRadar::isBlocked(SGSharedPtr<FGTrafficRecord> aiObject)
             // For right before left priority
             const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, aiObject->getHeading() - courseTowardOther);
             const double otherHeadingDiff = SGMiscd::normalizePeriodic(-180, 180, other->getHeading() - courseTowardOther);
-            SG_LOG(SG_ATC, SG_DEBUG, "Found " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff << " courseTowardOther " << courseTowardOther);
+            SG_LOG(SG_ATC, SG_BULK, "Found " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff << " courseTowardOther " << courseTowardOther);
 			const int threshold = getSize(aiObject) + getSize(other) + SEPARATION;
 			if ( distM < threshold ) {				
 			    if (headingDiff < 0 && aiObject->getSpeed() > 0 && abs(headingDiff) < 90){
 					// from the right and in front or other is stopped
-                	SG_LOG(SG_ATC, SG_DEBUG, aiObject->getId() << " blocked by " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
+                	SG_LOG(SG_ATC, SG_BULK, aiObject->getId() << " blocked by " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff << " Heading " << aiObject->getHeading() << " Other Heading " << other->getHeading());
 					return true;
 				}
 			    if (headingDiff < 0 && aiObject->getSpeed() < 0 && abs(headingDiff) > 90){
 					// from the right and in front or other is stopped
-                	SG_LOG(SG_ATC, SG_DEBUG, aiObject->getId() << " blocked reversing by " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
+                	SG_LOG(SG_ATC, SG_BULK, aiObject->getId() << " blocked by " << other->getId() << " while reversing Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
 					return true;
 				}
 			    if (other->getSpeed() == 0 && abs(headingDiff) < 5) {
 					// from the right and in front or other is stopped
-                	SG_LOG(SG_ATC, SG_DEBUG, aiObject->getId() << " blocked by stopped " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
+                	SG_LOG(SG_ATC, SG_BULK, aiObject->getId() << " blocked by stopped " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
 					return true;
 				}
 			}
@@ -130,7 +132,7 @@ bool AirportGroundRadar::isBlockedForPushback(SGSharedPtr<FGTrafficRecord> aiObj
 	QUERY_BOX_SIZE,
 	QUERY_BOX_SIZE);
 	index.query(queryBox, values);
-    SG_LOG(SG_ATC, SG_DEBUG, "Search Id : " << aiObject->getId() <<  " Index Size : " << index.size() << " Result Size : " << values.size() );
+    SG_LOG(SG_ATC, SG_BULK, "Search Id : " << aiObject->getId() <<  " Index Size : " << index.size() << " Result Size : " << values.size() );
 	for (SGSharedPtr<FGTrafficRecord> other: values) {
         if (other->getId()!=aiObject->getId()){
 			double distM = SGGeodesy::distanceM(aiObject->getPos(), other->getPos());
@@ -139,11 +141,11 @@ bool AirportGroundRadar::isBlockedForPushback(SGSharedPtr<FGTrafficRecord> aiObj
             // For right before left priority
             const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, aiObject->getHeading() - courseTowardOther);
             const double otherHeadingDiff = SGMiscd::normalizePeriodic(-180, 180, other->getHeading() - courseTowardOther);
-            SG_LOG(SG_ATC, SG_DEBUG, "Found " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
+            SG_LOG(SG_ATC, SG_BULK, "Found " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
 			const int threshold = getSize(aiObject) + getSize(other) + SEPARATION;
 			if ( distM < threshold && (abs(headingDiff) > 90) ){
 				// from the right and in front or other is stopped
-                SG_LOG(SG_ATC, SG_DEBUG, aiObject->getId() << " blocked for pushback by " << other->getId());
+                SG_LOG(SG_ATC, SG_BULK, aiObject->getId() << " blocked for pushback by " << other->getId());
 				return true;
 			}
 		}
@@ -159,7 +161,7 @@ const SGSharedPtr<FGTrafficRecord> AirportGroundRadar::getBlockedBy(SGSharedPtr<
 	QUERY_BOX_SIZE,
 	QUERY_BOX_SIZE);
 	index.query(queryBox, values);
-    SG_LOG(SG_ATC, SG_DEBUG, "Search Id : " << aiObject->getId() <<  " Index Size : " << index.size() << " Result Size : " << values.size() );
+    SG_LOG(SG_ATC, SG_BULK, "Search Id : " << aiObject->getId() <<  " Index Size : " << index.size() << " Result Size : " << values.size() );
 	SGSharedPtr<FGTrafficRecord> nearestTrafficRecord = nullptr;
 	double nearestDist = HUGE_VAL;
 	for (SGSharedPtr<FGTrafficRecord> other: values) {
@@ -171,23 +173,26 @@ const SGSharedPtr<FGTrafficRecord> AirportGroundRadar::getBlockedBy(SGSharedPtr<
             const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, aiObject->getHeading() - courseTowardOther);
             const double otherHeadingDiff = SGMiscd::normalizePeriodic(-180, 180, other->getHeading() - courseTowardOther);
 			const int threshold = getSize(aiObject) + getSize(other);
-            SG_LOG(SG_ATC, SG_DEBUG, "Search Id : " << aiObject->getId() <<  " Found Id : " << other->getId() << " NearestDist " << nearestDist << " Dist \t" << distM << "m Threshold " << threshold << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff  << " courseTowardOther " << courseTowardOther);
+            SG_LOG(SG_ATC, SG_BULK, "Search Id : " << aiObject->getId() <<  " Found Id : " << other->getId() << " NearestDist " << nearestDist << " Dist \t" << distM << "m Threshold " << threshold << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff  << " courseTowardOther " << courseTowardOther);
 			if ( distM < threshold && distM < nearestDist ) {				
-			    if (headingDiff < 0 && aiObject->getSpeed() >= 0 && abs(headingDiff) < 90){
+			    if (headingDiff < 0 
+				    && aiObject->getSpeed() >= 0 
+					&& abs(headingDiff) < 90 
+					&& other->getLeg() != AILeg::STARTUP_PUSHBACK){
 					// from the right and in front or other is stopped
-                	SG_LOG(SG_ATC, SG_DEBUG, aiObject->getId() << " blocked by " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
+                	SG_LOG(SG_ATC, SG_BULK, aiObject->getId() << " blocked by " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
 					nearestDist = distM;
 					nearestTrafficRecord = other;
 				}
 			    if (headingDiff < 0 && aiObject->getSpeed() < 0 && abs(headingDiff) > 90){
 					// from the right and in front or other is stopped
-                	SG_LOG(SG_ATC, SG_DEBUG, aiObject->getId() << " blocked reversing by " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
+                	SG_LOG(SG_ATC, SG_BULK, aiObject->getId() << " blocked reversing by " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
 					nearestDist = distM;
 					nearestTrafficRecord = other;
 				}
 			    if (other->getSpeed() == 0 && abs(headingDiff) < 5) {
 					// from the right and in front or other is stopped
-                	SG_LOG(SG_ATC, SG_DEBUG, aiObject->getId() << " blocked by stopped " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
+                	SG_LOG(SG_ATC, SG_BULK, aiObject->getId() << " blocked by stopped " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
 					nearestDist = distM;
 					nearestTrafficRecord = other;
 				}

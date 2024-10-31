@@ -30,7 +30,7 @@
 #include <Scenery/scenery.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <AIModel/AIAircraft.hxx>
+#include <AIModel/AIConstants.hxx>
 #include <AIModel/AIManager.hxx>
 #include <Traffic/Schedule.hxx>
 #include <Traffic/SchedFlight.hxx>

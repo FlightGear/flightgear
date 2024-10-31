@@ -253,8 +253,13 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
         (*i)->setWaitsForId(blocker->getId());
         double distM = SGGeodesy::distanceM((*i)->getPos(), blocker->getPos());
         int newSpeed = blocker->getSpeed() * (distM / 100);
-        SG_LOG(SG_ATC, SG_DEBUG,
-            (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") new speed " << newSpeed);
+        if (blocker->getWaitsForId()) {
+            SG_LOG(SG_ATC, SG_DEBUG,        
+                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") which is blocked by " << blocker->getWaitsForId() << " new speed " << newSpeed);
+        } else {
+            SG_LOG(SG_ATC, SG_DEBUG,        
+                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") new speed " << newSpeed);
+        }
         if (newSpeed!=0) {        
             (*i)->setSpeedAdjustment(newSpeed);
         } else {
@@ -412,7 +417,6 @@ void FGGroundController::checkHoldPosition(int id, double lat,
                                         double lon, double heading,
                                         double speed, double alt)
 {
-    FGGroundNetwork* network = parent->parent()->groundNetwork();
     TrafficVectorIterator current;
     TrafficVectorIterator i = activeTraffic.begin();
     if (activeTraffic.size()) {
@@ -468,7 +472,7 @@ void FGGroundController::checkHoldPosition(int id, double lat,
         available = false;
         // Don't act on the changed instruction until the transmission is confirmed
         // So set back to original status
-        SG_LOG(SG_ATC, SG_DEBUG, "Current state " << (*current)->getState());
+        SG_LOG(SG_ATC, SG_BULK, "Current transmit state " << (*current)->getState());
     }
     // 6 = Report runway
     // 7 = Acknowledge report runway
@@ -500,7 +504,7 @@ void FGGroundController::checkHoldPosition(int id, double lat,
     //(*current)->setState(0);
 }
 
-/*
+/**
 * Check whether situations occur where the current aircraft is waiting for itself
 * due to higher order interactions.
 * A 'circular' wait is a situation where a waits for b, b waits for c, and c waits
@@ -513,10 +517,9 @@ void FGGroundController::checkHoldPosition(int id, double lat,
 * the looping aircraft. If we don't check for that, this function will get stuck into
 * endless loop.
 */
-
 bool FGGroundController::checkForCircularWaits(int id)
 {
-    SG_LOG(SG_ATC, SG_DEBUG, "Performing circular check for " << id);
+    SG_LOG(SG_ATC, SG_BULK, "Performing circular check for " << id);
     int target = 0;
     TrafficVectorIterator current, other;
     TrafficVectorIterator i = activeTraffic.begin();
@@ -533,7 +536,8 @@ bool FGGroundController::checkForCircularWaits(int id)
     }
 
     if (i == activeTraffic.end()) {
-        SG_LOG(SG_ATC, SG_ALERT,
+        // Presumably in towercontroller
+        SG_LOG(SG_ATC, SG_BULK,
                "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkForCircularWaits at " );
     }
 
@@ -565,7 +569,7 @@ bool FGGroundController::checkForCircularWaits(int id)
         if (iter == activeTraffic.end()) {
             SG_LOG(SG_ATC, SG_DEBUG, "[Waiting for traffic at Runway: DONE] ");
             // The target id is not found on the current network, which means it's at the tower
-            SG_LOG(SG_ATC, SG_ALERT, "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkForCircularWaits Id : " << target);
+            SG_LOG(SG_ATC, SG_BULK, "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkForCircularWaits Id : " << target);
             return false;
         }
 
@@ -580,7 +584,7 @@ bool FGGroundController::checkForCircularWaits(int id)
     }
 
     //if (printed)
-    SG_LOG(SG_ATC, SG_DEBUG, "[done] ");
+    SG_LOG(SG_ATC, SG_BULK, "[done] ");
     if (id == target) {
         SG_LOG(SG_ATC, SG_WARN,
                "Detected circular wait condition: Id = " << id <<
@@ -878,23 +882,6 @@ void FGGroundController::updateStartupTraffic(TrafficVectorIterator i,
         return;
     }
 
-    double length = 0;
-    int pos = (*i)->getCurrentPosition();
-    if (pos > 0) {
-        FGTaxiSegment *seg = network->findSegment(pos);
-        length = seg->getLength();
-        network->blockSegmentsEndingAt(seg, (*i)->getId(), now, now);
-    }
-
-    for (intVecIterator j = (*i)->getIntentions().begin(); j != (*i)->getIntentions().end(); j++) {
-        pos = (*j);
-        if (pos > 0) {
-            FGTaxiSegment *seg = network->findSegment(pos);
-            length += seg->getLength();
-            time_t blockTime = now + (length / vTaxi);
-            network->blockSegmentsEndingAt(seg, (*i)->getId(), blockTime - 30, now);
-        }
-    }
 }
 
 bool FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
@@ -926,38 +913,6 @@ bool FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
     }
 
     (*i)->setPriority(priority++);
-    int pos = (*i)->getCurrentPosition();
-    if (pos > 0) {
-        FGTaxiSegment* segment = network->findSegment(pos);
-        length = segment->getLength();
-        if (segment->hasBlock(now)) {
-            SG_LOG(SG_ATC, SG_BULK, "Taxiway incursion for AI aircraft" << (*i)->getAircraft()->getCallSign());
-        }
-
-    }
-
-    intVecIterator ivi;
-    for (ivi = (*i)->getIntentions().begin(); ivi != (*i)->getIntentions().end(); ivi++) {
-        int segIndex = (*ivi);
-        if (segIndex > 0) {
-            FGTaxiSegment* seg = network->findSegment(segIndex);
-            if (seg->hasBlock(now)) {
-                break;
-            }
-        }
-    }
-
-    //after this, ivi points just behind the last valid unblocked taxi segment.
-    for (intVecIterator j = (*i)->getIntentions().begin(); j != ivi; j++) {
-        pos = (*j);
-        if (pos > 0) {
-            FGTaxiSegment *seg = network->findSegment(pos);
-            length += seg->getLength();
-            time_t blockTime = now + (length / vTaxi);
-            network->blockSegmentsEndingAt(seg, (*i)->getId(), blockTime - 30, now);
-        }
-    }
-
     return true;
 }
 

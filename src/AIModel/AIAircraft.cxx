@@ -1469,9 +1469,9 @@ void FGAIAircraft::updateUserFlightPlan(double dt)
             int legDistance = SGGeodesy::distanceM(current->getPos(), last->getPos());
             int currDist = SGGeodesy::distanceM(getGeodPos(), current->getPos());
             int lastDist = SGGeodesy::distanceM(getGeodPos(), last->getPos());
-            SG_LOG(SG_ATC, SG_BULK, "Signing off from Tower "
-                                        << "\t currDist\t" << currDist << "\t legDistance\t" << legDistance << "\t" << lastDist << "\t" << getGeodPos().getLatitudeDeg() << "\t" << getGeodPos().getLongitudeDeg() << "\t" << current->getPos().getLatitudeDeg() << "\t" << current->getPos().getLongitudeDeg());
             if (currDist > legDistance) {
+                SG_LOG(SG_ATC, SG_BULK, "Signing off from Tower "
+                                            << "\t currDist\t" << currDist << "\t legDistance\t" << legDistance << "\t" << lastDist << "\t" << getGeodPos().getLatitudeDeg() << "\t" << getGeodPos().getLongitudeDeg() << "\t" << current->getPos().getLatitudeDeg() << "\t" << current->getPos().getLongitudeDeg());
                 // We are definitely beyond the airport
                 fp->incrementLeg();
             }

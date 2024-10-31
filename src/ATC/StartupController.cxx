@@ -148,6 +148,7 @@ void FGStartupController::updateAircraftInformation(int id, SGGeod geod, double 
         available = true;
     }
 
+//FIXME These messages can become interleaved and shouldn't be
     if (now >(startTime + 0)) {
         checkTransmissionState(ATCMessageState::NORMAL, ATCMessageState::NORMAL, i, now, MSG_ANNOUNCE_ENGINE_START, ATC_AIR_TO_GROUND);
     }
@@ -181,9 +182,11 @@ void FGStartupController::updateAircraftInformation(int id, SGGeod geod, double 
                          ATC_GROUND_TO_AIR, true);
                 (*i)->updateState();
             } else {
-                transmit((*i), &(*parent), MSG_HOLD_PUSHBACK_CLEARANCE,
-                         ATC_GROUND_TO_AIR, true);
-                (*i)->suppressRepeatedTransmissions();
+                if ((*i)->allowTransmissions()) {
+                    transmit((*i), &(*parent), MSG_HOLD_PUSHBACK_CLEARANCE,
+                            ATC_GROUND_TO_AIR, true);
+                    (*i)->suppressRepeatedTransmissions();
+                }
             }
             lastTransmission = now;
             available = false;
