@@ -22,6 +22,8 @@
 
 #include <Airports/airports_fwd.hxx>
 
+#include <random>
+
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <osg/MatrixTransform>
@@ -88,7 +90,7 @@ protected:
     bool available;
     time_t lastTransmission;
     TrafficVector activeTraffic;
-
+    std::default_random_engine generator;
     double dt_count;
     osg::Group* group;
     FGAirportDynamics *parent = nullptr;

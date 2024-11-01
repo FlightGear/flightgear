@@ -56,10 +56,9 @@ void AirportGroundRadarTests::tearDown()
 
 void AirportGroundRadarTests::testFillingTree()
 {
-    SGGeod minPos = SGGeod::fromDeg(50,50);
-    SGGeod maxPos = SGGeod::fromDeg(60,60);
-
-    AirportGroundRadar* testsubject = new AirportGroundRadar(minPos, maxPos);
+  FGAirportRef egph = FGAirport::getByIdent("EGPH");
+  CPPUNIT_ASSERT_MESSAGE("Airport loaded", egph!=nullptr);
+  AirportGroundRadar* testsubject = new AirportGroundRadar(egph);
 
     FGTrafficRecord* rec = new FGTrafficRecord();
     auto rect = testsubject->getBox(rec);
@@ -78,10 +77,9 @@ void AirportGroundRadarTests::testFillingTree()
 
 void AirportGroundRadarTests::testFillingTreeSplit()
 {
-    SGGeod minPos = SGGeod::fromDeg(50,50);
-    SGGeod maxPos = SGGeod::fromDeg(60,60);
-
-    AirportGroundRadar* testsubject = new AirportGroundRadar(minPos, maxPos);
+  FGAirportRef egph = FGAirport::getByIdent("EGPH");
+  CPPUNIT_ASSERT_MESSAGE("Airport loaded", egph!=nullptr);
+  AirportGroundRadar* testsubject = new AirportGroundRadar(egph);
 
     FGTrafficRecord* rec = new FGTrafficRecord();
     auto rect = testsubject->getBox(rec);
@@ -95,8 +93,8 @@ void AirportGroundRadarTests::testFillingTreeSplit()
         FGTrafficRecord* rec = new FGTrafficRecord();
         id++;
         rec->setId(id);
-        rec->setPositionAndHeading((i/10)+50, (i/10)+50, 45, 20, 0);
-        testsubject->add(rec);
+        rec->setPositionAndHeading((i/100)+55.7, -3.6 + (i/100), 45, 20, 0);
+        CPPUNIT_ASSERT(testsubject->add(rec));
         CPPUNIT_ASSERT_EQUAL(size_t(id), testsubject->size());
       }
     }
@@ -105,10 +103,9 @@ void AirportGroundRadarTests::testFillingTreeSplit()
 
 void AirportGroundRadarTests::testFillingTreeRemove()
 {
-    SGGeod minPos = SGGeod::fromDeg(50,50);
-    SGGeod maxPos = SGGeod::fromDeg(60,60);
-
-    AirportGroundRadar* testsubject = new AirportGroundRadar(minPos, maxPos);
+  FGAirportRef egph = FGAirport::getByIdent("EGPH");
+  CPPUNIT_ASSERT_MESSAGE("Airport loaded", egph!=nullptr);
+  AirportGroundRadar* testsubject = new AirportGroundRadar(egph);
 
     FGTrafficRecord* rec33 = new FGTrafficRecord();
 
@@ -120,7 +117,7 @@ void AirportGroundRadarTests::testFillingTreeRemove()
     for (size_t i = 0; i < 100; i++)
     {
       FGTrafficRecord* rec = new FGTrafficRecord();
-      rec->setPositionAndHeading((i/10)+50, (i/10)+50, 45, 20, 0);
+      rec->setPositionAndHeading((i/100)+55.7, -3.6 + (i/100), 45, 20, 0);
       rec->setId(id++);
       testsubject->add(rec);
       bool removed = testsubject->remove(rec);
@@ -130,11 +127,11 @@ void AirportGroundRadarTests::testFillingTreeRemove()
 
     FGTrafficRecord* rec1 = new FGTrafficRecord();
     rec1->setId(2);
-    rec1->setPositionAndHeading(50, 50, 45, 20, 0);;
+    rec1->setPositionAndHeading(56, -3.6, 45, 20, 0);;
     testsubject->add(rec1);
     FGTrafficRecord* rec2 = new FGTrafficRecord();
     rec2->setId(3);
-    rec2->setPositionAndHeading(50, 50, 45, 20, 0);;
+    rec2->setPositionAndHeading(56, -3.6, 45, 20, 0);;
     testsubject->add(rec2);
     CPPUNIT_ASSERT_EQUAL(size_t(2), testsubject->size());
 

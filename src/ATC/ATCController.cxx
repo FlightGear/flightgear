@@ -471,7 +471,6 @@ string FGATCController::genTransponderCode(const string& fltRules)
     if (fltRules == "VFR")
         return string("1200");
 
-    std::default_random_engine generator;
     std::uniform_int_distribution<unsigned> distribution(0, 7);
 
     unsigned val = (distribution(generator) * 1000 +

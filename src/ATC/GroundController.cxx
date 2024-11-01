@@ -255,7 +255,7 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
         int newSpeed = blocker->getSpeed() * (distM / 100);
         if (blocker->getWaitsForId()) {
             SG_LOG(SG_ATC, SG_DEBUG,        
-                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") which is blocked by " << blocker->getWaitsForId() << " new speed " << newSpeed);
+                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") which is blocked by (" << blocker->getWaitsForId() << ") new speed " << newSpeed);
         } else {
             SG_LOG(SG_ATC, SG_DEBUG,        
                 (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") new speed " << newSpeed);
