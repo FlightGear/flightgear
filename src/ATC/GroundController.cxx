@@ -251,14 +251,20 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
     if (blocker!=nullptr) {
         int oldWaitsForId = (*i)->getWaitsForId();
         (*i)->setWaitsForId(blocker->getId());
+        time_t now = globals->get_time_params()->get_cur_time();
+        if(oldWaitsForId!=blocker->getId()) {
+            (*i)->setWaitingSince(now);
+        }
         double distM = SGGeodesy::distanceM((*i)->getPos(), blocker->getPos());
         int newSpeed = blocker->getSpeed() * (distM / 100);
+        int waittime = (now-(*i)->getWaitingSince());
+        const sgDebugPriority level = waittime > 60?SG_ALERT:SG_BULK; 
         if (blocker->getWaitsForId()) {
-            SG_LOG(SG_ATC, SG_DEBUG,        
-                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") which is blocked by (" << blocker->getWaitsForId() << ") new speed " << newSpeed);
+            SG_LOG(SG_ATC, level,        
+                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") for " << waittime << " seconds which is blocked by (" << blocker->getWaitsForId() << ") new speed " << newSpeed);
         } else {
-            SG_LOG(SG_ATC, SG_DEBUG,        
-                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") new speed " << newSpeed);
+            SG_LOG(SG_ATC, level,        
+                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") for " << waittime << " seconds new speed " << newSpeed);
         }
         if (newSpeed!=0) {        
             (*i)->setSpeedAdjustment(newSpeed);
@@ -276,6 +282,7 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
             (*i)->setResumeTaxi(true);                
         }
         (*i)->clearSpeedAdjustment();
+        (*i)->setWaitingSince(0);
         (*i)->setWaitsForId(0);
        return;
     }

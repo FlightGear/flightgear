@@ -73,6 +73,7 @@ private:
     bool changeAltitude = false;
     bool resolveCircularWait = false;
     int waitsForId;
+    int waitingSince;
 
     double speed = std::numeric_limits<double>::max();
     double heading;
@@ -126,6 +127,9 @@ public:
     int getWaitsForId  () const {
         return waitsForId;
     };
+    int getWaitingSince  () const {
+        return waitingSince;
+    };
 
     void setHoldPattern   (bool val) {
         holdPattern    = val;
@@ -164,6 +168,9 @@ public:
 
     void setWaitsForId(int id) {
         waitsForId = id;
+    };
+    void setWaitingSince(int t) {
+        waitingSince = t;
     };
 
 };
@@ -286,6 +293,9 @@ public:
     int getWaitsForId  () const {
         return instruction.getWaitsForId();
     };
+    int getWaitingSince  () const {
+        return instruction.getWaitingSince();
+    };
 
     void setSpeedAdjustment(double spd);
     void setHeadingAdjustment(double heading);
@@ -323,6 +333,10 @@ public:
     void setWaitsForId(int id) {
         instruction.setWaitsForId(id);
     };
+    void setWaitingSince(int id) {
+        instruction.setWaitingSince(id);
+    };
+
 
     void setResolveCircularWait()   {
         instruction.setResolveCircularWait(true);
