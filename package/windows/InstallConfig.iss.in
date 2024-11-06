@@ -11,4 +11,4 @@
 #define OSG64InstallDir "@INNO_SETUP_OSG_BASE_DIR@" 
 #define OSGSoNumber "@osg_soversion@" 
 #define OTSoNumber "@openthreads_soversion@"
-#define OutputBaseFilename @INNO_SETUP_OUT_NAME@
+#define OutputBaseFilename "@INNO_SETUP_OUT_NAME@"
