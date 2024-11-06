@@ -2421,11 +2421,11 @@ OptionResult Options::init(int argc, char** argv, const SGPath& appDataPath)
     } else {
     // XML properties file
         SGPath f = SGPath::fromUtf8(argv[i]);
-      if (!f.exists()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << f);
-      } else {
-        p->propertyFiles.push_back(f);
-      }
+        if (!f.exists()) {
+          SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << f);
+        } else {
+          p->propertyFiles.push_back(f);
+        }
     }
   } // of arguments iteration
   p->insertGroupMarker(); // command line is one group
@@ -2707,12 +2707,14 @@ void Options::readConfig(const SGPath& path)
     string line;
     getline( in, line, '\n' );
 
-    // catch extraneous (DOS) line ending character
-    int i;
-    for (i = line.length(); i > 0; i--)
-      if (line[i - 1] > 32)
-        break;
-    line = line.substr( 0, i );
+    simgear::strutils::stripTrailingNewlines_inplace(line);
+
+    // avoid processing empty lines
+    // https://sourceforge.net/p/flightgear/codetickets/2927/
+    if (line.empty()) {
+        in >> skipcomment;
+        continue;
+    }
 
     simgear::optional<std::string> value;
     const size_t space = line.find(' ');
@@ -2812,6 +2814,8 @@ int Options::parseOption(const string& s, const simgear::optional<std::string>& 
     }
 
     return addOption(key, value);
+  } else if (s.empty()) {
+      return FG_OPTIONS_OK;
   } else {
       flightgear::modalMessageBox("Unknown option", "Unknown command-line option: " + s);
     return FG_OPTIONS_ERROR;
