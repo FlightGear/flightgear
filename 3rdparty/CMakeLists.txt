@@ -29,5 +29,14 @@ if (NOT SYSTEM_CPPUNIT)
 endif()
 
 if (ENABLE_OSGXR AND NOT ENABLE_SYSTEM_OSGXR)
+
+    # Core profile: generated osg/GL includes <GL/glcorearb.h>, but we
+    # install that as part of SimGear. So we need to extend this value
+    # so osgXR can build
+    if (WIN32)
+        get_target_property(simgearScene_includes SimGearScene INTERFACE_INCLUDE_DIRECTORIES)
+        list(APPEND OPENSCENEGRAPH_INCLUDE_DIRS "${simgearScene_includes}")
+    endif()
+
     add_subdirectory(osgXR)
 endif()
