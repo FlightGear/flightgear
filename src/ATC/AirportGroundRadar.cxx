@@ -38,11 +38,12 @@ AirportGroundRadar::AirportGroundRadar(SGGeod min, SGGeod max): index(getBox, eq
 }
 
 AirportGroundRadar::AirportGroundRadar(FGAirportRef airport): index(getBox, equal) {
-    double minLat = airport->getLatitude() - 0.25;
-    double minLon = airport->getLongitude() - 0.25;
+	double INDEX_SIZE_DEG = 1;
+    double minLat = airport->getLatitude() - INDEX_SIZE_DEG/2;
+    double minLon = airport->getLongitude() - INDEX_SIZE_DEG/2;
 	SG_LOG(SG_ATC, SG_DEBUG, "Creating AirportGroundRadar for " << airport->getId());
 	AirportGroundRadar::airport = airport;
-	index.resize(SGRect<double>(minLat, minLon, 0.5, 0.5));
+	index.resize(SGRect<double>(minLat, minLon, INDEX_SIZE_DEG, INDEX_SIZE_DEG));
 }
 
 AirportGroundRadar::~AirportGroundRadar() {
@@ -52,10 +53,10 @@ bool AirportGroundRadar::add(SGSharedPtr<FGTrafficRecord> aiObject) {
 	bool ret = index.add(aiObject);
 	if (ret) {
 		SG_LOG(SG_ATC, SG_BULK, "Added Aircraft " << aiObject->getId() );	
-		index.printPath(aiObject);
+		//index.printPath(aiObject);
 	} else {
 		double distM = SGGeodesy::distanceM(aiObject->getPos(), airport->geod());
-		SG_LOG(SG_ATC, SG_ALERT, "Couldn't add Aircraft " << aiObject->getId() << "Dist " << distM  );	
+		SG_LOG(SG_ATC, SG_ALERT, "Couldn't add Aircraft " << aiObject->getId() << "(" << aiObject->getLeg() << ") to " << airport->getId() << " Dist " << distM << " Leg " << aiObject->getLeg() );	
 	}
 	return ret;
 }
