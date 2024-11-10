@@ -200,7 +200,7 @@ void FGAIFlightPlan::createArc(FGAIAircraft* ac, const SGGeod& center, int start
 
 void FGAIFlightPlan::createLine(FGAIAircraft* ac, const SGGeod& startPoint, double azimuth, double dist, double aElev, double dAlt, double vDescent, const char* pattern)
 {
-    double nPoints = dist / (vDescent * 2);
+    double nPoints = dist / (vDescent * 4);
     char buffer[20];
     double distIncrement = (dist / nPoints);
 

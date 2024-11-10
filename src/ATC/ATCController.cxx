@@ -219,12 +219,20 @@ void FGATCController::transmit(FGTrafficRecord* rec, FGAirportDynamics* parent, 
         fltRules = rec->getAircraft()->getTrafficRef()->getFlightRules();
         transponderCode = genTransponderCode(fltRules);
         rec->getAircraft()->SetTransponderCode(transponderCode);
-        text =
-            receiver + ". Start-up approved. " + atisInformation +
-            " correct, runway " + activeRunway + ", " + SID + ", squawk " +
-            transponderCode + ". " +
-            "For " + instructionText + " clearance call " + taxiFreqStr + ". " +
-            sender + " control.";
+        if (stationFreq!=taxiFreq) {
+            text =
+                receiver + ". Start-up approved. " + atisInformation +
+                " correct, runway " + activeRunway + ", " + SID + ", squawk " +
+                transponderCode + ". " +
+                "For " + instructionText + " clearance call " + taxiFreqStr + ". " +
+                sender + " control.";
+        } else {
+            text =
+                receiver + ". Start-up approved. " + atisInformation +
+                " correct, runway " + activeRunway + ", " + SID + ", squawk " +
+                transponderCode + ". " +
+                sender + " control.";
+        }
         break;
     case MSG_DENY_ENGINE_START:
         text = receiver + ". Standby.";
@@ -242,12 +250,20 @@ void FGATCController::transmit(FGTrafficRecord* rec, FGAirportDynamics* parent, 
         activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
         transponderCode = rec->getAircraft()->GetTransponderCode();
 
-        text =
-            receiver + ". Start-up approved. " + atisInformation +
-            " correct, runway " + activeRunway + ", " + SID + ", squawk " +
-            transponderCode + ". " +
-            "For " + instructionText + " clearance call " + taxiFreqStr + ". " +
-            sender + ".";
+        if (stationFreq!=taxiFreq) {
+            text =
+                receiver + ". Start-up approved. " + atisInformation +
+                " correct, runway " + activeRunway + ", " + SID + ", squawk " +
+                transponderCode + ". " +
+                "For " + instructionText + " clearance call " + taxiFreqStr + ". " +
+                sender + ".";
+        } else {
+            text =
+                receiver + ". Start-up approved. " + atisInformation +
+                " correct, runway " + activeRunway + ", " + SID + ", squawk " +
+                transponderCode + ". " +
+                sender + ".";
+        }
         break;
     case MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY:
         taxiFreqStr = formatATCFrequency3_2(taxiFreq);
@@ -342,6 +358,12 @@ void FGATCController::transmit(FGTrafficRecord* rec, FGAirportDynamics* parent, 
         break;
     case MSG_ACKNOWLEDGE_HOLD:
         text = receiver + " holding as published . " + sender;
+        break;
+    case MSG_TAXI_PARK:    
+        text = receiver + " taxi to " + rec->getAircraft()->GetFlightPlan()->getParkingGate()->getName() + " . " + sender;
+        break;
+    case MSG_ACKNOWLEDGE_TAXI_PARK:    
+        text = receiver + " taxi to " + rec->getAircraft()->GetFlightPlan()->getParkingGate()->getName() + " . " + sender;
         break;
     default:
         text = text + sender + ". Transmitting unknown Message. MsgId " + std::to_string(msgId);

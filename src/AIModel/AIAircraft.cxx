@@ -660,7 +660,7 @@ void FGAIAircraft::getGroundElev(double dt)
 
 void FGAIAircraft::doGroundAltitude()
 {
-    if ((fp->getLeg() == 7) && ((altitude_ft - tgt_altitude_ft) > 5)) {
+    if ((fp->getLeg() == AILeg::LANDING) && ((altitude_ft - tgt_altitude_ft) > 5)) {
         tgt_vs = -500;
     } else {
         if ((fabs(altitude_ft - (tgt_altitude_ft + groundOffset)) > 1000.0) ||
@@ -676,6 +676,11 @@ void FGAIAircraft::doGroundAltitude()
 void FGAIAircraft::announcePositionToController()
 {
     if (!trafficRef) {
+        return;
+    }    
+    const bool isUserAircraft = (manager == nullptr);
+
+    if ( isUserAircraft && globals->get_subsystem<FDMShell>()->is_suspended()) {
         return;
     }
 
@@ -712,16 +717,34 @@ void FGAIAircraft::announcePositionToController()
         }
         break;
     case AILeg::APPROACH:
+    case AILeg::HOLD:
         if (trafficRef->getArrivalAirport()->getDynamics()) {
             controller = trafficRef->getArrivalAirport()->getDynamics()->getApproachController();
         }
         break;
+    case AILeg::LANDING:
+        if (trafficRef->getArrivalAirport()->getDynamics()) {
+            controller = trafficRef->getArrivalAirport()->getDynamics()->getTowerController();
+        }
+        break;
     case AILeg::PARKING_TAXI: // Taxiing for parking
-        if (trafficRef->getArrivalAirport()->getDynamics()->getGroundController()->exists())
+        if (trafficRef->getArrivalAirport()->getDynamics()->getGroundController()->exists()) {
             controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundController();
+        } else {
+            SG_LOG(SG_ATC, SG_ALERT, trafficRef->getArrivalAirport()->getId() << " doesn't have a groundcontroller" );
+        }
+        break;
+    case AILeg::PARKING: // Parked
+        if (controller) {
+            SG_LOG(SG_AI, SG_BULK, "Will be signing off from " << controller->getName());
+            controller->signOff(getID());
+        } else {
+            SG_LOG(SG_AI, SG_BULK, "Controller was null");
+        }
+        controller = nullptr;
         break;
     default:
-        SG_LOG(SG_AI, SG_DEBUG, "AILeg " << leg << " not covered");        
+        SG_LOG(SG_AI, SG_ALERT, "AILeg " << leg << " not covered");        
         if (prevController) {
             SG_LOG(SG_AI, SG_BULK, "Will be signing off from " << prevController->getName());
         }

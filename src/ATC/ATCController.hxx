@@ -70,7 +70,8 @@ namespace ATCMessageState
         HOLD,
         CLEARED_TO_LAND,
         ACK_CLEARED_TO_LAND,
-        LANDING_TAXI
+        LANDING_TAXI,
+        SWITCH_TOWER_TO_GROUND
     };
 }
 
@@ -137,7 +138,9 @@ public:
         MSG_HOLD,
         MSG_ACKNOWLEDGE_HOLD,
         MSG_CLEARED_TO_LAND,
-        MSG_ACKNOWLEDGE_CLEARED_TO_LAND
+        MSG_ACKNOWLEDGE_CLEARED_TO_LAND,
+        MSG_TAXI_PARK,
+        MSG_ACKNOWLEDGE_TAXI_PARK
     } AtcMsgId;
 
     typedef enum {
