@@ -378,7 +378,7 @@ void FGATCController::transmit(FGTrafficRecord* rec, FGAirportDynamics* parent, 
             fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
         int onBoardRadioFreqI0 = (int)floor(onBoardRadioFreq0 * 100 + 0.5);
         int onBoardRadioFreqI1 = (int)floor(onBoardRadioFreq1 * 100 + 0.5);
-        SG_LOG(SG_ATC, SG_DEBUG, "COM1 : " << onBoardRadioFreq0 << " COM2 : " << onBoardRadioFreq1 << " Sending " << formatATCFrequency3_2(stationFreq) << " for " << text );
+        SG_LOG(SG_ATC, SG_DEBUG, "COM1 : " << onBoardRadioFreq0 << " COM2 : " << onBoardRadioFreq1 << " Sending to " << formatATCFrequency3_2(stationFreq) << " Txt : " << text );
         if (stationFreq == 0) {
             SG_LOG(SG_ATC, SG_DEBUG, getName() << " stationFreq not found");
         }
@@ -481,8 +481,12 @@ FGATCInstruction FGATCController::getInstruction(int id)
 */
 string FGATCController::formatATCFrequency3_2(int freq)
 {
-    char buffer[7]; // does this ever need to be freed?
-    snprintf(buffer, 7, "%3.2f", ((float)freq / 100.0));
+    char buffer[8]; // does this ever need to be freed?
+    if (freq>99999) {
+        snprintf(buffer, 8, "%3.3f", ((float)freq / 1000.0));
+    } else {
+        snprintf(buffer, 8, "%3.3f", ((float)freq / 100.0));
+    }
     return string(buffer);
 }
 
