@@ -114,8 +114,7 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
         i = estimatedArrivalTimes.begin();
         if ((eta + separation) < (*i)) {
             newEta = eta;
-            SG_LOG(SG_ATC, SG_BULK, "Storing at beginning");
-            SG_LOG(SG_ATC, SG_DEBUG, "Done. New ETA : " << newEta );
+            SG_LOG(SG_ATC, SG_DEBUG, "Start. New ETA : " << newEta );
             slotHousekeeping(newEta);
             return newEta;
         }
@@ -134,7 +133,7 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
                     newEta = (*i) + separation;
                     SG_LOG(SG_ATC, SG_BULK, "Storing at end + separation");
                 }
-                SG_LOG(SG_ATC, SG_DEBUG, "Done. New ETA : " << newEta << " Timediff : " << (newEta-eta));
+                SG_LOG(SG_ATC, SG_DEBUG, "End. New ETA : " << newEta << " Timediff : " << (newEta-eta));
                 slotHousekeeping(newEta);
                 return newEta;
             } else {

@@ -718,8 +718,6 @@ void FGGroundController::update(double dt)
         updateActiveTraffic(i, priority, now);
     }
 
-    //FIXME
-    //FGATCController::eraseDeadTraffic(startupTraffic);
     FGATCController::eraseDeadTraffic();
 }
 
@@ -736,45 +734,14 @@ void FGGroundController::updateStartupTraffic(TrafficVectorIterator i,
         SG_LOG(SG_ATC, SG_ALERT, "updateStartupTraffic: missing aircraft performance");
         return;
     }
-    //FIXME use ground radar for pushback
+
+    if( airportGroundRadar->isBlockedForPushback(*i) ) {
+        return;
+    }
+    
 
     (*i)->allowPushBack();
     (*i)->setPriority(priority++);
-    // in meters per second;
-    double vTaxi = ((*i)->getAircraft()->getPerformance()->vTaxi() * SG_NM_TO_METER) / 3600;
-    if (!(*i)->isActive(0)) {
-        return;
-    }
-
-    FGGroundNetwork* network = parent->parent()->groundNetwork();
-
-    if (!network) {
-        SG_LOG(SG_ATC, SG_ALERT, "updateStartupTraffic: missing ground network");
-        return;
-    }
-
-    // Check for all active aircraft whether it's current pos segment is
-    // an opposite of one of the departing aircraft's intentions
-    for (TrafficVectorIterator j = activeTraffic.begin(); j != activeTraffic.end(); j++) {
-        int pos = (*j)->getCurrentPosition();
-        if (pos > 0) {
-            FGTaxiSegment *seg = network->findOppositeSegment(pos-1);
-            if (seg) {
-                int posReverse = seg->getIndex();
-                for (intVecIterator k = (*i)->getIntentions().begin(); k != (*i)->getIntentions().end(); k++) {
-                    if ((*k) == posReverse) {
-                        (*i)->denyPushBack();
-                        network->findSegment(posReverse)->block((*i)->getId(), now, now);
-                    }
-                }
-            }
-        }
-    }
-    // if the current aircraft is still allowed to pushback, we can start reserving a route for if by blocking all the entry taxiways.
-    if (!(*i)->pushBackAllowed()) {
-        return;
-    }
-
 }
 
 bool FGGroundController::updateActiveTraffic(TrafficVectorIterator i,

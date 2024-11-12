@@ -343,7 +343,6 @@ class Node {
         {
             for (auto i = std::size_t(0); i < children.size(); i++)
             {
-                //FIXME
                 auto childBox = computeBox(bounds, static_cast<int>(i));
                 SG_LOG(SG_ATC, SG_BULK, "Query Quadtree center " << i << "\t" << childBox.x() << "\t" << childBox.y() << "\t" << childBox.width() << "\t" << childBox.height() );
                 if (childBox.contains(queryBox.getMin().x(), queryBox.getMin().y()) ||
