@@ -23,17 +23,17 @@ set(osg_soversion @osg_soversion@)
 set(openthreads_soversion @openthreads_soversion@)
 
 if (buildType STREQUAL "Release")
-    set(INNO_SETUP_OUT_NAME "FlightGear-${FLIGHTGEAR_VERSION}")
+    set(INNO_SETUP_OUT_NAME "FlightGear-${version}")
 elseif(buildType STREQUAL "Nightly")
     string(TIMESTAMP currentDate "%Y%m%d")
     set(INNO_SETUP_OUT_NAME "FlightGear-${currentDate}-nightly")
 else()
     execute_process(COMMAND "@GIT_EXECUTABLE@" --git-dir "@CMAKE_SOURCE_DIR@/.git" rev-parse --short HEAD
-        OUTPUT_VARIABLE REVISION
+        OUTPUT_VARIABLE revision
         OUTPUT_STRIP_TRAILING_WHITESPACE)
-    message(STATUS "Git revision is ${REVISION}")
+    message(STATUS "Git revision is ${revision}")
 
-    set(INNO_SETUP_OUT_NAME "FlightGear-${REVISION}-dev")
+    set(INNO_SETUP_OUT_NAME "FlightGear-${revision}-dev")
 endif()
 
 string(TIMESTAMP iss_config_timestamp)
