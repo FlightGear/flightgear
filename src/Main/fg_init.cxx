@@ -118,6 +118,7 @@
 #include <Network/http/httpd.hxx>
 #include <Viewer/CameraGroup.hxx>
 #include <Viewer/FGEventHandler.hxx>
+#include <Viewer/FGRenderingStats.hxx>
 #include <Viewer/GraphicsPresets.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/splash.hxx>
@@ -1105,6 +1106,7 @@ void fgCreateSubsystems(bool duringReset) {
         mgr->add<FGAircraftModel>();
         mgr->add<FGModelMgr>();
         mgr->add<FGViewMgr>();
+        mgr->add<FGRenderingStats>();
     }
     
     // SGSubsystemMgr::SOUND

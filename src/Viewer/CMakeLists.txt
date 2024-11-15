@@ -14,6 +14,7 @@ set(SOURCES
 	viewmgr.cxx
 	sview.cxx
 	GraphicsPresets.cxx
+	FGRenderingStats.cxx
 	)
 
 set(HEADERS
@@ -29,6 +30,7 @@ set(HEADERS
 	sview.hxx
 	GraphicsPresets.hxx
 	VRManager.hxx
+	FGRenderingStats.hxx
 	)
 
 if (ENABLE_OSGXR)
