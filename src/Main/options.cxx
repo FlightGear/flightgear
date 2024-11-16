@@ -3301,12 +3301,22 @@ void Options::showUsage() const
               // then split it up in several pieces.
 
               while ( t_str.size() > 47 ) {
-
                 string::size_type m = t_str.rfind(' ', 47);
-                msg += t_str.substr(0, m) + '\n';
-                msg.append( 32, ' ');
 
-                t_str.erase(t_str.begin(), t_str.begin() + m + 1);
+                if (m == string::npos) {
+                    m = t_str.find(' '); // fallback: find the first space
+                }
+
+                if (m == string::npos) {
+                    // No line wrapping at all. Maybe this is not the best for
+                    // some languages like Chinese, but at least this will
+                    // prevent FG from eating all memory.
+                    break;
+                } else {
+                    msg += t_str.substr(0, m) + '\n';
+                    msg.append( 32, ' ');
+                    t_str.erase(t_str.begin(), t_str.begin() + m + 1);
+                }
               }
               msg += t_str + '\n';
             }
