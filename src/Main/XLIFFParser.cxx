@@ -85,8 +85,10 @@ void XLIFFParser::endElement(const char* name)
         _target = _text;
     } else if (tag == "trans-unit") {
         finishTransUnit();
+    } else if (tag == "group") {
+        _resource.erase();
+        _resourceNode.reset();
     }
-    
 }
 
 void XLIFFParser::finishTransUnit()
