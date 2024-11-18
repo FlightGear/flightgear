@@ -55,8 +55,7 @@ const std::initializer_list<GuiFont> guiFonts = {
     { "HELVETICA_12", &FONT_HELVETICA_12 },
     { "HELVETICA_14", &FONT_HELVETICA_14 },
     { "HELVETICA_18", &PUFONT_HELVETICA_18 },
-    { "SANS_12B",     &FONT_SANS_12B },
-    { 0 }
+    { "SANS_12B",     &FONT_SANS_12B }
 };
 } // of anonymous namespace
 
