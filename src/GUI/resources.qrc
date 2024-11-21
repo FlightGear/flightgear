@@ -123,6 +123,8 @@
         <file>qml/GettingStartedTipLayer.qml</file>
         <file>qml/GettingStartedTipDisplay.qml</file>
         <file>qml/CatalogRefreshFailedNotification.qml</file>
+
+        <file>qml/+qt6/Settings.qml</file>
     </qresource>
 
     <qresource prefix="/preview">

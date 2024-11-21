@@ -124,6 +124,14 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
     setResizeMode(QQuickView::SizeRootObjectToView);
     engine()->addImportPath("qrc:///");
 
+    // allow selecting different QML files based on the Qt version we are
+    // compiled against
+    auto selector = new QQmlFileSelector(engine(), this);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    selector->setExtraSelectors({"qt6"});
+#endif
+
+
     QQmlContext* ctx = rootContext();
     ctx->setContextProperty("_launcher", m_controller);
     ctx->setContextProperty("_config", m_controller->config());
