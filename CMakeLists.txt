@@ -217,6 +217,9 @@ option(ENABLE_SENTRY     "Set to ON to build the Sentry.io crash reporting" ON)
 option(ENABLE_HUD        "Set to ON to build the default head-up display" ON)
 option(ENABLE_PUI        "Set to ON to build the legacy PUI user-interface" ON)
 
+option(CHECK_FOR_QT5        "Set to ON to attempt to look for Qt5" ON)
+option(CHECK_FOR_QT6        "Set to ON to attempt to look for Qt6" ON)
+
 # Test-suite options.
 option(ENABLE_AUTOTESTING "Set to ON to execute the test suite after building the test_suite target (default)" ON)
 
@@ -349,9 +352,23 @@ endif()
 ##############################################################################
 ## Qt5 setup setup
 if (ENABLE_QT)
-    find_package(QT NAMES Qt6 Qt5 COMPONENTS Core)
+    set(qtNames "")
+    if (CHECK_FOR_QT5)
+        message(STATUS "Will check for Qt5 libraries")
+        list(APPEND qtNames "Qt5")
+    endif()
+    if (CHECK_FOR_QT6)
+        list(APPEND qtNames "Qt6")
+    endif()
+
+
+    find_package(QT NAMES ${qtNames} COMPONENTS Core)
     if (QT_FOUND)
-        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Gui Network Qml Quick Svg)
+        if (${QT_VERSION_MAJOR} EQUAL "5")
+            set(minQtVersion 5.15.1)
+        endif()
+
+        find_package(Qt${QT_VERSION_MAJOR} ${minQtVersion} REQUIRED COMPONENTS Widgets Gui Network Qml Quick Svg)
         if (NOT Qt${QT_VERSION_MAJOR}Widgets_FOUND)
             message(FATAL_ERROR "Qt support enabled, Qt was found but some required packages are missing, stopping.")
         endif()
