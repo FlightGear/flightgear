@@ -170,7 +170,7 @@ public:
     {
     }
 
-    void update();
+    void update(const std::string& v);
 
     virtual void setSize(int w, int h);
 
@@ -755,7 +755,7 @@ void FGPUIDialog::updateValues(const std::string& objectName)
             }
         } else if (widgetType & PUCLASS_COMBOBOX) {
             fgComboBox* combo = static_cast<fgComboBox*>(widget);
-            combo->update();
+            combo->update(_propertyObjects[i]->node->getStringValue());
         } else {
             copy_to_pui(_propertyObjects[i]->node, widget);
         }
@@ -1570,20 +1570,25 @@ void LogList::setBuffer(simgear::BufferedLogCallback* buf)
 // Implementation of fgComboBox
 ////////////////////////////////////////////////////////////////////////
 
-void fgComboBox::update()
+void fgComboBox::update(const std::string& val)
 {
     if (_inHit) {
         return;
     }
 
-    std::string curValue(getStringValue());
+    // even if the values match, we might still need to update
+    // the current item. So no early return here.
+    if (val != getStringValue()) {
+        setValue(val.c_str());
+    }
+
     fgValueList::update();
     newList(_list);
     int currentItem = puaComboBox::getCurrentItem();
 
     // look for the previous value, in the new list
     for (int i = 0; _list[i] != 0; i++) {
-        if (_list[i] == curValue) {
+        if (_list[i] == val) {
             // don't set the current item again; this is important to avoid
             // recursion here if the combo callback ultimately causes another dialog-update
             if (i != currentItem) {
@@ -1593,6 +1598,10 @@ void fgComboBox::update()
             return;
         }
     } // of list values iteration
+
+    if (!val.empty()) {
+        SG_LOG(SG_GUI, SG_WARN, "Couldn't find item in list:" << val);
+    }
 
     // cound't find current item, default to first
     if (currentItem != 0) {
