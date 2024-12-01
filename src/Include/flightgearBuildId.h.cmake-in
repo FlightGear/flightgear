@@ -1,4 +1,4 @@
-// template file to produce build.h header
+// template file to produce flightgearBuildId.h header
 // this is produced at build time (not Cmake time) via the special
 // target defined by GenerateBuildInfo.Cmake
 // this ensures the info is always up to date, which does not happen

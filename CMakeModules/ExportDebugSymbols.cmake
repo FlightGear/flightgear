@@ -1,9 +1,9 @@
 
 
 # placehodler target for other ones to depend upon
-add_custom_target(
-    debug_symbols
-)
+if (NOT TARGET debug_symbols)
+    add_custom_target(debug_symbols)
+endif()
 
 function(export_debug_symbols target)
 

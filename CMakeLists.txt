@@ -412,7 +412,21 @@ set(FG_VERSION_PATCH ${CMAKE_MATCH_3})
 set(MIN_SIMGEAR_VERSION "${FG_VERSION_MAJOR}.${FG_VERSION_MINOR}.0")
 message(STATUS "Min Simgear version is ${MIN_SIMGEAR_VERSION}")
 
-find_package(SimGear ${MIN_SIMGEAR_VERSION} CONFIG REQUIRED)
+if (TARGET SimGearCore)
+    message(STATUS "Simgear targets exist, assuming superbuild")
+
+    # since we don't find(SimGear), we need to 
+    # find a few dependencies directly
+    if (SG_SOUND_USES_OPENALSOFT)
+        message((STATUS "Finding OpenAL"))
+        find_package(OpenAL CONFIG)
+    else()
+        find_package(OpenAL)
+    endif()
+
+else()
+    find_package(SimGear ${MIN_SIMGEAR_VERSION} CONFIG REQUIRED)
+endif()
 
 ##############################################################################
 
