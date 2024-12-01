@@ -481,6 +481,25 @@ void FGRouteMgr::setFlightPlan(const FlightPlanRef& plan)
   currentWaypointChanged();
 }
 
+void FGRouteMgr::departureChanged()
+{
+    auto gui = globals->get_subsystem<NewGUI>();
+    FGDialog* rmDlg = gui ? gui->getDialog("route-manager") : NULL;
+    if (rmDlg) {
+        rmDlg->runCallback("departure-changed");
+    }
+}
+
+void FGRouteMgr::arrivalChanged()
+{
+    auto gui = globals->get_subsystem<NewGUI>();
+    FGDialog* rmDlg = gui ? gui->getDialog("route-manager") : NULL;
+    if (rmDlg) {
+        rmDlg->runCallback("arrival-changed");
+    }
+}
+
+
 void FGRouteMgr::update( double dt )
 {
   if (dt <= 0.0) {
@@ -720,7 +739,7 @@ void FGRouteMgr::update_mirror()
   
   // set number as listener attachment point
   mirror->setIntValue("num", _plan->numLegs());
-    
+
   if (rmDlg) {
     rmDlg->updateValues();
   }

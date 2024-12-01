@@ -123,6 +123,9 @@ public:
         virtual void update() = 0;
     };
 
+    void runCallback(const std::string& name, SGPropertyNode_ptr args) override;
+
+
 private:
     enum {
         BACKGROUND = 0x01,

@@ -5,10 +5,8 @@
 
 #include <string>
 
+#include <simgear/props/propsfwd.hxx>
 #include <simgear/structure/SGWeakReferenced.hxx>
-
-// forward decls
-class SGPropertyNode;
 
 /**
  * An XML-configured dialog box.
@@ -70,6 +68,9 @@ public:
      * needs to be handled in advance of this interaction.
      */
     virtual void close() = 0;
+
+
+    virtual void runCallback(const std::string& name, SGPropertyNode_ptr args = {}) = 0;
 
 protected:
     /**

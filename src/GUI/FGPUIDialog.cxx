@@ -735,6 +735,27 @@ const char* FGPUIDialog::getName()
     return _name.c_str();
 }
 
+void FGPUIDialog::runCallback(const std::string& name, SGPropertyNode_ptr args)
+{
+    auto nas = globals->get_subsystem<FGNasalSys>();
+    if (!nas)
+        return;
+
+    SGPropertyNode* nasalNode = _props->getNode("nasal");
+    if (!nasalNode)
+        return;
+
+    auto callbackNode = nasalNode->getChild(name);
+    if (!callbackNode) {
+        SG_LOG(SG_GUI, SG_DEV_ALERT, "FGPUIDialog::runCallback: no Nasal callback '" << name << "' defined on dialog " << _name);
+        return;
+    }
+
+    string s = callbackNode->getStringValue();
+    string fileName = _module.c_str();
+    nas->handleCommand(_module.c_str(), fileName.c_str(), s.c_str(), args.get());
+}
+
 void FGPUIDialog::updateValues(const std::string& objectName)
 {
     for (unsigned int i = 0; i < _propertyObjects.size(); i++) {

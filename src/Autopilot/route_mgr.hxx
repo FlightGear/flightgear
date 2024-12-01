@@ -173,6 +173,8 @@ private:
      * 'edited' signal.
      */
     void waypointsChanged() override;
+    void arrivalChanged() override;
+    void departureChanged() override;
 
     void update_mirror();
 
