@@ -204,7 +204,6 @@ private:
     ColourDict _colors;
     typedef ColourDict::iterator _itt_t;
     typedef ColourDict::const_iterator _citt_t;
-    bool _usePUI = false;
     void clear_colors();
 
     // Read all the configuration files in a directory.

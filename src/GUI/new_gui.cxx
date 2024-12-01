@@ -37,24 +37,16 @@
 #include "FGWindowsMenuBar.hxx"
 #endif
 
-#if defined(HAVE_PUI)
-    // ensure we include this before puAux.h, so that 
-    // #define _PU_H_ 1 has been done, and hence we don't
-    // include the un-modified system pu.h
-    #include "FlightGear_pu.h"
+// ensure we include this before puAux.h, so that
+// #define _PU_H_ 1 has been done, and hence we don't
+// include the un-modified system pu.h
+#include "FlightGear_pu.h"
 
-    #include <plib/puAux.h>
-#endif
+#include <plib/puAux.h>
 
 
-#include "FGNasalMenuBar.hxx"
-#include "FGPUICompatDialog.hxx"
-#include "PUICompatObject.hxx"
-
-#if defined(HAVE_PUI)
 #include "FGPUIDialog.hxx"
 #include "FGPUIMenuBar.hxx"
-#endif
 
 #include "FGFontCache.hxx"
 #include "FGColor.hxx"
@@ -67,9 +59,7 @@
 using std::map;
 using std::string;
 
-#if defined(HAVE_PUI)
 extern void puCleanUpJunk(void);
-#endif
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of NewGUI.
@@ -130,8 +120,6 @@ static void scanMenus()
 void
 NewGUI::init ()
 {
-    _usePUI = fgGetBool("/sim/gui/use-pui", true);
-
     createMenuBarImplementation();
     fgTie("/sim/menubar/visibility", this,
           &NewGUI::getMenuBarVisible, &NewGUI::setMenuBarVisible);
@@ -210,14 +198,8 @@ NewGUI::createMenuBarImplementation()
    //     _menubar.reset(new FGWindowsMenuBar);
     }
 #endif
-#if defined(HAVE_PUI)
-    if (!_menubar.get() && _usePUI) {
+    if (!_menubar) {
         _menubar.reset(new FGPUIMenuBar);
-    }
-#endif
-
-    if (!_menubar.get()) {
-        _menubar.reset(new FGNasalMenuBar);
     }
 }
 
@@ -265,15 +247,6 @@ NewGUI::unbind ()
 
 void NewGUI::postinit()
 {
-    auto nas = globals->get_subsystem<FGNasalSys>();
-    nasal::Context ctx;
-    nasal::Hash guiModule{nas->getModule("gui"), ctx};
-    nasal::Hash compatModule = guiModule.createHash("xml");
-
-    FGPUICompatDialog::setupGhost(compatModule);
-    PUICompatObject::setupGhost(compatModule);
-    FGNasalMenuBar::setupGhosts(compatModule);
-
     _menubar->postinit();
 }
 
@@ -308,18 +281,7 @@ NewGUI::showDialog (const string &name)
 
     flightgear::addSentryBreadcrumb("showing GUI dialog:" + name, "info");
     try {
-        if (_usePUI) {
-#if defined(HAVE_PUI)
-            _active_dialogs[name] = new FGPUIDialog(getDialogProperties(name));
-#endif
-        } else {
-            SGSharedPtr<FGPUICompatDialog> pcd = new FGPUICompatDialog(getDialogProperties(name));
-            if (pcd->init()) {
-                _active_dialogs[name] = pcd; // establish ownership
-            } else {
-                return false;
-            }
-        }
+        _active_dialogs[name] = new FGPUIDialog(getDialogProperties(name));
 
         fgSetString("/sim/gui/dialogs/current-dialog", name);
 

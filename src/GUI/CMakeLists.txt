@@ -15,9 +15,6 @@ set(SOURCES
     MouseCursor.cxx
     MessageBox.cxx
     Highlight.cxx
-    FGPUICompatDialog.cxx
-    PUICompatObject.cxx
-    FGNasalMenuBar.cxx
   )
 
 set(HEADERS
@@ -32,9 +29,6 @@ set(HEADERS
     MouseCursor.hxx
     MessageBox.hxx
     Highlight.hxx
-    FGPUICompatDialog.hxx
-    PUICompatObject.hxx
-    FGNasalMenuBar.hxx
   )
 
 if(WIN32)
