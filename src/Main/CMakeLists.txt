@@ -61,7 +61,7 @@ set(MAIN_SOURCE
     bootstrap.cxx
     # we only want this file when building FGFS, so it can't be
     # part of fgfsObjects
-    ${CMAKE_SOURCE_DIR}/src/Scripting/NasalUnitTesting.cxx
+    ${PROJECT_SOURCE_DIR}/src/Scripting/NasalUnitTesting.cxx
 )
 
 # Set up the embedded resources.
@@ -103,7 +103,7 @@ setup_fgfs_includes(fgfs)
 
 add_executable(nasal
     nasal-bin.cxx
-    ${CMAKE_SOURCE_DIR}/src/Scripting/sqlitelib.cxx
+    ${PROJECT_SOURCE_DIR}/src/Scripting/sqlitelib.cxx
 )
 setup_fgfs_libraries(nasal)
 install(TARGETS nasal RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

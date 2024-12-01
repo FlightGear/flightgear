@@ -1,5 +1,5 @@
 
-set(BUILD_ID_DST_PATH "${CMAKE_BINARY_DIR}/src/Include/flightgearBuildId.h")
+set(BUILD_ID_DST_PATH "${PROJECT_BINARY_DIR}/src/Include/flightgearBuildId.h")
 
 if (FG_BUILD_TYPE STREQUAL "Dev")
   # default values for all of these
@@ -8,7 +8,7 @@ if (FG_BUILD_TYPE STREQUAL "Dev")
   set(REVISION "none")
 
   # generate a placeholder buildId header
-  configure_file (${CMAKE_SOURCE_DIR}/src/Include/flightgearBuildId.h.cmake-in ${BUILD_ID_DST_PATH})
+  configure_file (${PROJECT_SOURCE_DIR}/src/Include/flightgearBuildId.h.cmake-in ${BUILD_ID_DST_PATH})
 
   # dummy target, does nothing
   add_custom_target(buildId)
@@ -17,8 +17,8 @@ else()
   # this takes a little bit of time since we have to actually run Git as a sub-process
   add_custom_target(
     buildId
-    ${CMAKE_COMMAND} -D SRC=${CMAKE_SOURCE_DIR}
+    ${CMAKE_COMMAND} -D SRC=${PROJECT_SOURCE_DIR}
                     -D DST=${BUILD_ID_DST_PATH}
-                    -P ${CMAKE_SOURCE_DIR}/CMakeModules/buildId.cmake
+                    -P ${PROJECT_SOURCE_DIR}/CMakeModules/buildId.cmake
   )
 endif()
