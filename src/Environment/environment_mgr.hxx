@@ -34,7 +34,7 @@ class FGClimate;
 class FGClouds;
 class FGPrecipitationMgr;
 class SGSky;
-struct FGEnvironmentMgrMultiplayerListener;
+struct FGEnvironmentMgrPropertyListener;
 
 /**
  * Manage environment information.
@@ -70,9 +70,11 @@ public:
     virtual FGEnvironment getEnvironmentAtPosition(const SGGeod& aPos) const;
 
 private:
-    friend FGEnvironmentMgrMultiplayerListener;
+    friend FGEnvironmentMgrPropertyListener;
+
     void updateClosestAirport();
-    void updateTowerPosition();
+    void updateDynamicTowerPosition();
+    void onTowerAirportIDChanged();
 
     double get_cloud_layer_span_m (int index) const;
     void set_cloud_layer_span_m (int index, double span_m);
@@ -101,13 +103,15 @@ private:
 
     simgear::TiedPropertyList _tiedProperties;
     SGPropertyChangeListener * _3dCloudsEnableListener;
-    FGEnvironmentMgrMultiplayerListener * _multiplayerListener;
+
+    std::unique_ptr<FGEnvironmentMgrPropertyListener> _listener;
     SGSky* _sky;
 
     SGPropertyNode_ptr towerViewPositionLatDegNode;
     SGPropertyNode_ptr towerViewPositionLonDegNode;
     SGPropertyNode_ptr towerViewPositionAltFtNode;
-
+    SGPropertyNode_ptr _automaticTowerEnableNode;
+    
     const class FGAICarrier* nearestCarrier;
     const class FGAirport* nearestAirport;
 };

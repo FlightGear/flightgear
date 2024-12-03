@@ -71,12 +71,10 @@ void FG3DCloudsListener::valueChanged( SGPropertyNode * node )
   _fgClouds->set_3dClouds( _enableNode->getBoolValue() );
 }
 
-FGEnvironmentMgr::FGEnvironmentMgr () :
-  _environment(new FGEnvironment()),
-  _multiplayerListener(nullptr),
-  _sky(globals->get_renderer()->getSky()),
-  nearestCarrier(nullptr),
-  nearestAirport(nullptr)
+FGEnvironmentMgr::FGEnvironmentMgr() : _environment(new FGEnvironment()),
+                                       _sky(globals->get_renderer()->getSky()),
+                                       nearestCarrier(nullptr),
+                                       nearestAirport(nullptr)
 {
   fgClouds = new FGClouds;
   _3dCloudsEnableListener = new FG3DCloudsListener(fgClouds);
@@ -108,26 +106,45 @@ FGEnvironmentMgr::~FGEnvironmentMgr ()
   delete _environment;
 }
 
-struct FGEnvironmentMgrMultiplayerListener : SGPropertyChangeListener {
-    FGEnvironmentMgrMultiplayerListener(FGEnvironmentMgr* environmentmgr)
-    :
-    _environmentmgr(environmentmgr)
+
+struct FGEnvironmentMgrPropertyListener : SGPropertyChangeListener {
+    FGEnvironmentMgrPropertyListener(FGEnvironmentMgr* environmentmgr) : _environmentmgr(environmentmgr)
     {
-        _node = fgGetNode("/sim/current-view/model-view", true /*create*/);
-        _node->addChangeListener(this);
+        _modelViewNode = fgGetNode("/sim/current-view/model-view", true /*create*/);
+        _modelViewNode->addChangeListener(this);
+        _viewNumberNode = fgGetNode("/sim/current-view/view-number-raw", true /*create*/);
+        _viewNumberNode->addChangeListener(this);
+        _airportIdNode = fgGetNode("/sim/tower/airport-id", true /*create*/);
+        _airportIdNode->addChangeListener(this);
+        _autoTowerNode = fgGetNode("/sim/tower/auto-position", true /*create*/);
+        _autoTowerNode->addChangeListener(this);
     }
-    virtual void valueChanged(SGPropertyNode* node)
+
+    void valueChanged(SGPropertyNode* node) override
     {
-        _environmentmgr->updateClosestAirport();
+        if ((node == _modelViewNode) || (_autoTowerNode == node)) {
+            _environmentmgr->updateClosestAirport();
+        }
+
+        if ((node == _viewNumberNode) || (node == _airportIdNode)) {
+            _environmentmgr->onTowerAirportIDChanged();
+        }
     }
-    virtual ~FGEnvironmentMgrMultiplayerListener()
+    virtual ~FGEnvironmentMgrPropertyListener()
     {
-        _node->removeChangeListener(this);
+        _modelViewNode->removeChangeListener(this);
+        _viewNumberNode->removeChangeListener(this);
+        _airportIdNode->removeChangeListener(this);
+        _airportIdNode->removeChangeListener(this);
     }
     private:
         FGEnvironmentMgr*   _environmentmgr;
-        SGPropertyNode_ptr  _node;
+        SGPropertyNode_ptr _modelViewNode;
+        SGPropertyNode_ptr _viewNumberNode;
+        SGPropertyNode_ptr _airportIdNode;
+        SGPropertyNode_ptr _autoTowerNode;
 };
+
 
 SGSubsystem::InitStatus FGEnvironmentMgr::incrementalInit()
 {
@@ -135,7 +152,7 @@ SGSubsystem::InitStatus FGEnvironmentMgr::incrementalInit()
   InitStatus r = SGSubsystemGroup::incrementalInit();
   if (r == INIT_DONE) {
     fgClouds->Init();
-    _multiplayerListener = new FGEnvironmentMgrMultiplayerListener(this);
+    _listener.reset(new FGEnvironmentMgrPropertyListener(this));
     globals->get_event_mgr()->addTask("updateClosestAirport",
         [this](){ this->updateClosestAirport(); }, 10 );
   }
@@ -147,8 +164,7 @@ void
 FGEnvironmentMgr::shutdown()
 {
   globals->get_event_mgr()->removeTask("updateClosestAirport");
-  delete _multiplayerListener;
-  _multiplayerListener = nullptr;
+  _listener.reset();
   SGSubsystemGroup::shutdown();
 }
 
@@ -242,6 +258,8 @@ FGEnvironmentMgr::bind ()
   _tiedProperties.Tie("clouds3d-use-impostors", _sky,
           &SGSky::get_3dCloudUseImpostors,
           &SGSky::set_3dCloudUseImpostors);
+
+    _automaticTowerEnableNode = fgGetNode("/sim/tower/auto-position", true);
 }
 
 void
@@ -270,16 +288,57 @@ FGEnvironmentMgr::update (double dt)
     _cloudLayersDirty = false;
     fgClouds->set_update_event( fgClouds->get_update_event()+1 );
   }
-  updateTowerPosition();
-  
+  updateDynamicTowerPosition();
+
   fgSetDouble( "/environment/gravitational-acceleration-mps2",
     Environment::Gravity::instance()->getGravity(aircraftPos));
 }
 
-void FGEnvironmentMgr::updateTowerPosition()
+void FGEnvironmentMgr::onTowerAirportIDChanged()
+{
+    FGAirportRef apt;
+    const auto automaticTowerActive = _automaticTowerEnableNode->getBoolValue();
+
+    if (automaticTowerActive) {
+        apt = FGAirport::findByIdent(fgGetString("/sim/airport/closest-airport-id"));
+    } else {
+        apt = FGAirport::findByIdent(fgGetString("/sim/tower/airport-id"));
+    }
+
+    if (!apt) {
+        return;
+    }
+
+    SGGeod towerPos;
+    if (apt->hasTower()) {
+        towerPos = apt->getTowerLocation();
+        SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "airport-id=" << apt->getId() << " tower_pos=" << towerPos);
+    } else {
+        towerPos = apt->geod();
+        SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "no tower for airport-id=" << apt->getId());
+    }
+    //Ensure that the tower isn't at ground level by adding a nominal amount
+    // TODO: (fix the data so that too short or too tall towers aren't present in the data)
+    auto towerAirpotDistance = abs(towerPos.getElevationFt() - apt->geod().getElevationFt());
+    if (towerAirpotDistance < min_tower_height_feet) {
+        towerPos.setElevationFt(towerPos.getElevationFt() + default_tower_height_feet);
+        SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "Tower altitude adjusted because it was at below minimum height above ground (" << min_tower_height_feet << "feet) for airport " << nearestAirport->getId());
+    } else if (towerAirpotDistance > max_tower_height_feet) {
+        towerPos.setElevationFt(towerPos.getElevationFt() + default_tower_height_feet);
+        SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "Tower altitude adjusted because it was taller than the permitted maximum of (" << max_tower_height_feet << "feet) for airport " << nearestAirport->getId());
+    }
+
+    std::string path = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)/sim/tower/");
+
+    fgSetDouble(path + "latitude-deg", towerPos.getLatitudeDeg());
+    fgSetDouble(path + "longitude-deg", towerPos.getLongitudeDeg());
+    fgSetDouble(path + "altitude-ft", towerPos.getElevationFt());
+}
+
+void FGEnvironmentMgr::updateDynamicTowerPosition()
 {
     if (towerViewPositionLatDegNode != nullptr && towerViewPositionLonDegNode != nullptr && towerViewPositionAltFtNode != nullptr) {
-        auto automaticTowerActive = fgGetBool("/sim/tower/auto-position", true);
+        const auto automaticTowerActive = _automaticTowerEnableNode->getBoolValue();
 
         fgSetDouble("/sim/airport/nearest-tower-latitude-deg",  towerViewPositionLatDegNode->getDoubleValue());
         fgSetDouble("/sim/airport/nearest-tower-longitude-deg", towerViewPositionLonDegNode->getDoubleValue());
@@ -317,12 +376,11 @@ void FGEnvironmentMgr::updateClosestAirport()
     // 2. find nearest carrier
     // - select the nearest one as the tower.
 
-    nearestAirport = FGAirport::findClosest(pos, 100.0);
-    auto automaticTowerActive = fgGetBool("/sim/tower/auto-position", true);
+    auto nearestAirport = FGAirport::findClosest(pos, 100.0);
+    const auto automaticTowerActive = _automaticTowerEnableNode->getBoolValue();
 
     SGGeod nearestTowerPosition;
     std::string nearestIdent;
-    const SGGeod airportGeod;
     double towerDistance = std::numeric_limits<double>::max();
     if (nearestAirport) {
         const std::string currentId = fgGetString("/sim/airport/closest-airport-id", "");
@@ -331,36 +389,18 @@ void FGEnvironmentMgr::updateClosestAirport()
             fgSetString("/sim/airport/closest-airport-id", nearestAirport->ident().c_str());
         }
 
-        if (nearestAirport->hasTower()) {
-            nearestTowerPosition = nearestAirport->getTowerLocation();
-            SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "airport-id=" << nearestAirport->getId() << " tower_pos=" << nearestTowerPosition);
-        }
-        else {
-            nearestTowerPosition = nearestAirport->geod();
-            SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "no tower for airport-id=" << nearestAirport->getId());
-        }
-        //Ensure that the tower isn't at ground level by adding a nominal amount
-        // TODO: (fix the data so that too short or too tall towers aren't present in the data)
-        auto towerAirpotDistance = abs(nearestTowerPosition.getElevationFt() - nearestAirport->geod().getElevationFt());
-        if (towerAirpotDistance < min_tower_height_feet) {
-            nearestTowerPosition.setElevationFt(nearestTowerPosition.getElevationFt() + default_tower_height_feet);
-            SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "Tower altitude adjusted because it was at below minimum height above ground (" << min_tower_height_feet << "feet) for airport " << nearestAirport->getId());
-        }
-        else if (towerAirpotDistance > max_tower_height_feet) {
-            nearestTowerPosition.setElevationFt(nearestTowerPosition.getElevationFt() + default_tower_height_feet);
-            SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "Tower altitude adjusted because it was taller than the permitted maximum of (" << max_tower_height_feet << "feet) for airport " << nearestAirport->getId());
-        }
-        //
+        nearestTowerPosition = nearestAirport->geod();
         nearestIdent = nearestAirport->ident();
         towerDistance = SGGeodesy::distanceM(nearestTowerPosition, pos);
-        
-        // when the tower doesn't move we can clear these. 
-        // if the carrier is nearer these variables will be set in that logic.
+
+        // clear these so we don't do dynamic updates unless a carrier is active
         towerViewPositionLatDegNode = towerViewPositionLonDegNode = towerViewPositionAltFtNode = nullptr;
     }
     else {
         SG_LOG(SG_ENVIRONMENT, SG_INFO, "FGEnvironmentMgr::update: No airport within 100NM range");
     }
+
+    // check for closer carrier
     auto nctn = SGSharedPtr< NearestCarrierToNotification> (new NearestCarrierToNotification(pos));
     if (simgear::Emesary::ReceiptStatus::OK == simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(nctn)) {
         if (nearestCarrier != nctn->GetCarrier()) {
@@ -392,23 +432,7 @@ void FGEnvironmentMgr::updateClosestAirport()
         fgSetDouble("/sim/airport/nearest-carrier-longitude-deg", nctn->GetPosition()->getLongitudeDeg());
         fgSetDouble("/sim/airport/nearest-carrier-altitude-ft", nctn->GetPosition()->getElevationFt());
         fgSetDouble("/sim/airport/nearest-carrier-deck-height", nctn->GetDeckheight());
-    } else {
-        if (nearestAirport != nullptr) {
-
-            if (automaticTowerActive) {
-              std::string   path = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)/sim/tower/");
-              fgSetString(path + "airport-id", nearestAirport->getId());
-
-              fgSetDouble(path + "latitude-deg", nearestTowerPosition.getLatitudeDeg());
-              fgSetDouble(path + "longitude-deg", nearestTowerPosition.getLongitudeDeg());
-              fgSetDouble(path + "altitude-ft", nearestTowerPosition.getElevationFt());
-            }
-        }
-        else {
-            SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "FGEnvironmentMgr::update: No airport or carrier within 100NM range of current multiplayer aircraft");
-        }
     }
-
 
     if (fgGetString("/sim/airport/nearest-tower-ident") != nearestIdent) {
         SG_LOG(SG_ENVIRONMENT, SG_INFO, "Nearest airport tower now " << nearestIdent);
@@ -419,8 +443,16 @@ void FGEnvironmentMgr::updateClosestAirport()
             fgSetString("/sim/tower/airport-id", nearestIdent);
             SG_LOG(SG_ENVIRONMENT, SG_INFO, "Auto Tower: now " << nearestIdent);
         }
+
+        std::string path = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)/sim/tower/");
+        auto currentViewAirportIdNode = fgGetNode(path + "airport-id", true);
+        const auto curId = currentViewAirportIdNode->getStringValue();
+        if (curId != nearestIdent) {
+          currentViewAirportIdNode->setStringValue(nearestIdent);
+        }
     }
-    updateTowerPosition();
+
+    updateDynamicTowerPosition();
 }
 
 
