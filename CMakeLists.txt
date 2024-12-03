@@ -365,7 +365,7 @@ if (ENABLE_QT)
     find_package(QT NAMES ${qtNames} COMPONENTS Core)
     if (QT_FOUND)
         if (${QT_VERSION_MAJOR} EQUAL "5")
-            set(minQtVersion 5.15.1)
+            set(minQtVersion 5.12.1)
         endif()
 
         find_package(Qt${QT_VERSION_MAJOR} ${minQtVersion} REQUIRED COMPONENTS Widgets Gui Network Qml Quick Svg)
