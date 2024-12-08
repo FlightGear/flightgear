@@ -3010,7 +3010,7 @@ SGPath defaultDownloadDir()
     return globals->get_fg_home();
 }
 
-SGPath Options::actualDownloadDir()
+SGPath Options::actualDownloadDir() const
 {
     SGPath downloadDir = SGPath::fromUtf8(valueForOption("download-dir"));
     if (!downloadDir.isNull()) {
@@ -3447,26 +3447,12 @@ void Options::printJSONReport() const
   cJSON_Delete(rootNode);
 }
 
-#if defined(__CYGWIN__)
-SGPath Options::platformDefaultRoot() const
-{
-  return SGPath::fromUtf8("../data");
-}
 
-#elif defined(SG_WINDOWS)
 SGPath Options::platformDefaultRoot() const
 {
-  return SGPath::fromUtf8("..\\data");
+    const auto fgdataDirName = "fgdata_" + std::to_string(FLIGHTGEAR_MAJOR_VERSION) + "_" + std::to_string(FLIGHTGEAR_MINOR_VERSION);
+    return actualDownloadDir() / fgdataDirName;
 }
-#elif defined(SG_MAC)
-// platformDefaultRoot defined in CocoaHelpers.mm
-#else
-SGPath Options::platformDefaultRoot() const
-{
-    return SGPath::fromUtf8(PKGLIBDIR);
-}
-
-#endif
 
 string_list Options::extractOptions() const
 {

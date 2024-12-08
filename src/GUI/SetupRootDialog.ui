@@ -3,14 +3,14 @@
  <class>SetupRootDialog</class>
  <widget class="QDialog" name="SetupRootDialog">
   <property name="windowModality">
-   <enum>Qt::ApplicationModal</enum>
+   <enum>Qt::WindowModality::ApplicationModal</enum>
   </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>627</width>
-    <height>392</height>
+    <width>887</width>
+    <height>513</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,62 +20,135 @@
    <iconset resource="resources.qrc">
     <normaloff>:/app-icon-large</normaloff>:/app-icon-large</iconset>
   </property>
-  <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,0">
-   <item row="7" column="1">
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
+  <layout class="QGridLayout" name="dialogLayout" rowstretch="0,0,0,1,0" columnstretch="0,0,0">
+   <item row="2" column="1" rowspan="2">
+    <widget class="QStackedWidget" name="contentsPages">
+     <property name="currentIndex">
+      <number>1</number>
      </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="0" column="0" rowspan="2">
-    <widget class="QLabel" name="bigIcon">
-     <property name="minimumSize">
-      <size>
-       <width>128</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>TextLabel</string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="1" colspan="2">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel</set>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1" colspan="2">
-    <widget class="QLabel" name="versionLabel">
-     <property name="text">
-      <string>FlightGear version 3.4.5</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="2" alignment="Qt::AlignTop">
-    <widget class="QPushButton" name="useDefaultsButton">
-     <property name="text">
-      <string>Use built-in data files</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="2" alignment="Qt::AlignTop">
-    <widget class="QPushButton" name="downloadButton">
-     <property name="text">
-      <string>Download </string>
-     </property>
+     <widget class="QWidget" name="mainPage">
+      <layout class="QGridLayout" name="mainPageLayout" columnstretch="0,1,0">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item row="1" column="1">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>If you already have the data files on your computer, you can select them.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="2" alignment="Qt::AlignmentFlag::AlignTop">
+        <widget class="QPushButton" name="browseButton">
+         <property name="text">
+          <string>Choose folder...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QPushButton" name="downloadButton">
+         <property name="text">
+          <string>Download </string>
+         </property>
+         <property name="default">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Download &amp; install the data files automatically</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="extractPage">
+      <layout class="QGridLayout" name="extractPageLayout" columnstretch="1,0">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item row="3" column="0" colspan="2">
+        <widget class="QProgressBar" name="installProgress">
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="installText">
+         <property name="text">
+          <string>Extract files:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="downloadText">
+         <property name="text">
+          <string>Download</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QProgressBar" name="downloadProgress">
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item row="1" column="1" colspan="2">
@@ -90,50 +163,43 @@
       <string>Replace me</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+      <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
      </property>
     </widget>
    </item>
-   <item row="2" column="2" alignment="Qt::AlignTop">
-    <widget class="QPushButton" name="browseButton">
-     <property name="text">
-      <string>Choose folder...</string>
+   <item row="0" column="0" rowspan="3">
+    <widget class="QLabel" name="bigIcon">
+     <property name="minimumSize">
+      <size>
+       <width>128</width>
+       <height>0</height>
+      </size>
      </property>
-     <property name="default">
-      <bool>true</bool>
+     <property name="text">
+      <string>TextLabel</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
-    <widget class="QLabel" name="useDefaultLabel">
-     <property name="text">
-      <string>To use the files included with this copy of FlightGear, click this button</string>
+   <item row="4" column="1" colspan="2">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
-     <property name="wordWrap">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="1">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>To download a compressed archive of the files, click the 'Download' button. Once the download is complete, extract the files to a suitable location and choose the folder using the button above.</string>
-     </property>
-     <property name="wordWrap">
-      <bool>true</bool>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel</set>
      </property>
     </widget>
    </item>
-   <item row="2" column="1">
-    <widget class="QLabel" name="label_3">
+   <item row="0" column="1" colspan="2">
+    <widget class="QLabel" name="versionLabel">
      <property name="text">
-      <string>To browse to a downloaded copy of the files on your computer, click this button</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt;&quot;&gt;FlightGear 3.4.5&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
-     <property name="wordWrap">
-      <bool>true</bool>
+     <property name="textFormat">
+      <enum>Qt::TextFormat::RichText</enum>
      </property>
     </widget>
    </item>

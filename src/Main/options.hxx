@@ -237,27 +237,35 @@ public:
    */
   static std::string getArgValue(int argc, char* argv[], const char* checkArg);
 
+  /**
+       * @brief Default local to download / update FGData. In older versions this
+       * was located inside the application (eg Contents/Resources on macOS). But
+       * now we download the data, it needs to be user-writeable.
+       *
+       * The value is computed based on actualDownloadDir at present
+       * 
+       * @return SGPath 
+       */
+  SGPath platformDefaultRoot() const;
 
-      SGPath platformDefaultRoot() const;
-
-      /**
+  /**
        * @brief extractOptions - extract the currently set options as
        * a string array. This can be used to examine what options were
        * requested / set so far.
        * @return
        */
-      string_list extractOptions() const;
+  string_list extractOptions() const;
 
-      /**
+  /**
         @brief the actual download dir in use, which may be the default or a user-supplied value
      */
-      SGPath actualDownloadDir();
+  SGPath actualDownloadDir() const;
 
-      /**
+  /**
        * Convert string to bool for boolean options. When param cannot be recognized as bool then
        * the true is returned.
        */
-      static bool paramToBool(const std::string& param);
+  static bool paramToBool(const std::string& param);
 
   private:
       void showUsage() const;
