@@ -22,14 +22,20 @@
 
 #include "SetupRootDialog.hxx"
 
-#include <QFileDialog>
+#include <condition_variable>
+#include <mutex>
+
+#include <QDebug>
 #include <QDesktopServices>
 #include <QDir>
+#include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #include <QSettings>
-#include <QDebug>
-#include <QSettings>
+#include <QThread>
 #include <QUrl>
 
 #include "ui_SetupRootDialog.h"
@@ -43,10 +49,146 @@
 #include "QtLauncher.hxx"
 #include "SettingsWrapper.hxx"
 
+#include <condition_variable>
+#include <simgear/io/untar.hxx>
+#include <simgear/misc/sg_dir.hxx>
+
+using namespace std::chrono_literals;
+
+quint32 SetupRootDialog::static_basePackagePatchLevel = 1;
+
+class InstallFGDataThread : public QThread
+{
+    Q_OBJECT
+public:
+    InstallFGDataThread(QObject* pr, QNetworkReply* r) : QThread(pr)
+    {
+        r->setReadBufferSize(64 * 1024 * 1024);
+        const auto rp = flightgear::Options::sharedInstance()->platformDefaultRoot();
+
+        m_downloadPath = rp.dirPath() / ("_download_data_" + std::to_string(FLIGHTGEAR_MAJOR_VERSION) + "_" + std::to_string(FLIGHTGEAR_MINOR_VERSION));
+        m_downloadPath.set_cached(false);
+        if (m_downloadPath.exists()) {
+            simgear::Dir ed(m_downloadPath);
+            ed.remove(true);
+        }
+
+        m_archive.reset(new simgear::ArchiveExtractor(m_downloadPath));
+        m_archive->setRemoveTopmostDirectory(true);
+        m_archive->setCreateDirHashEntries(true);
+        m_download = r;
+
+        // +1 to include the leading /
+        m_pathPrefixLength = m_downloadPath.utf8Str().length() + 1;
+        connect(m_download, &QNetworkReply::downloadProgress, this, &InstallFGDataThread::onDownloadProgress);
+
+        // lambda slot, but scoped to an object living on this thread.
+        // this means the extraction work is done asynchronously with the
+        // download
+        connect(m_download, &QNetworkReply::readyRead, this, &InstallFGDataThread::processBytes);
+    }
+
+    ~InstallFGDataThread()
+    {
+        if (!m_done) {
+            m_error = true;
+        }
+
+        wait();
+
+        if (m_error) {
+            simgear::Dir ed(m_downloadPath);
+            ed.remove(true);
+        }
+    }
+
+
+    void run() override
+    {
+        while (!m_error & !m_done) {
+            QByteArray localBytes;
+            {
+                std::unique_lock g(m_mutex);
+                m_bufferWait.wait_for(g, 100ms);
+                localBytes.swap(m_buffer);
+            }
+
+            if (!localBytes.isEmpty()) {
+                m_archive->extractBytes((const uint8_t*)localBytes.constData(), localBytes.size());
+                m_extractedBytes += localBytes.size();
+            }
+
+            const int percent = (m_totalSize > 0) ? (m_extractedBytes * 100) / m_totalSize : 0;
+
+            auto fullPathStr = m_archive->mostRecentExtractedPath().utf8Str();
+            fullPathStr.erase(0, m_pathPrefixLength);
+
+            emit installProgress(QString::fromStdString(fullPathStr), percent);
+
+            if (m_archive->hasError()) {
+                m_error = true;
+                qWarning() << "Archive error";
+            }
+
+            if (m_archive->isAtEndOfArchive()) {
+                // end the thread's event loop
+                m_done = true;
+            }
+        }
+
+        if (!m_error) {
+            const auto finalDataPath =  flightgear::Options::sharedInstance()->platformDefaultRoot();
+            SG_LOG(SG_IO, SG_INFO, "Renaming downloaded data to: " << finalDataPath);
+            bool renamedOk = m_downloadPath.rename(finalDataPath);
+            if (!renamedOk) {
+                m_error = true;
+            }
+        }
+    }
+
+    void onDownloadProgress(quint64 got, quint64 total)
+    {
+        emit downloadProgress(got, total);
+        m_totalSize = total;
+    }
+
+    void processBytes()
+    {
+        QByteArray bytes = m_download->readAll();
+        {
+            std::lock_guard g(m_mutex);
+            m_buffer.append(bytes);
+            m_bufferWait.notify_one();
+        }
+    }
+signals:
+    void extractionError(QString file, QString msg);
+
+    void installProgress(QString fileName, int percent);
+
+    void downloadProgress(quint64 cur, quint64 total);
+
+private:
+    std::mutex m_mutex;
+    std::condition_variable m_bufferWait;
+    QByteArray m_buffer;
+    quint64 m_totalSize = 0;
+    quint64 m_extractedBytes = 0;
+
+    bool m_done = false;
+    QNetworkReply* m_download;
+    SGPath m_downloadPath;
+    std::unique_ptr<simgear::ArchiveExtractor> m_archive;
+    bool m_error = false;
+    uint32_t m_pathPrefixLength = 0;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
 QString SetupRootDialog::rootPathKey()
 {
     // return a settings key like fg-root-2018-3-0
-    return QString("fg-root-") + QString(FLIGHTGEAR_VERSION).replace('.', '-');
+    return QString("fg-root-%1-%2").arg(FLIGHTGEAR_MAJOR_VERSION).arg(FLIGHTGEAR_MINOR_VERSION);
 }
 
 SetupRootDialog::SetupRootDialog(PromptState prompt) :
@@ -62,17 +204,15 @@ SetupRootDialog::SetupRootDialog(PromptState prompt) :
             this, &SetupRootDialog::onDownload);
     connect(m_ui->buttonBox, &QDialogButtonBox::rejected,
             this, &QDialog::reject);
-    connect(m_ui->useDefaultsButton, &QPushButton::clicked,
-            this, &SetupRootDialog::onUseDefaults);
 
-    // decide if the 'use defaults' button should be enabled or not
-    bool ok = defaultRootAcceptable();
-    m_ui->useDefaultsButton->setEnabled(ok);
-    m_ui->useDefaultLabel->setEnabled(ok);
-
-    m_ui->versionLabel->setText(tr("FlightGear version %1").arg(FLIGHTGEAR_VERSION));
+    m_ui->versionLabel->setText(tr("<h1>FlightGear %1</h1>").arg(FLIGHTGEAR_VERSION));
     m_ui->bigIcon->setPixmap(QPixmap(":/app-icon-large"));
+    m_ui->contentsPages->setCurrentIndex(0);
+
     updatePromptText();
+
+    m_networkManager = new QNetworkAccessManager(this);
+    m_networkManager->setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
 }
 
 bool SetupRootDialog::runDialog(bool usingDefaultRoot)
@@ -175,10 +315,25 @@ bool SetupRootDialog::validatePath(QString path)
     return true;
 }
 
+/**
+ * @brief Ensure the base pakcage at 'path' is the same or more recent than our
+ * specified base package minimum version.
+ * 
+ * @param path : candidate base pakcage folder
+
+ */
 bool SetupRootDialog::validateVersion(QString path)
 {
+    std::string minBasePackageVersion = std::to_string(FLIGHTGEAR_MAJOR_VERSION) + "." + std::to_string(FLIGHTGEAR_MINOR_VERSION) + "." + std::to_string(static_basePackagePatchLevel);
+
     std::string ver = fgBasePackageVersion(SGPath::fromUtf8(path.toStdString()));
-    return (ver == FLIGHTGEAR_VERSION);
+
+    // ensure major & minor fields match exactly
+    if (simgear::strutils::compare_versions(minBasePackageVersion, ver, 2) != 0) {
+        return false;
+    }
+
+    return simgear::strutils::compare_versions(minBasePackageVersion, ver) >= 0;
 }
 
 bool SetupRootDialog::defaultRootAcceptable()
@@ -223,10 +378,43 @@ void SetupRootDialog::onBrowse()
 
 void SetupRootDialog::onDownload()
 {
-    QString templateUrl = "https://sourceforge.net/projects/flightgear/files/release-%1/FlightGear-%2-data.txz";
-    QString majorMinorVersion = QString("%1.%2").arg(FLIGHTGEAR_MAJOR_VERSION).arg(FLIGHTGEAR_MINOR_VERSION);
-    QUrl downloadUrl(templateUrl.arg(majorMinorVersion).arg(VERSION));
-    QDesktopServices::openUrl(downloadUrl);
+    QString templateUrl = "https://sourceforge.net/projects/flightgear/files/release-%1/FlightGear-%2.%3-data.txz/download";
+    QString majorMinorVersion = QString(FLIGHTGEAR_MAJOR_MINOR_VERSION);
+    QUrl downloadUrl(templateUrl.arg(majorMinorVersion).arg(majorMinorVersion).arg(static_basePackagePatchLevel));
+
+    qInfo() << "Download URI:" << downloadUrl;
+
+    m_promptState = DownloadingExtractingArchive;
+    updatePromptText();
+
+    m_ui->contentsPages->setCurrentIndex(1);
+
+    QNetworkRequest req{downloadUrl};
+    req.setMaximumRedirectsAllowed(5);
+    req.setRawHeader("user-agent", "flighgtear-installer");
+    auto reply = m_networkManager->get(req);
+    auto installThread = new InstallFGDataThread(this, reply);
+    connect(installThread, &InstallFGDataThread::downloadProgress, this, [this](quint64 cur, quint64 total) {
+        m_ui->downloadProgress->setValue(cur);
+        m_ui->downloadProgress->setMaximum(total);
+
+        const int curMb = cur / (1024 * 1024);
+        const int totalMb = total / (1024 * 1024);
+        const int percent = (cur * 100) / total;
+        m_ui->downloadText->setText(tr("Downloaded %1 of %2 MB (%3%)").arg(curMb).arg(totalMb).arg(percent));
+    });
+
+    connect(installThread, &InstallFGDataThread::installProgress, this, [this](QString s, int percent) {
+        m_ui->installText->setText(tr("Installation %1% complete.\nExtracting %2").arg(percent).arg(s));
+        m_ui->installProgress->setValue(percent);
+        // m_ui->installProgress->setMaximum(total);
+    });
+
+    connect(installThread, &InstallFGDataThread::finished, this, [this]() {
+        accept();
+    });
+
+    installThread->start();
 }
 
 // void SetupRootDialog::onUseDefaults()
@@ -267,7 +455,7 @@ void SetupRootDialog::updatePromptText()
         break;
 
     case ChoseInvalidLocation:
-        t = tr("The choosen location (%1) does not appear to contain FlightGear data files. Please try another location.").arg(m_browsedPath);
+        t = tr("The chosen location (%1) does not appear to contain FlightGear data files. Please try another location.").arg(m_browsedPath);
         break;
 
     case ChoseInvalidVersion:
@@ -277,8 +465,18 @@ void SetupRootDialog::updatePromptText()
                "Please update or try another location").arg(m_browsedPath).arg(curVer).arg(QString::fromLatin1(FLIGHTGEAR_VERSION));
         break;
     }
+
+    case ChoseInvalidArchive:
+        t = tr("The chosen file (%1) is not a valid compressed archive.").arg(m_browsedPath);
+        break;
+
+
+    case DownloadingExtractingArchive:
+        t = tr("Please wait while the data files are downloaded, extracted and verified.");
+        break;
     }
 
     m_ui->promptText->setText(t);
 }
 
+#include "SetupRootDialog.moc"

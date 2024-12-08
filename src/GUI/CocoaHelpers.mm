@@ -142,21 +142,6 @@ SGPath platformDefaultDataPath()
     return appData;
 }
 
-namespace flightgear
-{
-    
-SGPath Options::platformDefaultRoot() const
-{
-    CocoaAutoreleasePool ap;
-    
-    NSURL* url = [[NSBundle mainBundle] resourceURL];
-    SGPath dataDir(URLToPath(url));
-    dataDir.append("data");
-    return dataDir;
-}
-    
-} // of namespace flightgear
-
 string_list FGLocale::getUserLanguages()
 {
     CocoaAutoreleasePool ap;
