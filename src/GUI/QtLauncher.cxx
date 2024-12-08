@@ -383,7 +383,7 @@ void selectUITranslation()
     QStringList uiLanguages = QLocale::system().uiLanguages();
     //qWarning() << "UI languages:" << uiLanguages;
 
-    for (QString locale : qAsConst(uiLanguages)) {
+    for (QString locale : std::as_const(uiLanguages)) {
         // remove script if it exists, eg zh-Hans-CN -> zh-CN
         locale = QLocale(locale).name();
         locale.replace('-', '_');
