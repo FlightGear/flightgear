@@ -1413,7 +1413,10 @@ void fgStartNewReset()
 
     fgInitAircraftPaths(true);
     fgInitAircraft(true, false /* not from launcher */);
-    
+
+    auto presets = globals->get_subsystem_mgr()->add<flightgear::GraphicsPresets>();
+    presets->applyInitialPreset();
+
     render = new FGRenderer(composite_viewer);
     render->setEventHandler(eventHandler);
     eventHandler->reset();

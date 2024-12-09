@@ -745,6 +745,9 @@ int fgMainInit( int argc, char **argv )
     // Copy the property nodes for the menus added by registered add-ons
     addons::AddonManager::instance()->addAddonMenusToFGMenubar();
 
+    // The GraphicsPreset subsystem is special - it's not added together with
+    // the rest of the subsystems because it should be present before all the
+    // graphics-related stuff is initialized.
     auto presets = globals->get_subsystem_mgr()->add<flightgear::GraphicsPresets>();
     presets->applyInitialPreset();
 
