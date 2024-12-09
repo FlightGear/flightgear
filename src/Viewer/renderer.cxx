@@ -1017,28 +1017,23 @@ SGVec2d uvFromIntersection(const Intersection& hit)
 PickList FGRenderer::pick(const osg::Vec2& windowPos)
 {
     PickList result;
-
-    typedef osgUtil::LineSegmentIntersector::Intersections Intersections;
-    Intersections intersections;
+    osgUtil::LineSegmentIntersector::Intersections intersections;
 
     if (!computeIntersections(CameraGroup::getDefault(), windowPos, intersections))
-        return result;
+        return result; // return empty list
     
     // We attempt to highlight nodes until Highlight::highlight_nodes()
     // succeeds and returns +ve, or highlighting is disabled and it returns -1.
     auto highlight = globals->get_subsystem<Highlight>();
-    int higlight_num_props = 0;
+    int highlight_num_props = 0;
     
-    for (Intersections::iterator hit = intersections.begin(),
-             e = intersections.end();
-         hit != e;
-         ++hit) {
-        const osg::NodePath& np = hit->nodePath;
+    for (const auto& hit : intersections) {
+        const osg::NodePath& np = hit.nodePath;
         osg::NodePath::const_reverse_iterator npi;
 
         for (npi = np.rbegin(); npi != np.rend(); ++npi) {
-            if (!higlight_num_props && highlight) {
-                higlight_num_props = highlight->highlightNodes(*npi);
+            if (!highlight_num_props && highlight) {
+                highlight_num_props = highlight->highlightNodes(*npi);
             }
             SGSceneUserData* ud = SGSceneUserData::getSceneUserData(*npi);
             if (!ud || (ud->getNumPickCallbacks() == 0))
@@ -1049,11 +1044,11 @@ PickList FGRenderer::pick(const osg::Vec2& windowPos)
                 if (!pickCallback)
                     continue;
                 SGSceneryPick sceneryPick;
-                sceneryPick.info.local = toSG(hit->getLocalIntersectPoint());
-                sceneryPick.info.wgs84 = toSG(hit->getWorldIntersectPoint());
+                sceneryPick.info.local = toSG(hit.getLocalIntersectPoint());
+                sceneryPick.info.wgs84 = toSG(hit.getWorldIntersectPoint());
 
                 if( pickCallback->needsUV() )
-                  sceneryPick.info.uv = uvFromIntersection(*hit);
+                  sceneryPick.info.uv = uvFromIntersection(hit);
 
                 sceneryPick.callback = pickCallback;
                 result.push_back(sceneryPick);
