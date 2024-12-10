@@ -1152,6 +1152,8 @@ FGRenderer::addCamera(osg::Camera* camera, bool useSceneData)
         viewer->addSlave(camera, false);
     }
     simgear::installEffectCullVisitor(camera);
+    // Disable stats
+    camera->setStats(0);
     if (should_restart_threading) {
         getViewerBase()->startThreading();
     }
