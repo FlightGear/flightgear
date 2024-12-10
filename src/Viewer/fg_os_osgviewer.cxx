@@ -216,7 +216,7 @@ void fgOSOpenWindow(bool stencil)
 
         // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg29820.html
         view->getDatabasePager()->setUnrefImageDataAfterApplyPolicy(true, false);
-        osg::GraphicsContext::createNewContextID();
+        // osg::GraphicsContext::createNewContextID();
 
         //viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
 
