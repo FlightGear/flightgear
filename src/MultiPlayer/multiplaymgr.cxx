@@ -1111,6 +1111,7 @@ FGMultiplayMgr::init (void)
   string rxAddress = fgGetString("/sim/multiplay/rxhost");
   short txPort = fgGetInt("/sim/multiplay/txport", 5000);
   string txAddress = fgGetString("/sim/multiplay/txhost");
+  bool broadcast = fgGetBool("/sim/multiplay/broadcast");
 
   int txRateHz = fgGetInt("/sim/multiplay/tx-rate-hz", 10);
   if (txRateHz < 1) {
@@ -1163,6 +1164,9 @@ FGMultiplayMgr::init (void)
     return;
   }
   mSocket->setBlocking(false);
+  if (broadcast) {
+    mSocket->setBroadcast(true);
+  }
   if (mSocket->bind(rxAddress.c_str(), rxPort) != 0) {
     SG_LOG( SG_NETWORK, SG_ALERT,
             "Cannot enable multiplayer mode: binding receive socket failed. "
