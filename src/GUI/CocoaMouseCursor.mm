@@ -18,6 +18,7 @@
 //
 
 #include "CocoaMouseCursor.hxx"
+#include "MouseCursor.hxx"
 
 #include <Foundation/NSPathUtilities.h>
 #include <AppKit/NSImage.h>
@@ -54,7 +55,28 @@ NSCursor* cocoaCursorForKey(FGMouseCursor::Cursor aKey)
     // FIXME - use a proper left-right cursor here.
     case FGMouseCursor::CURSOR_LEFT_RIGHT: return [NSCursor resizeLeftRightCursor];
     case FGMouseCursor::CURSOR_UP_DOWN: return [NSCursor resizeUpDownCursor];
-            
+
+    case FGMouseCursor::CURSOR_LEFT_SIDE:
+      return [NSCursor resizeLeftCursor];
+    case FGMouseCursor::CURSOR_RIGHT_SIDE:
+      return [NSCursor resizeRightCursor];
+    case FGMouseCursor::CURSOR_TOP_SIDE:
+      return [NSCursor resizeUpCursor];
+    case FGMouseCursor::CURSOR_BOTTOM_SIDE:
+      return [NSCursor resizeDownCursor];
+
+    case FGMouseCursor::CURSOR_TOP_LEFT:
+      return [NSCursor _topLeftResizeCursor];
+    case FGMouseCursor::CURSOR_TOP_RIGHT:
+      return [NSCursor _topRightResizeCursor];
+    case FGMouseCursor::CURSOR_BOTTOM_LEFT:
+      return [NSCursor _bottomLeftResizeCursor];
+    case FGMouseCursor::CURSOR_BOTTOM_RIGHT:
+      return [NSCursor _bottomRightResizeCursor];
+
+    case FGMouseCursor::CURSOR_WAIT:
+      return [NSCursor _waitCursor];
+
     case FGMouseCursor::CURSOR_SPIN_CW:
         path = [path stringByAppendingPathComponent:@"cursor-spin-cw.png"];
         img = [[NSImage alloc] initWithContentsOfFile:path];
@@ -88,7 +110,9 @@ void CocoaMouseCursor::setCursor(Cursor aCursor)
     if (aCursor == d->activeCursorKey) {
         return;
     }
- 
+
+    m_currentCursor = aCursor;
+
     CocoaAutoreleasePool pool;   
     d->activeCursorKey = aCursor;
     if (d->cursors.find(aCursor) == d->cursors.end()) {

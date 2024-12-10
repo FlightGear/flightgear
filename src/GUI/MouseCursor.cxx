@@ -61,12 +61,11 @@ public:
         mCursor(osgViewer::GraphicsWindow::InheritCursor)
     {
         mActualCursor = mCursor;
-
-        globals->get_renderer()->getViewerBase()->getWindows(mWindows);
     }
 
     virtual void setCursor(Cursor aCursor)
     {
+        m_currentCursor = aCursor;
         mCursor = translateCursor(aCursor);
         updateCursor();
     }
@@ -109,6 +108,19 @@ private:
         case CURSOR_IBEAM: return osgViewer::GraphicsWindow::TextCursor;
         case CURSOR_LEFT_RIGHT: return osgViewer::GraphicsWindow::LeftRightCursor;
         case CURSOR_UP_DOWN: return osgViewer::GraphicsWindow::UpDownCursor;
+
+        case CURSOR_LEFT_SIDE: return osgViewer::GraphicsWindow::LeftSideCursor;
+        case CURSOR_RIGHT_SIDE: return osgViewer::GraphicsWindow::RightSideCursor;
+        case CURSOR_TOP_SIDE: return osgViewer::GraphicsWindow::TopSideCursor;
+        case CURSOR_BOTTOM_SIDE: return osgViewer::GraphicsWindow::BottomSideCursor;
+
+        case CURSOR_TOP_LEFT: return osgViewer::GraphicsWindow::TopLeftCorner;
+        case CURSOR_TOP_RIGHT: return osgViewer::GraphicsWindow::TopRightCorner;
+        case CURSOR_BOTTOM_LEFT: return osgViewer::GraphicsWindow::BottomLeftCorner;
+        case CURSOR_BOTTOM_RIGHT: return osgViewer::GraphicsWindow::BottomRightCorner;
+
+        case CURSOR_WAIT: return osgViewer::GraphicsWindow::WaitCursor;
+
         default:
 			return osgViewer::GraphicsWindow::RightArrowCursor;
         }
@@ -116,7 +128,7 @@ private:
 
     void updateCursor()
     {
-        osgViewer::GraphicsWindow::MouseCursor cur = osgViewer::GraphicsWindow::InheritCursor;
+        auto cur = osgViewer::GraphicsWindow::InheritCursor;
         if (mCursorObscured || !mCursorVisible) {
             cur = osgViewer::GraphicsWindow::NoCursor;
         } else {
@@ -127,7 +139,14 @@ private:
             return;
         }
 
-        for (auto gw : mWindows) {
+        osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
+        if (!viewer_base)
+            return;
+
+        std::vector<osgViewer::GraphicsWindow*> windows;
+        viewer_base->getWindows(windows);
+
+        for (auto gw : windows) {
             gw->setCursor(cur);
         }
 
@@ -137,7 +156,6 @@ private:
     bool mCursorObscured;
     bool mCursorVisible;
     osgViewer::GraphicsWindow::MouseCursor mCursor, mActualCursor;
-    std::vector<osgViewer::GraphicsWindow*> mWindows;
 };
 
 } // of anonymous namespace
@@ -192,6 +210,10 @@ void FGMouseCursor::setAutoHideTimeMsec(unsigned int aMsec)
     mAutoHideTimeMsec = aMsec;
 }
 
+FGMouseCursor::Cursor FGMouseCursor::getCursor() const
+{
+    return m_currentCursor;
+}
 
 bool FGMouseCursor::setCursorCommand(const SGPropertyNode* arg, SGPropertyNode*)
 {

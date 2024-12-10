@@ -26,6 +26,7 @@
  **************************************************************************/
 
 
+#include "MouseCursor.hxx"
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -239,8 +240,8 @@ void fgHiResDump()
     }
 
     fgSetBool("/sim/menubar/visibility", false);
-    int mouse = fgGetMouseCursor();
-    fgSetMouseCursor(MOUSE_CURSOR_NONE);
+    const auto mouse = fgGetMouseCursor();
+    fgSetMouseCursor(FGMouseCursor::CURSOR_NONE);
 
     FGRenderer *renderer = globals->get_renderer();
 //     renderer->init();
@@ -503,7 +504,7 @@ namespace
             if (!_freeze)
                 _master_freeze->setBoolValue(true);
 
-            fgSetMouseCursor(MOUSE_CURSOR_NONE);
+            fgSetMouseCursor(FGMouseCursor::CURSOR_NONE);
 
             SGPath dir = SGPath::fromUtf8(fgGetString("/sim/paths/screenshot-dir"));
             if (dir.isNull())
@@ -558,7 +559,7 @@ namespace
         SGPropertyNode_ptr _master_freeze;
         bool _freeze;
         bool _result;
-        int _mouse;
+        FGMouseCursor::Cursor _mouse;
         int _xsize, _ysize;
         SGPath _path;
     };

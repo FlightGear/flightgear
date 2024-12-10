@@ -408,7 +408,7 @@ void fgExitCleanup()
     flightgear::addSentryBreadcrumb("starting fgExitCleanup", "info");
 
     if (_bootstrap_OSInit != 0) {
-        fgSetMouseCursor(MOUSE_CURSOR_POINTER);
+        fgSetMouseCursor(FGMouseCursor::CURSOR_ARROW);
         fgOSCloseWindow();
     }
 

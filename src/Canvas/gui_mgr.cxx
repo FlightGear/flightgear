@@ -146,7 +146,7 @@ class DesktopGroup:
                       _pointer_grab_window;
 
     uint8_t _resize {sc::Window::NONE};
-    int     _last_cursor {MOUSE_CURSOR_NONE};
+    FGMouseCursor::Cursor _last_cursor{FGMouseCursor::CURSOR_NONE};
     bool    _drag_finished {false};
 
     osg::Vec2f  _drag_start,
@@ -416,12 +416,20 @@ bool DesktopGroup::handleMouse(const osgEA& ea)
       else if( event->getScreenY() >= reg.b() - RESIZE_CORNER )
         _resize |= sc::Window::BOTTOM;
 
-      static const int cursor_mapping[] =
-      {
-        0, MOUSE_CURSOR_LEFTSIDE, MOUSE_CURSOR_RIGHTSIDE, 0,
-        MOUSE_CURSOR_TOPSIDE, MOUSE_CURSOR_TOPLEFT, MOUSE_CURSOR_TOPRIGHT, 0,
-        MOUSE_CURSOR_BOTTOMSIDE, MOUSE_CURSOR_BOTTOMLEFT, MOUSE_CURSOR_BOTTOMRIGHT,
-      };
+      static const FGMouseCursor::Cursor cursor_mapping[] =
+          {
+              FGMouseCursor::CURSOR_NONE,
+              FGMouseCursor::CURSOR_LEFT_SIDE,
+              FGMouseCursor::CURSOR_RIGHT_SIDE,
+              FGMouseCursor::CURSOR_NONE,
+              FGMouseCursor::CURSOR_TOP_SIDE,
+              FGMouseCursor::CURSOR_TOP_LEFT,
+              FGMouseCursor::CURSOR_TOP_RIGHT,
+              FGMouseCursor::CURSOR_NONE,
+              FGMouseCursor::CURSOR_BOTTOM_SIDE,
+              FGMouseCursor::CURSOR_BOTTOM_LEFT,
+              FGMouseCursor::CURSOR_BOTTOM_RIGHT,
+          };
 
       if( !cursor_mapping[_resize] )
         return false;
@@ -444,7 +452,7 @@ bool DesktopGroup::handleMouse(const osgEA& ea)
   if( _last_cursor )
   {
     fgSetMouseCursor(_last_cursor);
-    _last_cursor = 0;
+    _last_cursor = FGMouseCursor::CURSOR_NONE;
     return true;
   }
 

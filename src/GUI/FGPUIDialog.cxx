@@ -1,5 +1,6 @@
 // dialog.cxx: implementation of an XML-configurable dialog box.
 
+#include "MouseCursor.hxx"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -130,8 +131,8 @@ private:
     bool _resizable;
     bool _dragging;
     int _resizing;
-    int _start_cursor;
-    int _cursor;
+    FGMouseCursor::Cursor _start_cursor;
+    FGMouseCursor::Cursor _cursor;
     int _dlgX, _dlgY, _dlgW, _dlgH;
     int _startX, _startY;
 };
@@ -367,20 +368,19 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
         _startY = y;
 
         // check and prepare for resizing
-        static const int cursor[] = {
-            MOUSE_CURSOR_POINTER,
-            MOUSE_CURSOR_LEFTSIDE,
-            MOUSE_CURSOR_RIGHTSIDE,
-            0,
-            MOUSE_CURSOR_TOPSIDE,
-            MOUSE_CURSOR_TOPLEFT,
-            MOUSE_CURSOR_TOPRIGHT,
-            0,
-            MOUSE_CURSOR_BOTTOMSIDE,
-            MOUSE_CURSOR_BOTTOMLEFT,
-            MOUSE_CURSOR_BOTTOMRIGHT,
-            0,
-        };
+        static const FGMouseCursor::Cursor cursor[] = {
+            FGMouseCursor::CURSOR_ARROW,
+            FGMouseCursor::CURSOR_LEFT_SIDE,
+            FGMouseCursor::CURSOR_RIGHT_SIDE,
+            FGMouseCursor::CURSOR_NONE,
+            FGMouseCursor::CURSOR_TOP_SIDE,
+            FGMouseCursor::CURSOR_TOP_LEFT,
+            FGMouseCursor::CURSOR_TOP_RIGHT,
+            FGMouseCursor::CURSOR_NONE,
+            FGMouseCursor::CURSOR_BOTTOM_SIDE,
+            FGMouseCursor::CURSOR_BOTTOM_LEFT,
+            FGMouseCursor::CURSOR_BOTTOM_RIGHT,
+            FGMouseCursor::CURSOR_NONE};
 
         _resizing = 0;
         if (!global_drag && _resizable) {
@@ -401,8 +401,9 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
                 _resizing = BOTTOM | RIGHT;
 
             _cursor = cursor[_resizing];
-            if (_resizing && _resizable)
+            if (_resizing && _resizable) {
                 fgSetMouseCursor(_cursor);
+            }
         }
 
     } else if (updown == PU_DRAG && _dragging) {

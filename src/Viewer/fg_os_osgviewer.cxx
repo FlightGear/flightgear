@@ -635,68 +635,12 @@ void fgOSFullScreen()
     window->grabFocusIfPointerInWindow();
 }
 
-static void setMouseCursor(osgViewer::GraphicsWindow* gw, int cursor)
+void fgSetMouseCursor(FGMouseCursor::Cursor cursor)
 {
-    if (!gw) {
-        return;
-    }
-
-    osgViewer::GraphicsWindow::MouseCursor mouseCursor;
-    mouseCursor = osgViewer::GraphicsWindow::InheritCursor;
-    if (cursor == MOUSE_CURSOR_NONE)
-        mouseCursor = osgViewer::GraphicsWindow::NoCursor;
-    else if (cursor == MOUSE_CURSOR_POINTER)
-#ifdef SG_MAC
-        // osgViewer-Cocoa lacks RightArrowCursor, use Left
-        mouseCursor = osgViewer::GraphicsWindow::LeftArrowCursor;
-#else
-        mouseCursor = osgViewer::GraphicsWindow::RightArrowCursor;
-#endif
-    else if (cursor == MOUSE_CURSOR_WAIT)
-        mouseCursor = osgViewer::GraphicsWindow::WaitCursor;
-    else if (cursor == MOUSE_CURSOR_CROSSHAIR)
-        mouseCursor = osgViewer::GraphicsWindow::CrosshairCursor;
-    else if (cursor == MOUSE_CURSOR_LEFTRIGHT)
-        mouseCursor = osgViewer::GraphicsWindow::LeftRightCursor;
-    else if (cursor == MOUSE_CURSOR_TOPSIDE)
-        mouseCursor = osgViewer::GraphicsWindow::TopSideCursor;
-    else if (cursor == MOUSE_CURSOR_BOTTOMSIDE)
-        mouseCursor = osgViewer::GraphicsWindow::BottomSideCursor;
-    else if (cursor == MOUSE_CURSOR_LEFTSIDE)
-        mouseCursor = osgViewer::GraphicsWindow::LeftSideCursor;
-    else if (cursor == MOUSE_CURSOR_RIGHTSIDE)
-        mouseCursor = osgViewer::GraphicsWindow::RightSideCursor;
-    else if (cursor == MOUSE_CURSOR_TOPLEFT)
-        mouseCursor = osgViewer::GraphicsWindow::TopLeftCorner;
-    else if (cursor == MOUSE_CURSOR_TOPRIGHT)
-        mouseCursor = osgViewer::GraphicsWindow::TopRightCorner;
-    else if (cursor == MOUSE_CURSOR_BOTTOMLEFT)
-        mouseCursor = osgViewer::GraphicsWindow::BottomLeftCorner;
-    else if (cursor == MOUSE_CURSOR_BOTTOMRIGHT)
-        mouseCursor = osgViewer::GraphicsWindow::BottomRightCorner;
-
-    gw->setCursor(mouseCursor);
+    FGMouseCursor::instance()->setCursor(cursor);
 }
 
-static int _cursor = -1;
-
-void fgSetMouseCursor(int cursor)
+FGMouseCursor::Cursor fgGetMouseCursor()
 {
-    _cursor = cursor;
-    if (!globals || !globals->get_renderer())
-        return;
-    osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
-    if (!viewer_base)
-        return;
-
-    std::vector<osgViewer::GraphicsWindow*> windows;
-    viewer_base->getWindows(windows);
-    for (osgViewer::GraphicsWindow* gw : windows) {
-        setMouseCursor(gw, cursor);
-    }
-}
-
-int fgGetMouseCursor()
-{
-    return _cursor;
+    return FGMouseCursor::instance()->getCursor();
 }
