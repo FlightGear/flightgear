@@ -233,7 +233,7 @@ Item {
                         label: qsTr("Server")
                         enabled: enableMP.checked
                         description: qsTr("Select a server close to you for better responsiveness and reduced lag when flying online.")
-                        choices: _launcher.mpServersModel
+                        model: _launcher.mpServersModel
 
                         readonly property bool currentIsCustom: (_launcher.mpServersModel.currentServer === "__custom__")
                         readonly property bool currentIsNoServers: (_launcher.mpServersModel.currentServer === "__noservers__")

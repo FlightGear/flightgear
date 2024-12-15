@@ -29,7 +29,7 @@ Item {
     MouseArea {
         anchors.fill: parent
 
-        onClicked: {
+        onClicked: function(mouse) {
             if (mouse.modifiers & Qt.ShiftModifier ) {
                 root.cycleTextDisplay();
                 return;

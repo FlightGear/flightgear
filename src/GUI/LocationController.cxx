@@ -32,11 +32,12 @@
 
 #include "AirportDiagram.hxx"
 #include "CarrierDiagram.hxx"
-#include "NavaidDiagram.hxx"
-#include "LaunchConfig.hxx"
-#include "DefaultAircraftLocator.hxx"
-#include "NavaidSearchModel.hxx"
 #include "CarriersLocationModel.hxx"
+#include "DefaultAircraftLocator.hxx"
+#include "LaunchConfig.hxx"
+#include "NavaidDiagram.hxx"
+#include "NavaidSearchModel.hxx"
+#include "QmlPositionedModel.hxx"
 
 #include <Airports/airport.hxx>
 #include <Airports/groundnetwork.hxx>
@@ -93,10 +94,15 @@ FGPositionedList loadPositionedList(QVariant v)
 LocationController::LocationController(QObject *parent) :
     QObject(parent)
 {
+    qmlRegisterUncreatableType<QmlPositionedModel>("FlightGear.Launcher", 1, 0, "QmlPositionedModel", "no");
+
     m_searchModel = new NavaidSearchModel(this);
     m_detailQml = new QmlPositioned(this);
     m_baseQml = new QmlPositioned(this);
     m_carriersModel = new CarriersLocationModel(this);
+    m_runwaysModel = new QmlPositionedModel(this);
+    m_helipadsModel = new QmlPositionedModel(this);
+    m_parkingsModel = new QmlPositionedModel(this);
 
     m_defaultAltitude = QuantityValue{Units::FeetMSL, 6000};
     m_defaultAirspeed = QuantityValue{Units::Knots, 120};
@@ -236,6 +242,9 @@ void LocationController::clearLocation()
     m_baseQml->setGuid(0);
     m_carrierParkings.clear();
     m_carrierParking.clear();
+    m_runwaysModel->clear();
+    m_helipadsModel->clear();
+    m_parkingsModel->clear();
     emit baseLocationChanged();
 }
 
@@ -260,12 +269,27 @@ void LocationController::setBaseLocation(QmlPositioned* pos)
             m_onFinal = false;
             m_useActiveRunway = false;
         }
+
+        updateAirportModels();
     } else {
         m_airportLocation.clear();
     }
 
     emit offsetChanged();
     emit baseLocationChanged();
+}
+
+void LocationController::updateAirportModels()
+{
+    m_runwaysModel->setValues(m_airportLocation->getRunways());
+
+    FGPositionedList helipads;
+    for (unsigned int r = 0; r < m_airportLocation->numHelipads(); ++r) {
+        helipads.push_back(m_airportLocation->getHelipadByIndex(r));
+    }
+
+    m_helipadsModel->setValues(helipads);
+    m_parkingsModel->setValues(m_airportLocation->groundNetwork()->allParkings());
 }
 
 void LocationController::setDetailLocation(QmlPositioned* pos)
@@ -318,50 +342,6 @@ void LocationController::setUseActiveRunway(bool b)
 void LocationController::addToRecent(QmlPositioned* pos)
 {
     addToRecent(pos->inner());
-}
-
-QObjectList LocationController::airportRunways() const
-{
-    if (!m_airportLocation)
-        return {};
-
-    QObjectList result;
-    for (unsigned int r = 0; r < m_airportLocation->numRunways(); ++r) {
-        auto p = new QmlPositioned(m_airportLocation->getRunwayByIndex(r).ptr());
-        QQmlEngine::setObjectOwnership(p, QQmlEngine::JavaScriptOwnership);
-        result.push_back(p);
-    }
-
-    return result;
-}
-
-QObjectList LocationController::airportHelipads() const
-{
-    if (!m_airportLocation)
-        return {};
-
-    QObjectList result;
-    for (unsigned int r = 0; r < m_airportLocation->numHelipads(); ++r) {
-        auto p = new QmlPositioned(m_airportLocation->getHelipadByIndex(r).ptr());
-        QQmlEngine::setObjectOwnership(p, QQmlEngine::JavaScriptOwnership);
-        result.push_back(p);
-    }
-
-    return result;
-}
-
-QObjectList LocationController::airportParkings() const
-{
-    if (!m_airportLocation)
-        return {};
-
-    QObjectList result;
-    for (auto park : m_airportLocation->groundNetwork()->allParkings()) {
-        auto p = new QmlPositioned(park);
-        QQmlEngine::setObjectOwnership(p, QQmlEngine::JavaScriptOwnership);
-        result.push_back(p);
-    }
-    return result;
 }
 
 void LocationController::showHistoryInSearchModel()
@@ -625,6 +605,8 @@ void LocationController::restoreLocation(QVariantMap l)
             m_onFinal = l.value("location-on-final").toBool();
             setAbeam(l.value("abeam").toBool());
             m_offsetDistance = l.value("location-apt-final-distance", QVariant::fromValue(m_defaultOffsetDistance)).value<QuantityValue>();
+            updateAirportModels();
+
         } // of location is an airport
     } catch (const sg_exception&) {
         qWarning() << "Errors restoring saved location, clearing";
@@ -687,6 +669,7 @@ QVariantMap LocationController::saveLocation() const
                     locationSet.insert("location-apt-parking", QString::fromStdString(m_detailLocation->ident()));
                 }
             }
+
         } else { // not an aiport, must be a navaid
             locationSet.insert("location-navaid", QString::fromStdString(m_location->ident()));
             if (m_location->type() == FGPositioned::DME) {
@@ -838,6 +821,8 @@ void LocationController::setLocationProperties()
             // parking selection
             fgSetString("/sim/presets/parkpos", m_detailLocation->ident());
         }
+
+        updateAirportModels();
         // of location is an airport
     } else {
         fgSetString("/sim/presets/airport-id", "");

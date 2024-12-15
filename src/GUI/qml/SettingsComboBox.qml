@@ -3,7 +3,10 @@ import FlightGear 1.0
 
 SettingControl {
     id: root
-    property alias choices: popup.model
+
+    property alias choices: choicesModel.values
+    property var model: null
+
     property alias displayRole: popup.displayRole
 
     property alias selectedIndex: popup.currentIndex
@@ -15,11 +18,19 @@ SettingControl {
 
     implicitHeight: popup.height + Style.margin + description.height
 
+    StringListModel {
+        id: choicesModel
+    }
+
     PopupChoice {
         id: popup
         label: root.label
         enabled: root.enabled
         width: root.width
+
+        // if we have an explicit model, use it, otherwise use
+        // our local string list model
+        model: root.model ? root.model : choicesModel
     }
 
     SettingDescription {
