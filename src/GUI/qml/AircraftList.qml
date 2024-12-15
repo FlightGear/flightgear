@@ -291,7 +291,9 @@ FocusScope
 
         Connections {
             target: aircraftContent.item
-            onShowDetails: root.showDetails(uri)
+            onShowDetails: function(uri)  {
+                root.showDetails(uri);
+            }
         }
     }
 

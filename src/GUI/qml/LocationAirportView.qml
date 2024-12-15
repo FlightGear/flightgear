@@ -22,7 +22,7 @@ Item {
         anchors.fill: parent
         airport: airportData.guid
 
-        onClicked: {
+        onClicked: function(pos) {
             if (pos === null)
                 return;
 
@@ -138,7 +138,6 @@ Item {
                 PopupChoice {
                     id: runwayChoice
                     model: _location.airportRunways
-                    displayRole: "ident"
                     width: parent.width * 0.5
                     anchors.verticalCenter: parent.verticalCenter
                     headerText: qsTr("Active")
@@ -154,8 +153,9 @@ Item {
                             _location.useActiveRunway = true;
                             diagram.selection = null;
                         } else {
-                            _location.setDetailLocation(_location.airportRunways[currentIndex])
-                            diagram.selection = _location.airportRunways[currentIndex]
+                            var rwy = _location.airportRunways.itemAt(currentIndex);
+                            _location.setDetailLocation(rwy);
+                            diagram.selection = rwy;
                         }
                     }
 
@@ -166,15 +166,7 @@ Item {
                             return;
                         }
 
-                        for (var i=0; i < _location.airportRunways.length; ++i) {
-                            if (_location.airportRunways[i].equals(_location.detail)) {
-                                currentIndex = i;
-                                return;
-                            }
-                        }
-
-                        // not found, default to active
-                        currentIndex = -1;
+                        currentIndex = _location.airportRunways.indexOf(_location.detail);
                     }
                 }
             }
@@ -272,7 +264,7 @@ Item {
             Row {
                 width: parent.width
                 spacing: Style.margin
-                visible: (_launcher.aircraftType === LauncherController.Helicopter) && ( _location.airportHelipads.length > 0)
+                visible: (_launcher.aircraftType === LauncherController.Helicopter) && (! _location.airportHelipads.empty)
 
                 RadioButton {
                     id: helipadRadio
@@ -292,7 +284,6 @@ Item {
                 PopupChoice {
                     id: helipadChoice
                     model: _location.airportHelipads
-                    displayRole: "ident"
                     width: parent.width * 0.5
                     anchors.verticalCenter: parent.verticalCenter
                     enabled: helipadRadio.selected
@@ -303,20 +294,14 @@ Item {
 
                     function setLocation()
                     {
-                        _location.setDetailLocation(_location.airportHelipads[currentIndex])
-                        diagram.selection = _location.airportHelipads[currentIndex] 
+                        var pad = _location.airportHelipads.itemAt(currentIndex);
+                        _location.setDetailLocation(pad);
+                        diagram.selection = pad;
                     }
 
                     function syncCurrentIndex()
                     {
-                        for (var i=0; i < _location.airportHelipads.length; ++i) {
-                            if (_location.airportHelipads[i].equals(_location.detail)) {
-                                currentIndex = i;
-                                return;
-                            }
-                        }
-
-                        currentIndex = 0;
+                        currentIndex = _location.airportHelipads.indexOf(_location.detail);
                     }
                 }
             }
@@ -347,7 +332,6 @@ Item {
                 PopupChoice {
                     id: parkingChoice
                     model: _location.airportParkings
-                    displayRole: "name"
                     width: parent.width * 0.5
                     anchors.verticalCenter: parent.verticalCenter
                     headerText: qsTr("Available")
@@ -364,16 +348,7 @@ Item {
                             return;
                         }
 
-                        for (var i=0; i < _location.airportParkings.length; ++i) {
-                            if (_location.airportParkings[i].equals(_location.detail)) {
-                                currentIndex = i;
-                                return;
-                            }
-                        }
-
-                        // not found, default to available
-                        console.info("Couldn't find parking at airport:" + _location.detail.ident)
-                        currentIndex = -1;
+                        currentIndex = _location.airportParkings.indexOf(_location.detail);
                     }
 
                     function setLocation()
@@ -382,8 +357,9 @@ Item {
                             _location.useAvailableParking = true;
                             diagram.selection = null;
                         } else {
-                            _location.setDetailLocation(_location.airportParkings[currentIndex])
-                            diagram.selection = _location.airportParkings[currentIndex]
+                            var park = _location.airportParkings.itemAt(currentIndex);
+                            _location.setDetailLocation(park);
+                            diagram.selection = park;
                         }
                     }
                 }

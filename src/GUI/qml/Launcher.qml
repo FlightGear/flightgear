@@ -118,7 +118,7 @@ Item {
 
         onShowMenu: menu.show();
 
-        onSelectPage: {
+        onSelectPage: function(pageSource) {
             pageLoader.source = pageSource
             root.state = pagesModel.get(selectedPage).state
         }

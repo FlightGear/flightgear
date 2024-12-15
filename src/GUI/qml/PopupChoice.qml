@@ -111,7 +111,10 @@ Item {
             currentIndex: root.currentIndex
             model: root.model
             headerText: root.headerText
-            onSelect: root.select(index)
+            onSelect: function doSelect(index) {
+                root.select(index);
+            }
+            
             displayRole: root.displayRole
         }
     }

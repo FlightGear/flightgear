@@ -34,10 +34,11 @@
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 Q_MOC_INCLUDE("NavaidSearchModel.hxx")
+Q_MOC_INCLUDE("QmlPositionedModel.hxx")
 #endif
 
 class NavaidSearchModel;
-
+class QmlPositionedModel;
 class LocationController : public QObject
 {
     Q_OBJECT
@@ -47,9 +48,9 @@ class LocationController : public QObject
     Q_PROPERTY(NavaidSearchModel* searchModel MEMBER m_searchModel CONSTANT)
     Q_PROPERTY(CarriersLocationModel* carriersModel MEMBER m_carriersModel CONSTANT)
 
-    Q_PROPERTY(QList<QObject*> airportRunways READ airportRunways NOTIFY baseLocationChanged)
-    Q_PROPERTY(QList<QObject*> airportParkings READ airportParkings NOTIFY baseLocationChanged)
-    Q_PROPERTY(QList<QObject*> airportHelipads READ airportHelipads NOTIFY baseLocationChanged)
+    Q_PROPERTY(QmlPositionedModel* airportRunways READ airportRunways CONSTANT)
+    Q_PROPERTY(QmlPositionedModel* airportParkings READ airportParkings CONSTANT)
+    Q_PROPERTY(QmlPositionedModel* airportHelipads READ airportHelipads CONSTANT)
 
     Q_PROPERTY(bool offsetEnabled READ offsetEnabled WRITE setOffsetEnabled NOTIFY offsetChanged)
     Q_PROPERTY(QuantityValue offsetRadial READ offsetRadial WRITE setOffsetRadial NOTIFY offsetChanged)
@@ -149,9 +150,20 @@ public:
 
     Q_INVOKABLE void addToRecent(QmlPositioned* pos);
 
-    QObjectList airportRunways() const;
-    QObjectList airportHelipads() const;
-    QObjectList airportParkings() const;
+    QmlPositionedModel* airportRunways() const
+    {
+        return m_runwaysModel;
+    }
+
+    QmlPositionedModel* airportHelipads() const
+    {
+        return m_helipadsModel;
+    }
+
+    QmlPositionedModel* airportParkings() const
+    {
+        return m_parkingsModel;
+    }
 
     Q_INVOKABLE void showHistoryInSearchModel();
 
@@ -231,6 +243,7 @@ private Q_SLOTS:
     void onSaveCurrentLocation();
 private:
     void clearLocation();
+    void updateAirportModels();
 
     void onSearchComplete();
     void addToRecent(FGPositionedRef pos);
@@ -258,6 +271,10 @@ private:
     LaunchConfig* m_config = nullptr;
     QmlPositioned* m_detailQml = nullptr;
     QmlPositioned* m_baseQml = nullptr;
+
+    QmlPositionedModel* m_runwaysModel;
+    QmlPositionedModel* m_helipadsModel;
+    QmlPositionedModel* m_parkingsModel;
 
     bool m_offsetEnabled = false;
     QuantityValue m_offsetRadial;

@@ -83,10 +83,14 @@ Rectangle {
                 model: root.model
                 delegate: PopupChoiceItem {
                     isCurrentIndex: root.currentIndex === model.index
-                    onSelect: root.doSelect(index)
-                    text: model && model.hasOwnProperty(displayRole) ? model[displayRole] // Qml ListModel and QAbstractItemModel
-                                                                     : modelData && modelData.hasOwnProperty(displayRole) ? modelData[displayRole] // QObjectList / QObject
-                                                                                                                          : modelData != undefined ? modelData : "" // Models without role
+                    onSelect: function select(index) {
+                        root.doSelect(index)
+                    }
+                    
+                    text: (Array.isArray(model) ? modelData[displayRole] : model[displayRole]) 
+                    // text: model && model.hasOwnProperty(displayRole) ? model[displayRole] // Qml ListModel and QAbstractItemModel
+                    //                                                  : modelData && modelData.hasOwnProperty(displayRole) ? modelData[displayRole] // QObjectList / QObject
+                    //                                                                                                       : modelData != undefined ? modelData : "" // Models without role
                 }
             } // menu item repeater
         } // of menu contents column

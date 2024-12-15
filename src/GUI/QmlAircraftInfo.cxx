@@ -18,6 +18,7 @@
 #include "FavouriteAircraftData.hxx"
 
 using namespace simgear::pkg;
+using namespace std::chrono_literals;
 
 const int QmlAircraftInfo::StateTagRole =  Qt::UserRole + 1;
 const int QmlAircraftInfo::StateDescriptionRole = Qt::UserRole + 2;
@@ -624,8 +625,8 @@ void QmlAircraftInfo::validateLocalProps() const
         if (r == LocalAircraftCache::ParseSetXMLResult::Retry) {
             _cachedProps.reset();
 
-            // give the AircraftScsn threa d abit more time
-            QTimer::singleShot(2000, this, &QmlAircraftInfo::retryValidateLocalProps);
+            // give the AircraftScsn thread abit more time
+            QTimer::singleShot(2s, this, &QmlAircraftInfo::retryValidateLocalProps);
         } else if (r == LocalAircraftCache::ParseSetXMLResult::Ok) {
             // we're good
         } else {
@@ -716,7 +717,6 @@ void QmlAircraftInfo::onFavouriteChanged(QUrl u)
 
 void QmlAircraftInfo::retryValidateLocalProps()
 {
-    qInfo() << Q_FUNC_INFO << "Retrying validation of local props for:" << uri();
     validateLocalProps();
 }
 

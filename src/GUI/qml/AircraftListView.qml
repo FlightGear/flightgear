@@ -55,12 +55,14 @@ Item {
         }
 
         delegate: AircraftCompactDelegate {
-            onSelect: {
+            onSelect: function(uri) {
                 aircraftList.currentIndex = model.index;
                 _launcher.selectedAircraft = uri;
             }
 
-            onShowDetails: root.showDetails(uri)
+            onShowDetails: function(uri) {
+                root.showDetails(uri);
+            }
         }
 
         clip: true
