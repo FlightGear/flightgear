@@ -10,6 +10,7 @@
 #include <Main/globals.hxx>
 
 #include "LaunchConfig.hxx"
+#include "SettingsWrapper.hxx"
 
 const int IsCustomIndexRole = Qt::UserRole + 1;
 const int ServerNameRole = Qt::UserRole + 2;
@@ -147,7 +148,7 @@ void MPServersModel::onRefreshMPServersFailed(simgear::HTTP::Request*)
 void MPServersModel::restoreMPServerSelection()
 {
     if (m_doRestoreMPServer) {
-        QSettings settings;
+        auto settings = flightgear::getQSettings();
         settings.beginGroup("mpSettings");
         QString host = settings.value("mp-server").toString();
         if (host == "__custom__") {

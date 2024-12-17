@@ -10,6 +10,7 @@
 #include <QtQml> // qmlContext
 
 #include "GettingStartedTip.hxx"
+#include "SettingsWrapper.hxx"
 #include "TipBackgroundBox.hxx"
 
 struct TipGeometryByArrowLocation
@@ -215,7 +216,7 @@ void GettingStartedTipsController::showOneShotTip(GettingStartedTip *tip)
         return;
     }
 
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     settings.beginGroup("GettingStarted-DontShow");
     if (settings.value(tip->tipId()).toBool()) {
         return;
@@ -428,7 +429,7 @@ void GettingStartedTipsController::close()
             static_activeController.clear();
         }
 
-        QSettings settings;
+        auto settings = flightgear::getQSettings();
         settings.beginGroup("GettingStarted-DontShow");
         settings.setValue(_scopeId, true);
         _scopeActive = false;
@@ -477,7 +478,7 @@ bool GettingStartedTipsController::shouldShowScope() const
     if (_scopeId.isEmpty())
         return true;
 
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     settings.beginGroup("GettingStarted-DontShow");
     return settings.value(_scopeId).toBool() == false;
 }

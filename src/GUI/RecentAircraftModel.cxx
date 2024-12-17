@@ -4,6 +4,7 @@
 #include <QDebug>
 
 #include "AircraftModel.hxx"
+#include "SettingsWrapper.hxx"
 
 const int MAX_RECENT_AIRCRAFT = 20;
 
@@ -13,7 +14,7 @@ RecentAircraftModel::RecentAircraftModel(AircraftItemModel* acModel, QObject* pr
     QAbstractListModel(pr),
     m_aircraftModel(acModel)
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     const QStringList urls = settings.value(recentAircraftKey).toStringList();
     m_data = QUrl::fromStringList(urls);
 
@@ -23,7 +24,7 @@ RecentAircraftModel::RecentAircraftModel(AircraftItemModel* acModel, QObject* pr
 
 void RecentAircraftModel::saveToSettings()
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     settings.setValue(recentAircraftKey, QUrl::toStringList(m_data));
 }
 

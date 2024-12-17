@@ -77,6 +77,7 @@
 #include "LocalAircraftCache.hxx"
 #include "PathListModel.hxx"
 #include "GettingStartedTip.hxx"
+#include "SettingsWrapper.hxx"
 #include "SetupRootDialog.hxx"
 #include "UnitsModel.hxx"
 
@@ -404,11 +405,6 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
     if (!qtInitDone) {
         qtInitDone = true;
 
-        // Disable Qt 5.15 warnings about obsolete Connections/onFoo: syntax
-        // we cannot use the new syntax
-        // as long as we have to support Qt 5.9
-        qputenv("QT_LOGGING_RULES", "qt.qml.connections.warning=false");
-        
         initQtResources(); // can't be called from a namespace
 
         s_argc = argc; // QApplication only stores a reference to argc,
@@ -533,6 +529,28 @@ void initQSettings()
     }
 }
 
+QSettings getQSettings()
+{
+#if defined(SG_MAC)
+    return QSettings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(),
+                     "FlightGear_" FLIGHTGEAR_MAJOR_MINOR_VERSION);
+#else
+    return QSettings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationName(),
+                     "FlightGear_" FLIGHTGEAR_MAJOR_MINOR_VERSION);
+#endif
+}
+
+std::unique_ptr<QSettings> createQSettings()
+{
+#if defined(SG_MAC)
+    return std::make_unique<QSettings>(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(),
+                                       "FlightGear_" FLIGHTGEAR_MAJOR_MINOR_VERSION);
+#else
+    return std::make_unique<QSettings>(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationName(),
+                                       "FlightGear_" FLIGHTGEAR_MAJOR_MINOR_VERSION);
+#endif
+}
+
 bool checkKeyboardModifiersForSettingFGRoot()
 {
     initQSettings();
@@ -617,7 +635,7 @@ void launcherSetSceneryPaths()
 
 // mimic what options.cxx does, so we can find airport data for parking
 // positions
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     // append explicit scenery paths
     Q_FOREACH(QString path, PathListModel::readEnabledPaths("scenery-paths-v2")) {
         globals->append_fg_scenery(path.toStdString());
@@ -669,7 +687,7 @@ bool runLauncherDialog()
         // launcher GUI. We'll disable the UI.
         LaunchConfig::setEnableDownloadDirUI(false);
     } else {
-        QSettings settings;
+        auto settings = flightgear::getQSettings();
         QString downloadDir = settings.value("download-dir").toString();
         if (!downloadDir.isEmpty()) {
             options->setOption("download-dir", downloadDir.toStdString());

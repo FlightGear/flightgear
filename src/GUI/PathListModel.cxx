@@ -3,6 +3,8 @@
 #include <QSettings>
 #include <QDebug>
 
+#include "SettingsWrapper.hxx"
+
 PathListModel::PathListModel(QObject *pr) :
     QAbstractListModel(pr)
 {
@@ -16,7 +18,7 @@ PathListModel::~PathListModel()
 
 void PathListModel::loadFromSettings(QString key)
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     if (!settings.contains(key))
         return;
 
@@ -53,13 +55,13 @@ void PathListModel::saveToSettings(QString key) const
         vl.append(v);
     }
 
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     settings.setValue(key, vl);
 }
 
 QStringList PathListModel::readEnabledPaths(QString settingsKey)
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     if (!settings.contains(settingsKey))
         return {};
 

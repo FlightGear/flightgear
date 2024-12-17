@@ -4,6 +4,8 @@
 
 #include <memory>
 
+#include "SettingsWrapper.hxx"
+
 static std::unique_ptr<FavouriteAircraftData> static_instance;
 
 FavouriteAircraftData *FavouriteAircraftData::instance()
@@ -45,7 +47,7 @@ FavouriteAircraftData::FavouriteAircraftData()
 void FavouriteAircraftData::loadFavourites()
 {
     m_favourites.clear();
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     Q_FOREACH(auto v, settings.value("favourite-aircraft").toList()) {
         m_favourites.append(v.toUrl());
     }
@@ -57,6 +59,6 @@ void FavouriteAircraftData::saveFavourites()
     Q_FOREACH(auto u, m_favourites) {
         favs.append(u);
     }
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     settings.setValue("favourite-aircraft", favs);
 }

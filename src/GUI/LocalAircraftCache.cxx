@@ -40,6 +40,8 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 
+#include "SettingsWrapper.hxx"
+
 static quint32 CACHE_VERSION = 13;
 
 const std::vector<QByteArray> static_localizedStringTags = {"name", "desc"};
@@ -436,7 +438,7 @@ protected:
 private:
     void readCache()
     {
-        QSettings settings;
+        auto settings = flightgear::getQSettings();
         QByteArray cacheData = settings.value("aircraft-cache").toByteArray();
         if (!cacheData.isEmpty()) {
             QDataStream ds(cacheData);
@@ -463,7 +465,7 @@ private:
 
     void writeCache()
     {
-        QSettings settings;
+        auto settings = flightgear::getQSettings();
         QByteArray cacheData;
         {
             QDataStream ds(&cacheData, QIODevice::WriteOnly);

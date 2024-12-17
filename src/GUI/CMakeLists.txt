@@ -95,6 +95,7 @@ if (HAVE_QT)
 
     add_library(fglauncher QtLauncher.cxx
                             QtLauncher.hxx
+                            SettingsWrapper.hxx
                             LauncherMainWindow.hxx
                             LauncherMainWindow.cxx
                             BaseDiagram.cxx

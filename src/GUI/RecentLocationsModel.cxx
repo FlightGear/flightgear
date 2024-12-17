@@ -3,6 +3,7 @@
 #include <QSettings>
 #include <QDebug>
 
+#include "SettingsWrapper.hxx"
 
 const int MAX_RECENT_LOCATIONS = 20;
 
@@ -12,13 +13,13 @@ const QString recentLocationsKey = "recent-locations-2020";
 RecentLocationsModel::RecentLocationsModel(QObject* pr) :
     QAbstractListModel(pr)
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     m_data = settings.value(recentLocationsKey).toList();
 }
 
 void RecentLocationsModel::saveToSettings()
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     settings.setValue(recentLocationsKey, m_data);
 }
 

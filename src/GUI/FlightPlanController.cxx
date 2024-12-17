@@ -16,8 +16,9 @@
 #include <Navaids/navrecord.hxx>
 #include <Navaids/airways.hxx>
 
-#include "QmlPositioned.hxx"
 #include "LaunchConfig.hxx"
+#include "QmlPositioned.hxx"
+#include "SettingsWrapper.hxx"
 
 using namespace flightgear;
 
@@ -537,7 +538,7 @@ void FlightPlanController::computeDuration()
 
 bool FlightPlanController::loadPlan()
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     QString lastUsedDir = settings.value("flightplan-lastdir", "").toString();
 
     QString file = QFileDialog::getOpenFileName(nullptr, tr("Load a flight-plan"),
@@ -553,7 +554,7 @@ bool FlightPlanController::loadPlan()
 
 void FlightPlanController::savePlan()
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     QString lastUsedDir = settings.value("flightplan-lastdir", "").toString();
 
     QString file = QFileDialog::getSaveFileName(nullptr, tr("Save flight-plan"),

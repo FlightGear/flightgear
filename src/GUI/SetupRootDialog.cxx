@@ -41,6 +41,7 @@
 #include <Viewer/WindowBuilder.hxx>
 
 #include "QtLauncher.hxx"
+#include "SettingsWrapper.hxx"
 
 QString SetupRootDialog::rootPathKey()
 {
@@ -99,7 +100,7 @@ bool SetupRootDialog::runDialog(PromptState prompt)
 
 SetupRootDialog::RestoreResult SetupRootDialog::restoreUserSelectedRoot(SGPath& sgpath)
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     QString path = settings.value(rootPathKey()).toString();
 	bool ask = flightgear::checkKeyboardModifiersForSettingFGRoot();
     if (ask || (path == QStringLiteral("!ask"))) {
@@ -143,7 +144,7 @@ SetupRootDialog::RestoreResult SetupRootDialog::restoreUserSelectedRoot(SGPath& 
 
 void SetupRootDialog::askRootOnNextLaunch()
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     // set the option to the magic marker value
     settings.setValue(rootPathKey(), "!ask");
 }
@@ -214,7 +215,7 @@ void SetupRootDialog::onBrowse()
 
     globals->set_fg_root(m_browsedPath.toStdString());
 
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     settings.setValue(rootPathKey(), m_browsedPath);
 
     accept(); // we're done
@@ -228,15 +229,15 @@ void SetupRootDialog::onDownload()
     QDesktopServices::openUrl(downloadUrl);
 }
 
-void SetupRootDialog::onUseDefaults()
-{
-    SGPath r = flightgear::Options::sharedInstance()->platformDefaultRoot();
-    m_browsedPath = QString::fromStdString(r.utf8Str());
-    globals->set_fg_root(r);
-    QSettings settings;
-    settings.remove(rootPathKey()); // remove any setting
-    accept();
-}
+// void SetupRootDialog::onUseDefaults()
+// {
+//     SGPath r = flightgear::Options::sharedInstance()->platformDefaultRoot();
+//     m_browsedPath = QString::fromStdString(r.utf8Str());
+//     globals->set_fg_root(r);
+//     auto settings = flightgear::getQSettings();
+//     settings.remove(rootPathKey()); // remove any setting
+//     accept();
+// }
 
 void SetupRootDialog::updatePromptText()
 {

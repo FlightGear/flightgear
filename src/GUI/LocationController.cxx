@@ -37,6 +37,7 @@
 #include "DefaultAircraftLocator.hxx"
 #include "NavaidSearchModel.hxx"
 #include "CarriersLocationModel.hxx"
+#include "SettingsWrapper.hxx"
 
 #include <Airports/airport.hxx>
 #include <Airports/groundnetwork.hxx>
@@ -125,7 +126,7 @@ void LocationController::setLaunchConfig(LaunchConfig *config)
 
 void LocationController::restoreSearchHistory()
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     m_recentLocations = loadPositionedList(settings.value("recent-locations"));
 }
 
@@ -1237,6 +1238,6 @@ void LocationController::addToRecent(FGPositionedRef pos)
     }
 
     m_recentLocations.insert(m_recentLocations.begin(), pos);
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     settings.setValue("recent-locations", savePositionList(m_recentLocations));
 }
