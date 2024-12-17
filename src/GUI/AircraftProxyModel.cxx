@@ -5,6 +5,7 @@
 
 #include "AircraftItemModel.hxx"
 #include "FavouriteAircraftData.hxx"
+#include "SettingsWrapper.hxx"
 
 #include <simgear/package/Package.hxx>
 
@@ -221,7 +222,7 @@ bool AircraftProxyModel::filterAircraft(const QModelIndex &sourceIndex) const
 
 void AircraftProxyModel::loadRatingsSettings()
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     m_ratingsFilter = settings.value("enable-ratings-filter", true).toBool();
     QVariantList vRatings = settings.value("ratings-filter").toList();
     if (vRatings.size() == 4) {
@@ -235,7 +236,7 @@ void AircraftProxyModel::loadRatingsSettings()
 
 void AircraftProxyModel::saveRatingsSettings()
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     settings.setValue("enable-ratings-filter", m_ratingsFilter);
     QVariantList vRatings;
     for (int i=0; i < 4; ++i) {

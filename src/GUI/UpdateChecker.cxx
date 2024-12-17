@@ -32,6 +32,7 @@
 #include <Main/globals.hxx>
 
 #include "LauncherNotificationsController.hxx"
+#include "SettingsWrapper.hxx"
 
 namespace {
 
@@ -69,7 +70,7 @@ private:
     void didFail()
     {
         // reset check time to tomorrow
-        QSettings settings;
+        auto settings = flightgear::getQSettings();
         const QDate n = QDate::currentDate().addDays(1);
         settings.setValue("next-update-check", n);
     }
@@ -81,7 +82,7 @@ private:
 
 UpdateChecker::UpdateChecker(QObject *parent) : QObject(parent)
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     QDate nextCheck = settings.value("next-update-check").toDate();
     if (!nextCheck.isValid()) {
         // check tomorrow, so we don't nag immediately after installaion
@@ -121,7 +122,7 @@ UpdateChecker::~UpdateChecker()
 
 void UpdateChecker::ignoreUpdate()
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     if (m_status == PointUpdate) {
         settings.setValue("ignored-point-release", _currentUpdateVersion);
     } else if (m_status == MajorUpdate) {
@@ -141,7 +142,7 @@ void UpdateChecker::receivedUpdateXML(QByteArray body)
     SGPropertyNode_ptr props(new SGPropertyNode);
     const auto s = body.toStdString();
 
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     auto nc = LauncherNotificationsController::instance();
 
     try {

@@ -23,6 +23,8 @@
 #include <QQmlEngine>
 #include <QSettings>
 
+#include "SettingsWrapper.hxx"
+
 static LauncherNotificationsController* static_instance = nullptr;
 
 namespace {
@@ -151,7 +153,7 @@ void LauncherNotificationsController::dismissIndex(int index)
     // restore defaults will of course clear these settings, but that's
     // desirable anyway.
     if (d.args.property("persistent-dismiss").toBool()) {
-        QSettings settings;
+        auto settings = flightgear::getQSettings();
         settings.beginGroup("dismissed-notifications");
         settings.setValue(d.id, true);
     }
@@ -163,7 +165,7 @@ void LauncherNotificationsController::postNotification(QString id, QUrl source, 
 {
     const bool supportsPersistentDismiss = args.property("persistent-dismiss").toBool();
     if (supportsPersistentDismiss) {
-        QSettings settings;
+        auto settings = flightgear::getQSettings();
         settings.beginGroup("dismissed-notifications");
         bool alreadyDimissed = settings.value(id).toBool();
         if (alreadyDimissed) {

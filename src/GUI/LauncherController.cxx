@@ -59,6 +59,7 @@
 #include "RecentAircraftModel.hxx"
 #include "RecentLocationsModel.hxx"
 #include "RouteDiagram.hxx"
+#include "SettingsWrapper.hxx"
 #include "SetupRootDialog.hxx"
 #include "StackController.hxx"
 #include "ThumbnailImageItem.hxx"
@@ -116,7 +117,7 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
             &LocalAircraftCache::scanCompleted,
             this, &LauncherController::updateSelectedAircraft);
 
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     m_aircraftModel->setPackageRoot(globals->packageRoot());
 
     m_aircraftGridMode = settings.value("aircraftGridMode").toBool();
@@ -285,7 +286,7 @@ void LauncherController::initialRestoreSettings()
 
 void LauncherController::saveSettings()
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     if (m_window->windowState() != Qt::WindowMaximized) {
         settings.setValue("window-geometry", m_window->geometry());
     }
@@ -363,7 +364,7 @@ void LauncherController::doRun()
     flightgear::addSentryBreadcrumb("acft path:" + m_selectedAircraftInfo->pathOnDisk().toStdString(), "info");
 
     // aircraft paths
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     QString downloadDir = settings.value("downloadSettings/downloadDir").toString();
     if (!downloadDir.isEmpty()) {
         QDir d(downloadDir);
@@ -773,7 +774,7 @@ QVariantList LauncherController::defaultSplashUrls() const
 
 QVariant LauncherController::loadUISetting(QString name, QVariant defaultValue) const
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     if (!settings.contains(name))
         return defaultValue;
     return settings.value(name);
@@ -781,7 +782,7 @@ QVariant LauncherController::loadUISetting(QString name, QVariant defaultValue) 
 
 void LauncherController::saveUISetting(QString name, QVariant value) const
 {
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     settings.setValue(name, value);
 }
 
@@ -828,8 +829,8 @@ void LauncherController::requestRestoreDefaults()
 	}
 
 	{
-		QSettings settings;
-		settings.clear();
+        auto settings = flightgear::getQSettings();
+        settings.clear();
 		settings.setValue("restore-defaults-on-run", true);
 	}
 
@@ -839,8 +840,8 @@ void LauncherController::requestRestoreDefaults()
 void LauncherController::requestChangeDataPath()
 {
 	QString currentLocText;
-	QSettings settings;
-	QString root = settings.value(SetupRootDialog::rootPathKey()).toString();
+    auto settings = flightgear::getQSettings();
+    QString root = settings.value(SetupRootDialog::rootPathKey()).toString();
 	if (root.isNull()) {
 		currentLocText = tr("Currently the built-in data files are being used");
 	}
@@ -896,7 +897,7 @@ void LauncherController::setAircraftGridMode(bool aircraftGridMode)
     if (m_aircraftGridMode == aircraftGridMode)
         return;
 
-    QSettings settings;
+    auto settings = flightgear::getQSettings();
     settings.setValue("aircraftGridMode", aircraftGridMode);
     m_aircraftGridMode = aircraftGridMode;
     emit aircraftGridModeChanged(m_aircraftGridMode);
@@ -905,7 +906,7 @@ void LauncherController::setAircraftGridMode(bool aircraftGridMode)
 void LauncherController::resetGettingStartedTips()
 {
     {
-        QSettings settings;
+        auto settings = flightgear::getQSettings();
         settings.beginGroup("GettingStarted-DontShow");
         settings.remove(""); // remove all keys in the current group
         settings.endGroup();

@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (C) 2024  James Turner - james@flightgear.org
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+
 #include "LaunchConfig.hxx"
 
 #include <set>
@@ -11,6 +16,8 @@
 #include <QDataStream>
 #include <QClipboard>
 #include <QGuiApplication>
+
+#include "SettingsWrapper.hxx"
 
 static bool static_enableDownloadDirUI = true;
 static QSettings::Format static_binaryFormat = QSettings::InvalidFormat;
@@ -221,7 +228,7 @@ bool LaunchConfig::saveConfigToINI()
 {
     // create settings using default type (INI) and path (inside FG_HOME),
     // as setup in initQSettings()
-    m_loadSaveSettings.reset(new QSettings);
+    m_loadSaveSettings = flightgear::createQSettings();
     emit save();
     m_loadSaveSettings->sync();
     m_loadSaveSettings.reset();
@@ -233,7 +240,7 @@ bool LaunchConfig::loadConfigFromINI()
 {
     // create settings using default type (INI) and path (inside FG_HOME),
     // as setup in initQSettings()
-    m_loadSaveSettings.reset(new QSettings);
+    m_loadSaveSettings = flightgear::createQSettings();
     emit restore();
     emit postRestore();
     m_loadSaveSettings.reset();
@@ -265,7 +272,7 @@ QVariant LaunchConfig::getValueForKey(QString group, QString key, QVariant defau
         // becuase we load settings on component completion, we need
         // to create the default implementation (using the INI file)
         // on demand
-        m_loadSaveSettings.reset(new QSettings);
+        m_loadSaveSettings = flightgear::createQSettings();
     }
 
     m_loadSaveSettings->beginGroup(group);

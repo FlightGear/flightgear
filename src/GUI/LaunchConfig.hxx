@@ -1,10 +1,15 @@
-#ifndef FG_GUI_LAUNCHCONFIG_HXX
-#define FG_GUI_LAUNCHCONFIG_HXX
+/*
+ * SPDX-FileCopyrightText: Copyright (C) 2024  James Turner - james@flightgear.org
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
 
+#pragma once
+
+#include <memory>
 #include <set>
+
 #include <QObject>
 #include <QVariant>
-#include <QScopedPointer>
 
 // forwards decls
 class QSettings;
@@ -91,7 +96,5 @@ private:
 
     std::vector<Arg> m_values;
     QString m_defaultDownloadDir;
-    mutable QScopedPointer<QSettings> m_loadSaveSettings;
+    mutable std::unique_ptr<QSettings> m_loadSaveSettings;
 };
-
-#endif
