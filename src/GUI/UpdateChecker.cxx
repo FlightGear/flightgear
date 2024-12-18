@@ -103,7 +103,7 @@ UpdateChecker::UpdateChecker(QObject *parent) : QObject(parent)
         _majorMinorVersion = versionParts[0] + "." + versionParts[1];
 
         // definitiely want to ensure HTTPS for this.
-        std::string uri = "https://download.flightgear.org/builds/" + _majorMinorVersion + "/updates.xml";
+        std::string uri = "https://update.flightgear.org/" + _majorMinorVersion + "/updates.xml";
         m_request = new UpdateXMLRequest(this, uri);
         http->makeRequest(m_request);
     } else {
