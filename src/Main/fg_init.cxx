@@ -544,7 +544,7 @@ InitHomeResult fgInitHome()
 		SG_LOG(SG_GENERAL, SG_ALERT, "Failed to create mutex for multi-app protection");
         return InitHomeAbort;
 	} else if (GetLastError() == ERROR_ALREADY_EXISTS) {
-		SG_LOG(SG_GENERAL, SG_POPUP, "flightgear instance already running, switching to FG_HOME read-only.");
+		SG_LOG(SG_GENERAL, SG_MANDATORY_INFO, "flightgear instance already running, switching to FG_HOME read-only.");
 		fgSetBool("/sim/fghome-readonly", true);
         return InitHomeReadOnly;
 	} else {
