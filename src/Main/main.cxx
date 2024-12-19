@@ -579,9 +579,13 @@ int fgMainInit( int argc, char **argv )
     // environment variables. This avoids needed a wrapper shell-script on OS-X.
     showLauncher |= (::getenv("FG_LAUNCHER") != nullptr);
 
+    bool needToShowReadOnlyWarning = (initHomeResult == InitHomeReadOnly);
 #if defined(HAVE_QT)
-    if (showLauncher && (initHomeResult == InitHomeReadOnly)) {
-// show this message early, if we can
+    // honour headless mode, even if Qt is enabled
+    // if we're in headless mode, we fall through to the case
+    // below and call modalMessageBox which logs
+    if (needToShowReadOnlyWarning && !flightgear::isHeadlessMode()) {
+        needToShowReadOnlyWarning = false;
         auto r = flightgear::showLockFileDialog();
         if (r == flightgear::LockFileReset) {
             SG_LOG( SG_GENERAL, SG_MANDATORY_INFO, "Deleting lock file at user request");
@@ -592,7 +596,14 @@ int fgMainInit( int argc, char **argv )
             return EXIT_SUCCESS;
         }
     }
-#endif
+ #endif
+
+    if (needToShowReadOnlyWarning) {
+        // will handle headless mode by logging
+        flightgear::modalMessageBox("Multiple copies of FlightGear",
+            "Another copy of FlightGear is running, so this copy will run read-only.", 
+            "This means aircraft and scenery cannot be downloaded, and settings will not be saved.");
+    }
     
     const bool readOnlyFGHome = fgGetBool("/sim/fghome-readonly");
     if (!readOnlyFGHome) {
