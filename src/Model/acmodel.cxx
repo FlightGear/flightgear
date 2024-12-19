@@ -52,20 +52,14 @@ fgLoad3DModelPanel(const SGPath &path, SGPropertyNode *prop_root)
 // Implementation of FGAircraftModel
 ////////////////////////////////////////////////////////////////////////
 
-FGAircraftModel::FGAircraftModel ()
-  : _velocity(SGVec3d::zeros()),
-    _fx(0),
-    _speed_n(0),
-    _speed_e(0),
-    _speed_d(0)
+FGAircraftModel::FGAircraftModel()
+    : _velocity(SGVec3d::zeros())
 {
 }
 
 FGAircraftModel::~FGAircraftModel ()
 {
-  // drop reference
-  _fx = 0;
-  shutdown();
+    shutdown();
 }
 
 
@@ -229,11 +223,10 @@ FGAircraftModel::init ()
 void
 FGAircraftModel::reinit()
 {
-  shutdown();
-  _fx->reinit();
-  init();
-  // TODO globally create signals for all subsystems (re)initialized
-  fgSetBool("/sim/signals/model-reinit", true);
+    shutdown();
+    init();
+    // TODO globally create signals for all subsystems (re)initialized
+    fgSetBool("/sim/signals/model-reinit", true);
 }
 
 void
@@ -255,6 +248,14 @@ FGAircraftModel::shutdown()
 
     _aircraft.reset();
     _interior.reset();
+
+    if (_fx) {
+        // becuase the sound-manager keeps a ref to our FX itself, we need to manually call
+        // shutdown() to unregister from the Sound-manager, otherwise the ref will persist,
+        // and prevent us re-registering a new FGFX on reset/reinit
+        _fx->shutdown();
+        _fx.reset();
+    }
 }
 
 void
@@ -268,7 +269,9 @@ FGAircraftModel::bind ()
 void
 FGAircraftModel::unbind ()
 {
-  _fx->unbind();
+    _speed_n.reset();
+    _speed_e.reset();
+    _speed_d.reset();
 }
 
 void
@@ -312,6 +315,8 @@ FGAircraftModel::update (double dt)
   float humidity = fgGetFloat("/environment/relative-humidity");
   float pressure = fgGetFloat("/environment/pressure-inhg")*SG_INHG_TO_PA/1000.0f;
   _fx->set_atmosphere( temp_c, humidity, pressure );
+
+  // _fx->update() is run via SGSoundMgr, don't need to call it here
 }
 
 
