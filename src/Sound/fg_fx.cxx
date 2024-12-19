@@ -90,21 +90,16 @@ FGFX::FGFX ( const std::string &refname, SGPropertyNode *props ) :
     }
 }
 
-void FGFX::unbind()
+void FGFX::shutdown()
 {
-    if (_smgr)
-    {
-        _smgr->remove(_refname);
-    }
-
-    // because SGXmlSound has an owning ref back to us, we need to
-    // clear these here, or we will never get destroyed
-    std::for_each(_sound.begin(), _sound.end(), [](const SGXmlSound* snd) { delete snd; });
-    _sound.clear();
+    _smgr->remove(_refname);
+    _xmlSounds.clear();
 }
 
 FGFX::~FGFX ()
 {
+    // check that shutdown has been called
+    assert(!_smgr->exists(_refname));
 }
 
 void
@@ -146,14 +141,13 @@ FGFX::init()
     node = root.getNode("fx");
     if(node) {
         for (int i = 0; i < node->nChildren(); ++i) {
-            std::unique_ptr<SGXmlSound> soundfx{new SGXmlSound};
-  
+            SGXmlSoundRef soundfx{new SGXmlSound};
+
             try {
                 bool ok = soundfx->init( _props, node->getChild(i), this, _avionics,
                                path.dir() );
                 if (ok) {
-                    // take the pointer out of the unique ptr so it's not deleted
-                    _sound.push_back( soundfx.release() );
+                    _xmlSounds.push_back(soundfx);
                 }
             } catch ( sg_exception &e ) {
                 SG_LOG(SG_SOUND, SG_ALERT, e.getFormattedMessage());
@@ -164,21 +158,11 @@ FGFX::init()
     }
 }
 
-
-void
-FGFX::reinit()
-{
-    SGSampleGroup::stop();
-    std::for_each(_sound.begin(), _sound.end(), [](const SGXmlSound* snd) { delete snd; });
-    _sound.clear();
-    init();
-    SGSampleGroup::resume();
-}
-
-
 void
 FGFX::update (double dt)
 {
+    // FGFX::update is called via the SGSoundManager update(), which
+    // calls update on all its sample-groups.
     if (!_smgr) {
         return;
     }
@@ -186,8 +170,8 @@ FGFX::update (double dt)
     if (!_active && _smgr->is_active())
     {
         _active = true;
-        for ( unsigned int i = 0; i < _sound.size(); i++ ) {
-            _sound[i]->start();
+        for (auto s : _xmlSounds) {
+            s->start();
         }
     }
 
@@ -224,8 +208,8 @@ FGFX::update (double dt)
         resume();
 
         // update sound effects if not paused
-        for ( unsigned int i = 0; i < _sound.size(); i++ ) {
-            _sound[i]->update(dt);
+        for (auto xs : _xmlSounds) {
+            xs->update(dt);
         }
 
         SGSampleGroup::update(dt);

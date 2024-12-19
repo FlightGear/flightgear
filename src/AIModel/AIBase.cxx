@@ -321,6 +321,8 @@ void FGAIBase::update(double dt) {
         {
             const string& fxpath = _modeldata->get_sound_path();
             if (!fxpath.empty()) {
+                removeSoundFx();
+
                 simgear::ErrorReportContext ec("ai-model", _name);
                 if (!_scenarioPath.empty()) {
                     ec.add("scenario-path", _scenarioPath);
@@ -331,9 +333,6 @@ void FGAIBase::update(double dt) {
                 }
 
                 props->setStringValue("sim/sound/path", fxpath.c_str());
-
-                // Remove any existing sound FX (e.g. from another model)
-                removeSoundFx();
 
                 // initialize the sound configuration
                 std::stringstream name;
@@ -805,14 +804,11 @@ void FGAIBase::unbind() {
     removeSoundFx();
 }
 
-void FGAIBase::removeSoundFx() {
-    // drop reference to sound effects now
-    if (_fx)
-    {
-        // must remove explicitly - since the sound manager also keeps a reference
-        _fx->unbind();
-        // now drop last reference - kill the object
-        _fx = 0;
+void FGAIBase::removeSoundFx()
+{
+    if (_fx) {
+        _fx->shutdown();
+        _fx.clear();
     }
 }
 

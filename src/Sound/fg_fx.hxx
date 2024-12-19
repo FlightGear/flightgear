@@ -33,6 +33,7 @@
 #include <simgear/sound/sample_group.hxx>
 
 class SGXmlSound;
+using SGXmlSoundRef = SGSharedPtr<SGXmlSound>;
 
 /**
  * Generator for FlightGear model sound effects.
@@ -52,10 +53,9 @@ public:
     FGFX ( const std::string &refname, SGPropertyNode *props = 0 );
     virtual ~FGFX ();
 
-    void init ();
-    void reinit ();
+    void init();
     void update (double dt) override;
-    void unbind();
+    void shutdown();
 
 private:
 
@@ -63,8 +63,8 @@ private:
     bool _is_aimodel;
     SGSharedPtr<SGSampleGroup> _avionics;
     SGSharedPtr<SGSampleGroup> _atc;
-    
-    std::vector<SGXmlSound *> _sound;
+
+    std::vector<SGXmlSoundRef> _xmlSounds;
 
     SGPropertyNode_ptr _props;
     SGPropertyNode_ptr _enabled;
