@@ -322,10 +322,10 @@ void FGEnvironmentMgr::onTowerAirportIDChanged()
     auto towerAirpotDistance = abs(towerPos.getElevationFt() - apt->geod().getElevationFt());
     if (towerAirpotDistance < min_tower_height_feet) {
         towerPos.setElevationFt(towerPos.getElevationFt() + default_tower_height_feet);
-        SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "Tower altitude adjusted because it was at below minimum height above ground (" << min_tower_height_feet << "feet) for airport " << nearestAirport->getId());
+        SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "Tower altitude adjusted because it was at below minimum height above ground (" << min_tower_height_feet << "feet) for airport " << apt->getId());
     } else if (towerAirpotDistance > max_tower_height_feet) {
         towerPos.setElevationFt(towerPos.getElevationFt() + default_tower_height_feet);
-        SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "Tower altitude adjusted because it was taller than the permitted maximum of (" << max_tower_height_feet << "feet) for airport " << nearestAirport->getId());
+        SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "Tower altitude adjusted because it was taller than the permitted maximum of (" << max_tower_height_feet << "feet) for airport " << apt->getId());
     }
 
     std::string path = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)/sim/tower/");
