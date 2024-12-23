@@ -235,6 +235,9 @@ public:
 
 				// transfer pointer ownership
   virtual void addBinding (SGBinding * binding, int updown);
+
+  virtual void setBindings(const SGBindingList& bindings, int updown);
+
   virtual void setButton (int button) { _button = button; }
   virtual void setX (int x) { _x = x; }
   virtual void setY (int y) { _y = y; }
@@ -255,8 +258,6 @@ public:
   virtual bool doAction (int updown);
 
 private:
-  typedef std::vector<SGBinding *> binding_list_t;
-
   int _button;
   int _x;
   int _y;
@@ -264,7 +265,7 @@ private:
   int _h;
   bool _repeatable;
   int _last_state;
-  binding_list_t _bindings[2];
+  SGBindingList _bindings[2];
 };
 
 

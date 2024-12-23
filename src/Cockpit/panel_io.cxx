@@ -155,17 +155,16 @@ readConditions (SGConditional *component, const SGPropertyNode *node)
 static FGPanelAction *
 readAction (const SGPropertyNode * node, float w_scale, float h_scale)
 {
-  unsigned int i, j;
-  SGPropertyNode *binding;
-  std::vector<SGPropertyNode_ptr>bindings = node->getChildren("binding");
+    auto propRoot = globals->get_props();
 
-  // button-less actions are fired initially
-  if (!node->hasValue("w") || !node->hasValue("h")) {
-    for (i = 0; i < bindings.size(); i++) {
-      SGBinding b(bindings[i], globals->get_props());
-      b.fire();
-    }
-    return 0;
+    // button-less actions are fired initially
+    if (!node->hasValue("w") || !node->hasValue("h")) {
+        for (auto bn : node->getChildren("binding")) {
+            SGBinding b(bn, propRoot);
+            b.fire();
+        }
+
+        return nullptr;
   }
 
   string name = node->getStringValue("name");
@@ -179,32 +178,9 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
 
   FGPanelAction * action = new FGPanelAction(button, x, y, w, h, repeatable);
 
-  SGPropertyNode * dest = fgGetNode("/sim/bindings/panel", true);
-
-  for (i = 0; i < bindings.size(); i++) {
-    SG_LOG(SG_INPUT, SG_BULK, "Reading binding "
-      << bindings[i]->getStringValue("command"));
-
-    j = 0;
-    while (dest->getChild("binding", j))
-      j++;
-
-    binding = dest->getChild("binding", j, true);
-    copyProperties(bindings[i], binding);
-    action->addBinding(new SGBinding(binding, globals->get_props()), 0);
-  }
-
+  action->setBindings(readBindingList(node->getChildren("binding"), propRoot), 0);
   if (node->hasChild("mod-up")) {
-    bindings = node->getChild("mod-up")->getChildren("binding");
-    for (i = 0; i < bindings.size(); i++) {
-      j = 0;
-      while (dest->getChild("binding", j))
-        j++;
-
-      binding = dest->getChild("binding", j, true);
-      copyProperties(bindings[i], binding);
-      action->addBinding(new SGBinding(binding, globals->get_props()), 1);
-    }
+      action->setBindings(readBindingList(node->getChild("mod-up")->getChildren("binding"), propRoot), 1);
   }
 
   readConditions(action, node);

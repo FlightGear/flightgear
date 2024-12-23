@@ -642,10 +642,6 @@ FGPanelAction::FGPanelAction (int button, int x, int y, int w, int h,
 
 FGPanelAction::~FGPanelAction ()
 {
-  for (unsigned int i = 0; i < 2; i++) {
-      for (unsigned int j = 0; j < _bindings[i].size(); j++)
-          delete _bindings[i][j];
-  }
 }
 
 void
@@ -654,14 +650,18 @@ FGPanelAction::addBinding (SGBinding * binding, int updown)
   _bindings[updown].push_back(binding);
 }
 
+void FGPanelAction::setBindings(const SGBindingList& bindings, int updown)
+{
+    _bindings[updown] = bindings;
+}
+
+
 bool
 FGPanelAction::doAction (int updown)
 {
   if (test()) {
     if ((updown != _last_state) || (updown == 0 && _repeatable)) {
-        int nBindings = _bindings[updown].size();
-        for (int i = 0; i < nBindings; i++)
-            _bindings[updown][i]->fire();
+        fireBindingList(_bindings[updown]);
     }
     _last_state = updown;
     return true;
