@@ -412,6 +412,9 @@ int WebsocketConnection::request(struct mg_connection * connection)
   setConnection(connection);
   if ((connection->wsbits & 0x0f) >= 0x8) {
     // control opcode (close/ping/pong)
+    if ((connection->wsbits & 0x0f) == WEBSOCKET_OPCODE_PING) {
+      mg_websocket_write(connection, WEBSOCKET_OPCODE_PONG, NULL, 0);
+    }
     return MG_MORE;
   }
 
