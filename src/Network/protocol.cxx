@@ -111,7 +111,7 @@ bool FGProtocol::parse_message() {
 void FGProtocol::set_direction( const std::string& d ) {
     if ( d == "in" ) {
 	dir = SG_IO_IN;
-    } else if ( d == "out" | d == "broadcast") {
+    } else if ( d == "out" || d == "broadcast") {
 	dir = SG_IO_OUT;
     } else if ( d == "bi" ) {
 	dir = SG_IO_BI;
