@@ -87,6 +87,11 @@ private:
     SGPropertyNode_ptr _lodDetailed, _lodRoughDelta, _lodBareDelta, _disableNasalHooks;
     SGPropertyNode_ptr _scenery_loaded, _scenery_override;
 
+    // Statistics from the database pager.
+    SGPropertyNode_ptr _pager_file_queue_size, _pager_compile_queue_size, _pager_merge_queue_size;
+    SGPropertyNode_ptr _pager_min_merge_time, _pager_mean_merge_time, _pager_max_merge_time;
+    SGPropertyNode_ptr _pager_active_lod_count;
+
     osg::ref_ptr<flightgear::SceneryPager> _pager;
 
     /// is caching of expired tiles enabled or not?
