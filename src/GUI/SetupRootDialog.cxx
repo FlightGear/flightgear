@@ -50,6 +50,7 @@
 #include "SettingsWrapper.hxx"
 
 #include <condition_variable>
+#include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/io/untar.hxx>
 #include <simgear/misc/sg_dir.hxx>
 
@@ -134,6 +135,13 @@ public:
                 // end the thread's event loop
                 m_done = true;
             }
+        }
+
+        // create marker file for future updates
+        {
+            SGPath setupInfoPath = m_downloadPath / ".setup-info";
+            sg_ofstream stream(setupInfoPath, std::ios::out | std::ios::binary);
+            stream << m_download->url().toString().toStdString();
         }
 
         if (!m_error) {
