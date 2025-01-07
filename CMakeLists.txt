@@ -295,7 +295,6 @@ find_package(OpenSceneGraph 3.6.0 REQUIRED
   osgSim
   osgDB
   osgParticle
-  osgFX
   osgUtil
   osgViewer
   osgGA
