@@ -62,15 +62,16 @@ auto OSG_messageWhitelist = {
 };
 
 auto exception_messageWhitelist = {
-    "position is invalid, NaNs",    ///< avoid spam when NaNs occur
-    "bad AI flight plan",           ///< adjusting logic to avoid this is tricky
-    "couldn't find shader",         ///< handled seperately
+    "position is invalid, NaNs", ///< avoid spam when NaNs occur
+    "bad AI flight plan",        ///< adjusting logic to avoid this is tricky
+    "couldn't find shader",      ///< handled seperately
 
     /// supress noise from user-entered METAR values : we special case
     /// when live metar fails to parse
     "metar data bogus",
-    "metar data incomplete"
-};
+    "metar data incomplete",
+    "metar temperature data",
+    "metar pressure data"};
 
 // we don't want sentry enabled for the test suite
 #if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)

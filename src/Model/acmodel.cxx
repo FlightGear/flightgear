@@ -51,12 +51,11 @@ fgLoad3DModel(const SGPath &path, SGPropertyNode *prop_root)
 // Implementation of FGAircraftModel
 ////////////////////////////////////////////////////////////////////////
 
-FGAircraftModel::FGAircraftModel ()
-  : _velocity(SGVec3d::zeros()),
-    _fx(0),
-    _speed_n(0),
-    _speed_e(0),
-    _speed_d(0)
+FGAircraftModel::FGAircraftModel()
+    : _velocity(SGVec3d::zeros()),
+      _speed_n(0),
+      _speed_e(0),
+      _speed_d(0)
 {
 }
 
