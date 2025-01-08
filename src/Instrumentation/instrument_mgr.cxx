@@ -65,19 +65,20 @@ SGSubsystem::InitStatus FGInstrumentMgr::incrementalInit()
 
 void FGInstrumentMgr::init()
 {
-  SGPropertyNode_ptr config_props = new SGPropertyNode;
-  SGPropertyNode* path_n = fgGetNode("/sim/instrumentation/path");
-  if (!path_n) {
-    SG_LOG(SG_COCKPIT, SG_DEV_WARN, "No instrumentation model specified for this model!");
-    return;
-  }
+    simgear::ErrorReportContext ec("primary-aircraft", "yes");
+
+    SGPropertyNode_ptr config_props = new SGPropertyNode;
+    SGPropertyNode* path_n = fgGetNode("/sim/instrumentation/path");
+    if (!path_n) {
+        SG_LOG(SG_COCKPIT, SG_DEV_WARN, "No instrumentation model specified for this model!");
+        return;
+    }
 
   SGPath config = globals->resolve_aircraft_path(path_n->getStringValue());
   if (!config.exists()) {
-    SG_LOG(SG_COCKPIT, SG_DEV_ALERT, "Missing instrumentation file at:" << config);
       simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::AircraftSystems,
                              "FGInstrumentMgr: Missing instrumentation file", config);
-    return;
+      return;
   }
 
   SG_LOG( SG_COCKPIT, SG_INFO, "Reading instruments from " << config );

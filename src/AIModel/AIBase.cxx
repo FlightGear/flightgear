@@ -302,19 +302,17 @@ void FGAIBase::update(double dt) {
     ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.getLatitudeRad());
     ft_per_deg_lon = 365228.16 * cos(pos.getLatitudeRad());
 
-    if ((_modeldata)&&(_modeldata->needInitialization()))
-    {
+    if (_modeldata && _modeldata->needInitialization()) {
         // process deferred nasal initialization,
         // which must be done in main thread
         _modeldata->init();
 
         // update LOD radius from loaded modeldata
-        auto radius = _modeldata->getRadius();
+        const auto radius = _modeldata->getRadius();
         if (radius > 0) {
             _model->setRadius(radius);
             _model->dirtyBound();
-        }
-        else {
+        } else {
             SG_LOG(SG_AI, SG_WARN, "AIBase: model radius not set.");
         }
 
@@ -322,11 +320,14 @@ void FGAIBase::update(double dt) {
         if (fgGetBool("/sim/sound/aimodels/enabled",false))
         {
             const string& fxpath = _modeldata->get_sound_path();
-            if (fxpath != "")
-            {
+            if (!fxpath.empty()) {
                 simgear::ErrorReportContext ec("ai-model", _name);
                 if (!_scenarioPath.empty()) {
                     ec.add("scenario-path", _scenarioPath);
+                }
+
+                if (_otype == object_type::otMultiplayer) {
+                    _modeldata->addErrorContext("multiplayer", getCallSign());
                 }
 
                 props->setStringValue("sim/sound/path", fxpath.c_str());
