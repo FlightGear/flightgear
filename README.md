@@ -18,6 +18,10 @@ Aside from being used by thousands of flight simulator enthusiasts, FlightGear h
 
 You can download brand-new releases (including release candidates) of FlightGear from GitLab [here](https://gitlab.com/flightgear/fgmeta/-/releases). Old releases can be downloaded from the FlightGear website [here](https://www.flightgear.org/download/).
 
+## Building
+
+If you would like to compile FlightGear from source, please see the [build guide](BUILDING.md).
+
 ## Documentation
 
 > ⚠️ FlightGear is undergoing a major revamping of its documentation in order to improve the quality of information, pool information into a single location, and provide it in a modern and easily accessible format built with modern tooling.
