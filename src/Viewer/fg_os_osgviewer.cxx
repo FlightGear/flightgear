@@ -391,6 +391,10 @@ void fgOSInit(int* argc, char** argv)
 
 void fgOSCloseWindow()
 {
+    // reset the cursor before we close the window
+
+    fgSetMouseCursor(FGMouseCursor::CURSOR_ARROW);
+
     if (globals && globals->get_renderer()) {
         osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
         if (viewer_base) {
