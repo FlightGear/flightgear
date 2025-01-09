@@ -1,5 +1,5 @@
 [Desktop Entry]
-Version=@DEKSTOP_FILE_VERSION@
+Version=@DESKTOP_FILE_VERSION@
 Name=FlightGear
 GenericName=Flight simulator
 GenericName[ca]=Simulador de vol
