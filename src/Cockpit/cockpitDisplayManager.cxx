@@ -54,10 +54,12 @@ SGSubsystem::InitStatus CockpitDisplayManager::incrementalInit()
 
 void CockpitDisplayManager::init()
 {
-  SGPropertyNode_ptr config_props = new SGPropertyNode;
-  SGPropertyNode* path_n = fgGetNode("/sim/instrumentation/path");
-  if (!path_n) {
-    return;
+    simgear::ErrorReportContext ec("primary-aircraft", "yes");
+
+    SGPropertyNode_ptr config_props = new SGPropertyNode;
+    SGPropertyNode* path_n = fgGetNode("/sim/instrumentation/path");
+    if (!path_n) {
+        return;
   }
 
   SGPath config = globals->resolve_aircraft_path(path_n->getStringValue());
