@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 #include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
@@ -707,7 +708,7 @@ static naRef f_interpolate(naContext c, naRef me, int argc, naRef* args)
 
   simgear::PropertyList value_nodes;
   value_nodes.reserve(nPoints);
-  double_list deltas;
+  std::vector<double> deltas;
   deltas.reserve(nPoints);
 
   for( int i = 0; i < nPoints; ++i )

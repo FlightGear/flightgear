@@ -1,4 +1,3 @@
-
 /*
  * SPDX-FileName: fg_commands.hxx
  * SPDX-FileComment: built-in commands for FlightGear.
@@ -13,6 +12,7 @@
 
 #include <string>
 #include <fstream>
+#include <vector>
 
 #include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/debug/logstream.hxx>
@@ -817,7 +817,7 @@ do_property_interpolate (const SGPropertyNode * arg, SGPropertyNode * root)
   if( value_nodes.size() != num_times )
     return false;
 
-  double_list deltas;
+  std::vector<double> deltas;
   deltas.reserve(num_times);
 
   if( !time_nodes.empty() )
