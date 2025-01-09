@@ -20,7 +20,7 @@ You can download brand-new releases (including release candidates) of FlightGear
 
 ## Building
 
-If you would like to compile FlightGear from source, please see the [build guide](BUILDING.md).
+If you would like to compile FlightGear from source, please see the [building guide](BUILDING.md).
 
 ## Documentation
 
