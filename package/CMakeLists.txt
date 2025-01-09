@@ -6,7 +6,7 @@
 string(TIMESTAMP FG_CMAKE_TIMESTAMP "%Y-%m-%d")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    set(DEKSTOP_FILE_VERSION "1.0")
+    set(DESKTOP_FILE_VERSION "1.0")
     
     if (ENABLE_QT)
         set(DESKTOP_FILE_RUN_ARGS "--launcher")
@@ -36,5 +36,11 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/org.flightgear.FlightGear.metainfo.xml" 
         DESTINATION appdir/usr/share/metainfo
+        COMPONENT packaging)
+
+    install(FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/FlightGear_app_icon.svg" 
+        DESTINATION appdir/usr/share/icons
+        RENAME flightgear.svg
         COMPONENT packaging)
 endif()
