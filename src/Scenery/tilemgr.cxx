@@ -152,6 +152,13 @@ FGTileMgr::FGTileMgr():
     _disableNasalHooks(fgGetNode("/sim/temp/disable-scenery-nasal", true)),
     _scenery_loaded(fgGetNode("/sim/sceneryloaded", true)),
     _scenery_override(fgGetNode("/sim/sceneryloaded-override", true)),
+    _pager_file_queue_size(fgGetNode("/sim/rendering/statistics/database-pager/file-queue-size", true)),
+    _pager_compile_queue_size(fgGetNode("/sim/rendering/statistics/database-pager/compile-queue-size", true)),
+    _pager_merge_queue_size(fgGetNode("/sim/rendering/statistics/database-pager/merge-queue-size", true)),
+    _pager_min_merge_time(fgGetNode("/sim/rendering/statistics/database-pager/min-merge-time", true)),
+    _pager_mean_merge_time(fgGetNode("/sim/rendering/statistics/database-pager/mean-merge-time", true)),
+    _pager_max_merge_time(fgGetNode("/sim/rendering/statistics/database-pager/max-merge-time", true)),
+    _pager_active_lod_count(fgGetNode("/sim/rendering/statistics/database-pager/active-paged-lod-count", true)),
     _pager(FGScenery::getPagerSingleton()),
     _enableCache(true),
     _use_vpb(false)
@@ -523,6 +530,17 @@ void FGTileMgr::update(double)
 
     bool waitingOnTerrasync = false;
     update_queues(waitingOnTerrasync);
+
+    if (_pager) {
+        // Update various useful statistics
+        _pager_file_queue_size->setIntValue(_pager->getFileRequestListSize());
+        _pager_compile_queue_size->setIntValue(_pager->getDataToCompileListSize());
+        _pager_merge_queue_size->setIntValue(_pager->getDataToMergeListSize());
+        _pager_active_lod_count->setIntValue(_pager->getActivePagedLODCount());
+        _pager_min_merge_time->setFloatValue(_pager->getMinimumTimeToMergeTile());
+        _pager_mean_merge_time->setFloatValue(_pager->getAverageTimeToMergeTiles());
+        _pager_max_merge_time->setFloatValue(_pager->getMaximumTimeToMergeTile());
+    }
 
     // scenery loading check, triggers after each sim (tile manager) reinit
     if (!_scenery_loaded->getBoolValue())
