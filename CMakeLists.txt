@@ -7,6 +7,8 @@ include (CheckCXXSourceCompiles)
 include (CheckIncludeFile)
 include (CheckIncludeFileCXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # OpenGL VND policy : we need to use NEW, so we will set
 # OpenGL_GL_PREFERENCE to LEGACY
 if(POLICY CMP0072)

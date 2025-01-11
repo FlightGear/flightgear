@@ -139,6 +139,11 @@ private:
             return;
         }
 
+        // can happen during shutdown, we call fgSetMouseCursor from fgExitCleanup
+        if (!globals || !globals->get_renderer()) {
+            return;
+        }
+
         osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
         if (!viewer_base)
             return;
