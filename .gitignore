@@ -1,12 +1,34 @@
+# Ignore all hidden directories (i.e., .idea, .vscode). This casts a very wide net, 
+# and a case could be made either way for it being a good thing or a bad thing.
 .*
+
+# Make exceptions for specific hidden directories/files.
+!.gitignore
+!.gitlab/**
+
+# Editor/IDE temporary files
 *~
-Makefile
-Debug/
-Build
-build
 .*.swp
+*.pyc
+Makefile
+*.kdev4
+nbproject
+
+# Build artifacts
+Debug/
+build*/
+Build
 *.o
 lib*.a
+
+# Qt/QML related files
+*.qmlc
+*.pro.user
+
+# CMake-related temporary files
+CMakeUserPresets.json
+compile_commands.json
+CMakeLists.txt.user
 cmake_install.cmake
 CMakeFiles
 CMakeCache.txt
@@ -14,14 +36,3 @@ CPackConfig.cmake
 CPackSourceConfig.cmake
 cmake_uninstall.cmake
 CTestTestfile.cmake
-.kdev4
-*.kdev4
-*.pyc
-build*/
-*.qmlc
-CMakeLists.txt.user
-*.pro.user
-nbproject
-compile_commands.json
-.cache
-CMakeUserPresets.json
