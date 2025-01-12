@@ -794,12 +794,20 @@ bool FGProps::open()
  */
 bool FGProps::close()
 {
-    SG_LOG(SG_IO, SG_INFO, "closing FGProps");
-    for (auto channel : _activeChannels) {
-        channel->close();
-        delete channel;
+    // guard this, since NetChannelPoller::removeChannel must be symmetric
+    if (is_enabled()) {
+        SG_LOG(SG_IO, SG_INFO, "closing FGProps");
+        for (auto channel : _activeChannels) {
+            channel->close();
+            delete channel;
+        }
+        _activeChannels.clear();
+        poller.removeChannel(this);
+
+        set_enabled(false);
     }
-    _activeChannels.clear();
+
+    simgear::NetChannel::close();
     return true;
 }
 
