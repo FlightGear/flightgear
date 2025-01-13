@@ -88,6 +88,17 @@ if (LINUX)
     install(DIRECTORY ${OSG_PLUGINS_DIR} 
         DESTINATION appdir/usr/lib 
         COMPONENT packaging EXCLUDE_FROM_ALL)
+
+    install(FILES /etc/ssl/certs/ca-certificates.crt
+	DESTINATION appdir/usr/ssl
+	RENAME cacert.pem
+	OPTIONAL
+	COMPONENT packaging EXCLUDE_FROM_ALL)
+    install(CODE "
+	if(NOT EXISTS /etc/ssl/certs/ca-certificates.crt)
+            message(WARNING \"No SSL certificates found, will not be included in AppImage\")
+	endif()
+    ")
     # TODO: things under share/
 endif()
 
