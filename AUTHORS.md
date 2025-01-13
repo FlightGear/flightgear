@@ -107,7 +107,7 @@ It is impossible to keep an accurate record of all contributors, and this list i
 - U.S. Geological Survey
 - Durk Talsma
 - Gabor Toth
-- James Turne
+- James Turner
 - UIUC - Department of Aeronautical and Astronautical Engineering
 - Jeff Scott
 - Bipin Sehgal
@@ -130,7 +130,6 @@ It is impossible to keep an accurate record of all contributors, and this list i
 - John Wojnaroski
 - Marcus Zojer
 - Lee Elliot
-- Innis Cunningham
 - Vivian Meazza
 - David Culp
 - Mathias Fröhlich
@@ -145,11 +144,9 @@ It is impossible to keep an accurate record of all contributors, and this list i
 - http://sky.aw.net.ua/
 - WoodSoup Project
 - Robert Allan Zeh
-- Martin Spott
 - Dave Martin
 - Thomas Foerster
 - Chris Metzler
-- Melchior Franz
 - Roberto Inzerillo
 - Mike Round
 - Innis Cunningham
@@ -157,13 +154,10 @@ It is impossible to keep an accurate record of all contributors, and this list i
 - Esa Hyytia
 - Mircea Lutic
 - Jens Thoms Toerring
-- Mark Akermann
 - Martin C. Doege
-- Alexis Bory
 - Sebastian Bechtold
 - Julien Pierru
 - Bertrand Augras
-- Gerard Robin
 - Jakub Skibinski
 - Morten Oesterlund Joergensen
 - Carsten Vogel
