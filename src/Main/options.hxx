@@ -237,16 +237,26 @@ public:
    */
   static std::string getArgValue(int argc, char* argv[], const char* checkArg);
 
+
   /**
-       * @brief Default local to download / update FGData. In older versions this
-       * was located inside the application (eg Contents/Resources on macOS). But
-       * now we download the data, it needs to be user-writeable.
-       *
-       * The value is computed based on actualDownloadDir at present
-       * 
-       * @return SGPath 
-       */
+      * @brief Default location to find FGData. This is based on compile-time configuration
+      * and platform conventions. For most deployments it's empty because we no longer
+      * bundle FGData with the simulator, but download it automatically.
+      * 
+      * @return SGPath 
+      */
   SGPath platformDefaultRoot() const;
+
+  /**
+      * @brief Default location to download / update FGData. In older versions this
+      * was located inside the application (eg Contents/Resources on macOS). But
+      * now we download the data, it needs to be user-writeable.
+      *
+      * The value is computed based on actualDownloadDir at present
+      * 
+      * @return SGPath 
+      */
+  SGPath downloadedDataRoot() const;
 
   /**
        * @brief extractOptions - extract the currently set options as
