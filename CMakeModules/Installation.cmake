@@ -88,6 +88,11 @@ if (LINUX)
     install(DIRECTORY ${OSG_PLUGINS_DIR} 
         DESTINATION appdir/usr/lib 
         COMPONENT packaging EXCLUDE_FROM_ALL)
+
+    install(FILES /etc/ssl/certs/ca-certificates.crt
+	DESTINATION appdir/usr/ssl
+	RENAME cacert.pem
+	COMPONENT packaging EXCLUDE_FROM_ALL)
     # TODO: things under share/
 endif()
 
