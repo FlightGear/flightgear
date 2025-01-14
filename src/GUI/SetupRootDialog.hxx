@@ -81,7 +81,7 @@ private:
     static bool validateVersion(QString path);
 
     static bool defaultRootAcceptable();
-
+    static bool downloadedDataAcceptable();
 
     PromptState m_promptState;
     QScopedPointer<Ui::SetupRootDialog> m_ui;

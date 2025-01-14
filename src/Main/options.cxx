@@ -2955,10 +2955,15 @@ void Options::printJSONReport() const
 }
 
 
-SGPath Options::platformDefaultRoot() const
+SGPath Options::downloadedDataRoot() const
 {
     const auto fgdataDirName = "fgdata_" + std::to_string(FLIGHTGEAR_MAJOR_VERSION) + "_" + std::to_string(FLIGHTGEAR_MINOR_VERSION);
     return actualDownloadDir() / fgdataDirName;
+}
+
+SGPath Options::platformDefaultRoot() const
+{
+    return SGPath::fromUtf8(PKGLIBDIR);
 }
 
 string_list Options::extractOptions() const
@@ -3013,6 +3018,9 @@ OptionResult Options::setupRoot(int argc, char** argv)
         if (root.isNull()) {
             usingDefaultRoot = true;
             root = platformDefaultRoot();
+            if (!root.exists()) {
+                root = downloadedDataRoot();
+            }
             SG_LOG(SG_GENERAL, SG_INFO, "platform default fg_root = " << root );
         } else {
             SG_LOG(SG_GENERAL, SG_INFO, "Qt launcher set fg_root = " << root );
