@@ -64,7 +64,7 @@ public:
     InstallFGDataThread(QObject* pr, QNetworkReply* r) : QThread(pr)
     {
         r->setReadBufferSize(64 * 1024 * 1024);
-        const auto rp = flightgear::Options::sharedInstance()->platformDefaultRoot();
+        const auto rp = flightgear::Options::sharedInstance()->downloadedDataRoot();
 
         m_downloadPath = rp.dirPath() / ("_download_data_" + std::to_string(FLIGHTGEAR_MAJOR_VERSION) + "_" + std::to_string(FLIGHTGEAR_MINOR_VERSION));
         m_downloadPath.set_cached(false);
@@ -144,7 +144,7 @@ public:
         }
 
         if (!m_error) {
-            const auto finalDataPath =  flightgear::Options::sharedInstance()->platformDefaultRoot();
+            const auto finalDataPath = flightgear::Options::sharedInstance()->downloadedDataRoot();
             SG_LOG(SG_IO, SG_INFO, "Renaming downloaded data to: " << finalDataPath);
             bool renamedOk = m_downloadPath.rename(finalDataPath);
             if (!renamedOk) {
@@ -276,6 +276,10 @@ flightgear::SetupRootResult SetupRootDialog::restoreUserSelectedRoot(SGPath& sgp
         return flightgear::SetupRootResult::UseDefault;
     }
 
+    if (downloadedDataAcceptable()) {
+        return flightgear::SetupRootResult::UseDefault;
+    }
+
     // okay, we don't have an acceptable FG_DATA anywhere we can find, we
     // have to ask the user what they want to do.
     bool ok = runDialog(VersionCheckFailed);
@@ -348,6 +352,13 @@ bool SetupRootDialog::defaultRootAcceptable()
     SGPath r = flightgear::Options::sharedInstance()->platformDefaultRoot();
     QString defaultRoot = QString::fromStdString(r.utf8Str());
     return validatePath(defaultRoot) && validateVersion(defaultRoot);
+}
+
+bool SetupRootDialog::downloadedDataAcceptable()
+{
+    SGPath r = flightgear::Options::sharedInstance()->downloadedDataRoot();
+    QString dlRoot = QString::fromStdString(r.utf8Str());
+    return validatePath(dlRoot) && validateVersion(dlRoot);
 }
 
 SetupRootDialog::~SetupRootDialog()
