@@ -203,7 +203,7 @@ bool GUIEventHandler::handle( const osgEA& ea,
 
 //------------------------------------------------------------------------------
 DesktopGroup::DesktopGroup(osg::Camera* camera):
-  Group(sc::CanvasPtr(), fgGetNode("/sim/gui/canvas", true)),
+  Group(sc::CanvasPtr(), fgGetNode("/canvas/desktop", true)),
   _cb_mouse_mode( this,
                   &DesktopGroup::handleMouseMode,
                   fgGetNode("/devices/status/mice/mouse[0]/mode") ),

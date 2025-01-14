@@ -1505,26 +1505,11 @@ bool FGNasalSys::loadModule(SGPath file, const char* module)
         return false;
     }
 
-#if 1
-    // MMap the contents of the file.
-    // This saves an alloc, memcpy and free
     SGMMapFile mmap(file);
     mmap.open(SG_IO_IN);
 
     auto pathStr = file.utf8Str();
     return createModule(module, pathStr.c_str(), mmap.get(), mmap.get_size());
-#else
-    sg_ifstream file_in(file);
-    string buf;
-    while (!file_in.eof()) {
-        char bytes[8192];
-        file_in.read(bytes, 8192);
-        buf.append(bytes, file_in.gcount());
-    }
-    file_in.close();
-    auto pathStr = file.utf8Str();
-    return createModule(module, pathStr.c_str(), buf.data(), buf.length());
-#endif
 }
 
 // Parse and run.  Save the local variables namespace, as it will
