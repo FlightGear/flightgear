@@ -284,43 +284,6 @@ private:
     bool m_abandoned = false;
 };
 
-enum class OpenGLStatus
-{
-    OpenGL41,
-    Unknown
-};
-
-OpenGLStatus checkForWorkingOpenGL()
-{
-    QSurfaceFormat fmt;
-    fmt.setProfile(QSurfaceFormat::CoreProfile);
-    fmt.setMajorVersion(4);
-    fmt.setMinorVersion(1);
-
-    QOpenGLContext ctx;
-    ctx.setFormat(fmt);
-    if (!ctx.create()) {
-        return OpenGLStatus::Unknown;
-    }
-
-    // from here on, we need to ensure orderly cleanup or some drivers
-    // crash. So we can't early return.
-
-    OpenGLStatus result = OpenGLStatus::Unknown;
-    QOffscreenSurface offSurface;
-    offSurface.setFormat(ctx.format()); // ensure it's compatible
-    offSurface.create();
-
-    if (ctx.makeCurrent(&offSurface)) {
-        result = OpenGLStatus::OpenGL41;
-        // ensure the context is no longer current on the offscreen
-        ctx.doneCurrent();
-    }
-
-    offSurface.destroy();
-    return result;
-}
-
 } // of anonymous namespace
 
 static void initQtResources()
@@ -631,14 +594,6 @@ void launcherSetSceneryPaths()
 
 bool runLauncherDialog()
 {
-    auto glCheckResult = checkForWorkingOpenGL();
-    if (glCheckResult != OpenGLStatus::OpenGL41) {
-        QMessageBox::critical(nullptr, "Failed to find graphics drivers",
-                              "This computer is missing suitable graphics drivers (OpenGL) to run FlightGear. "
-                              "Please download and install drivers from your graphics card vendor.");
-        return false;
-    }
-
     // Used for NavDataCache initialization: needed to find the apt.dat files
     launcherSetSceneryPaths();
     // startup the nav-cache now. This pre-empts normal startup of
@@ -774,6 +729,15 @@ bool showSetupRootDialog(bool usingDefaultRoot)
 SetupRootResult restoreUserSelectedRoot(SGPath& path)
 {
     return SetupRootDialog::restoreUserSelectedRoot(path);
+}
+
+void warnAboutGLVersion()
+{
+    QMessageBox::critical(
+        nullptr,
+        "Unable to create OpenGL 4.1 core profile context",
+        "FlightGear detected that your system does not support the required OpenGL version. "
+        "This is normally due to outdated graphics drivers, please check if updates are available.");
 }
 
 } // of namespace flightgear

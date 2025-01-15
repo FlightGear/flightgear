@@ -659,6 +659,15 @@ int fgMainInit( int argc, char **argv )
     bool didUseLauncher = false; /* <didUseLauncher> is set but unused. */
 #if defined(HAVE_QT)
     if (showLauncher) {
+#if !defined(SG_MAC)
+        // Do a quick GL version check using OSG before running the launcher.
+        // We skip it on Mac because using OSG before Qt might be problematic.
+        if (!fgPreliminaryGLVersionCheck()) {
+            warnAboutGLVersion();
+            return EXIT_FAILURE;
+        }
+#endif
+
         flightgear::addSentryBreadcrumb("starting launcher", "info");
         if (!flightgear::runLauncherDialog()) {
             return EXIT_SUCCESS;

@@ -149,3 +149,10 @@ bool fgDumpSceneGraphToFile(const char* filename);
 bool fgDumpTerrainBranchToFile(const char* filename);
 bool fgDumpNodeToFile(osg::Node* node, const char* filename);
 bool fgPrintVisibleSceneInfo(FGRenderer* renderer);
+
+/**
+ * Attempt to create an off-screen pixel buffer to check whether our target
+ * OpenGL version is available on this computer.
+ * @return Whether the version check was successful or not.
+ */
+bool fgPreliminaryGLVersionCheck();

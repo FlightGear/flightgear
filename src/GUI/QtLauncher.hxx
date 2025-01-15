@@ -78,5 +78,7 @@ namespace flightgear
     };
 
     SetupRootResult restoreUserSelectedRoot(SGPath& path);
+
+  void warnAboutGLVersion();
 } // of namespace flightgear
 

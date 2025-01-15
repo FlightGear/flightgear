@@ -1080,3 +1080,32 @@ bool fgPrintVisibleSceneInfo(FGRenderer* renderer)
     vsv.doTraversal(view->getCamera(), view->getSceneData(), vp);
     return true;
 }
+
+bool fgPreliminaryGLVersionCheck()
+{
+    osg::ref_ptr<osg::GraphicsContext::Traits> traits =
+        new osg::GraphicsContext::Traits;
+
+    // 1x1 is enough for the check
+    traits->x = 0; traits->y = 0;
+    traits->width = 1; traits->height = 1;
+    // RGBA8
+    traits->red = 8; traits->green = 8; traits->blue = 8; traits->alpha = 8;
+    // Use an off-screen pbuffer, not an actual window surface. This prevents
+    // flashing from opening and closing a window very fast.
+    traits->pbuffer = true;
+
+    traits->windowDecoration = false;
+    traits->doubleBuffer = true;
+    traits->sharedContext = nullptr;
+    traits->readDISPLAY();
+    traits->setUndefinedScreenDetailsToDefaultScreen();
+
+    // Our minimum is OpenGL 4.1 core
+    traits->glContextVersion = "4.1";
+    traits->glContextProfileMask = 0x1;
+
+    osg::ref_ptr<osg::GraphicsContext> pbuffer
+        = osg::GraphicsContext::createGraphicsContext(traits.get());
+    return pbuffer.valid();
+}
