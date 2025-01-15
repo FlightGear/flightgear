@@ -22,7 +22,7 @@
 
 static bool nameIsSeparator(const std::string& n)
 {
-    return simgear::strutils::starts_with(n, "----");
+    return simgear::strutils::starts_with(simgear::strutils::strip(n), "----");
 }
 
 class NasalMenu;
