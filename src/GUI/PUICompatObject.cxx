@@ -384,7 +384,7 @@ bool PUICompatObject::enabled() const
     return _enabled;
 }
 
-std::string PUICompatObject::type() const
+const std::string& PUICompatObject::type() const
 {
     return _type;
 }

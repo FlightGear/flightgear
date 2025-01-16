@@ -64,7 +64,7 @@ public:
 
     bool visible() const;
     bool enabled() const;
-    std::string type() const;
+    const std::string& type() const;
 
     void setVisible(bool v);
     void setEnabled(bool e);
