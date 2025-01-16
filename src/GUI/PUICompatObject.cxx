@@ -60,6 +60,7 @@ void PUICompatObject::setupGhost(nasal::Hash& compatModule)
         .member("parent", &PUICompatObject::parent)
         .member("visible", &PUICompatObject::visible, &PUICompatObject::setVisible)
         .member("enabled", &PUICompatObject::enabled, &PUICompatObject::setEnabled)
+        .member("type", &PUICompatObject::type)
         .method("show", &PUICompatObject::show)
         .method("activateBindings", &PUICompatObject::activateBindings)
         .method("gridLocation", &PUICompatObject::gridLocation);
@@ -199,7 +200,7 @@ bool PUICompatObject::isNodeAChildObject(const std::string& nm)
 {
     const string_list typeNames = {
         "button", "one-shot", "slider", "dial",
-        "text", "input",
+        "text", "input", "radio",
         "combo", "textbox", "select",
         "hrule", "vrule", "group", "frame",
         "checkbox"};
@@ -383,6 +384,11 @@ bool PUICompatObject::enabled() const
     return _enabled;
 }
 
+std::string PUICompatObject::type() const
+{
+    return _type;
+}
+
 void PUICompatObject::setVisible(bool v)
 {
     if (_visibleCondition) {
@@ -464,6 +470,6 @@ nasal::Hash PUICompatObject::gridLocation(const nasal::CallContext& ctx) const
     result.set("column", _config->getIntValue("col"));
     result.set("row", _config->getIntValue("row"));
     result.set("columnSpan", _config->getIntValue("colspan", 1));
-    result.set("rowSpan", _config->getIntValue("rowpsan", 1));
+    result.set("rowSpan", _config->getIntValue("rowspan", 1));
     return result;
 }
