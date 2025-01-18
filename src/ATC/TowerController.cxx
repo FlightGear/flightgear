@@ -140,8 +140,18 @@ void FGTowerController::announcePosition(int id,
             double distM = SGGeodesy::distanceM((*i)->getPos(), blocker->getPos());
             int newSpeed = blocker->getSpeed() * (distM / 100);
             SG_LOG(SG_ATC, SG_DEBUG,
-                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked for takeoff by " << blocker->getCallsign() << "(" << blocker->getId() << ") new speed " << newSpeed);
+                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked for takeoff by " << blocker->getCallsign() << "(" << blocker->getId() << ") new speed " << newSpeed << " dist " << distM);
             (*i)->setSpeedAdjustment(newSpeed);
+        } else {
+            int oldWaitsForId = (*i)->getWaitsForId();
+            if (oldWaitsForId>0) {
+                SG_LOG(SG_ATC, SG_DEBUG,
+                    (*i)->getCallsign() << "(" << (*i)->getId() << ") cleared of blocker " << oldWaitsForId);
+                (*i)->setResumeTaxi(true);                
+            }
+            (*i)->clearSpeedAdjustment();
+            (*i)->setWaitingSince(0);
+            (*i)->setWaitsForId(0);
         }
     }
 }
@@ -227,20 +237,22 @@ void FGTowerController::updateAircraftInformation(int id, SGGeod geod,
         } else {
             (*i)->setHoldPosition(true);
             SG_LOG(SG_ATC, SG_BULK,
-                    (*i)->getCallsign() << "| Waiting for " << ((*i)->getRunwaySlot() - now) << " seconds");
+                    (*i)->getCallsign() << "(" << (*i)->getId() << ")   Waiting for " << ((*i)->getRunwaySlot() - now) << " seconds");
         }
         int clearanceId = rwy->getCleared();
         if (clearanceId) {
             if (id == clearanceId) {
-                SG_LOG(SG_ATC, SG_BULK, (*i)->getCallsign() << "| Unset Hold " << clearanceId << " for rwy " << rwy->getRunwayName());
+                if ((*i)->hasHoldPosition()) {
+                    SG_LOG(SG_ATC, SG_BULK, (*i)->getCallsign() << "(" << (*i)->getId() << ")   Unset Hold " << clearanceId << " for rwy " << rwy->getRunwayName());
+                }
                 (*i)->setHoldPosition(false);
             } else {
-                SG_LOG(SG_ATC, SG_BULK, (*i)->getCallsign() << "| Not cleared " << id << " Currently cleared " << clearanceId);
+                SG_LOG(SG_ATC, SG_BULK, (*i)->getCallsign() << "(" << (*i)->getId() << ")   Not cleared " << id << " Currently cleared " << clearanceId);
             }
         } else {
             if ((*i)->getAircraft() == rwy->getFirstAircraftInDepartureQueue()) {
                 SG_LOG(SG_ATC, SG_BULK,
-                (*i)->getCallsign() << "| Cleared for runway " << getName() << " " << rwy->getRunwayName() << " Id " << id);
+                (*i)->getCallsign() << "(" << (*i)->getId() << ")   Cleared for runway " << getName() << " " << rwy->getRunwayName() << " Id " << id);
                 auto blocker = airportGroundRadar->getBlockedBy(*i);
                 if (blocker==nullptr) {
                     // FIXME presumably this can be replaced by ground radar
@@ -283,7 +295,7 @@ void FGTowerController::signOff(int id)
                "AI error: Aircraft without traffic record is signing off from tower at " << SG_ORIGIN);
         return;
     }
-    SG_LOG(SG_ATC, SG_BULK, "Signing off " << (*i)->getCallsign() << "(" << id << ") from " << getName() );
+    SG_LOG(SG_ATC, SG_BULK, "Signing off " << (*i)->getCallsign() << "(" << id << ") from " << getName() << " Leg : " << (*i)->getLeg() );
 
     if((*i)->getLeg() <= AILeg::CRUISE) {
         const auto trafficRunway = (*i)->getRunway();
@@ -293,11 +305,11 @@ void FGTowerController::signOff(int id)
                                     });
 
         if (runwayIt != activeRunways.end()) {
-            SG_LOG(SG_ATC, SG_BULK, (*i)->getCallsign() << "|Cleared " << id << " from " << runwayIt->getRunwayName() << " cleared " << runwayIt->getCleared() );
+            SG_LOG(SG_ATC, SG_BULK, (*i)->getCallsign() << "(" << (*i)->getId() << ")  Cleared " << id << " from " << runwayIt->getRunwayName() << " cleared " << runwayIt->getCleared() );
             runwayIt->removeFromDepartureQueue(id);
         } else {
             SG_LOG(SG_ATC, SG_ALERT,
-                "AI error: Attempting to erase non-existing runway clearance record in FGTowerController::signoff at " << SG_ORIGIN);
+                (*i)->getCallsign() << "(" << (*i)->getId() << ") AI error: Attempting to erase non-existing runway clearance record in FGTowerController::signoff from Runway " << trafficRunway );
         }
 
         (*i)->getAircraft()->resetTakeOffStatus();

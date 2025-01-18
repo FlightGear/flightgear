@@ -159,12 +159,12 @@ void FGApproachController::updateAircraftInformation(int id, SGGeod geod,
             }
             if (checkTransmissionState(ATCMessageState::ACK_ARRIVAL, ATCMessageState::ACK_ARRIVAL, current, now, MSG_ACKNOWLEDGE_ARRIVAL, ATC_GROUND_TO_AIR)) {
                 if ((*current)->getRunwaySlot() > (*current)->getPlannedArrivalTime()) {
-                    (*current)->setState(ATCMessageState::HOLD);
+                    (*current)->setState(ATCMessageState::HOLD_PATTERN);
                 } else {
                     (*current)->setState(ATCMessageState::CLEARED_TO_LAND);
                 }
             }
-            if (checkTransmissionState(ATCMessageState::HOLD, ATCMessageState::HOLD, current, now, MSG_ACKNOWLEDGE_HOLD, ATC_AIR_TO_GROUND)) {
+            if (checkTransmissionState(ATCMessageState::HOLD_PATTERN, ATCMessageState::HOLD_PATTERN, current, now, MSG_ACKNOWLEDGE_HOLD, ATC_AIR_TO_GROUND)) {
                 (*current)->setState(ATCMessageState::ACK_HOLD);
             }
             if (checkTransmissionState(ATCMessageState::CLEARED_TO_LAND, ATCMessageState::CLEARED_TO_LAND, current, now, MSG_CLEARED_TO_LAND, ATC_GROUND_TO_AIR)) {
@@ -213,7 +213,9 @@ ActiveRunway *FGApproachController::getRunway(const string& name)
 
 void FGApproachController::render(bool visible) {
     // Must be BULK in order to prevent it being called each frame
-    SG_LOG(SG_ATC, SG_BULK, "FGApproachController::render function not yet implemented");
+    if (visible) {
+        SG_LOG(SG_ATC, SG_BULK, "FGApproachController::render function not yet implemented");
+    }
 }
 
 string FGApproachController::getName() {

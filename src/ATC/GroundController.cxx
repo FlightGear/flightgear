@@ -115,6 +115,7 @@ void FGGroundController::announcePosition(int id,
     // Add a new TrafficRecord if none exists for this aircraft
     // otherwise set the information for the TrafficRecord
     if (i == activeTraffic.end() || (activeTraffic.empty())) {
+        SG_LOG(SG_ATC, SG_BULK, "Adding " << aircraft->getCallSign() << "(" << id << ")" );	
         FGTrafficRecord* rec = new FGTrafficRecord();
         rec->setId(id);
         rec->setLeg(leg);
@@ -172,6 +173,10 @@ void FGGroundController::updateAircraftInformation(int id, SGGeod geod,
         return;
     }
 
+    SG_LOG(SG_ATC, SG_BULK, "Moving " << (*i)->getCallsign() << "(" << (*i)->getId() << ") Speed : " << speed
+    << " Speed 2 : " << (*i)->getSpeed());	
+
+    airportGroundRadar->move(SGRect<double>(geod.getLatitudeDeg(), geod.getLongitudeDeg()), *i);
     (*i)->setPositionAndHeading(geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
     TrafficVectorIterator current = i;
 
@@ -240,7 +245,7 @@ void FGGroundController::updateAircraftInformation(int id, SGGeod geod,
 void FGGroundController::checkSpeedAdjustment(int id, double lat,
         double lon, double heading,
         double speed, double alt) {
-    TrafficVectorIterator current, closest, closestOnNetwork;
+    TrafficVectorIterator current;
     // bool previousInstruction;
 	TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
     if (!activeTraffic.size()) {
@@ -248,47 +253,55 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
 	}
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_ATC, SG_ALERT,
-               "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkSpeedAdjustment" );
+               "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkSpeedAdjustment (" << id << ")" );
     }
     current = i;
 
     auto blocker = airportGroundRadar->getBlockedBy(*i);
+    time_t now = globals->get_time_params()->get_cur_time();
     if (blocker!=nullptr) {
         int oldWaitsForId = (*i)->getWaitsForId();
         (*i)->setWaitsForId(blocker->getId());
-        time_t now = globals->get_time_params()->get_cur_time();
         if(oldWaitsForId!=blocker->getId()) {
             (*i)->setWaitingSince(now);
         }
         double distM = SGGeodesy::distanceM((*i)->getPos(), blocker->getPos());
-        int newSpeed = blocker->getSpeed() * (distM / 100);
+        double distanceSlowdown = ((distM-20) / 100); // At 20 m we want to correct to zero
+        int newSpeed = blocker->getSpeed() * (distanceSlowdown>1?1:distanceSlowdown); // clamp to max speed of other aircraft
+        newSpeed = newSpeed>1?newSpeed:0; // ensure we don't crawl
         int waittime = (now-(*i)->getWaitingSince());
-        const sgDebugPriority level = waittime > 60?SG_ALERT:SG_BULK; 
+        const sgDebugPriority level = waittime > 600?SG_ALERT:SG_DEBUG; 
         if (blocker->getWaitsForId()) {
             SG_LOG(SG_ATC, level,        
-                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") for " << waittime << " seconds which is blocked by (" << blocker->getWaitsForId() << ") new speed " << newSpeed);
+                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") for " << waittime << " seconds which is blocked by (" << blocker->getWaitsForId() << ") new speed " << newSpeed << " Dist : " << distM << " Other speed : " << blocker->getSpeed());
+            if (blocker->getWaitsForId() == (*i)->getId()) {
+                SG_LOG(SG_ATC, level,        
+                    (*i)->getCallsign() << "(" << (*i)->getId() << ") circular ");
+            }    
         } else {
             SG_LOG(SG_ATC, level,        
-                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") for " << waittime << " seconds new speed " << newSpeed);
+                (*i)->getCallsign() << "(" << (*i)->getId() << ") is blocked by " << blocker->getCallsign() << "(" << blocker->getId() << ") for " << waittime << " seconds new speed " << newSpeed << " Dist : " << distM << " Other speed : " << blocker->getSpeed());
         }
         if (newSpeed!=0) {        
             (*i)->setSpeedAdjustment(newSpeed);
         } else {
             if (oldWaitsForId!=blocker->getId()) {
+                (*i)->setState(ATCMessageState::NORMAL);
                 (*i)->setRequestHoldPosition(true);
             }
         }
         return;
     } else {
         int oldWaitsForId = (*i)->getWaitsForId();
-        if (oldWaitsForId>0) {
+        int waitTime = now - (*i)->getWaitingSince();
+        if (oldWaitsForId>0 && waitTime > 5) {
             SG_LOG(SG_ATC, SG_DEBUG,
-                (*i)->getCallsign() << "(" << (*i)->getId() << ") cleared of blocker " << oldWaitsForId);
+                (*i)->getCallsign() << "(" << (*i)->getId() << ") cleared of blocker (" << oldWaitsForId << ")");
             (*i)->setResumeTaxi(true);                
+            (*i)->clearSpeedAdjustment();
+            (*i)->setWaitingSince(0);
+            (*i)->setWaitsForId(0);
         }
-        (*i)->clearSpeedAdjustment();
-        (*i)->setWaitingSince(0);
-        (*i)->setWaitsForId(0);
        return;
     }
 }
@@ -460,7 +473,6 @@ bool FGGroundController::checkForCircularWaits(int id)
         }
 
         if (iter == activeTraffic.end()) {
-            SG_LOG(SG_ATC, SG_DEBUG, "[Waiting for traffic at Runway: DONE] ");
             // The target id is not found on the current network, which means it's at the tower
             SG_LOG(SG_ATC, SG_BULK, "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkForCircularWaits Id : " << target);
             return false;
@@ -760,15 +772,6 @@ bool FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
 
     if (!(*i)->getAircraft()->getPerformance()) {
         SG_LOG(SG_ATC, SG_ALERT, "updateActiveTraffic: missing aircraft performance");
-        return false;
-    }
-
-    double length = 0;
-    double vTaxi = ((*i)->getAircraft()->getPerformance()->vTaxi() * SG_NM_TO_METER) / 3600;
-    FGGroundNetwork* network = parent->parent()->groundNetwork();
-
-    if (!network) {
-        SG_LOG(SG_ATC, SG_ALERT, "updateActiveTraffic: missing ground network");
         return false;
     }
 

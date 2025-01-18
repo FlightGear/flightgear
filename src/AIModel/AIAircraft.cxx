@@ -468,6 +468,9 @@ void FGAIAircraft::ProcessFlightPlan(double dt, time_t now)
             tgt_altitude_ft = curr->getAltitude();
         }
 
+        if(holdPos) {
+            SG_LOG(SG_ATC, SG_WARN, getCallSign() << " should be blocked ");
+        }
         AccelTo(prev->getSpeed());
         hdg_lock = alt_lock = true;
         no_roll = (prev->getOn_ground() && curr->getOn_ground());
@@ -717,7 +720,7 @@ void FGAIAircraft::announcePositionToController()
         }
         break;
     case AILeg::APPROACH:
-    case AILeg::HOLD:
+    case AILeg::HOLD_PATTERN:
         if (trafficRef->getArrivalAirport()->getDynamics()) {
             controller = trafficRef->getArrivalAirport()->getDynamics()->getApproachController();
         }
@@ -764,7 +767,7 @@ void FGAIAircraft::announcePositionToController()
     }
 }
 
-void FGAIAircraft::scheduleForATCTowerDepartureControl()
+void FGAIAircraft::scheduleForATCTowerRunwayControl()
 {
     if (!takeOffStatus) {
         int leg = fp->getLeg();
@@ -784,7 +787,9 @@ void FGAIAircraft::scheduleForATCTowerDepartureControl()
     takeOffStatus = AITakeOffStatus::QUEUED;
 }
 
-// Process ATC instructions and report back
+/** 
+ * Process ATC instructions and report back
+ */ 
 
 void FGAIAircraft::processATC(const FGATCInstruction& instruction)
 {
@@ -809,6 +814,9 @@ void FGAIAircraft::processATC(const FGATCInstruction& instruction)
     // Hold Position
     if (instruction.getHoldPosition()) {
         holdPos = true;
+        if (onGround()) {
+            groundTargetSpeed = 0.0;
+        }
         AccelTo(0.0);
     } else {
         holdPos = false;
@@ -1097,7 +1105,7 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now)
     }
     if (prev->contains("DepartureHold"s)) {
         //std::cerr << "Passing point DepartureHold" << std::endl;
-        scheduleForATCTowerDepartureControl();
+        scheduleForATCTowerRunwayControl();
     }
     if (prev->contains("Accel"s)) {
         takeOffStatus = AITakeOffStatus::CLEARED_FOR_TAKEOFF;
@@ -1444,7 +1452,7 @@ int FGAIAircraft::determineNextLeg(int leg)
     if (leg == AILeg::APPROACH) {
         time_t now = globals->get_time_params()->get_cur_time();
         if (controller == nullptr || controller->getInstruction(getID()).getRunwaySlot() > now) {
-            return AILeg::HOLD;
+            return AILeg::HOLD_PATTERN;
         } else {
             return AILeg::LANDING;
         }

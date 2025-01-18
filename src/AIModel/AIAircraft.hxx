@@ -87,7 +87,7 @@ public:
     int getTakeOffStatus() { return takeOffStatus; };
     void setTakeOffSlot(time_t timeSlot) { takeOffTimeSlot = timeSlot; };
     time_t getTakeOffSlot() { return takeOffTimeSlot; };
-    void scheduleForATCTowerDepartureControl();
+    void scheduleForATCTowerRunwayControl();
 
     const std::string& GetTransponderCode() { return transponderCode; };
     void SetTransponderCode(const std::string& tc) { transponderCode = tc; };

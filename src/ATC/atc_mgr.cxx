@@ -438,7 +438,9 @@ void FGATCManager::update ( double time ) {
         if (controller) {
             // render the path for the present controller if the ground network is set to visible
             controller->render(networkVisible);
-            SG_LOG(SG_ATC, SG_BULK, "Adding ground network to the scenegraph::update");
+            if (networkVisible) {
+               SG_LOG(SG_ATC, SG_BULK, "Adding ground network to the scenegraph::update");
+            }
         }
 
         // reset previous controller for next update() iteration

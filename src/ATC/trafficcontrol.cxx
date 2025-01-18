@@ -87,7 +87,7 @@ void ActiveRunway::updateDepartureQueue()
 * Fetch next slot for the active runway
 * @param eta time of slot requested
 * @return newEta: next slot available; starts at eta paramater
-* and adds separation as needed
+* and adds SEPARATION as needed
 */
 time_t ActiveRunway::requestTimeSlot(time_t eta)
 {
@@ -109,12 +109,11 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
             SG_LOG(SG_ATC, SG_BULK, "Stored time : " << (*i));
         }
 
-        // if the flight is before the first scheduled slot + separation
-        time_t separation = 60;
+        // if the flight is before the first scheduled slot + SEPARATION
         i = estimatedArrivalTimes.begin();
-        if ((eta + separation) < (*i)) {
+        if ((eta + SEPARATION) < (*i)) {
             newEta = eta;
-            SG_LOG(SG_ATC, SG_DEBUG, "Start. New ETA : " << newEta );
+            SG_LOG(SG_ATC, SG_DEBUG, "Added to start. New ETA : " << newEta );
             slotHousekeeping(newEta);
             return newEta;
         }
@@ -124,14 +123,14 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
         while ((i != estimatedArrivalTimes.end()) && (!found)) {
             TimeVectorIterator j = i + 1;
 
-            // if the flight is after the last scheduled slot check if separation is needed
+            // if the flight is after the last scheduled slot check if SEPARATION is needed
             if (j == estimatedArrivalTimes.end()) {
-                if (((*i) + separation) < eta) {
+                if (((*i) + SEPARATION) < eta) {
                     SG_LOG(SG_ATC, SG_BULK, "Storing at end");
                     newEta = eta;
                 } else {
-                    newEta = (*i) + separation;
-                    SG_LOG(SG_ATC, SG_BULK, "Storing at end + separation");
+                    newEta = (*i) + SEPARATION;
+                    SG_LOG(SG_ATC, SG_BULK, "Storing at end + SEPARATION");
                 }
                 SG_LOG(SG_ATC, SG_DEBUG, "End. New ETA : " << newEta << " Timediff : " << (newEta-eta));
                 slotHousekeeping(newEta);
@@ -139,35 +138,35 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
             } else {
                 // potential slot found
                 // check the distance between the previous and next slots
-                // distance must be greater than 2* separation
-                if ((((*j) - (*i)) > (separation * 2))) {
+                // distance must be greater than 2* SEPARATION
+                if ((((*j) - (*i)) > (SEPARATION * 2))) {
                     // now check whether this slot is usable:
                     // eta should fall between the two points
                     // i.e. eta > i AND eta < j
                     SG_LOG(SG_ATC, SG_DEBUG, "Found potential slot after " << (*i));
                     if (eta > (*i) && (eta < (*j))) {
                         found = true;
-                        if (eta < ((*i) + separation)) {
-                            newEta = (*i) + separation;
-                            SG_LOG(SG_ATC, SG_BULK, "Using  original" << (*i) << " + separation ");
+                        if (eta < ((*i) + SEPARATION)) {
+                            newEta = (*i) + SEPARATION;
+                            SG_LOG(SG_ATC, SG_BULK, "Using  original" << (*i) << " + SEPARATION ");
                         } else {
                             newEta = eta;
                             SG_LOG(SG_ATC, SG_BULK, "Using original after " << (*i));
                         }
                     } else if (eta < (*i)) {
                         found = true;
-                        newEta = (*i) + separation;
+                        newEta = (*i) + SEPARATION;
                         SG_LOG(SG_ATC, SG_BULK, "Using delayed slot after " << (*i));
                     }
                     /*
-                       if (((*j) - separation) < eta) {
+                       if (((*j) - SEPARATION) < eta) {
                        found = true;
-                       if (((*i) + separation) < eta) {
+                       if (((*i) + SEPARATION) < eta) {
                        newEta = eta;
                        SG_LOG(SG_ATC, SG_BULK, "Using original after " << (*i));
                        } else {
-                       newEta = (*i) + separation;
-                       SG_LOG(SG_ATC, SG_BULK, "Using  " << (*i) << " + separation ");
+                       newEta = (*i) + SEPARATION;
+                       SG_LOG(SG_ATC, SG_BULK, "Using  " << (*i) << " + SEPARATION ");
                        }
                        } */
                 }
@@ -281,7 +280,7 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
     } else {
         //FGAIFlightPlan::waypoint* const wpt= route->getCurrentWaypoint();
         int size = route->getNrOfWayPoints();
-        SG_LOG(SG_ATC, SG_DEBUG, "Setting pos to " << currentPos << " and intentions");
+        //SG_LOG(SG_ATC, SG_DEBUG, "Setting pos to " << currentPos << " and intentions");
         for (int i = 2; i < size; i++) {
             int val = route->getRouteIndex(i);
             intentions.push_back(val);
@@ -369,6 +368,11 @@ void FGTrafficRecord::setPositionAndHeading(double lat, double lon,
         double alt)
 {
     this->pos = SGGeod::fromDegFt(lon, lat, alt);
+    if (heading!=0 && spd != 0) {
+        headingDiff = SGMiscd::normalizePeriodic(-180, 180, heading - hdg);
+    } else {
+        headingDiff = 0;
+    }
     heading = hdg;
     speed = spd;
     altitude = alt;

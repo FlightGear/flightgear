@@ -99,7 +99,7 @@ class Node {
                     return true;
                 } else {
                     SG_LOG(SG_ATC, SG_BULK , "Not readded" );
-                    return false;
+                    return true;
                 }
             }
             else
@@ -125,10 +125,13 @@ class Node {
         }
     };
 
-    bool move(const SGRectd& newPos, const SGRectd& pos, SGSharedPtr<T> value, const Equal& equalFkt, const GetBox& getBoxFunction)
+    bool move(const SGRectd& newPos, const SGRectd& oldPos, SGSharedPtr<T> value, const Equal& equalFkt, const GetBox& getBoxFunction)
     {
+        SGRectd realPos = getBoxFunction(value);
+        double dist = SGGeodesy::distanceM(SGGeod::fromDegM(oldPos.y(), oldPos.x(), 0), SGGeod::fromDegM(realPos.y(), realPos.x(), 0) );
         SG_LOG(SG_ATC, SG_BULK,
-               "Moving  " << pos.x() << ":" << pos.y() << " to " << newPos.x() << ":" << newPos.y() << (isLeaf()?" leaf ":" "));
+               "Moving  " << oldPos.x() << ":" << oldPos.y() << " to " << newPos.x() << ":" << newPos.y() << (isLeaf()?" leaf ":" ") << dist );
+
 
         // finding 
         if (isLeaf())
@@ -139,16 +142,23 @@ class Node {
         }
         else
         {
-            auto oldQuadrant = getQuadrant(bounds, pos);
+            auto oldQuadrant = getQuadrant(bounds, oldPos);
             auto newQuadrant = getQuadrant(bounds, newPos);
             if (oldQuadrant != UNKNOWN) {
                 if (oldQuadrant != newQuadrant) {
                     SG_LOG(SG_ATC, SG_BULK,
                       "Moving from quadrant " << oldQuadrant << " to quadrant " << newQuadrant << " Level " << depth );
-                    children[static_cast<std::size_t>(oldQuadrant)].get()->remove(pos, value, equalFkt);    
-                    children[static_cast<std::size_t>(newQuadrant)].get()->add(newPos, value, equalFkt, getBoxFunction);    
+                    bool removed = children[static_cast<std::size_t>(oldQuadrant)].get()->remove(oldPos, value, equalFkt);    
+                    bool added = children[static_cast<std::size_t>(newQuadrant)].get()->add(newPos, value, equalFkt, getBoxFunction); 
+                    if (!removed || !added)
+                    {
+                        SG_LOG(SG_ATC, SG_ALERT,
+                        "Error moving " << (removed?" true ":" false ") << (added?" true ":" false "));
+                    }
+                    
+
                 } else {
-                    children[static_cast<std::size_t>(oldQuadrant)].get()->move(newPos, pos, value, equalFkt, getBoxFunction);
+                    children[static_cast<std::size_t>(oldQuadrant)].get()->move(newPos, oldPos, value, equalFkt, getBoxFunction);
                 }
             } else {
                 SG_LOG(SG_ATC, SG_WARN,
@@ -341,21 +351,21 @@ class Node {
         }
         if (!isLeaf())
         {
+            if (children.size()!=4) {
+                SG_LOG(SG_ATC, SG_ALERT, "Wrong Box Size" );
+            }
             for (auto i = std::size_t(0); i < children.size(); i++)
             {
                 auto childBox = computeBox(bounds, static_cast<int>(i));
                 SG_LOG(SG_ATC, SG_BULK, "Query Quadtree center " << i << "\t" << childBox.x() << "\t" << childBox.y() << "\t" << childBox.width() << "\t" << childBox.height() );
-                if (childBox.contains(queryBox.getMin().x(), queryBox.getMin().y()) ||
-                    childBox.contains(queryBox.getMin().x(), queryBox.getMax().y()) || 
-                    childBox.contains(queryBox.getMax().x(), queryBox.getMax().y()) ||
-                    childBox.contains(queryBox.getMax().x(), queryBox.getMin().y()) ||
-                    childBox.contains(queryBox.getMin().x() + queryBox.width() / 2, queryBox.getMin().y()+ queryBox.height() / 2)) {
+                if (intersection(queryBox, childBox)) {
                     children[i].get()->query(queryBox, getBoxFunction, values);
-                }/* else {
+                } else {
                     SG_LOG(SG_ATC, SG_BULK, "Query Quadtree center " << i << " not found " );
                     SG_LOG(SG_ATC, SG_BULK, "QueryBox " << queryBox.getMin().x() << "," << queryBox.getMin().y() << "\t" << queryBox.getMax().x() << "," << queryBox.getMax().y() );
                     SG_LOG(SG_ATC, SG_BULK, "ChildBox " << childBox.getMin().x() << "," << childBox.getMin().y() << "\t" << childBox.getMax().x() << "," << childBox.getMax().y() );
-                }*/
+                    SG_LOG(SG_ATC, SG_BULK, "MinMax " << ((childBox.getMax().y() > queryBox.getMin().y())?"true":"false"));
+                }
             }
         }
     };
@@ -393,7 +403,14 @@ class Node {
 
     SGRectd getBounds() {
        return bounds;
-    }
+    };
+
+    bool intersection(const SGRectd& firstBox, const SGRectd& secondBox) {
+        return firstBox.getMax().x() > secondBox.getMin().x() && 
+        firstBox.getMin().x() < secondBox.getMax().x() && 
+        firstBox.getMax().y() > secondBox.getMin().y() && 
+        firstBox.getMin().y() < secondBox.getMax().y();
+    };
 };
 
 template <class T, typename GetBox, typename Equal>

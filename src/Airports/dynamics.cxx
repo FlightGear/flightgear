@@ -218,8 +218,6 @@ void FGAirportDynamics::init()
 {
     groundRadar = new AirportGroundRadar(_ap);
 
-    groundController.setTowerController(&towerController);
-    groundController.init();
     startupController.setAirportGroundRadar(groundRadar);
     towerController.setAirportGroundRadar(groundRadar);
     approachController.setAirportGroundRadar(groundRadar);

@@ -45,7 +45,6 @@ private:
     int count;
     int version;
 
-    FGTowerController *towerController;
     /**Returns the frequency to be used. */
     int getFrequency();
 
@@ -69,10 +68,6 @@ public:
     bool exists() {
         return hasNetwork;
     };
-    void setTowerController(FGTowerController *twrCtrlr) {
-        towerController = twrCtrlr;
-    };
-
 
     virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                   double lat, double lon, double hdg, double spd, double alt,

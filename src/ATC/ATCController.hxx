@@ -49,29 +49,30 @@ namespace ATCMessageState
         // 2 = "Acknowledge "Resume taxi".
         ACK_RESUME_TAXI,
         // 3 = "Issue TaxiClearance"
-        TAXI_CLEARED = 3,
+        TAXI_CLEARED,
         // 4 = Acknowledge Taxi Clearance"
-        ACK_TAXI_CLEARED = 4,
+        ACK_TAXI_CLEARED,
         // 5 = Post acknowlegde taxiclearance: Start taxiing
-        START_TAXI = 5,
+        START_TAXI,
         // 6 = Report runway
-        REPORT_RUNWAY = 6,
+        REPORT_RUNWAY,
         // 7 = Acknowledge report runway
-        ACK_REPORT_RUNWAY = 7,
+        ACK_REPORT_RUNWAY,
         // 8 = Switch tower frequency
-        SWITCH_GROUND_TOWER = 8,
+        SWITCH_GROUND_TOWER,
         // 9 = Acknowledge switch tower frequency
-        ACK_SWITCH_GROUND_TOWER = 9,
+        ACK_SWITCH_GROUND_TOWER,
         // 10 = Cleared for takeoff
         CLEARED_TAKEOFF,
         ACK_CLEARED_TAKEOFF,
         ANNOUNCE_ARRIVAL,
         ACK_ARRIVAL,
-        HOLD,
+        HOLD_PATTERN,
         CLEARED_TO_LAND,
         ACK_CLEARED_TO_LAND,
         LANDING_TAXI,
-        SWITCH_TOWER_TO_GROUND
+        SWITCH_TOWER_TO_GROUND,
+        HOLD_POSITION
     };
 }
 

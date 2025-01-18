@@ -15,7 +15,7 @@ enum Type {
     CLIMB = 4,
     CRUISE = 5,
     APPROACH = 6,
-    HOLD = 7,
+    HOLD_PATTERN = 7,
     LANDING = 8,
     PARKING_TAXI = 9,
     PARKING = 10

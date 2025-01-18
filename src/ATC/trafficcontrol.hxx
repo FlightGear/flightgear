@@ -78,6 +78,8 @@ private:
     double speed = std::numeric_limits<double>::max();
     double heading;
     double alt;
+
+
 public:
     FGATCInstruction();
 
@@ -197,6 +199,7 @@ private:
     FGATCInstruction instruction;
     SGGeod pos;
     double heading;
+    double headingDiff;
     double speed;
     double altitude;
     double radius;
@@ -266,7 +269,7 @@ public:
     };
     void setRunwaySlot( int val ) {
         if (plannedArrivalTime) {
-            SG_LOG(SG_ATC, SG_BULK, callsign << "| Runwayslot " << (val-plannedArrivalTime));
+            SG_LOG(SG_ATC, SG_BULK, callsign << "(" << id << ") Runwayslot timedelta " << (val-plannedArrivalTime));
         }
         instruction.setRunwaySlot(val);
     };
@@ -279,6 +282,9 @@ public:
     }
     double getHeading  () const {
         return heading  ;
+    };
+    double getHeadingDiff  () const {
+        return headingDiff  ;
     };
     double getSpeed    () const {
         return speed    ;
@@ -407,6 +413,10 @@ public:
  **********************************************************************/
 class ActiveRunway
 {
+public:
+    /**Separation between aircraft in seconds.*/
+    const time_t SEPARATION = 120;
+
 private:
     const std::string rwy;
     int currentlyCleared;
