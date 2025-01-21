@@ -80,7 +80,7 @@
 
 #include <osg/Version>
 #include <Include/version.h>
-#include <Include/build.h>
+#include <Include/flightgearBuildId.h>
 #include <simgear/version.h>
 
 using std::string;

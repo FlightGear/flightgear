@@ -94,4 +94,8 @@ function(setup_fgfs_libraries target)
     if(${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
         target_link_libraries(${target} execinfo)
     endif()
+
+    if (TARGET sentry::sentry)
+        target_link_libraries(${target} sentry::sentry)
+    endif()
 endfunction()

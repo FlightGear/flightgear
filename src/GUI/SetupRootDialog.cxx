@@ -278,7 +278,7 @@ SetupRootDialog::RestoreResult SetupRootDialog::restoreUserSelectedRoot(SGPath& 
     }
 
     if (downloadedDataAcceptable()) {
-        return flightgear::SetupRootResult::UseDefault;
+        return UseDefault;
     }
 
     // okay, we don't have an acceptable FG_DATA anywhere we can find, we

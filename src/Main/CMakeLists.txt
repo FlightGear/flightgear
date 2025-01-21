@@ -107,13 +107,6 @@ endif()
 setup_fgfs_libraries(fgfs)
 export_debug_symbols(fgfs)
 
-add_executable(nasal
-    nasal-bin.cxx
-    ${PROJECT_SOURCE_DIR}/src/Scripting/sqlitelib.cxx
-)
-setup_fgfs_libraries(nasal)
-install(TARGETS nasal RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
 if(ENABLE_METAR)
     add_executable(metar metar_main.cxx)
     target_link_libraries(metar

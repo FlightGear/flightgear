@@ -1,10 +1,10 @@
 function(setup_fgfs_embedded_resources)
     # The source and header files.
     set(SOURCES
-        ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
+        ${PROJECT_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
     )
     set(HEADERS
-        ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
+        ${PROJECT_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
     )
     set_property(GLOBAL APPEND PROPERTY EMBEDDED_RESOURCE_SOURCES ${SOURCES})
     set_property(GLOBAL APPEND PROPERTY EMBEDDED_RESOURCE_HEADERS ${HEADERS})

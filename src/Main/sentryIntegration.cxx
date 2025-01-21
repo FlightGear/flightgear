@@ -37,7 +37,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
-#include <build.h>
+#include <flightgearBuildId.h>
 
 bool doesStringMatchPrefixes(const std::string& s, const std::initializer_list<const char*>& prefixes)
 {
