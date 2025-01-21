@@ -55,7 +55,7 @@
 
 using namespace std::chrono_literals;
 
-quint32 SetupRootDialog::static_basePackagePatchLevel = 1;
+quint32 SetupRootDialog::static_basePackagePatchLevel = 19;
 
 class InstallFGDataThread : public QThread
 {
