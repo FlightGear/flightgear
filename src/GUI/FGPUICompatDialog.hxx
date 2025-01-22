@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <functional>
 
 #include "dialog.hxx"
@@ -118,6 +119,23 @@ public:
     std::string title() const;
     void setTitle(const std::string& s);
 
+    const std::string& windowType() const
+    {
+        return _windowType;
+    }
+
+    /**
+     * @brief return the UI XML syntax version used by this dialog. 
+     * 
+     * 0 = no version specified explicitly, 1 = compatible with PUI dialogs in older
+     * versions of FlightGear. Higher numbers indicate features than only work with the
+     * updated XML UI.
+     */
+    uint32_t uiVersion() const
+    {
+        return _uiVersion;
+    }
+
 private:
     friend naRef f_makeDialogPeer(const nasal::CallContext& ctx);
     friend naRef f_dialogRootObject(FGPUICompatDialog& dialog, naContext c);
@@ -127,33 +145,8 @@ private:
 
     void requestClose();
 
-#if 0
-    // Build the dialog or a subobject of it.
-    puObject* makeObject(SGPropertyNode* props,
-                         int parentWidth, int parentHeight);
-
-    // Common configuration for all GUI objects.
-    void setupObject(puObject* object, SGPropertyNode* props);
-
-    // Common configuration for all GUI group objects.
-    void setupGroup(puGroup* group, SGPropertyNode* props,
-                    int width, int height, bool makeFrame = false);
-
-    // Set object colors: the "which" argument defines which color qualities
-    // (PUCOL_LABEL, etc.) should pick up the <color> property.
-    void setColor(puObject* object, SGPropertyNode* props, int which = 0);
-#endif
     // return key code number for keystring
     int getKeyCode(const char* keystring);
-
-    /**
-     * Apply layout sizes to a tree of puObjects
-     */
-    //void applySize(puObject* object);
-
-    // // The top-level PUI object.
-    // puObject* _object;
-
 
     // The source xml tree, so that we can pass data back, such as the
     // last position.
@@ -169,7 +162,9 @@ private:
 
     SGSharedPtr<DialogPeer> _peer;
 
+    std::string _windowType; ///< eg a dialog, an overlay, a modal dialog
     std::string _name;
     PUICompatObjectRef _root;
     std::string _title;
+    uint32_t _uiVersion = 0;
 };
