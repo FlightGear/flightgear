@@ -104,6 +104,14 @@ private:
     
     nasal::Hash gridLocation(const nasal::CallContext& ctx) const;
 
+    /**
+     * @brief return the radio group ID associated with this widget
+     (which is presumably a radio-button)
+     * 
+     * @return std::string the radio-group ID, or an empty string
+     */
+    std::string radioGroupIdent() const;
+
     SGWeakPtr<PUICompatObject> _parent;
     SGWeakPtr<FGPUICompatDialog> _dialog;
 
