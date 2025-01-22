@@ -68,7 +68,6 @@ if (${do_translate})
         # ensure we expose the English translations in a 'short' form, so that
         # the QTranslator search order finds it
         if (${LANG} STREQUAL "en_US")
-            message(STATUS "Wibble")
             file(APPEND ${translation_res} "<file alias=\"FlightGear_en.qm\">FlightGear_${LANG}.qm</file>\n")
         else()
             # local path needed here, not absolute
