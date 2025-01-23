@@ -18,7 +18,7 @@ set(LIBIAX2_SOURCES
     libiax2/src/md5.c
 )
 
-if (APPLE)
+if (SG_SOUND_USES_OPENALSOFT)
     message(STATUS "Using OpenAL-soft for IAX OpenAL backend")
     find_package(OpenAL CONFIG REQUIRED)
 else()
