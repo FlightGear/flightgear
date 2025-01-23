@@ -172,6 +172,7 @@ void initStandardNasal(bool withCanvas)
     nasalNode->setBoolValue("jetways/enabled", false);
     nasalNode->setBoolValue("jetways_edit/enabled", false);
     nasalNode->setBoolValue("local_weather/enabled", false);
+    nasalNode->setBoolValue("gui/enabled", withCanvas);
 
     // Nasal needs the interpolator running
     globals->get_subsystem_mgr()->add<FGInterpolator>();

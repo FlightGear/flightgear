@@ -552,7 +552,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MSVC_LD_FLAGS}")
 add_definitions(-DHAVE_CONFIG_H)
 include (CheckPOSIXFeatures)
 
-set(FG_TEST_SUITE_DATA "${CMAKE_SOURCE_DIR}/test_suite/test_data")
+set(FG_TEST_SUITE_DATA "${PROJECT_SOURCE_DIR}/test_suite/test_data")
 
 # configure a header file to pass some of the CMake settings
 # to the source code

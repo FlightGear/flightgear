@@ -123,29 +123,26 @@
 #include <Viewer/splash.hxx>
 #include <Viewer/viewmgr.hxx>
 
+#include "AircraftDirVisitorBase.hxx"
+#include "FGInterpolator.hxx"
 #include "fg_init.hxx"
 #include "fg_io.hxx"
-#include "fg_commands.hxx"
 #include "fg_props.hxx"
-#include "FGInterpolator.hxx"
-#include "options.hxx"
 #include "globals.hxx"
 #include "logger.hxx"
 #include "main.hxx"
+#include "options.hxx"
 #include "positioninit.hxx"
 #include "util.hxx"
-#include "AircraftDirVisitorBase.hxx"
-#include <Main/sentryIntegration.hxx>
 #include <Main/ErrorReporter.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #if defined(SG_MAC)
 #include <GUI/CocoaHelpers.h> // for Mac impl of platformDefaultDataPath()
 #endif
 
-using std::string;
 using std::endl;
-using std::cerr;
-using std::cout;
+using std::string;
 
 using namespace simgear::pkg;
 

@@ -12,6 +12,7 @@ foreach( unit_test_category
         AI
         Airports
         Autopilot
+        GUI
     )
 
     add_subdirectory(${unit_test_category})

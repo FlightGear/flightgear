@@ -385,3 +385,8 @@ void FGPUICompatDialog::setTitle(const std::string& s)
     _title = s;
     _peer->callMethod<void>("titleChanged");
 }
+
+PUICompatObjectRef FGPUICompatDialog::widgetByName(const std::string& name) const
+{
+    return _root->widgetByName(name);
+}

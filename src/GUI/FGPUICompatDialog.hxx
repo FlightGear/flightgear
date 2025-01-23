@@ -6,7 +6,6 @@
 #pragma once
 
 #include <cstdint>
-#include <functional>
 
 #include "dialog.hxx"
 
@@ -16,9 +15,6 @@
 #include <simgear/nasal/cppbind/NasalObject.hxx>
 #include <simgear/props/condition.hxx>
 #include <simgear/props/props.hxx>
-
-
-#include <vector>
 
 
 class NewGUI;
@@ -135,6 +131,12 @@ public:
     {
         return _uiVersion;
     }
+
+    /**
+     * @brief find the dialog widget with the specified name, or nullptr.
+     * 
+     */
+    PUICompatObjectRef widgetByName(const std::string& name) const;
 
 private:
     friend naRef f_makeDialogPeer(const nasal::CallContext& ctx);

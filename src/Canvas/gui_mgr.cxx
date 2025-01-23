@@ -202,37 +202,36 @@ bool GUIEventHandler::handle( const osgEA& ea,
 }
 
 //------------------------------------------------------------------------------
-DesktopGroup::DesktopGroup(osg::Camera* camera):
-  Group(sc::CanvasPtr(), fgGetNode("/canvas/desktop", true)),
-  _cb_mouse_mode( this,
-                  &DesktopGroup::handleMouseMode,
-                  fgGetNode("/devices/status/mice/mouse[0]/mode") ),
-  _width(_node, "size[0]"),
-  _height(_node, "size[1]")
+DesktopGroup::DesktopGroup(osg::Camera* camera) : Group(sc::CanvasPtr(), fgGetNode("/canvas/desktop", true)),
+                                                  _cb_mouse_mode(this,
+                                                                 &DesktopGroup::handleMouseMode,
+                                                                 fgGetNode("/devices/status/mice/mouse[0]/mode", true)),
+                                                  _width(_node, "size[0]"),
+                                                  _height(_node, "size[1]")
 {
-  if( !camera )
-  {
-    SG_LOG(SG_GUI, SG_WARN, "DesktopGroup: failed to get GUI camera.");
-    return;
-  }
+#if !defined(BUILDING_TESTSUITE)
+    if (!camera) {
+        SG_LOG(SG_GUI, SG_WARN, "DesktopGroup: failed to get GUI camera.");
+        return;
+    }
 
-  camera->addChild(_scene_group.get());
+    camera->addChild(_scene_group.get());
 
-  osg::StateSet* stateSet = _scene_group->getOrCreateStateSet();
-  stateSet->setDataVariance(osg::Object::STATIC);
-  stateSet->setRenderBinDetails(1000, "RenderBin");
+    osg::StateSet* stateSet = _scene_group->getOrCreateStateSet();
+    stateSet->setDataVariance(osg::Object::STATIC);
+    stateSet->setRenderBinDetails(1000, "RenderBin");
 
-  // speed optimization?
-  stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-  stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
+    // speed optimization?
+    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+    stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
 
-  stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
-  stateSet->setAttribute(new osg::BlendFunc(
-    osg::BlendFunc::SRC_ALPHA,
-    osg::BlendFunc::ONE_MINUS_SRC_ALPHA)
-  );
+    stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+    stateSet->setAttribute(new osg::BlendFunc(
+        osg::BlendFunc::SRC_ALPHA,
+        osg::BlendFunc::ONE_MINUS_SRC_ALPHA));
+#endif
 
-  _width = _height = -1;
+    _width = _height = -1;
 }
 
 //------------------------------------------------------------------------------
@@ -666,40 +665,40 @@ sc::WindowPtr GUIMgr::createWindow(const std::string& name)
 //------------------------------------------------------------------------------
 void GUIMgr::init()
 {
-  assert(_viewerView);
-   if( _desktop && _event_handler )
-  {
-    SG_LOG(SG_GUI, SG_WARN, "GUIMgr::init() already initialized.");
-    return;
-  }
+    if (_desktop && _event_handler) {
+        SG_LOG(SG_GUI, SG_WARN, "GUIMgr::init() already initialized.");
+        return;
+    }
 
     auto camera = _camera;
+#if !defined(BUILDING_TESTSUITE)
+    assert(_viewerView);
     if (!camera) {
         camera = _viewerView->getCamera();
     }
-    
-  DesktopPtr desktop( new DesktopGroup(camera) );
-  desktop->handleResize
-  (
-    0,
-    0,
-    fgGetInt("/sim/startup/xsize"),
-    fgGetInt("/sim/startup/ysize")
-  );
-  _desktop = desktop;
+#endif
 
-  _event_handler = new GUIEventHandler(desktop);
-  _viewerView->getEventHandlers()
-         // GUI is on top of everything so lets install as first event handler
-         .push_front( _event_handler );
+    DesktopPtr desktop(new DesktopGroup(camera));
+    desktop->handleResize(
+        0,
+        0,
+        fgGetInt("/sim/startup/xsize"),
+        fgGetInt("/sim/startup/ysize"));
+    _desktop = desktop;
 
-  sc::Canvas::addPlacementFactory
-  (
-    "window",
-   std::bind(&GUIMgr::addWindowPlacement, this, std::placeholders::_1, std::placeholders::_2)
-  );
+    _event_handler = new GUIEventHandler(desktop);
 
-  _desktop->getProps()->fireCreatedRecursive();
+#if !defined(BUILDING_TESTSUITE)
+    _viewerView->getEventHandlers()
+        // GUI is on top of everything so lets install as first event handler
+        .push_front(_event_handler);
+#endif
+
+    sc::Canvas::addPlacementFactory(
+        "window",
+        std::bind(&GUIMgr::addWindowPlacement, this, std::placeholders::_1, std::placeholders::_2));
+
+    _desktop->getProps()->fireCreatedRecursive();
 }
 
 //------------------------------------------------------------------------------
@@ -721,8 +720,10 @@ void GUIMgr::shutdown()
 
   if( _event_handler )
   {
-    _viewerView->removeEventHandler( _event_handler );
-    _event_handler = 0;
+#if !defined(BUILDING_TESTSUITE)
+      _viewerView->removeEventHandler(_event_handler);
+#endif
+      _event_handler = 0;
   }
 
     _viewerView = nullptr;

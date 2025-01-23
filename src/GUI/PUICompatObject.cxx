@@ -437,6 +437,22 @@ void PUICompatObject::setEnabled(bool e)
     callMethod<void, bool>("enabledChanged", _enabled);
 }
 
+PUICompatObjectRef PUICompatObject::widgetByName(const std::string& name) const
+{
+    if (name == _name) {
+        return PUICompatObjectRef(const_cast<PUICompatObject*>(this));
+    }
+
+    for (auto child : _children) {
+        auto r = child->widgetByName(name);
+        if (r) {
+            return r;
+        }
+    }
+
+    return {};
+}
+
 void PUICompatObject::recursiveUpdate(const std::string& objectName)
 {
     if (objectName.empty() || (objectName == _name)) {
