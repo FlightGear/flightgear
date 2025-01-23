@@ -38,7 +38,6 @@
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.hxx>
-#include <simgear/misc/SimpleMarkdown.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/strutils.hxx>
@@ -983,19 +982,6 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
 }
 
 /**
- * Parse very simple and small subset of markdown
- *
- * parse_markdown(src)
- */
-static naRef f_parse_markdown(naContext c, naRef me, int argc, naRef* args)
-{
-  nasal::CallContext ctx(c, me, argc, args);
-  return ctx.to_nasal(
-    simgear::SimpleMarkdown::parse(ctx.requireArg<std::string>(0))
-  );
-}
-
-/**
  * Create md5 hash from given string
  *
  * md5(str)
@@ -1051,7 +1037,6 @@ static struct { const char* name; naCFunction func;
     {"resolvepath", f_resolveDataPath},
     {"finddata", f_findDataDir},
     {"parsexml", f_parsexml},
-    {"parse_markdown", f_parse_markdown},
     {"md5", f_md5},
     {"systime", f_systime},
     {"maketimestamp", f_maketimeStamp},
