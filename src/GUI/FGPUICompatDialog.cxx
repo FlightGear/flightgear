@@ -91,6 +91,8 @@ void FGPUICompatDialog::setupGhost(nasal::Hash& compatModule)
         .member("y", &FGPUICompatDialog::getY)
         .member("width", &FGPUICompatDialog::width)
         .member("height", &FGPUICompatDialog::height)
+        .member("windowType", &FGPUICompatDialog::windowType)
+        .member("uiVersion", &FGPUICompatDialog::uiVersion)
         .member("resizeable", f_dialogCanResize)
         .member("root", f_dialogRootObject)
         .method("close", &FGPUICompatDialog::requestClose);
@@ -144,6 +146,9 @@ void FGPUICompatDialog::close()
 
 bool FGPUICompatDialog::init()
 {
+    _windowType = _props->getStringValue("type", "dialog");
+    _uiVersion = static_cast<uint32_t>(_props->getIntValue("ui-version", 0));
+
     try {
         auto nas = globals->get_subsystem<FGNasalSys>();
 
@@ -156,14 +161,13 @@ bool FGPUICompatDialog::init()
         using SelfRef = SGSharedPtr<FGPUICompatDialog>;
         using PeerRef = SGSharedPtr<DialogPeer>;
 
-        const std::string type = _props->getStringValue("type", "dialog");
         auto f = guiModule.get<std::function<PeerRef(std::string, SelfRef)>>("_createDialogPeer");
         if (!f) {
             SG_LOG(SG_GUI, SG_DEV_ALERT, "PUICompat module loaded incorrectly");
             return false;
         }
 
-        _peer = f(type, SelfRef{this});
+        _peer = f(_windowType, SelfRef{this});
         _peer->setDialog(this);
         _peer->callMethod<void>("init", nas->wrappedPropsNode(_props));
 
@@ -380,4 +384,9 @@ void FGPUICompatDialog::setTitle(const std::string& s)
 {
     _title = s;
     _peer->callMethod<void>("titleChanged");
+}
+
+PUICompatObjectRef FGPUICompatDialog::widgetByName(const std::string& name) const
+{
+    return _root->widgetByName(name);
 }

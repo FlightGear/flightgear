@@ -126,19 +126,23 @@ NewGUI::init ()
 
         // Read XML dialogs made available by registered add-ons
         const auto& addonManager = flightgear::addons::AddonManager::instance();
-        for (const auto& addon: addonManager->registeredAddons()) {
-            SGPath addonDialogDir = addon->getBasePath() / "gui/dialogs";
+        if (addonManager) {
+            for (const auto& addon : addonManager->registeredAddons()) {
+                SGPath addonDialogDir = addon->getBasePath() / "gui/dialogs";
 
-            if (addonDialogDir.exists()) {
-                readDir(addonDialogDir);
+                if (addonDialogDir.exists()) {
+                    readDir(addonDialogDir);
+                }
             }
         }
     }
 
-    // Fix for http://code.google.com/p/flightgear-bugs/issues/detail?id=947
-    fgGetNode("sim/menubar")->setAttribute(SGPropertyNode::PRESERVE, true);
-    _menubar->init();
-    scanMenus();
+    if (_menubar) {
+        // Fix for http://code.google.com/p/flightgear-bugs/issues/detail?id=947
+        fgGetNode("sim/menubar")->setAttribute(SGPropertyNode::PRESERVE, true);
+        _menubar->init();
+        scanMenus();
+    }
 }
 
 void
@@ -169,6 +173,11 @@ NewGUI::redraw ()
 void
 NewGUI::createMenuBarImplementation()
 {
+    if (!fgGetBool("/sim/menubar/enable", true)) {
+        SG_LOG(SG_GUI, SG_INFO, "Menubar is disabled");
+        return;
+    }
+
 #if defined(SG_MAC)
     if (fgGetBool("/sim/menubar/native", true)) {
         _menubar.reset(new FGCocoaMenuBar);
@@ -206,7 +215,9 @@ NewGUI::reset (bool reload)
         init();
     } else {
         createMenuBarImplementation();
-        _menubar->init();
+        if (_menubar) {
+            _menubar->init();
+        }
     }
 
     bind();
@@ -237,7 +248,9 @@ void NewGUI::postinit()
     PUICompatObject::setupGhost(compatModule);
     FGNasalMenuBar::setupGhosts(compatModule);
 
-    _menubar->postinit();
+    if (_menubar) {
+        _menubar->postinit();
+    }
 }
 
 void
@@ -408,28 +421,36 @@ NewGUI::getMenuBar ()
 bool
 NewGUI::getMenuBarVisible () const
 {
-    return _menubar->isVisible();
+    if (_menubar) {
+        return _menubar->isVisible();
+    }
+
+    return false;
 }
 
 void
 NewGUI::setMenuBarVisible (bool visible)
 {
-    if (visible)
-        _menubar->show();
-    else
-        _menubar->hide();
+    if (_menubar) {
+        if (visible)
+            _menubar->show();
+        else
+            _menubar->hide();
+    }
 }
 
 bool
 NewGUI::getMenuBarOverlapHide() const
 {
-    return _menubar->getHideIfOverlapsWindow();
+    return _menubar && _menubar->getHideIfOverlapsWindow();
 }
 
 void
 NewGUI::setMenuBarOverlapHide(bool hide)
 {
-    _menubar->setHideIfOverlapsWindow(hide);
+    if (_menubar) {
+        _menubar->setHideIfOverlapsWindow(hide);
+    }
 }
 
 void

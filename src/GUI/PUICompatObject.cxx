@@ -18,8 +18,8 @@
 
 extern naRef propNodeGhostCreate(naContext c, SGPropertyNode* n);
 
-PUICompatObject::PUICompatObject(naRef impl, const std::string& type) : nasal::Object(impl),
-                                                                        _type(type)
+PUICompatObject::PUICompatObject(naRef impl, const std::string& type)
+    : nasal::Object(impl), _type(type)
 {
 }
 
@@ -61,6 +61,7 @@ void PUICompatObject::setupGhost(nasal::Hash& compatModule)
         .member("visible", &PUICompatObject::visible, &PUICompatObject::setVisible)
         .member("enabled", &PUICompatObject::enabled, &PUICompatObject::setEnabled)
         .member("type", &PUICompatObject::type)
+        .member("radioGroup", &PUICompatObject::radioGroupIdent)
         .method("show", &PUICompatObject::show)
         .method("activateBindings", &PUICompatObject::activateBindings)
         .method("gridLocation", &PUICompatObject::gridLocation);
@@ -88,8 +89,7 @@ PUICompatObjectRef PUICompatObject::createForType(const std::string& type, SGPro
 
 void PUICompatObject::init()
 {
-    
-    // read conditions, bindings, etc
+    const auto uiVersion = dialog()->uiVersion();
 
     _name = _config->getStringValue("name");
     _label = _config->getStringValue("label");
@@ -136,6 +136,16 @@ void PUICompatObject::init()
 
             if (_live == LiveValueMode::Listener) {
                 _value->addChangeListener(this);
+            }
+        }
+    }
+
+    // parse version 2 featrues
+    if (uiVersion >= 2) {
+        if (_type == "radio") {
+            auto g = _config->getStringValue("radio-group");
+            if (g.empty()) {
+                SG_LOG(SG_GUI, SG_DEV_WARN, "UIv2 radio button does not specify a group ID (at " << _config->getLocation() << ")");
             }
         }
     }
@@ -188,6 +198,16 @@ void PUICompatObject::init()
     }
 
     callMethod<void>("postinit");
+}
+
+std::string PUICompatObject::radioGroupIdent() const
+{
+    const auto uiVersion = dialog()->uiVersion();
+    if (uiVersion < 2) {
+        throw std::runtime_error("radioGroupIdent: Not allowed at UI version < 2");
+    }
+
+    return _config->getStringValue("radio-group");
 }
 
 naRef PUICompatObject::show(naRef viewParent)
@@ -415,6 +435,22 @@ void PUICompatObject::setEnabled(bool e)
 
     _enabled = e;
     callMethod<void, bool>("enabledChanged", _enabled);
+}
+
+PUICompatObjectRef PUICompatObject::widgetByName(const std::string& name) const
+{
+    if (name == _name) {
+        return PUICompatObjectRef(const_cast<PUICompatObject*>(this));
+    }
+
+    for (auto child : _children) {
+        auto r = child->widgetByName(name);
+        if (r) {
+            return r;
+        }
+    }
+
+    return {};
 }
 
 void PUICompatObject::recursiveUpdate(const std::string& objectName)

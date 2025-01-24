@@ -3,7 +3,6 @@ include(FlightGearComponent)
 set(SOURCES
   canvas_mgr.cxx
   FGCanvasSystemAdapter.cxx
-  gui_mgr.cxx
 )
 
 set(HEADERS
@@ -12,4 +11,5 @@ set(HEADERS
   gui_mgr.hxx
 )
 
-flightgear_component(Canvas "${SOURCES}" "${HEADERS}")
+# gui_mgr.cxx is compiled differently for testing
+flightgear_component(Canvas "${SOURCES}" "${HEADERS}"  gui_mgr.cxx)

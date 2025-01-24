@@ -69,6 +69,23 @@ public:
     void setVisible(bool v);
     void setEnabled(bool e);
 
+    /**
+     * @brief find an object (which might be us, or a descendant) with the 
+     * corresponding name, or nullptr.
+     * 
+     * @param name 
+     */
+    PUICompatObjectRef widgetByName(const std::string& name) const;
+
+
+    /**
+     * @brief return the radio group ID associated with this widget
+     (which is presumably a radio-button)
+     * 
+     * @return std::string the radio-group ID, or an empty string
+     */
+    std::string radioGroupIdent() const;
+
 protected:
     PUICompatObject(naRef impl, const std::string& type);
 
@@ -103,6 +120,7 @@ private:
     void doActivate();
     
     nasal::Hash gridLocation(const nasal::CallContext& ctx) const;
+
 
     SGWeakPtr<PUICompatObject> _parent;
     SGWeakPtr<FGPUICompatDialog> _dialog;
