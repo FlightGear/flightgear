@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license>GPL-2.0</project_license>
+	<id>org.flightgear.FlightGear</id>
+	<name>FlightGear</name>
+	<summary>A free and highly sophisticated flight simulator</summary>
+	<summary xml:lang="pt_BR">Um simulador de voo gratuito e altamente sofisticado</summary>
+	<summary xml:lang="es">Un simulador de vuelo gratuito y altamente sofisticado</summary>
+	<summary xml:lang="it">Un simulatore di volo gratuito e altamente sofisticato</summary>
+	<description>
+		<p>FlightGear allows you to control over 400 aircraft, small and large in a range of
+			situations, types of weather, seasons, day and night cycle. This includes single-engine
+			propeller aircraft, large 4-engine passenger liners, experimental aircraft, classic and
+			vintage aircraft and helicopters.</p>
+		<p>The FlightGear landscape covers the entire world and is downloaded as you fly. Visit any
+			of the 20,000 airports with an accurate representation of airport buildings on many of
+			the larger, international airports.</p>
+		<p>Most popular flight control hardware, such as yokes and sticks are supported. Multiple
+			monitor setup and multiplayer is also featured.</p>
+
+		<p xml:lang="pt_BR">FlightGear permite controlar mais de 400 aeronaves, pequenas e grandes em diversas
+			situações, tipos de clima, estações do ano, ciclo diurno e noturno. Isso inclui
+			aeronaves a hélice monomotor, grandes navios de passageiros de 4 motores, aeronaves
+			experimentais, aeronaves clássicas e antigas e helicópteros.</p>
+		<p xml:lang="pt_BR">A paisagem do FlightGear cobre o mundo inteiro e é baixada enquanto você voa. Visite
+			qualquer um dos 20.000 aeroportos com uma representação precisa dos edifícios do
+			aeroporto em muitos dos maiores aeroportos internacionais.</p>
+		<p xml:lang="pt_BR">Mais popular hardware de controle de vôo, tais como yokes e sticks são suportados. Vários
+			monitores de configuração e multiplayer também é destaque.</p>
+
+		<p xml:lang="es">FlightGear permite controlar más de 400 aeronaves, pequeñas y grandes en diversas
+			situaciones, tipos de clima, estaciones del año, ciclo diurno y nocturno. Esto incluye
+			aviones a hélice monomotor, grandes buques de pasajeros de 4 motores, aeronaves
+			experimentales, aeronaves clásicas y antiguas y helicópteros.</p>
+		<p xml:lang="es">El paisaje de FlightGear cubre el mundo entero y se descarga mientras vuela. Visite
+			cualquiera de los 20.000 aeropuertos con una representación precisa de los edificios del
+			aeropuerto en muchos de los mayores aeropuertos internacionales.</p>
+		<p xml:lang="es">Más populares hardware de control de vuelo, como yokes y sticks son compatibles. Varios
+			monitores de configuración y multijugador también se destaca.</p>
+
+		<p xml:lang="it">FlightGear permette di controllare più di 400 velivoli, piccoli e grandi in diverse
+			situazioni, tipo di meteo, stagioni, ciclo diurno e notturno. Questo include velivoli ad
+			elica monomotore, velivoli ad elica monomotore, grandi navi passeggeri a 4 motori,
+			velivoli sperimentali, velivoli ed elicotteri classici e vintage.</p>
+		<p xml:lang="it">Il paesaggio di FlightGear copre tutto il mondo e viene scaricato mentre voli. Visita uno
+			qualsiasi dei 20.000 aeroporti con una rappresentazione accurata degli edifici
+			aeroportuali su molti dei più grandi aeroporti internazionali.</p>
+		<p xml:lang="it">Sono supportati i più diffusi hardware di controllo del volo, come gioghi e levette. Sono
+			presenti anche impostazioni per monitor multipli e multiplayer.</p>
+	</description>
+	<!-- All the screenshots are licensed under CC-BY-SA 4.0 and available in the FlightGear wiki.
+	To find a lot of high quality FlightGear screenshots, see
+	https://wiki.flightgear.org/Category:Screenshots_at_high_settings,
+	https://wiki.flightgear.org/Category:Screenshots_at_high_settings/sotm
+	and the different categories at https://wiki.flightgear.org/Category:FlightGear_screenshots
+	NOTE: Screenshots should have an aspect ratio of 16:9 and a resolution of more than or equal to 1600x900.
+	Please make sure to only include very good looking screenshots, similar with the current ones. -->
+	<screenshots>
+		<screenshot type="default">
+			<image>https://wiki.flightgear.org/images/8/8a/Bell_UH-1D_Huey%40Matterhorn.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/1/1f/Cessna_172P_over_Lake_of_Constance.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/8/8d/Cessna_182S_at_LEBL.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/0/00/CH53-E-approaching-USS-Vinson-battle-group.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/6/69/DC3Swissairlines.png</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/7/7f/EC135_Sea_of_fog.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/4/42/Hot_Stuff_with_H130_at_Stromboli.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/5/55/Ju-52_taking_off_from_EDDI.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/5/51/SOTM_2019-06_Catching_the_rainbow_by_F5SLQ.png</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/e/e1/SOTM_2019-06_Stormy_Singapore_by_sidi762.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/b/b3/SOTM_2019-08_Low_Landing_by_sidi762.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/8/8a/SOTM_2020-01_Tweet_over_cloud_by_erik.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/9/93/SOTM_2020-02_A_Pinch_Of_Star_Dust_by_GinGin.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/3/31/SOTM_2020-02_Beijing_Approach_by_sidi762.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/a/a7/SOTM_2020-02_Dawn_Landing_by_dg-505.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/b/b6/SOTM-July18.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/c/c0/SOTM-June17.png</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/7/77/DHC-6_Twin_Otter_in_steep_climb.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/e/ed/Reikjavik%2C_Iceland_with_OSM2City_output_%28Flightgear_2020.x%29.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/3/3b/Stemme_S6_over_Montserrat.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/e/e6/ALS_Compositor_pipeline.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/d/db/C-47_in_flight.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/0/0f/P-51D_over_Koblenz.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/6/6c/SOTM_2020-01_Dawn_at_Paris-Orly_by_barszczisbad.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>https://wiki.flightgear.org/images/3/3c/Truman07.jpg</image>
+		</screenshot>
+	</screenshots>
+	<content_rating type="oars-1.1">
+		<content_attribute id="social-chat">intense</content_attribute>
+	</content_rating>
+	<developer id="org.flightgear">
+		<name>The FlightGear Developers</name>
+  	</developer>
+	<url type="homepage">https://www.flightgear.org/</url>
+	<url type="bugtracker">https://gitlab.com/groups/flightgear/-/issues/</url>
+	<url type="faq">https://wiki.flightgear.org/Frequently_asked_questions</url>
+	<url type="help">https://flightgear.sourceforge.net/getstart-en/getstart-en.html</url>
+	<url type="donation">https://store.flightgear.org/</url>
+	<url type="translate">https://wiki.flightgear.org/Howto:Translate_FlightGear</url>
+	<url type="contact">https://www.flightgear.org/flying/</url>
+	<url type="vcs-browser">https://gitlab.com/flightgear/</url>
+	<url type="contribute">https://wiki.flightgear.org/Portal:Developer</url>
+	<launchable type="desktop-id">org.flightgear.FlightGear.desktop</launchable>
+	<releases>
+		<release version="@FLIGHTGEAR_VERSION@" date="@FG_CMAKE_TIMESTAMP@" />
+	</releases>
+</component>
