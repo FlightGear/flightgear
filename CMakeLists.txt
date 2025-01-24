@@ -418,7 +418,7 @@ if (TARGET SimGearCore)
     # since we don't find(SimGear), we need to 
     # find a few dependencies directly
     if (SG_SOUND_USES_OPENALSOFT)
-        message((STATUS "Finding OpenAL"))
+        message((STATUS "Finding OpenALSoft"))
         find_package(OpenAL CONFIG)
     else()
         find_package(OpenAL)
@@ -427,6 +427,8 @@ if (TARGET SimGearCore)
 else()
     find_package(SimGear ${MIN_SIMGEAR_VERSION} CONFIG REQUIRED)
 endif()
+
+message(STATUS "OpenAL includes: ${OPENAL_INCLUDE_DIR}")
 
 ##############################################################################
 
