@@ -542,13 +542,33 @@ QSettings getQSettings()
 
 std::unique_ptr<QSettings> createQSettings()
 {
+    std::unique_ptr<QSettings> qs;
 #if defined(SG_MAC)
-    return std::make_unique<QSettings>(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(),
-                                       "FlightGear_" FLIGHTGEAR_MAJOR_MINOR_VERSION);
+    qs.reset(new QSettings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(),
+                  "FlightGear_" FLIGHTGEAR_MAJOR_MINOR_VERSION));
 #else
-    return std::make_unique<QSettings>(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationName(),
-                                       "FlightGear_" FLIGHTGEAR_MAJOR_MINOR_VERSION);
+    qs.reset(new QSettings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationName(),
+                           "FlightGear_" FLIGHTGEAR_MAJOR_MINOR_VERSION));
 #endif
+    if (!QFile::exists(qs->fileName())) {
+        qInfo() << "No launcher settings file found, looking for previous name";
+
+        std::unique_ptr<QSettings> oldSettings;
+#if defined(SG_MAC)
+            oldSettings.reset(new QSettings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(),
+                                               "FlightGear"));
+#else
+        oldSettings.reset(new QSettings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationName(),
+                                        "FlightGear"));
+#endif
+
+    // copy all keys over
+        for (auto k : oldSettings->allKeys()) {
+            qs->setValue(k, oldSettings->value(k));
+        }
+    }
+
+    return qs;
 }
 
 bool checkKeyboardModifiersForSettingFGRoot()
