@@ -18,6 +18,8 @@ set(LIBIAX2_SOURCES
     libiax2/src/md5.c
 )
 
+message(STATUS "OpenAL includes: ${OPENAL_INCLUDE_DIR}")
+
 if (SG_SOUND_USES_OPENALSOFT)
     message(STATUS "Using OpenAL-soft for IAX OpenAL backend")
     find_package(OpenAL CONFIG REQUIRED)
