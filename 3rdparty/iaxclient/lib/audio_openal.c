@@ -1,15 +1,11 @@
 #include "iaxclient_lib.h"
 
-#ifdef __APPLE__
-#include <OpenAL/al.h>
-#include <OpenAL/alc.h>
-#elif defined(OPENALSDK)
+// changed by James Turner to use non-prefixed OpenAL include paths,
+// which is what CMake official FindOpenAL.cmake and the OpenAL-soft Config.cmake
+// expect to provide. This avoids any pre-processor logic to decide which
+// prefix is correct.
 #include <al.h>
 #include <alc.h>
-#else
-#include <AL/al.h>
-#include <AL/alc.h>
-#endif
 
 struct openal_priv_data
 {

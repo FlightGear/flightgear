@@ -14,23 +14,13 @@
 # include "config.h"
 #endif
 
-#ifdef __APPLE__
-# include <OpenAL/al.h>
-# include <OpenAL/alc.h>
-#else
-# include <AL/al.h>
-# include <AL/alc.h>
-# include <AL/alext.h>
-#endif
+
+#include <al.h>
+#include <alc.h>
 
 #ifndef AL_VERSION_1_1
-# ifdef __APPLE__
-#  include <OpenAL/altypes.h>
-#  include <OpenAL/alctypes.h>
-#else
-#  include <AL/altypes.h>
-#  include <AL/alctypes.h>
-# endif
+#  include <altypes.h>
+#  include <alctypes.h>
 #endif
 
 #include <stdlib.h>
