@@ -214,7 +214,7 @@ Item {
 
                         // between one and seven alphanumerics, underscores and/or hypens
                         // spaces not permitted
-                        validation: RegExpValidator { regExp: /[\w-]{1,7}/ }
+                        validation: RegularExpressionValidator { regularExpression: /[\w-]{1,7}/ }
                         setting: "callsign"
                     },
 
@@ -454,8 +454,7 @@ Item {
                         label: qsTr("Custom size")
                         advanced: true
                         description: qsTr("Enter a custom window size in the form 'WWWWW x HHHHH', for example '1280 x 900'")
-                        validation: RegExpValidator { regExp: /[\d]{1,7}[\s]*x[\s]*[\d]{1,7}$/ }
-
+                        validation: RegularExpressionValidator { regularExpression: /[\d]{1,7}[\s]*x[\s]*[\d]{1,7}$/ }
                         setting: "custom-size"
                         suggestedWidthString: "0000000 x 0000000"
 

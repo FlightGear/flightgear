@@ -117,11 +117,14 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
     // allow selecting different QML files based on the Qt version we are
     // compiled against
     auto selector = new QQmlFileSelector(engine(), this);
+
 #if QT_VERSION >= 0x050600
     selector->setExtraSelectors({"qt56"});
 #endif
 
-#if QT_VERSION >= 0x050700
+#if QT_VERSION >= 0x060000
+    selector->setExtraSelectors({"qt56", "qt57", "qt6"});
+#elif QT_VERSION >= 0x050700
     if (haveQQC2) {
       selector->setExtraSelectors({"qt56", "qt57"});
     }
