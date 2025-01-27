@@ -193,7 +193,7 @@ void FGXMLAutopilotGroup::addAutopilotFromFile( const std::string& name,
   if( config.isNull() )
   {
       simgear::reportFailure(simgear::LoadFailure::NotFound, simgear::ErrorCode::AircraftSystems,
-                             string{"Autopilot XML not found:"} + path, sg_location{path});
+                             std::string{"Autopilot XML not found:"} + path, sg_location{path});
       SG_LOG(
           SG_AUTOPILOT,
           SG_ALERT,
@@ -225,7 +225,7 @@ void FGXMLAutopilotGroup::addAutopilotFromFile( const std::string& name,
                                              << ": " << e.getMessage()
     );
     simgear::reportFailure(simgear::LoadFailure::BadData, simgear::ErrorCode::AircraftSystems,
-                           string{"Autopilot XML faield to load:"} + e.getFormattedMessage(), e.getLocation());
+                           std::string{"Autopilot XML faield to load:"} + e.getFormattedMessage(), e.getLocation());
     return;
   }
 }

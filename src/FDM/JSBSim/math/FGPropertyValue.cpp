@@ -97,7 +97,7 @@ std::string FGPropertyValue::GetName(void) const
 
 std::string FGPropertyValue::GetNameWithSign(void) const
 {
-  string name;
+  std::string name;
 
   if (Sign < 0.0) name ="-";
 

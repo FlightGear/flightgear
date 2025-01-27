@@ -518,7 +518,7 @@ public:
 
     std::string dump()
     {
-        ostringstream os;
+        std::ostringstream os;
         os << runways.front()->ident();
         for (unsigned int r=1; r <runways.size(); ++r) {
             os << ", " << runways[r]->ident();

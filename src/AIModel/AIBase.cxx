@@ -474,7 +474,7 @@ void FGAIBase::updateLOD()
                   _model->setRange(modelLowDetailIndex , maxRangeBare, maxRangeDetail); // least detailed
                 } else {
                   // we have only one model it obviously will have to be displayed from the smallest value
-                  _model->setRange(0, min(maxRangeBare, maxRangeDetail), FLT_MAX );
+                  _model->setRange(0, std::min(maxRangeBare, maxRangeDetail), FLT_MAX );
                 }
             } else {
                 /* In non-pixel range mode we're dealing with straight distance.
@@ -647,7 +647,7 @@ bool FGAIBase::init(ModelSearchOrder searchOrder)
         _modeldata->addErrorContext("multiplayer", getCallSign());
     }
 
-    vector<string> model_list = resolveModelPath(searchOrder);
+    std::vector<std::string> model_list = resolveModelPath(searchOrder);
     _model= SGModelLib::loadPagedModel(model_list, props, _modeldata);
     _model->setName("AI-model range animation node");
     _model->setRadius(getDefaultModelRadius());

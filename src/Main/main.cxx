@@ -381,7 +381,7 @@ static void fgIdleFunction ( void ) {
         } catch (std::exception& e) {
             // attempt to trace location of illegal argument / invalid string
             // position errors on startup
-            flightgear::sentryReportException(string{"Creating subsystems: caught:"} + e.what());
+            flightgear::sentryReportException(std::string{"Creating subsystems: caught:"} + e.what());
             throw;
         }
 

@@ -329,7 +329,7 @@ class FGSpoolUp : public FGParameter
 public:
   FGSpoolUp(FGTurbine* _turb, double BPR, double factor)
     : turb(_turb), delay(factor * 90.0 / (BPR + 3.0)) {}
-  string GetName(void) const { return string(); };
+  std::string GetName(void) const { return {}; };
   double GetValue(void) const {
     // adjust acceleration for N2 and atmospheric density
     double n = std::min(1.0, turb->N2norm + 0.1);

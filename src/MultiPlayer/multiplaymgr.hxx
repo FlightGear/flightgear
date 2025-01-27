@@ -71,8 +71,8 @@ public:
 
   FGAIMultiplayer* getMultiplayer(const std::string& callsign);
 
-    std::shared_ptr<vector<char>> popMessageHistory();
-    void pushMessageHistory(std::shared_ptr<vector<char>> message);
+    std::shared_ptr<std::vector<char>> popMessageHistory();
+    void pushMessageHistory(std::shared_ptr<std::vector<char>> message);
     
     // Remove motion information for all multiplayer aircraft, e.g. when
     // scrubbing during replay.

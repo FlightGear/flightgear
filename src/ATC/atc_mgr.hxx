@@ -53,7 +53,7 @@ private:
     bool networkVisible;
     bool initSucceeded;
     SGPropertyNode_ptr trans_num;
-    string destination;
+    std::string destination;
 
     std::unique_ptr<FGAISchedule> userAircraftTrafficRef;
     std::unique_ptr<FGScheduledFlight> userAircraftScheduledFlight;

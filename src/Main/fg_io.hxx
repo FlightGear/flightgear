@@ -64,9 +64,9 @@ private:
     FGProtocol* parse_port_config( const std::string& cfgstr );
     FGProtocol* parse_port_config( const string_list& tokens );
 
-    void addToPropertyTree(const string name, const string config);
-    void removeFromPropertyTree(const string name);
-    string generateName(const string protocol);
+    void addToPropertyTree(const std::string name, const std::string config);
+    void removeFromPropertyTree(const std::string name);
+    std::string generateName(const std::string protocol);
 
 private:
     // define the global I/O channel list

@@ -51,6 +51,8 @@ struct ActiveTest
     int failLineNumber;
 };
 
+using std::string;
+
 static std::unique_ptr<ActiveTest> static_activeTest;
 
 static naRef f_assert(const nasal::CallContext& ctx )

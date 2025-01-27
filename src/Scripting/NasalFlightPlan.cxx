@@ -787,7 +787,7 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
         }
 
         if (naIsNil(value)) {
-            fp->setSID(fp->sid(), string{});
+            fp->setSID(fp->sid(), std::string{});
             return;
         }
 
@@ -857,7 +857,7 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
         }
 
         if (naIsNil(value)) {
-            fp->setSTAR(fp->star(), string{});
+            fp->setSTAR(fp->star(), std::string{});
             return;
         }
 
@@ -922,7 +922,7 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
         }
 
         if (naIsNil(value)) {
-            fp->setApproach(fp->approach(), string{});
+            fp->setApproach(fp->approach(), std::string{});
             return;
         }
 
@@ -2060,7 +2060,7 @@ static naRef f_procedure_transition(naContext c, naRef me, int argc, naRef* args
         naRuntimeError(c, "procedure.transition called on non-procedure object");
     }
 
-    const string ident{naStr_data(args[0])};
+    const std::string ident{naStr_data(args[0])};
     const auto ty = proc->type();
     if (Approach::isApproach(ty)) {
         const auto app = static_cast<Approach*>(proc);

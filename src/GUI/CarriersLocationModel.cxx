@@ -21,7 +21,7 @@ CarriersLocationModel::CarriersLocationModel(QObject *parent)
     }
 }
 
-void CarriersLocationModel::processCarrier(const string &scenario, SGPropertyNode_ptr carrierNode)
+void CarriersLocationModel::processCarrier(const std::string &scenario, SGPropertyNode_ptr carrierNode)
 {
     const auto name = QString::fromStdString(carrierNode->getStringValue("name"));
     const auto pennant = QString::fromStdString(carrierNode->getStringValue("pennant-number"));

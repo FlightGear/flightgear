@@ -208,9 +208,9 @@ void FGSoundManager::update(double dt)
 bool FGSoundManager::playAudioSampleCommand(const SGPropertyNode * arg, SGPropertyNode * root)
 {
     const char *qname = arg->getStringValue("queue");
-    string name = qname ? qname : "chatter";
-    string path = arg->getStringValue("path");
-    string file = arg->getStringValue("file");
+    std::string name = qname ? qname : "chatter";
+    std::string path = arg->getStringValue("path");
+    std::string file = arg->getStringValue("file");
     float volume = arg->getFloatValue("volume");
 
     const auto fullPath = SGPath(path) / file;
@@ -231,7 +231,7 @@ bool FGSoundManager::playAudioSampleCommand(const SGPropertyNode * arg, SGProper
         {
             static const char *r = "0123456789abcdefghijklmnopqrstuvwxyz"
                                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-           string rstr = "NASAL: ";
+           std::string rstr = "NASAL: ";
            for (int i=0; i<10; i++) {
                rstr.push_back( r[rand() % strlen(r)] );
            }

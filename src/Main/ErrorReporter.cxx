@@ -44,7 +44,7 @@
 #include <Scripting/NasalClipboard.hxx> // clipboard access
 
 using std::string;
-
+using std::endl;
 namespace {
 
 const double MinimumIntervalBetweenDialogs = 5.0;
@@ -131,7 +131,7 @@ public:
 
     bool doProcessEntry(const simgear::LogEntry& e) override
     {
-        ostringstream os;
+        std::ostringstream os;
         if (e.file != nullptr) {
             os << e.file << ":" << e.line << ":\t";
         }
@@ -328,7 +328,7 @@ public:
         // remove any existing error children
         _displayNode->removeChildren("error");
 
-        ostringstream detailsTextStream;
+        std::ostringstream detailsTextStream;
 
         // add all the discrete errors as child nodes with all their information
         for (const auto& e : report.errors) {
@@ -548,14 +548,14 @@ void ErrorReporter::ErrorReporterPrivate::writeReportToStream(const AggregateRep
     for (auto o : Options::sharedInstance()->extractOptions()) {
         os << "\t" << o << "\n";
     }
-    os << endl;
+    os << std::endl;
 
     writeSignificantPropertiesToStream(os);
 }
 
 void ErrorReporter::ErrorReporterPrivate::writeSignificantPropertiesToStream(std::ostream& os) const
 {
-    os << "Properties:" << endl;
+    os << "Properties:" << std::endl;
     for (const auto& ps : _significantProperties) {
         auto node = fgGetNode(ps);
         if (!node) {

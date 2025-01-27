@@ -79,7 +79,7 @@ public:
   static Addon::Metadata parseMetadataFile(const SGPath& addonPath);
 
 private:
-  static std::tuple<string, SGPath, string>
+  static std::tuple<std::string, SGPath, std::string>
   parseLicenseNode(const SGPath& addonPath, SGPropertyNode* addonNode);
 
   // Parse an addon-metadata.xml node such as <authors> or <maintainers>.

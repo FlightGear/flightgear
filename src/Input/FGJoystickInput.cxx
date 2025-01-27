@@ -140,7 +140,7 @@ void FGJoystickInput::init()
       SGPropertyNode_ptr named;
 
       // allow distinguishing duplicated devices by the name
-      string indexedName = computeDeviceIndexName(name, i);
+      std::string indexedName = computeDeviceIndexName(name, i);
       if (configMap.hasConfiguration(indexedName)) {
           named = configMap.configurationForDeviceName(indexedName);
           std::string source = named->getStringValue("source", "user defined");

@@ -64,14 +64,14 @@ class FGParameterValue : public FGParameter
 {
 public:
   FGParameterValue(Element* el, FGPropertyManager* pm) {
-    string value = el->GetDataLine();
+    std::string value = el->GetDataLine();
 
     if (el->GetNumDataLines() != 1 || value.empty()) {
-      cerr << el->ReadFrom()
+      std::cerr << el->ReadFrom()
            << "The element <" << el->GetName()
            << "> must either contain a value number or a property name."
-           << endl;
-      throw invalid_argument("FGParameterValue: Illegal argument defining: " + el->GetName());
+           << std::endl;
+      throw std::invalid_argument("FGParameterValue: Illegal argument defining: " + el->GetName());
     }
 
     Construct(value, pm);
@@ -89,7 +89,7 @@ public:
     if (v)
       return v->GetNameWithSign();
     else
-      return to_string(param->GetValue());
+      return std::to_string(param->GetValue());
   }
 
   bool IsLateBound(void) const {

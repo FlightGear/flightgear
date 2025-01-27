@@ -66,7 +66,7 @@ FGElectricalSupplier::FGElectricalSupplier ( SGPropertyNode *node ) {
 
     // cout << "Creating a supplier" << endl;
     name = node->getStringValue("name");
-    string _model = node->getStringValue("kind");
+    std::string _model = node->getStringValue("kind");
     // cout << "_model = " << _model << endl;
     if ( _model == "battery" ) {
         model = FG_BATTERY;
@@ -91,7 +91,7 @@ FGElectricalSupplier::FGElectricalSupplier ( SGPropertyNode *node ) {
         SGPropertyNode *child = node->getChild(i);
         // cout << " scanning: " << child->getName() << endl;
         if ( !strcmp(child->getName(), "prop") ) {
-            string prop = child->getStringValue();
+            std::string prop = child->getStringValue();
             // cout << "  Adding prop = " << prop << endl;
             add_prop( prop );
             fgSetFloat( prop.c_str(), ideal_amps );
@@ -210,7 +210,7 @@ FGElectricalBus::FGElectricalBus ( SGPropertyNode *node ) {
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
         if ( !strcmp(child->getName(), "prop") ) {
-            string prop = child->getStringValue();
+            std::string prop = child->getStringValue();
             add_prop( prop );
         }
     }
@@ -232,7 +232,7 @@ FGElectricalOutput::FGElectricalOutput ( SGPropertyNode *node ) {
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
         if ( !strcmp(child->getName(), "prop") ) {
-            string prop = child->getStringValue();
+            std::string prop = child->getStringValue();
             add_prop( prop );
         }
     }
@@ -248,8 +248,8 @@ FGElectricalSwitch::FGElectricalSwitch( SGPropertyNode *node ) :
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
+        std::string cname = child->getName();
+        std::string cval = child->getStringValue();
         if ( cname == "prop" ) {
             switch_node = fgGetNode( cval.c_str(), true );
             // cout << "switch node = " << cval << endl;
@@ -277,8 +277,8 @@ FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
+        std::string cname = child->getName();
+        std::string cval = child->getStringValue();
         // cout << "  " << cname << " = " << cval << endl;
         if ( cname == "input" ) {
             FGElectricalComponent *s = es->find( child->getStringValue() );
@@ -600,7 +600,7 @@ bool FGElectricalSystem::build (SGPropertyNode* config_props) {
     int count = config_props->nChildren();
     for ( i = 0; i < count; ++i ) {
         node = config_props->getChild(i);
-        string name = node->getName();
+        std::string name = node->getName();
         // cout << name << endl;
         if ( name == "supplier" ) {
             FGElectricalSupplier *s =
@@ -633,7 +633,7 @@ bool FGElectricalSystem::build (SGPropertyNode* config_props) {
 // total current drawn by the children of this node.
 float FGElectricalSystem::propagate( FGElectricalComponent *node, double dt,
                                      float input_volts, float input_amps,
-                                     string s ) {
+                                     std::string s ) {
     s += " ";
 
     float total_load = 0.0;
@@ -725,9 +725,9 @@ float FGElectricalSystem::propagate( FGElectricalComponent *node, double dt,
 
 
 // search for the named component and return a pointer to it, NULL otherwise
-FGElectricalComponent *FGElectricalSystem::find ( const string &name ) {
+FGElectricalComponent *FGElectricalSystem::find ( const std::string &name ) {
     unsigned int i;
-    string s;
+    std::string s;
 
     // search suppliers
     for ( i = 0; i < suppliers.size(); ++i ) {

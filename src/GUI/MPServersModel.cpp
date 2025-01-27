@@ -88,7 +88,7 @@ void MPServersModel::refresh()
         return; // in-progress
     }
 
-    string url(fgGetString("/sim/multiplay/serverlist-url",
+    std::string url(fgGetString("/sim/multiplay/serverlist-url",
                            "http://liveries.flightgear.org/mpstatus/mpservers.xml"));
 
     if (url.empty()) {

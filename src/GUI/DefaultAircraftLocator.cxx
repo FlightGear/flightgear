@@ -117,7 +117,7 @@ WeatherScenariosModel::WeatherScenariosModel(QObject *pr) :
             }
 
             WeatherScenario ws;
-            const string wsId = scenario->getStringValue("id");
+            const std::string wsId = scenario->getStringValue("id");
             if (!wsId.empty()) {
                 // translated
                 auto locale = globals->get_locale();

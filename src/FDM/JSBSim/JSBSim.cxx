@@ -390,7 +390,7 @@ FGJSBsim::FGJSBsim( double dt )
     fgtrim->DoTrim();
     delete fgtrim;
 
-    string directive_file = fgGetString("/sim/jsbsim/output-directive-file");
+    std::string directive_file = fgGetString("/sim/jsbsim/output-directive-file");
     if (!directive_file.empty())
       fdmex->SetOutputDirectives(directive_file);
 }

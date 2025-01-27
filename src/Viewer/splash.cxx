@@ -713,7 +713,7 @@ void fgSplashProgress( const char *identifier, unsigned int percent )
         } else if (kbytesPerSec > 0) {
             oss << " - " << kbytesPerSec << " KB/sec";
         } else if (kbytesPendingExtract > 0) {
-            const string extractText = globals->get_locale()->getLocalizedString("scenery-extract", "sys");
+            const std::string extractText = globals->get_locale()->getLocalizedString("scenery-extract", "sys");
             std::ostringstream os2;
 
             if (kbytesPendingExtract > 1024) {
@@ -731,7 +731,7 @@ void fgSplashProgress( const char *identifier, unsigned int percent )
     if (!strcmp(identifier, "loading-scenery")) {
         unsigned int kbytesPendingExtract = fgGetInt("/sim/terrasync/extract-pending-kbytes");
         if (kbytesPendingExtract > 0) {
-            const string extractText = globals->get_locale()->getLocalizedString("scenery-extract", "sys");
+            const std::string extractText = globals->get_locale()->getLocalizedString("scenery-extract", "sys");
             std::ostringstream oss;
             if (kbytesPendingExtract > 1024) {
                 int mBytesPendingExtract = kbytesPendingExtract >> 10;
@@ -749,8 +749,8 @@ void fgSplashProgress( const char *identifier, unsigned int percent )
 
     // over-write the spinner
     if (!strncmp(identifier, "navdata-", 8)) {
-        const string percentText = globals->get_locale()->getLocalizedString("navdata-load-percent", "sys");
-        auto finalText = simgear::strutils::replace(percentText, "[VALUE]", to_string(percent));
+        const std::string percentText = globals->get_locale()->getLocalizedString("navdata-load-percent", "sys");
+        auto finalText = simgear::strutils::replace(percentText, "[VALUE]", std::to_string(percent));
         fgSetString("/sim/startup/splash-progress-spinner", finalText);
     }
 

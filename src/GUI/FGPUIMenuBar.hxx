@@ -138,10 +138,10 @@ private:
     puCallback * make_callback_array (int size);
     // The return value points to an array where each element is a pointer to a
     // vector that gives the list of bindings assigned to a given menu entry.
-    const vector<std::unique_ptr<SGBinding>> ** make_userdata_array (int size);
+    const std::vector<std::unique_ptr<SGBinding>> ** make_userdata_array (int size);
     std::vector<char **> _char_arrays;
     std::vector<puCallback *> _callback_arrays;
-    std::vector<const vector<std::unique_ptr<SGBinding>> **> _userdata_arrays;
+    std::vector<const std::vector<std::unique_ptr<SGBinding>> **> _userdata_arrays;
 
     // A map for {menu node path}->puObject translation.
     std::map<std::string, puObject *> _objects;

@@ -33,13 +33,13 @@ using namespace simgear;
 /**
  * Build a name=value map from base64 encoded JSON string
  */
-class MPServerProperties : public std::map<string, string> {
+class MPServerProperties : public std::map<std::string, std::string> {
 public:
-  MPServerProperties (string b64)
+  MPServerProperties (std::string b64)
   {
     std::vector<unsigned char> b64dec;
     simgear::strutils::decodeBase64 (b64, b64dec);
-    auto jsonString = string ((char*) b64dec.data (), b64dec.size ());
+    auto jsonString = std::string ((char*) b64dec.data (), b64dec.size ());
     cJSON * json = ::cJSON_Parse (jsonString.c_str ());
     if (json) {
       for (int i = 0; i < ::cJSON_GetArraySize (json); i++) {

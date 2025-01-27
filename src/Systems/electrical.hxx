@@ -122,7 +122,7 @@ private:
     float ideal_volts;          // ideal volts
 
     // alternator fields
-    string rpm_src;             // property name of alternator power source
+    std::string rpm_src;             // property name of alternator power source
     float rpm_threshold;        // minimal rpm to generate full power
 
     // alt & ext supplier fields
@@ -190,7 +190,7 @@ class FGElectricalConnector : public FGElectricalComponent
 {
     comp_list inputs;
     comp_list outputs;
-    typedef vector< FGElectricalSwitch> switch_list;
+    typedef std::vector< FGElectricalSwitch> switch_list;
     switch_list switches;
 
 public:
@@ -236,7 +236,7 @@ public:
     FGElectricalComponent *find ( const std::string &name );
 
 protected:
-    typedef vector<FGElectricalComponent *> comp_list;
+    typedef std::vector<FGElectricalComponent *> comp_list;
 
 private:
     void deleteComponents(comp_list& comps);

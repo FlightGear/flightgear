@@ -116,9 +116,9 @@ protected:
   // Wrappers that can be passed as function pointers to checkCondition
   // @see simgear::strutils::starts_with
   // @see simgear::strutils::ends_with
-  static bool contains(const string &s, const string &substring)
+  static bool contains(const std::string &s, const std::string &substring)
     { return s.find(substring) != std::string::npos; };
-  static bool equals(const string &s1, const string &s2)
+  static bool equals(const std::string &s1, const std::string &s2)
     { return s1 == s2; };
 
   bool checkCondition( SGPropertyNode_ptr node, bool notInverted,
