@@ -1,6 +1,8 @@
 import QtQuick 2.4
 import "."
 
+import FlightGear 1.0
+
 SettingControl {
     id: root
 
