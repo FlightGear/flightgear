@@ -607,6 +607,8 @@ else()
     )
 endif()
 
+include(OSGHelpers)
+
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/src)
 # following is needed, because config.h is include 'bare', whereas
