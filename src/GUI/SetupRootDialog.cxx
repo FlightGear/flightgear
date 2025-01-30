@@ -34,6 +34,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QPointer>
 #include <QSettings>
 #include <QThread>
 #include <QUrl>
@@ -55,15 +56,15 @@
 
 using namespace std::chrono_literals;
 
-quint32 SetupRootDialog::static_basePackagePatchLevel = 1;
+const quint32 static_basePackagePatchLevel = 1;
 
 class InstallFGDataThread : public QThread
 {
     Q_OBJECT
 public:
-    InstallFGDataThread(QObject* pr, QNetworkReply* r) : QThread(pr)
+    InstallFGDataThread(QObject* pr, QNetworkAccessManager* nam) : QThread(pr),
+                                                                   m_networkManager(nam)
     {
-        r->setReadBufferSize(64 * 1024 * 1024);
         const auto rp = flightgear::Options::sharedInstance()->downloadedDataRoot();
 
         m_downloadPath = rp.dirPath() / ("_download_data_" + std::to_string(FLIGHTGEAR_MAJOR_VERSION) + "_" + std::to_string(FLIGHTGEAR_MINOR_VERSION));
@@ -73,25 +74,67 @@ public:
             ed.remove(true);
         }
 
-        m_archive.reset(new simgear::ArchiveExtractor(m_downloadPath));
-        m_archive->setRemoveTopmostDirectory(true);
-        m_archive->setCreateDirHashEntries(true);
-        m_download = r;
-
         // +1 to include the leading /
         m_pathPrefixLength = m_downloadPath.utf8Str().length() + 1;
+
+        m_urlTemplates = QStringList()
+                         << "https://flightgear-download.b-cdn.net/release-%1/FlightGear-%2.%3-data.txz"
+                         << "http://mirrors.ibiblio.org/flightgear/ftp/release-%1/FlightGear-%2.%3-data.txz"
+                         << "https://download.flightgear.org/release-%1/FlightGear-%2.%3-data.txz"
+                         << "https://sourceforge.net/projects/flightgear/files/release-%1/FlightGear-%2.%3-data.txz/download";
+
+        startRequest();
+    }
+
+    void startRequest()
+    {
+        QString templateUrl = m_urlTemplates.front();
+
+        QString majorMinorVersion = QString(FLIGHTGEAR_MAJOR_MINOR_VERSION);
+        m_downloadUrl = QUrl(templateUrl.arg(majorMinorVersion).arg(majorMinorVersion).arg(static_basePackagePatchLevel));
+
+        qInfo() << "Download URI:" << m_downloadUrl;
+
+        QNetworkRequest req{m_downloadUrl};
+        req.setMaximumRedirectsAllowed(5);
+        req.setRawHeader("user-agent", "flighgtear-installer");
+
+        m_download = m_networkManager->get(req);
+        m_download->setReadBufferSize(64 * 1024 * 1024);
+
         connect(m_download, &QNetworkReply::downloadProgress, this, &InstallFGDataThread::onDownloadProgress);
 
         // lambda slot, but scoped to an object living on this thread.
         // this means the extraction work is done asynchronously with the
         // download
         connect(m_download, &QNetworkReply::readyRead, this, &InstallFGDataThread::processBytes);
+
+        connect(m_download, &QNetworkReply::finished, this, &InstallFGDataThread::onReplyFinished);
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+        connect(m_download, &QNetworkReply::errorOccurred, this, &InstallFGDataThread::onNetworkError);
+#endif
+        {
+            std::unique_lock g(m_mutex);
+            m_haveFirstMByte = false;
+            m_buffer.clear();
+        }
+
+        // reset the archive too
+        m_archive.reset(new simgear::ArchiveExtractor(m_downloadPath));
+        m_archive->setRemoveTopmostDirectory(true);
+        m_archive->setCreateDirHashEntries(true);
     }
 
     ~InstallFGDataThread()
     {
         if (!m_done) {
             m_error = true;
+        }
+
+        if (m_download) {
+            m_download->deleteLater();
+            m_download = nullptr;
         }
 
         wait();
@@ -110,6 +153,16 @@ public:
             {
                 std::unique_lock g(m_mutex);
                 m_bufferWait.wait_for(g, 100ms);
+
+                // don't start passing bytes to the archive extractor, until we have 1MB
+                // this is necssary to avoid passing redirect/404 page bytes in, and breaking
+                // the extractor.
+                if (!m_haveFirstMByte && (m_buffer.size() < 0x100000)) {
+                    continue;
+                } else {
+                    m_haveFirstMByte = true;
+                }
+
                 localBytes.swap(m_buffer);
             }
 
@@ -136,20 +189,36 @@ public:
             }
         }
 
-        // create marker file for future updates
-        {
-            SGPath setupInfoPath = m_downloadPath / ".setup-info";
-            sg_ofstream stream(setupInfoPath, std::ios::out | std::ios::binary);
-            stream << m_download->url().toString().toStdString();
-        }
-
         if (!m_error) {
+            // create marker file for future updates
+            {
+                SGPath setupInfoPath = m_downloadPath / ".setup-info";
+                sg_ofstream stream(setupInfoPath, std::ios::out | std::ios::binary);
+                stream << m_downloadUrl.toString().toStdString();
+            }
+
             const auto finalDataPath = flightgear::Options::sharedInstance()->downloadedDataRoot();
             SG_LOG(SG_IO, SG_INFO, "Renaming downloaded data to: " << finalDataPath);
             bool renamedOk = m_downloadPath.rename(finalDataPath);
             if (!renamedOk) {
                 m_error = true;
             }
+        }
+    }
+
+    void onNetworkError(QNetworkReply::NetworkError code)
+    {
+        SG_LOG(SG_IO, SG_WARN, "FGdata download failed, will re-try next mirror:" << code << " (" << m_download->errorString().toStdString() << ")");
+
+        // don't need to delete, onReplyFinished will also fire
+
+        m_urlTemplates.pop_front();
+        if (m_urlTemplates.empty()) {
+            m_error = true;
+            emit failed(m_download->errorString());
+        } else {
+            startRequest();
+            // will try a new request!
         }
     }
 
@@ -168,6 +237,20 @@ public:
             m_bufferWait.notify_one();
         }
     }
+
+    void onReplyFinished()
+    {
+        // we can't use m_download here because in the case of re-trying,
+        // we already replaced m_download with our new request.
+        QNetworkReply* r = qobject_cast<QNetworkReply*>(sender());
+        r->deleteLater();
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+        if (r->error() != QNetworkReply::NoError) {
+            onNetworkError(r->error());
+        }
+#endif
+    }
 signals:
     void extractionError(QString file, QString msg);
 
@@ -175,19 +258,25 @@ signals:
 
     void downloadProgress(quint64 cur, quint64 total);
 
+    void failed(QString message);
+
 private:
+    QStringList m_urlTemplates;
     std::mutex m_mutex;
     std::condition_variable m_bufferWait;
     QByteArray m_buffer;
     quint64 m_totalSize = 0;
     quint64 m_extractedBytes = 0;
+    bool m_haveFirstMByte = false;
+    QUrl m_downloadUrl;
 
     bool m_done = false;
-    QNetworkReply* m_download;
+    QPointer<QNetworkReply> m_download;
     SGPath m_downloadPath;
     std::unique_ptr<simgear::ArchiveExtractor> m_archive;
     bool m_error = false;
     uint32_t m_pathPrefixLength = 0;
+    QNetworkAccessManager* m_networkManager = nullptr;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -396,22 +485,12 @@ void SetupRootDialog::onBrowse()
 
 void SetupRootDialog::onDownload()
 {
-    QString templateUrl = "https://sourceforge.net/projects/flightgear/files/release-%1/FlightGear-%2.%3-data.txz/download";
-    QString majorMinorVersion = QString(FLIGHTGEAR_MAJOR_MINOR_VERSION);
-    QUrl downloadUrl(templateUrl.arg(majorMinorVersion).arg(majorMinorVersion).arg(static_basePackagePatchLevel));
-
-    qInfo() << "Download URI:" << downloadUrl;
-
     m_promptState = DownloadingExtractingArchive;
     updatePromptText();
 
     m_ui->contentsPages->setCurrentIndex(1);
 
-    QNetworkRequest req{downloadUrl};
-    req.setMaximumRedirectsAllowed(5);
-    req.setRawHeader("user-agent", "flighgtear-installer");
-    auto reply = m_networkManager->get(req);
-    auto installThread = new InstallFGDataThread(this, reply);
+    auto installThread = new InstallFGDataThread(this, m_networkManager);
     connect(installThread, &InstallFGDataThread::downloadProgress, this, [this](quint64 cur, quint64 total) {
         m_ui->downloadProgress->setValue(cur);
         m_ui->downloadProgress->setMaximum(total);
@@ -426,6 +505,10 @@ void SetupRootDialog::onDownload()
         m_ui->installText->setText(tr("Installation %1% complete.\nExtracting %2").arg(percent).arg(s));
         m_ui->installProgress->setValue(percent);
         // m_ui->installProgress->setMaximum(total);
+    });
+
+    connect(installThread, &InstallFGDataThread::failed, this, [this](QString s) {
+        m_ui->downloadText->setText(tr("Download failed: %1").arg(s));
     });
 
     connect(installThread, &InstallFGDataThread::finished, this, [this]() {

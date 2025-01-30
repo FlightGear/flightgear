@@ -82,6 +82,4 @@ private:
     QScopedPointer<Ui::SetupRootDialog> m_ui;
     QString m_browsedPath;
     QNetworkAccessManager* m_networkManager;
-
-    static quint32 static_basePackagePatchLevel;
 };
