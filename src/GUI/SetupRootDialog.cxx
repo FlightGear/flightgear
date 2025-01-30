@@ -110,8 +110,10 @@ public:
         connect(m_download, &QNetworkReply::readyRead, this, &InstallFGDataThread::processBytes);
 
         connect(m_download, &QNetworkReply::finished, this, &InstallFGDataThread::onReplyFinished);
-        connect(m_download, &QNetworkReply::errorOccurred, this, &InstallFGDataThread::onNetworkError);
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+        connect(m_download, &QNetworkReply::errorOccurred, this, &InstallFGDataThread::onNetworkError);
+#endif
         {
             std::unique_lock g(m_mutex);
             m_haveFirstMByte = false;
@@ -240,9 +242,14 @@ public:
     {
         // we can't use m_download here because in the case of re-trying,
         // we already replaced m_download with our new request.
-
         QNetworkReply* r = qobject_cast<QNetworkReply*>(sender());
         r->deleteLater();
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+        if (r->error() != QNetworkReply::NoError) {
+            onNetworkError(r->error());
+        }
+#endif
     }
 signals:
     void extractionError(QString file, QString msg);
