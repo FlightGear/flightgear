@@ -18,10 +18,10 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
-#include <Canvas/FGCanvasSystemAdapter.hxx>
 #include <Canvas/canvas_mgr.hxx>
 #include <Canvas/gui_mgr.hxx>
 
+#include "test_suite/FGTestApi/DummyCanvasSystemAdapter.hxx"
 #include "test_suite/FGTestApi/testGlobals.hxx"
 
 #include <GUI/FGPUICompatDialog.hxx>
@@ -47,7 +47,7 @@ void XMLDialogTests::setUp()
     fgInitCommands();
 
     simgear::canvas::Canvas::setSystemAdapter(
-        simgear::canvas::SystemAdapterPtr(new canvas::FGCanvasSystemAdapter));
+        simgear::canvas::SystemAdapterPtr(new canvas::DummyCanvasSystemAdapter));
 
     auto sm = globals->get_subsystem_mgr();
     sm->add<CanvasMgr>();

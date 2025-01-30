@@ -8,6 +8,7 @@ set(TESTSUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/NasalUnitTesting_TestSuite.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/TestDataLogger.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/testApis.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/DummyCanvasSystemAdapter.cxx
     PARENT_SCOPE
 )
 
@@ -20,5 +21,6 @@ set(TESTSUITE_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/scene_graph.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/TestPilot.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/TestDataLogger.hxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/DummyCanvasSystemAdapter.hxx
     PARENT_SCOPE
 )

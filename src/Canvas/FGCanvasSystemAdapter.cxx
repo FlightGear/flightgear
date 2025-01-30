@@ -110,7 +110,7 @@ namespace canvas
   SGSubsystem*
   FGCanvasSystemAdapter::getSubsystem(const std::string& name) const
   {
-    return globals->get_subsystem_mgr()->get_subsystem(name.c_str());
+    return globals->get_subsystem_mgr()->get_subsystem(name);
   }
 
   //----------------------------------------------------------------------------
