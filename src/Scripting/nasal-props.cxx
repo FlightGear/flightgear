@@ -364,6 +364,9 @@ static naRef f_setValueHelper(naContext c, SGPropertyNode_ptr node, naRef val) {
         }
 
         result = node->setDoubleValue(d);
+    } else if (naIsNil(val)) {
+        node->clearValue();
+        result = true;
     } else {
         naRuntimeError(c, "props.setValue() called with unsupported value %s", s_val_description(val).c_str());
     }

@@ -34,6 +34,8 @@ public:
 
     virtual void apply();
 
+    virtual void updateValue();
+
     naRef config() const;
     
     /// return the wrapped props,Node corresponding to our property
@@ -86,6 +88,11 @@ public:
      */
     std::string radioGroupIdent() const;
 
+    bool isLive() const
+    {
+        return _live != LiveValueMode::OnApply;
+    }
+
 protected:
     PUICompatObject(naRef impl, const std::string& type);
 
@@ -114,6 +121,7 @@ private:
     void setDialog(PUICompatDialogRef dialog);
 
     void recursiveUpdate(const std::string& objectName = {});
+    void recursiveUpdateValues(const std::string& objectName = {});
     void recursiveApply(const std::string& objectName = {});
     void recursiveOnDelete();
 

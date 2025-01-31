@@ -203,7 +203,7 @@ const char* FGPUICompatDialog::getName()
 
 void FGPUICompatDialog::updateValues(const std::string& objectName)
 {
-    _root->recursiveUpdate(objectName);
+    _root->recursiveUpdateValues(objectName);
 }
 
 void FGPUICompatDialog::applyValues(const std::string& objectName)
