@@ -97,7 +97,10 @@ void WindowBuilder::makeDefaultTraits(bool stencil)
     traits->sampleBuffers = fgGetInt("/sim/rendering/multi-sample-buffers", traits->sampleBuffers);
     traits->samples = fgGetInt("/sim/rendering/multi-samples", traits->samples);
     traits->vsync = fgGetBool("/sim/rendering/vsync-enable", traits->vsync);
-    
+
+    // Used by tree.eff
+    fgSetBool("/sim/rendering/window-has-multi-sample-buffers", traits->sampleBuffers > 0);
+
     const bool wantFullscreen = fgGetBool("/sim/startup/fullscreen");
     unsigned screenwidth = 0;
     unsigned screenheight = 0;
