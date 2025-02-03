@@ -78,8 +78,10 @@ public:
         // +1 to include the leading /
         m_pathPrefixLength = m_downloadPath.utf8Str().length() + 1;
 
+
         m_urlTemplates = QStringList()
                          << "https://flightgear-download.b-cdn.net/release-%1/FlightGear-%2.%3-data.txz"
+                         << "http://mirrors.ibiblio.org/flightgear/ftp/release-%1/FlightGear-%2.%3-data.txz"
                          << "https://download.flightgear.org/release-%1/FlightGear-%2.%3-data.txz"
                          << "https://sourceforge.net/projects/flightgear/files/release-%1/FlightGear-%2.%3-data.txz/download";
 
