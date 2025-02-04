@@ -7,7 +7,6 @@
 
 #include "canvas_mgr.hxx"
 
-#include <Cockpit/od_gauge.hxx>
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalModelData.hxx>
 #include <Viewer/CameraGroup.hxx>
@@ -15,6 +14,8 @@
 
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/scene/model/placement.hxx>
+
+#include "od_gauge.hxx"
 
 namespace sc = simgear::canvas;
 

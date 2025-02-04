@@ -90,7 +90,7 @@ class ReplaceStaticTextureVisitor:
     ReplaceStaticTextureVisitor( const char* name,
                                  osg::Texture2D* new_texture ):
         osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
-        _tex_name( osgDB::getSimpleFileName(name) ),
+        _tex_name(name),
         _new_texture(new_texture),
         _cull_callback(0)
     {}
@@ -101,9 +101,7 @@ class ReplaceStaticTextureVisitor:
                                  const simgear::canvas::CanvasWeakPtr& canvas =
                                    simgear::canvas::CanvasWeakPtr() ):
         osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
-        _tex_name( osgDB::getSimpleFileName(
-          placement->getStringValue("texture"))
-        ),
+        _tex_name( placement->getStringValue("texture") ),
         _node_name( placement->getStringValue("node") ),
         _parent_name( placement->getStringValue("parent") ),
         _node(placement),
@@ -174,37 +172,23 @@ class ReplaceStaticTextureVisitor:
           return;
       }
 
-      if (_tex_name.empty()) {
-        // No texture name was provided, so replace texture unit 0 by default
-        groups_to_modify.push_back({parent, &node, 0});
-      } else {
-        // A texture name was provided, so attempt to find the corresponding
-        // texture unit.
-        // XXX: This only works for AC3D models and Effects with a
-        // fixed-function pipeline technique.
-        osg::StateSet* ss = eff->getDefaultStateSet();
-        if (!ss) {
-          return;
-        }
-
-        for (unsigned int unit = 0; unit < ss->getNumTextureAttributeLists(); ++unit) {
-          osg::Texture2D* tex = dynamic_cast<osg::Texture2D*>(
-            ss->getTextureAttribute(unit, osg::StateAttribute::TEXTURE));
-
-          if (!tex || !tex->getImage() || tex == _new_texture) {
-            continue;
-          }
-
-          std::string tex_name = tex->getImage()->getFileName();
-          std::string tex_name_simple = osgDB::getSimpleFileName(tex_name);
-          if (!osgDB::equalCaseInsensitive(_tex_name, tex_name_simple)) {
-            continue;
-          }
-
-          groups_to_modify.push_back({ parent, &node, unit });
-          return;
-        }
+      // NOTE: The texture units that correspond to each texture type (e.g.
+      // 0 for base color, 1 for normal map, etc.) must match the ones in:
+      //  1. PBR Effect: $FG_ROOT/Effects/model-pbr.eff
+      //  2. glTF loader: simgear/scene/model/ReaderWriterGLTF.cxx
+      //  3. PBR animations: simgear/scene/model/SGPBRAnimation.cxx
+      //  4. Canvas ODGauge: flightgear/src/Canvas/od_gauge.cxx
+      unsigned int unit = 0;
+      if (_tex_name.empty() || _tex_name == "base-color") unit = 0;
+      else if (_tex_name == "normalmap")                  unit = 1;
+      else if (_tex_name == "orm")                        unit = 2;
+      else if (_tex_name == "emissive")                   unit = 3;
+      else {
+        SG_LOG(SG_GL, SG_WARN, "Unknown texture '" << _tex_name
+               << "'. Using base-color by default");
       }
+
+      groups_to_modify.push_back({parent, &node, unit});
     }
     /*
      * this section of code used to be in the apply method above, however to work this requires modification of the scenegraph nodes
@@ -250,7 +234,9 @@ class ReplaceStaticTextureVisitor:
 
   protected:
 
-    std::string _tex_name,      ///<! Name of texture to be replaced
+    std::string _tex_name,      ///<! PBR texture name to be replaced
+                                ///   (base-color, normalmap, orm, etc.).
+                                ///   This is not the actual texture filename
                 _node_name,     ///<! Only replace if node name matches
                 _parent_name;   ///<! Only replace if any parent node matches
                                 ///   given name (all the tree upwards)
