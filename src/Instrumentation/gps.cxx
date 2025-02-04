@@ -3,9 +3,7 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include "gps.hxx"
 
@@ -281,8 +279,12 @@ GPS::bind()
 void
 GPS::unbind()
 {
-  _tiedProperties.Untie();
-  _gpsNode.clear();
+    // avoid shutdown crash during Untie(), due to invoking the getters to capture the
+    // current value(s)
+    _currentWaypt = _prevWaypt = nullptr;
+
+    _tiedProperties.Untie();
+    _gpsNode.clear();
     _currentWayptNode.clear();
     _currentWpLatNode.clear();
     _currentWpLonNode.clear();
@@ -388,6 +390,7 @@ void GPS::shutdown()
         _route->removeDelegate(this);
         _route = nullptr;
     }
+    _wayptController.reset();
 }
 
 void GPS::routeManagerFlightPlanChanged(SGPropertyNode*)
