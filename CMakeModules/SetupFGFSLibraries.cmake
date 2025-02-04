@@ -23,7 +23,7 @@ function(setup_fgfs_libraries target)
     endif()
 
     if(ENABLE_IAX)
-        target_link_libraries(${target} iaxclient_lib ${OPENAL_LIBRARY})
+        target_link_libraries(${target} iaxclient_lib)
     endif()
 
     # manually created DBus target
@@ -85,6 +85,8 @@ function(setup_fgfs_libraries target)
 
     if(USE_AEONWAVE)
        target_link_libraries(${target} ${AAX_LIBRARY})
+    else()
+        target_link_libraries(${target} OpenAL::OpenAL)
     endif()
 
     if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")

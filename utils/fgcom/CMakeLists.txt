@@ -34,7 +34,6 @@ add_executable(${name}
 
 target_link_Libraries(${name}
                       iaxclient_lib
-                      ${OPENAL_LIBRARY}
                       SimGearCore
 )
 

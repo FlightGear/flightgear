@@ -601,10 +601,6 @@ if (USE_AEONWAVE)
     include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
         ${AAX_INCLUDE_DIR}
     )
-else()
-    include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
-        ${OPENAL_INCLUDE_DIR}
-    )
 endif()
 
 include(OSGHelpers)
