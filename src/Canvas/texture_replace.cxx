@@ -1,70 +1,23 @@
-// Owner Drawn Gauge helper class
-//
-// Written by Harald JOHNSEN, started May 2005.
-//
-// Copyright (C) 2005  Harald JOHNSEN
-//
-// Ported to OSG by Tim Moore - Jun 2007
-//
-// Heavily modified to be usable for the 2d Canvas by Thomas Geymayer - April 2012
-// Supports now multisampling/mipmapping, usage of the stencil buffer and placing
-// the texture in the scene by certain filter criteria
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-//
-
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+/*
+ * SPDX-FileName: texture_replace.cxx
+ * SPDX-FileCopyrightText: Copyright (C) 2012  Thomas Geymayer
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
 
 #include <osg/Texture2D>
-#include <osg/AlphaFunc>
-#include <osg/BlendFunc>
-#include <osg/Camera>
 #include <osg/Geode>
 #include <osg/NodeVisitor>
-#include <osg/Matrix>
-#include <osg/PolygonMode>
-#include <osg/ShadeModel>
 #include <osg/StateSet>
-#include <osg/FrameBufferObject> // for GL_DEPTH_STENCIL_EXT on Windows
-
-#include <osgDB/FileNameUtils>
 
 #include <simgear/canvas/CanvasObjectPlacement.hxx>
 #include <simgear/scene/material/EffectGeode.hxx>
-#include <simgear/scene/util/RenderConstants.hxx>
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
-#include "od_gauge.hxx"
 
-#include <cassert>
+#include "texture_replace.hxx"
 
-//------------------------------------------------------------------------------
-FGODGauge::FGODGauge()
-{
-
-}
-
-//------------------------------------------------------------------------------
-FGODGauge::~FGODGauge()
-{
-
-}
+namespace canvas {
 
 /*
  * Used to remember the located groups that require modification
@@ -76,11 +29,9 @@ typedef struct {
 } GroupListItem;
 
 /**
- * Replace a texture in the airplane model with the gauge texture.
+ * Replace a texture in the airplane model with another.
  */
-class ReplaceStaticTextureVisitor:
-
-  public osg::NodeVisitor
+class ReplaceStaticTextureVisitor : public osg::NodeVisitor
 {
   public:
 
@@ -115,7 +66,7 @@ class ReplaceStaticTextureVisitor:
         SG_LOG
         (
           SG_GL,
-          SG_WARN,
+          SG_DEV_ALERT,
           "No filter criterion for replacing texture. "
           " Every texture will be replaced!"
         );
@@ -184,7 +135,7 @@ class ReplaceStaticTextureVisitor:
       else if (_tex_name == "orm")                        unit = 2;
       else if (_tex_name == "emissive")                   unit = 3;
       else {
-        SG_LOG(SG_GL, SG_WARN, "Unknown texture '" << _tex_name
+        SG_LOG(SG_GL, SG_DEV_ALERT, "Unknown texture '" << _tex_name
                << "'. Using base-color by default");
       }
 
@@ -267,9 +218,9 @@ class ReplaceStaticTextureVisitor:
 
 //------------------------------------------------------------------------------
 simgear::canvas::Placements
-FGODGauge::set_texture( osg::Node* branch,
-                        const char * name,
-                        osg::Texture2D* new_texture )
+set_texture( osg::Node* branch,
+             const char * name,
+             osg::Texture2D* new_texture )
 {
   ReplaceStaticTextureVisitor visitor(name, new_texture);
   branch->accept(visitor);
@@ -279,24 +230,24 @@ FGODGauge::set_texture( osg::Node* branch,
 
 //------------------------------------------------------------------------------
 simgear::canvas::Placements
-FGODGauge::set_aircraft_texture( const char* name,
-                                 osg::Texture2D* new_texture )
+set_aircraft_texture( const char* name,
+                      osg::Texture2D* new_texture )
 {
   return set_texture
   (
     globals->get_scenery()->get_aircraft_branch(),
     name,
     new_texture
-  );
+    );
 }
 
 //------------------------------------------------------------------------------
 simgear::canvas::Placements
-FGODGauge::set_texture( osg::Node* branch,
-                        SGPropertyNode* placement,
-                        osg::Texture2D* new_texture,
-                        osg::NodeCallback* cull_callback,
-                        const simgear::canvas::CanvasWeakPtr& canvas )
+set_texture( osg::Node* branch,
+             SGPropertyNode* placement,
+             osg::Texture2D* new_texture,
+             osg::NodeCallback* cull_callback,
+             const simgear::canvas::CanvasWeakPtr& canvas )
 {
   ReplaceStaticTextureVisitor visitor( placement,
                                        new_texture,
@@ -309,10 +260,10 @@ FGODGauge::set_texture( osg::Node* branch,
 
 //------------------------------------------------------------------------------
 simgear::canvas::Placements
-FGODGauge::set_aircraft_texture( SGPropertyNode* placement,
-                                 osg::Texture2D* new_texture,
-                                 osg::NodeCallback* cull_callback,
-                                 const simgear::canvas::CanvasWeakPtr& canvas )
+set_aircraft_texture( SGPropertyNode* placement,
+                      osg::Texture2D* new_texture,
+                      osg::NodeCallback* cull_callback,
+                      const simgear::canvas::CanvasWeakPtr& canvas )
 {
   return set_texture
   (
@@ -323,3 +274,5 @@ FGODGauge::set_aircraft_texture( SGPropertyNode* placement,
     canvas
   );
 }
+
+} // namespace canvas
