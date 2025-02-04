@@ -7,7 +7,6 @@
 
 #include "canvas_mgr.hxx"
 
-#include <Cockpit/od_gauge.hxx>
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalModelData.hxx>
 #include <Viewer/CameraGroup.hxx>
@@ -16,7 +15,10 @@
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/scene/model/placement.hxx>
 
+#include "texture_replace.hxx"
+
 namespace sc = simgear::canvas;
+using namespace canvas;
 
 //------------------------------------------------------------------------------
 static sc::Placements addSceneObjectPlacement( SGPropertyNode* placement,
@@ -35,7 +37,7 @@ static sc::Placements addSceneObjectPlacement( SGPropertyNode* placement,
   if( !model_data->getNode() )
     return sc::Placements();
 
-  return FGODGauge::set_texture
+  return set_texture
   (
     model_data->getNode(),
     placement,
@@ -62,7 +64,7 @@ static sc::Placements addDynamicModelPlacement(SGPropertyNode* placement,
     if (!model_instance || !model_instance->model || !model_instance->model->getSceneGraph())
         return {};
 
-    return FGODGauge::set_texture(
+    return set_texture(
         model_instance->model->getSceneGraph(),
         placement,
         canvas->getTexture(),
@@ -89,10 +91,10 @@ void CanvasMgr::init()
   sc::Canvas::addPlacementFactory
   (
    "object", [](SGPropertyNode* placement, sc::CanvasPtr canvas) {
-      return FGODGauge::set_aircraft_texture(placement,
-                                             canvas->getTexture(),
-                                             canvas->getCullCallback(),
-                                             canvas);
+      return set_aircraft_texture(placement,
+                                  canvas->getTexture(),
+                                  canvas->getCullCallback(),
+                                  canvas);
   });
   sc::Canvas::addPlacementFactory("scenery-object", &addSceneObjectPlacement);
   sc::Canvas::addPlacementFactory("dynamic-model", &addDynamicModelPlacement);
