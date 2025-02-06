@@ -45,6 +45,7 @@
 #include "ATC/atc_mgr.hxx"
 
 using namespace flightgear;
+using std::string;
 
 void PosInitTests::setUp()
 {

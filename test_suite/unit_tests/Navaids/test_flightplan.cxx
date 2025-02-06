@@ -24,6 +24,7 @@
 #include <Airports/airport.hxx>
 
 using namespace flightgear;
+using std::string;
 
 static bool static_haveProcedures = false;
 
