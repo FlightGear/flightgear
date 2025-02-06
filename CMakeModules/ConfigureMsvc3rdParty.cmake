@@ -54,12 +54,7 @@ if (MSVC AND MSVC_3RDPARTY_ROOT)
     set(FINAL_MSVC_3RDPARTY_DIR ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR})
 
     if(NOT BOOST_INCLUDEDIR)
-        # if this variable was not set by the user, set it to 3rdparty root's
-        # parent dir, which is the normal location for people using our
-        # windows-3rd-party repo
-        get_filename_component(MSVC_ROOT_PARENT_DIR ${MSVC_3RDPARTY_ROOT}
-                               DIRECTORY)
-        set(BOOST_INCLUDEDIR ${MSVC_ROOT_PARENT_DIR})
+        set(BOOST_INCLUDEDIR ${MSVC_3RDPARTY_ROOT})
         message(STATUS "BOOST_INCLUDEDIR is ${BOOST_INCLUDEDIR}")
       endif()
 
