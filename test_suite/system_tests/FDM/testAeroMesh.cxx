@@ -51,6 +51,7 @@ void AeroMeshTests::setUp()
 // Clean up after each test.
 void AeroMeshTests::tearDown()
 {
+    FGTestApi::tearDown::shutdownScenery();
     FGTestApi::tearDown::shutdownTestGlobals();
 }
 

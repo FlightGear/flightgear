@@ -26,6 +26,13 @@ namespace setUp {
 void initScenery();
 
 } // End of namespace setUp.
+
+namespace tearDown {
+
+void shutdownScenery();
+
+}
+
 } // End of namespace FGTestApi.
 
 #endif // FG_TEST_SCENE_GRAPH_HXX

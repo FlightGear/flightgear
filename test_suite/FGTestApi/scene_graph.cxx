@@ -54,4 +54,14 @@ void initScenery()
 }
 
 } // End of namespace setUp.
+
+namespace tearDown {
+
+void shutdownScenery()
+{
+    globals->get_scenery()->resetPagerSingleton();
+}
+
+}
+
 } // End of namespace FGTestApi.
