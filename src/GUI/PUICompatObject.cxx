@@ -294,7 +294,9 @@ void PUICompatObject::updateValue()
 void PUICompatObject::apply()
 {
     callMethod<void>("apply");
-    _valueChanged = false;
+    if (_live == LiveValueMode::OnApply) {
+        _valueChanged = false;
+    }
 }
 
 naRef PUICompatObject::property() const
