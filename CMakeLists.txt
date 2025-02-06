@@ -213,7 +213,6 @@ option(ENABLE_METAR      "Set to ON to build the metar application (default)" ON
 option(ENABLE_STGMERGE   "Set to ON to build the stgmerge application (default)" OFF)
 option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" ON)
 option(ENABLE_QT         "Set to ON to build the internal Qt launcher" ON)
-option(ENABLE_TRAFFIC    "Set to ON to build the external traffic generator modules" ON)
 option(ENABLE_FGQCANVAS  "Set to ON to build the Qt-based remote canvas application" OFF)
 option(ENABLE_DEMCONVERT "Set to ON to build the dem conversion tool (default)" ON)
 option(ENABLE_HID_INPUT  "Set to ON to build HID-based input code" ${EVENT_INPUT_DEFAULT})
