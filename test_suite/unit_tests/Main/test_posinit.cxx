@@ -262,7 +262,7 @@ void PosInitTests::testAirportAndAvailableParkingStartup()
     simulateFinalizePosition();
 
     auto assignedParking = globals->get_props()->getStringValue("/sim/presets/parkpos");
-    CPPUNIT_ASSERT(assignedParking != "AVAILABLE");
+    CPPUNIT_ASSERT_EQUAL(std::string{assignedParking}, std::string{"AVAILABLE"});
     
     auto dynamics =  FGAirport::getByIdent("EDDF");
     auto parking = dynamics->groundNetwork()->findParkingByName(assignedParking);
@@ -783,7 +783,7 @@ void PosInitTests::testRepositionAtParking()
     finalizePosition();
 
     auto assignedParking = globals->get_props()->getStringValue("/sim/presets/parkpos");
-    CPPUNIT_ASSERT(assignedParking != "AVAILABLE");
+    CPPUNIT_ASSERT(std::string{assignedParking} != std::string{"AVAILABLE"});
 
     parking = apt->groundNetwork()->findParkingByName(assignedParking);
 

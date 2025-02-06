@@ -1419,7 +1419,7 @@ void GPSTests::testRadialIntercept()
     
     fp->setCurrentIndex(2);
 
-    CPPUNIT_ASSERT_EQUAL("BUNAX"s, gpsNode->getStringValue("wp/wp[1]/ID"));
+    CPPUNIT_ASSERT_EQUAL("BUNAX"s, std::string{gpsNode->getStringValue("wp/wp[1]/ID")});
     CPPUNIT_ASSERT_DOUBLES_EQUAL(312, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
 
   
@@ -1515,7 +1515,7 @@ void GPSTests::testDMEIntercept()
     
     fp->setCurrentIndex(2);
 
-    CPPUNIT_ASSERT_EQUAL("TLA"s, gpsNode->getStringValue("wp/wp[1]/ID"));
+    CPPUNIT_ASSERT_EQUAL("TLA"s, std::string{gpsNode->getStringValue("wp/wp[1]/ID")});
     // CPPUNIT_ASSERT_DOUBLES_EQUAL(312, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
     
     auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
@@ -1564,6 +1564,7 @@ void GPSTests::testFinalLegCourse()
     CPPUNIT_ASSERT(rm->activate());
     fp->addDelegate(testDelegate);
     auto gps = setupStandardGPS();
+    SG_UNUSED(gps);
     
     fp->setCurrentIndex(2);
     
