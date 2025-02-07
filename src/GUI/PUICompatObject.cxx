@@ -58,6 +58,7 @@ void PUICompatObject::setupGhost(nasal::Hash& compatModule)
         .member("children", &PUICompatObject::children)
         .member("dialog", &PUICompatObject::dialog)
         .member("parent", &PUICompatObject::parent)
+        .member("live", &PUICompatObject::isLive)
         .member("visible", &PUICompatObject::visible, &PUICompatObject::setVisible)
         .member("enabled", &PUICompatObject::enabled, &PUICompatObject::setEnabled)
         .member("type", &PUICompatObject::type)
@@ -270,10 +271,32 @@ void PUICompatObject::update()
     }
 }
 
+void PUICompatObject::updateValue()
+{
+    if (!_value) {
+        return;
+    }
+
+    if (_live != LiveValueMode::OnApply) {
+        return;
+    }
+
+    // avoid updates where the value didn't actually change
+    const auto nv = _value->getStringValue();
+    if (nv != _oldPolledValue) {
+        _valueChanged = true;
+        _oldPolledValue = nv;
+    }
+
+    // we don't call update here(), it will hapen next cycle.
+}
+
 void PUICompatObject::apply()
 {
     callMethod<void>("apply");
-    _valueChanged = false;
+    if (_live == LiveValueMode::OnApply) {
+        _valueChanged = false;
+    }
 }
 
 naRef PUICompatObject::property() const
@@ -463,6 +486,18 @@ void PUICompatObject::recursiveUpdate(const std::string& objectName)
         child->recursiveUpdate(objectName);
     }
 }
+
+void PUICompatObject::recursiveUpdateValues(const std::string& objectName)
+{
+    if (objectName.empty() || (objectName == _name)) {
+        updateValue();
+    }
+
+    for (auto child : _children) {
+        child->recursiveUpdateValues(objectName);
+    }
+}
+
 
 void PUICompatObject::recursiveApply(const std::string& objectName)
 {
