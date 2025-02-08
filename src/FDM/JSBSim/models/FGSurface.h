@@ -61,16 +61,10 @@ CLASS DECLARATION
 class FGSurface
 {
 public:
-
-  enum ContactType {ctBOGEY, ctSTRUCTURE, ctGROUND};
-
   /// Constructor
-  FGSurface(FGFDMExec* fdmex, int number = -1);
+  FGSurface(FGFDMExec* fdmex);
 
-  /// Destructor
-  ~FGSurface();
-
-  void bind(void);
+  void bind(FGPropertyManager* pm);
 
   /// Reset all surface values to a default
   void resetValues(void);
@@ -95,9 +89,6 @@ public:
       pos[0] = pt[0]; pos[1] = pt[1]; pos[2] = pt[2];
   }
 
-  /// Sets the height of the bump at the provided offset
-  void SetBumpHeight(float height) { bumpHeight = height; }
-
 
   /// Gets the static friction factor of the surface area
   double GetStaticFFactor(void) { return staticFFactor; }
@@ -115,30 +106,16 @@ public:
   bool GetSolid(void) { return isSolid; }
 
   /// Returns the height of the bump at the provided offset
-  float GetBumpHeight();
-
-  std::string GetSurfaceStrings(std::string delimeter) const;
-  std::string GetSurfaceValues(std::string delimeter) const;
+  float  GetBumpHeight();
 
 protected:
-  ContactType eSurfaceType = ctBOGEY;
-  double staticFFactor = 1.0;
-  double rollingFFactor = 1.0;
-  double maximumForce = DBL_MAX;
-  double bumpiness = 0.0;
-  bool isSolid = true;
-
-  double staticFCoeff = 1.0;
-  double dynamicFCoeff = 1.0;
+  double staticFFactor, rollingFFactor;
+  double maximumForce;
+  double bumpiness;
+  bool isSolid;
 
 private:
-  int contactNumber = 0;
-  double bumpHeight = DBL_MAX;
-  double pos[3] = { 0.0, 0.0, 0.0 };
-
-  FGPropertyManager* _PropertyManager = NULL;
-
-  static std::string _CreateIndexedPropertyName(const std::string& Property, int index);
+  double pos[3];
 };
 
 }

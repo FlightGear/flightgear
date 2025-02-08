@@ -43,7 +43,10 @@ INCLUDES
 #include <string>
 #include <cmath>
 #include <stdexcept>
+#include <random>
+#include <chrono>
 
+#include "JSBSim_API.h"
 #include "input_output/string_utilities.h"
 
 #ifndef M_PI
@@ -56,9 +59,46 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
-class BaseException : public std::runtime_error {
+class JSBSIM_API BaseException : public std::runtime_error {
   public:
     BaseException(const std::string& msg) : std::runtime_error(msg) {}
+};
+
+/**
+ * @brief Random number generator.
+ * This class encapsulates the C++11 random number generation classes for
+ * uniform and gaussian (aka normal) distributions as well as their seed.
+ * This class guarantees that whenever its seed is reset so are its uniform
+ * and normal random number generators.
+ */
+
+class JSBSIM_API RandomNumberGenerator {
+  public:
+    /// Default constructor using a seed based on the system clock.
+    RandomNumberGenerator(void) : uniform_random(-1.0, 1.0), normal_random(0.0, 1.0)
+    {
+      auto seed_value = std::chrono::system_clock::now().time_since_epoch().count();
+      generator.seed(static_cast<unsigned int>(seed_value));
+    }
+    /// Constructor allowing to specify a seed.
+    RandomNumberGenerator(unsigned int seed)
+      : generator(seed), uniform_random(-1.0, 1.0), normal_random(0.0, 1.0) {}
+    /// Specify a new seed and reinitialize the random generation process.
+    void seed(unsigned int value) {
+      generator.seed(value);
+      uniform_random.reset();
+      normal_random.reset();
+    }
+    /** Get a random number which probability of occurrence is uniformly
+     * distributed over the segment [-1;1( */
+    double GetUniformRandomNumber(void) { return uniform_random(generator); }
+    /** Get a random number which probability of occurrence is following Gauss
+     * normal distribution with a mean of 0.0 and a standard deviation of 1.0 */
+    double GetNormalRandomNumber(void) { return normal_random(generator); }
+  private:
+    std::default_random_engine generator;
+    std::uniform_real_distribution<double> uniform_random;
+    std::normal_distribution<double> normal_random;
 };
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -75,25 +115,13 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGJSBBase {
+class JSBSIM_API FGJSBBase {
 public:
   /// Constructor for FGJSBBase.
   FGJSBBase() {};
 
   /// Destructor for FGJSBBase.
   virtual ~FGJSBBase() {};
-
-  /// JSBSim Message structure
-  struct Message {
-    unsigned int fdmId;
-    unsigned int messageId;
-    std::string text;
-    std::string subsystem;
-    enum mType {eText, eInteger, eDouble, eBool} type;
-    bool bVal;
-    int  iVal;
-    double dVal;
-  };
 
   /// First order, (low pass / lag) filter
   class Filter {
@@ -141,43 +169,6 @@ public:
   static char fggreen[6];
   /// default text
   static char fgdef[6];
-  //@}
-
-  ///@name JSBSim Messaging functions
-  //@{
-  /** Places a Message structure on the Message queue.
-      @param msg pointer to a Message structure
-      @return pointer to a Message structure */
-  void PutMessage(const Message& msg);
-  /** Creates a message with the given text and places it on the queue.
-      @param text message text
-      @return pointer to a Message structure */
-  void PutMessage(const std::string& text);
-  /** Creates a message with the given text and boolean value and places it on the queue.
-      @param text message text
-      @param bVal boolean value associated with the message
-      @return pointer to a Message structure */
-  void PutMessage(const std::string& text, bool bVal);
-  /** Creates a message with the given text and integer value and places it on the queue.
-      @param text message text
-      @param iVal integer value associated with the message
-      @return pointer to a Message structure */
-  void PutMessage(const std::string& text, int iVal);
-  /** Creates a message with the given text and double value and places it on the queue.
-      @param text message text
-      @param dVal double value associated with the message
-      @return pointer to a Message structure */
-  void PutMessage(const std::string& text, double dVal);
-  /** Reads the message on the queue (but does not delete it).
-      @return 1 if some messages */
-  int SomeMessages(void) const { return !Messages.empty(); }
-  /** Reads the message on the queue and removes it from the queue.
-      This function also prints out the message.*/
-  void ProcessMessage(void);
-  /** Reads the next message on the queue and removes it from the queue.
-      This function also prints out the message.
-      @return a pointer to the message, or NULL if there are no messages.*/
-  Message* ProcessNextMessage(void);
   //@}
 
   /** Returns the version number of JSBSim.
@@ -259,41 +250,6 @@ public:
     return measure*0.3048;
   }
 
-  /** Compute the total pressure in front of the Pitot tube. It uses the
-  *   Rayleigh formula for supersonic speeds (See "Introduction to Aerodynamics
-  *   of a Compressible Fluid - H.W. Liepmann, A.E. Puckett - Wiley & sons
-  *   (1947)" §5.4 pp 75-80)
-  *   @param mach  The Mach number
-  *   @param p     Pressure in psf
-  *   @return The total pressure in front of the Pitot tube in psf */
-  static double PitotTotalPressure(double mach, double p);
-
-  /** Compute the Mach number from the differential pressure (qc) and the
-  *   static pressure. Based on the formulas in the US Air Force Aircraft
-  *   Performance Flight Testing Manual (AFFTC-TIH-99-01).
-  *   @param qc    The differential/impact pressure
-  *   @param p     Pressure in psf
-  *   @return The Mach number */
-  static double MachFromImpactPressure(double qc, double p);
-
-  /** Calculate the calibrated airspeed from the Mach number. Based on the
-  *   formulas in the US Air Force Aircraft Performance Flight Testing
-  *   Manual (AFFTC-TIH-99-01).
-  *   @param mach  The Mach number
-  *   @param p     Pressure in psf
-  *   @return The calibrated airspeed (CAS) in ft/s
-  * */
-  static double VcalibratedFromMach(double mach, double p);
-
-  /** Calculate the Mach number from the calibrated airspeed.Based on the
-  *   formulas in the US Air Force Aircraft Performance Flight Testing
-  *   Manual (AFFTC-TIH-99-01).
-  *   @param vcas  The calibrated airspeed (CAS) in ft/s
-  *   @param p     Pressure in psf
-  *   @return The Mach number
-  * */
-  static double MachFromVcalibrated(double vcas, double p);
-
   /** Finite precision comparison.
       @param a first value to compare
       @param b second value to compare
@@ -336,24 +292,16 @@ public:
 
   static constexpr double sign(double num) {return num>=0.0?1.0:-1.0;}
 
-  static double GaussianRandomNumber(void);
-
 protected:
-  static Message localMsg;
-
-  static std::queue <Message> Messages;
-
-  static unsigned int messageId;
-
   static constexpr double radtodeg = 180. / M_PI;
   static constexpr double degtorad = M_PI / 180.;
   static constexpr double hptoftlbssec = 550.0;
   static constexpr double psftoinhg = 0.014138;
   static constexpr double psftopa = 47.88;
-  static constexpr double ktstofps = 1.68781;
+  static constexpr double fttom = 0.3048;
+  static constexpr double ktstofps = 1852./(3600*fttom);
   static constexpr double fpstokts = 1.0 / ktstofps;
   static constexpr double inchtoft = 1.0/12.0;
-  static constexpr double fttom = 0.3048;
   static constexpr double m3toft3 = 1.0/(fttom*fttom*fttom);
   static constexpr double in3tom3 = inchtoft*inchtoft*inchtoft/m3toft3;
   static constexpr double inhgtopa = 3386.38;
@@ -371,8 +319,6 @@ protected:
   static const std::string JSBSim_version;
 
   static std::string CreateIndexedPropertyName(const std::string& Property, int index);
-
-  static int gaussian_random_number_phase;
 
 public:
 /// Moments L, M, N

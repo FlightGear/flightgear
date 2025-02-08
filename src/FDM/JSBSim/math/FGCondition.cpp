@@ -37,6 +37,9 @@ INCLUDES
 #include <iostream>
 #include <cstdlib>
 #include <stdexcept>
+#include <assert.h>
+#include <array>
+#include <utility>
 
 #include "FGCondition.h"
 #include "FGPropertyValue.h"
@@ -57,8 +60,6 @@ FGCondition::FGCondition(Element* element, FGPropertyManager* PropertyManager)
   : Logic(elUndef), TestParam1(nullptr), TestParam2(nullptr),
     Comparison(ecUndef)
 {
-  InitializeConditionals();
-
   string logic = element->GetAttributeValue("logic");
   if (!logic.empty()) {
     if (logic == "OR") Logic = eOR;
@@ -66,15 +67,17 @@ FGCondition::FGCondition(Element* element, FGPropertyManager* PropertyManager)
     else { // error
       cerr << element->ReadFrom()
            << "Unrecognized LOGIC token " << logic << endl;
-      throw std::invalid_argument("JSBSim FGCondition: unrecognized logic value:'" + logic + "'");
+      throw BaseException("FGCondition: unrecognized logic value:'" + logic + "'");
     }
   } else {
     Logic = eAND; // default
   }
 
+  assert(Logic != elUndef);
+
   for (unsigned int i=0; i<element->GetNumDataLines(); i++) {
     string data = element->GetDataLine(i);
-    conditions.push_back(new FGCondition(data, PropertyManager, element));
+    conditions.push_back(make_shared<FGCondition>(data, PropertyManager, element));
   }
 
   Element* condition_element = element->GetElement();
@@ -87,11 +90,17 @@ FGCondition::FGCondition(Element* element, FGPropertyManager* PropertyManager)
       cerr << condition_element->ReadFrom()
            << "Unrecognized tag <" << tagName << "> in the condition statement."
            << endl;
-        throw std::invalid_argument("JSBSim FGCondition: unrecognized tag:'" + tagName + "'");
+      throw BaseException("FGCondition: unrecognized tag:'" + tagName + "'");
     }
 
-    conditions.push_back(new FGCondition(condition_element, PropertyManager));
+    conditions.push_back(make_shared<FGCondition>(condition_element, PropertyManager));
     condition_element = element->GetNextElement();
+  }
+
+  if (conditions.empty()) {
+    cerr << element->ReadFrom()
+         << "Empty conditional" << endl;
+    throw BaseException("Empty conditional");
   }
 
   Debug(0);
@@ -106,7 +115,26 @@ FGCondition::FGCondition(const string& test, FGPropertyManager* PropertyManager,
   : Logic(elUndef), TestParam1(nullptr), TestParam2(nullptr),
     Comparison(ecUndef)
 {
-  InitializeConditionals();
+  static const array<pair<const char*, enum eComparison>, 18> mComparison {{
+    {"!=", eNE},
+    {"<",  eLT},
+    {"<=", eLE},
+    {"==", eEQ},
+    {">",  eGT},
+    {">=", eGE},
+    {"EQ", eEQ},
+    {"GE", eGE},
+    {"GT", eGT},
+    {"LE", eLE},
+    {"LT", eLT},
+    {"NE", eNE},
+    {"eq", eEQ},
+    {"ge", eGE},
+    {"gt", eGT},
+    {"le", eLE},
+    {"lt", eLT},
+    {"ne", eNE},
+  }};
 
   vector<string> test_strings = split(test, ' ');
 
@@ -119,47 +147,21 @@ FGCondition::FGCondition(const string& test, FGPropertyManager* PropertyManager,
          << "  Conditional test is invalid: \"" << test
          << "\" has " << test_strings.size() << " elements in the "
          << "test condition." << endl;
-      throw std::invalid_argument("JSBSim FGCondition: incorrect numner of test elments:" + std::to_string(test_strings.size()));
+    throw BaseException("FGCondition: incorrect number of test elements:" + std::to_string(test_strings.size()));
   }
 
-  Comparison = mComparison[conditional];
+  assert(Comparison == ecUndef);
+  for(auto& elm: mComparison) {
+    if (conditional == elm.first) {
+      Comparison = elm.second;
+      break;
+    }
+  }
+
   if (Comparison == ecUndef) {
-    throw std::invalid_argument("JSBSim FGCondition: Comparison operator: \""+conditional
+    throw BaseException("FGCondition: Comparison operator: \""+conditional
           +"\" does not exist.  Please check the conditional.");
   }
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGCondition::InitializeConditionals(void)
-{
-  mComparison["EQ"] = eEQ;
-  mComparison["NE"] = eNE;
-  mComparison["GT"] = eGT;
-  mComparison["GE"] = eGE;
-  mComparison["LT"] = eLT;
-  mComparison["LE"] = eLE;
-  mComparison["eq"] = eEQ;
-  mComparison["ne"] = eNE;
-  mComparison["gt"] = eGT;
-  mComparison["ge"] = eGE;
-  mComparison["lt"] = eLT;
-  mComparison["le"] = eLE;
-  mComparison["=="] = eEQ;
-  mComparison["!="] = eNE;
-  mComparison[">"]  = eGT;
-  mComparison[">="] = eGE;
-  mComparison["<"]  = eLT;
-  mComparison["<="] = eLE;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-FGCondition::~FGCondition(void)
-{
-  for (auto cond: conditions) delete cond;
-
-  Debug(1);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -173,47 +175,45 @@ bool FGCondition::Evaluate(void )
     if (Logic == eAND) {
 
       pass = true;
-      for (auto cond: conditions) {
+      for (auto& cond: conditions) {
         if (!cond->Evaluate()) pass = false;
       }
 
     } else { // Logic must be eOR
 
       pass = false;
-      for (auto cond: conditions) {
+      for (auto& cond: conditions) {
         if (cond->Evaluate()) pass = true;
       }
 
     }
 
   } else {
-
-    double compareValue = TestParam2->GetValue();
+    double value1 = TestParam1->GetValue();
+    double value2 = TestParam2->GetValue();
 
     switch (Comparison) {
-    case ecUndef:
-      cerr << "Undefined comparison operator." << endl;
-      break;
     case eEQ:
-      pass = TestParam1->getDoubleValue() == compareValue;
+      pass = value1 == value2;
       break;
     case eNE:
-      pass = TestParam1->getDoubleValue() != compareValue;
+      pass = value1 != value2;
       break;
     case eGT:
-      pass = TestParam1->getDoubleValue() > compareValue;
+      pass = value1 > value2;
       break;
     case eGE:
-      pass = TestParam1->getDoubleValue() >= compareValue;
+      pass = value1 >= value2;
       break;
     case eLT:
-      pass = TestParam1->getDoubleValue() < compareValue;
+      pass = value1 < value2;
       break;
     case eLE:
-      pass = TestParam1->getDoubleValue() <= compareValue;
+      pass = value1 <= value2;
       break;
     default:
-     cerr << "Unknown comparison operator." << endl;
+     assert(false);  // Should not be reached
+     break;
     }
   }
 
@@ -245,7 +245,7 @@ void FGCondition::PrintCondition(string indent)
     }
     cout << scratch << endl;
 
-    for (auto cond: conditions) {
+    for (auto& cond: conditions) {
       cond->PrintCondition(indent + "  ");
       cout << endl;
     }

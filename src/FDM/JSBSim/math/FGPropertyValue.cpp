@@ -1,18 +1,39 @@
-/*
- * SPDX-FileName: FGPropertyValue.cpp
- * SPDX-FileComment: Stores property values
- * SPDX-FileCopyrightText: Copyright (C) 2001  Jon S. Berndt (jon@jsbsim.org)
- * SPDX-FileContributor: Copyright (C) 2010 - 2011  Anders Gidenstam (anders(at)gidenstam.org)
- * SPDX-License-Identifier: LGPL-2.0-or-later
- */
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Module: FGPropertyValue.cpp
+Author: Jon Berndt
+Date started: 12/10/2004
+Purpose: Stores property values
+
+ ------------- Copyright (C) 2001  Jon S. Berndt (jon@jsbsim.org) -------------
+ ------ Copyright (C) 2010 - 2011  Anders Gidenstam (anders(at)gidenstam.org) -
+
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU Lesser General Public License as published by the Free
+ Software Foundation; either version 2 of the License, or (at your option) any
+ later version.
+
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ details.
+
+ You should have received a copy of the GNU Lesser General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc., 59
+ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+ Further information about the GNU Lesser General Public License can also be
+ found on the world wide web at http://www.gnu.org.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <assert.h>
 
 #include "FGPropertyValue.h"
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -40,10 +61,10 @@ FGPropertyNode* FGPropertyValue::GetNode(void) const
 {
   if (!PropertyNode) {
     FGPropertyNode* node = PropertyManager->GetNode(PropertyName);
-    
+
     if (!node)
-      throw(std::string("FGPropertyValue::GetValue() The property " +
-                        PropertyName + " does not exist."));
+      throw BaseException("FGPropertyValue::GetValue() The property " +
+                          PropertyName + " does not exist.");
 
     PropertyNode = node;
   }
@@ -82,7 +103,7 @@ std::string FGPropertyValue::GetName(void) const
 
 std::string FGPropertyValue::GetNameWithSign(void) const
 {
-  std::string name;
+  string name;
 
   if (Sign < 0.0) name ="-";
 

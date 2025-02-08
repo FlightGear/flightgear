@@ -544,30 +544,6 @@ void FGJSBsim::update( double dt )
       update_external_forces(fdmex->GetSimTime() + i * fdmex->GetDeltaT());
     }
 
-    FGJSBBase::Message* msg;
-    while ((msg = fdmex->ProcessNextMessage()) != NULL) {
-//      msg = fdmex->ProcessNextMessage();
-      switch (msg->type) {
-      case FGJSBBase::Message::eText:
-        if (msg->text == "Crash Detected: Simulation FREEZE.")
-          crashed = true;
-        SG_LOG( SG_FLIGHT, SG_INFO, msg->messageId << ": " << msg->text );
-        break;
-      case FGJSBBase::Message::eBool:
-        SG_LOG( SG_FLIGHT, SG_INFO, msg->messageId << ": " << msg->text << " " << msg->bVal );
-        break;
-      case FGJSBBase::Message::eInteger:
-        SG_LOG( SG_FLIGHT, SG_INFO, msg->messageId << ": " << msg->text << " " << msg->iVal );
-        break;
-      case FGJSBBase::Message::eDouble:
-        SG_LOG( SG_FLIGHT, SG_INFO, msg->messageId << ": " << msg->text << " " << msg->dVal );
-        break;
-      default:
-        SG_LOG( SG_FLIGHT, SG_INFO, "Unrecognized message type." );
-        break;
-      }
-    }
-
     reset_wake_group();
 
     // translate JSBsim back to FG structure so that the
@@ -1086,7 +1062,7 @@ void FGJSBsim::set_V_calibrated_kts(double vc)
     fgic->SetVcalibratedKtsIC(vc);
   else {
     double p=pressure->getDoubleValue();
-    double mach = FGJSBBase::MachFromVcalibrated(vc, p);
+    double mach = Auxiliary->MachFromVcalibrated(vc, p);
     double temp = 1.8*(temperature->getDoubleValue()+273.15);
     double soundSpeed = sqrt(1.4*1716.0*temp);
     FGColumnVector3 vUVW = Propagate->GetUVW();
@@ -1501,22 +1477,22 @@ void FGJSBsim::update_external_forces(double t_off)
 		// and rearrange to get a quadratic with coeffs:
         	double a = sqr(hook_length) * (sqr(ground_normal_body(1)) + sqr(ground_normal_body(3)));
         	double b = 2 * E * ground_normal_body(3) * hook_length;
-        	double c = sqr(E) - sqr(ground_normal_body(1) * hook_length);	
+        	double c = sqr(E) - sqr(ground_normal_body(1) * hook_length);
 
         	double disc = sqr(b) - 4 * a * c;
         	if (disc >= 0) {
 		    double delta = sqrt(disc) / (2 * a);
-		
+
 		    // allow 4 solutions for safety, should never happen
 		    double sin_fis[4];
 		    double cos_fis[4];
 		    double fis[4];
 		    int points = 0;
-		
+
         	    double sin_fi_guess = -b / (2 * a) - delta;
 		    check_hook_solution(ground_normal_body, E, hook_length, sin_fi_guess, sin_fis, cos_fis, fis, &points);
 		    check_hook_solution(ground_normal_body, E, hook_length, sin_fi_guess + 2 * delta, sin_fis, cos_fis, fis, &points);
-		
+
 		    if (points == 2) {
 			double diff1 = angle_diff(fi, fis[0]);
 			double diff2 = angle_diff(fi, fis[1]);

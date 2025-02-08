@@ -53,10 +53,25 @@ namespace JSBSim {
 
 void FGPropertyManager::Unbind(void)
 {
-  for(auto& prop: tied_properties)
-    prop->untie();
+  for(auto& property: tied_properties)
+    property.untie();
 
   tied_properties.clear();
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropertyManager::Unbind(const void* instance)
+{
+  auto it = tied_properties.begin();
+
+  while(it != tied_properties.end()) {
+    auto property = it++;
+    if (property->BindingInstance == instance) {
+      property->untie();
+      tied_properties.erase(property);
+    }
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -134,26 +149,16 @@ string FGPropertyNode::GetPrintableName( void ) const
 
 string FGPropertyNode::GetFullyQualifiedName(void) const
 {
-    vector<string> stack;
-    stack.push_back( getDisplayName(true) );
-    const SGPropertyNode* tmpn=getParent();
-    bool atroot=false;
-    while( !atroot ) {
-     stack.push_back( tmpn->getDisplayName(true) );
-     if( !tmpn->getParent() )
-      atroot=true;
-     else
-      tmpn=tmpn->getParent();
-    }
+  string fqname;
+  const SGPropertyNode* node = this;
+  while(node) {
+    fqname = node->getDisplayName(true) + "/" + fqname;
+    node = node->getParent();
+  }
 
-    string fqname="";
-    for(size_t i=stack.size()-1;i>0;i--) {
-      fqname+= stack[i];
-      fqname+= "/";
-    }
-    fqname+= stack[0];
-    return fqname;
-
+  // Remove the trailing slash if the node is not the root.
+  size_t len = std::max<size_t>(1, fqname.size()-1);
+  return fqname.substr(0, len);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -315,8 +320,8 @@ void FGPropertyManager::Untie(SGPropertyNode *property)
   assert(property->isTied());
 
   for (auto it = tied_properties.begin(); it != tied_properties.end(); ++it) {
-    if (*it == property) {
-      property->untie();
+    if (it->node.ptr() == property) {
+      it->untie();
       tied_properties.erase(it);
       if (FGJSBBase::debug_lvl & 0x20) cout << "Untied " << name << endl;
       return;
