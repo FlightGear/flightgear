@@ -244,7 +244,13 @@ void NasalMenuItem::valueChanged(SGPropertyNode* n)
 
 void NasalMenuItem::fire()
 {
-    fireBindingList(_bindings);
+    if (!_enabled) {
+        return;
+    }
+
+    SGPropertyNode_ptr args{new SGPropertyNode};
+    args->setBoolValue("checked", _checked);
+    fireBindingList(_bindings, args);
 }
 
 void NasalMenuItem::aboutToShow()
