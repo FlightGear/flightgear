@@ -209,7 +209,7 @@ target_include_directories(JSBsim_bin PRIVATE ${PROJECT_SOURCE_DIR}/src/FDM/JSBS
 
 if (MSVC)
     set_target_properties(JSBsim_bin PROPERTIES DEBUG_POSTFIX d)
-    target_compile_definitions(JSBSim PRIVATE JSBSIM_STATIC_LINK)
+    target_compile_definitions(JSBSim PUBLIC JSBSIM_STATIC_LINK)
 endif ()
 install(TARGETS JSBsim_bin RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
