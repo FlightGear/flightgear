@@ -23,7 +23,9 @@ Item {
     // ensure active-ness is updated, if the 'reset all tips' function is used
     Connections {
         target: _launcher
-        onDidResetGettingStartedTips: ctl.tipsWereReset();
+        function onDidResetGettingStartedTips() {
+            ctl.tipsWereReset();
+        }
     }
 
     // use a Loader to handle tip display, so we're not creating visual items
