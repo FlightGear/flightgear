@@ -33,7 +33,7 @@ Item {
 
         Connections {
             target: loader.item
-            onRequestPanelClose: root.activeTab = -1;
+            function onRequestPanelClose() { root.activeTab = -1; }
             ignoreUnknownSignals: true
         }
     }

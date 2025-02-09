@@ -289,12 +289,12 @@ Item {
 
                 Connections {
                     target: _launcher.selectedAircraftInfo
-                    onInfoChanged: stateSelectionGroup.updateComboFromController()
+                    function onInfoChanged() { stateSelectionGroup.updateComboFromController(); }
                 }
 
                 Connections {
                     target: _launcher
-                    onSelectedAircraftStateChanged: stateSelectionGroup.updateComboFromController()
+                    function onSelectedAircraftStateChanged() { stateSelectionGroup.updateComboFromController(); }
                 } // of connections
             }
 

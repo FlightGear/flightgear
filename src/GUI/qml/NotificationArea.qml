@@ -58,7 +58,7 @@ Item {
 
             Connections {
                 target: contentLoader.item
-                onDismiss: {
+                function onDismiss() {
                     _notifications.dismissIndex(model.index)
                 }
             }
