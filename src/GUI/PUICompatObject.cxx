@@ -181,7 +181,7 @@ void PUICompatObject::init()
         auto childNode = _config->getChild(i);
 
         const auto nodeName = childNode->getNameString();
-        if (!isNodeAChildObject(nodeName)) {
+        if (!isNodeAChildObject(nodeName, uiVersion)) {
             continue;
         }
 
@@ -217,14 +217,20 @@ naRef PUICompatObject::show(naRef viewParent)
     return callMethod<naRef>("show", viewParent);
 }
 
-bool PUICompatObject::isNodeAChildObject(const std::string& nm)
+bool PUICompatObject::isNodeAChildObject(const std::string& nm, int uiVersion)
 {
-    const string_list typeNames = {
+    string_list typeNames = {
         "button", "one-shot", "slider", "dial",
         "text", "input", "radio",
         "combo", "textbox", "select",
         "hrule", "vrule", "group", "frame",
         "checkbox"};
+
+    if (uiVersion >= 2) {
+        typeNames.push_back("standard-button");
+        typeNames.push_back("tabs");
+        typeNames.push_back("button-box");
+    }
 
     auto it = std::find(typeNames.begin(), typeNames.end(), nm);
     return it != typeNames.end();
