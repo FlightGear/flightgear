@@ -93,6 +93,7 @@ public:
         return _live != LiveValueMode::OnApply;
     }
 
+    bool hasBindings() const;
 protected:
     PUICompatObject(naRef impl, const std::string& type);
 

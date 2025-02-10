@@ -63,6 +63,7 @@ void PUICompatObject::setupGhost(nasal::Hash& compatModule)
         .member("enabled", &PUICompatObject::enabled, &PUICompatObject::setEnabled)
         .member("type", &PUICompatObject::type)
         .member("radioGroup", &PUICompatObject::radioGroupIdent)
+        .member("hasBindings", &PUICompatObject::hasBindings )
         .method("show", &PUICompatObject::show)
         .method("activateBindings", &PUICompatObject::activateBindings)
         .method("gridLocation", &PUICompatObject::gridLocation);
@@ -361,6 +362,11 @@ void PUICompatObject::activateBindings()
     guiSub->setActiveDialog(dialog());
     fireBindingList(_bindings);
     guiSub->setActiveDialog(nullptr);
+}
+
+bool PUICompatObject::hasBindings() const
+{
+    return !_bindings.empty();
 }
 
 void PUICompatObject::setGeometry(const SGRectd& g)
