@@ -93,6 +93,7 @@ public:
         return _live != LiveValueMode::OnApply;
     }
 
+    bool hasBindings() const;
 protected:
     PUICompatObject(naRef impl, const std::string& type);
 
@@ -104,7 +105,7 @@ protected:
 
     // emporary solution to decide which SGPropertyNode children of an
     // object, are children
-    static bool isNodeAChildObject(const std::string& nm);
+    static bool isNodeAChildObject(const std::string& nm, int uiVersion);
 
 private:
     enum class LiveValueMode {
