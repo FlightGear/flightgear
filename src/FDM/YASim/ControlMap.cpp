@@ -82,7 +82,6 @@ ControlMap::~ControlMap()
    
     for(int i=0; i<_properties.size(); i++) {
         PropHandle* p = (PropHandle*)_properties.get(i);
-        delete[] p->name;
         delete p;
     }  
 }
@@ -401,14 +400,14 @@ int ControlMap::getInputPropertyHandle(const char* name)
     // search for existing
     for(int i=0; i < _properties.size(); i++) {
         PropHandle* p = (PropHandle*)_properties.get(i);
-        if(!strcmp(p->name, name))
+        if(p->name == name)
             return p->handle;
     }
 
     // else create new
     PropHandle* p = new PropHandle();
-    p->name = strdup(name);
-    
+    p->name = name;
+
     fgGetNode(p->name, true); 
 
     Vector* v = new Vector();

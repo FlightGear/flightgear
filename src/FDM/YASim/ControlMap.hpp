@@ -1,6 +1,8 @@
 #ifndef _CONTROL_MAP_HPP
 #define _CONTROL_MAP_HPP
 
+#include <string>
+
 #include <simgear/props/props.hxx>
 #include "yasim-common.hpp"
 #include "Vector.hpp"
@@ -69,7 +71,7 @@ public:
     };
 
     struct PropHandle {
-        char* name {nullptr};
+        std::string name;
         int handle {0};
     };
     // to identify controls per wing section we need wing object + section id 
