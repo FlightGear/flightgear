@@ -469,6 +469,9 @@ private:
     flightgear::CommStationRef _commStationForFrequency;
 
     PropertyObject<double> _volume_norm;
+    PropertyObject<bool> _ptt;
+    bool _fullDuplexCfg = true;
+    PropertyObject<bool> _fullDuplex;
     PropertyObject<string> _atis;
     PropertyObject<bool> _addNoise;
     PropertyObject<double> _cutoffSignalQuality;
@@ -495,6 +498,7 @@ CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node) :
   readConfig(node, "comm");
   _soundPrefix = name() + "_" + std::to_string(number()) + "_";
   _useEightPointThree = node->getBoolValue("eight-point-three", false );
+  _fullDuplexCfg = node->getBoolValue("full-duplex", _fullDuplexCfg);
 }
 
 CommRadioImpl::~CommRadioImpl()
@@ -506,6 +510,9 @@ void CommRadioImpl::bind()
   SGPropertyNode_ptr n = fgGetNode(nodePath(), true);
   OutputProperties::bind(n);
 
+  _ptt = PropertyObject<bool>(_rootNode->getNode("ptt", true));
+  _fullDuplex = PropertyObject<bool>(_rootNode->getNode("full-duplex", true));
+  _fullDuplex = _fullDuplexCfg;
   _volume_norm = PropertyObject<double>(_rootNode->getNode("volume", true));
   _atis = PropertyObject<string>(_rootNode->getNode("atis", true));
   if (!fgHasNode("/sim/atis/enabled")) fgSetBool("/sim/atis/enabled", true);
@@ -714,17 +721,19 @@ void CommRadioImpl::updateAudio()
   _atis_enabled_prev = atis_enabled;
   
   // adjust volumes
+  double tgt_volume = _volume_norm;
+  if (_ptt && !_fullDuplex) tgt_volume = 0.0;
   const bool doSquelch = (_signalQuality_norm < _cutoffSignalQuality);
-  double atisVolume = doSquelch ? 0.0 : _volume_norm;
+  double atisVolume = doSquelch ? 0.0 : tgt_volume;
   if (_addNoise) {
-    double noiseVol = (1.0 - _signalQuality_norm) * _volume_norm;
+    double noiseVol = (1.0 - _signalQuality_norm) * tgt_volume;
     if (_cutoffSignalQuality < 0.01) {
       // ensure noise is still heard disabling squelch
       // see https://sourceforge.net/p/flightgear/codetickets/2846/
-      noiseVol = _volume_norm;
+      noiseVol = tgt_volume;
     }
 
-    atisVolume = _signalQuality_norm * _volume_norm;
+    atisVolume = _signalQuality_norm * tgt_volume;
     noiseSample->set_volume(doSquelch ? 0.0: noiseVol);
   }
   
