@@ -472,6 +472,7 @@ private:
     PropertyObject<bool> _ptt;
     bool _fullDuplexCfg = true;
     PropertyObject<bool> _fullDuplex;
+    PropertyObject<bool> _receiving_flag;
     PropertyObject<string> _atis;
     PropertyObject<bool> _addNoise;
     PropertyObject<double> _cutoffSignalQuality;
@@ -513,6 +514,8 @@ void CommRadioImpl::bind()
   _ptt = PropertyObject<bool>(_rootNode->getNode("ptt", true));
   _fullDuplex = PropertyObject<bool>(_rootNode->getNode("full-duplex", true));
   _fullDuplex = _fullDuplexCfg;
+  _receiving_flag = PropertyObject<bool>(_rootNode->getNode("receiving-flag", true));
+  _receiving_flag = false;
   _volume_norm = PropertyObject<double>(_rootNode->getNode("volume", true));
   _atis = PropertyObject<string>(_rootNode->getNode("atis", true));
   if (!fgHasNode("/sim/atis/enabled")) fgSetBool("/sim/atis/enabled", true);
@@ -610,6 +613,7 @@ void CommRadioImpl::update(double dt)
     _atis = "";
     _stationTTL = 0.0;
     stopAudio();
+    _receiving_flag = false;
     return;
   }
 
@@ -632,6 +636,7 @@ void CommRadioImpl::update(double dt)
 
   if (!_commStationForFrequency.valid()) {
     stopAudio();
+    _receiving_flag = false;
     return;
   }
   
@@ -653,9 +658,11 @@ void CommRadioImpl::update(double dt)
       case FGPositioned::FREQ_AWOS: {
       if (_signalQuality_norm > 0.01) {
         _metarBridge->requestMetarForId(_airportId);
+        _receiving_flag = (_fullDuplex || !_ptt)? true : false;
       } else {
         _metarBridge->clearMetar();
         _atis = "";
+        _receiving_flag = false;
       }
     }
       break;
@@ -663,6 +670,7 @@ void CommRadioImpl::update(double dt)
     default:
       _metarBridge->clearMetar();
       _atis = "";
+      _receiving_flag = false;
       break;
   }
   
