@@ -1,6 +1,4 @@
 # Dependencies
-find_package(OpenGL REQUIRED)
-find_package(OpenSceneGraph REQUIRED COMPONENTS osgViewer osgUtil)
 find_package(OpenXR REQUIRED)
 
 # Old OpenXR SDK versions don't find Threads but Threads::Threads is an

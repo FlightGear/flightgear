@@ -114,6 +114,17 @@ public:
     bool hasInteriorPath(void) { return _hasInteriorPath;}
     inline std::string& getInteriorPath() { return _interiorPath; }
     inline float getRadius() { return _radius; }
+
+    bool hasHighResolutionModel(void) { return _hasHighResolutionModel;}
+    void setHasHighResolutionModel(bool hasHighResolutionModel) { _hasHighResolutionModel = hasHighResolutionModel; }
+
+    // The indices used by the LoD node depend on what models are actually available.
+    // The maximal case is a list of [low, high, interior], but [low, interior] and
+    // [low, high] and [low] are also possible.
+    int getInteriorLoDIndex(void) { assert(_hasInteriorPath); return _hasHighResolutionModel ? 2 : 1; }
+    int getHighResolutionLoDIndex(void) { assert(_hasHighResolutionModel); return 1; }
+    int getLowResolutionLoDIndex(void) { return 0; }
+
 private:
     std::string _fxpath;
     std::string _interiorPath;
@@ -123,7 +134,9 @@ private:
     bool _ready = false;
     bool _initialized = false;
     bool _hasInteriorPath = false;
+    bool _hasHighResolutionModel = false;
     bool _interiorLoaded = false;
+
     float _radius = -1.0;
     SGPropertyNode* _root;
 
@@ -216,9 +229,6 @@ FGAIBase::removeModel()
         aip.clear();
         _modeldata = nullptr;
         _model = nullptr;
-        _interior = nullptr;
-        _high_res = nullptr;
-        _low_res = nullptr;
 
         // pass it on to the pager, to be be deleted in the pager thread
         pSceneryManager->getPager()->queueDeleteRequest(temp);
@@ -292,19 +302,17 @@ void FGAIBase::update(double dt) {
     ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.getLatitudeRad());
     ft_per_deg_lon = 365228.16 * cos(pos.getLatitudeRad());
 
-    if ((_modeldata)&&(_modeldata->needInitialization()))
-    {
+    if (_modeldata && _modeldata->needInitialization()) {
         // process deferred nasal initialization,
         // which must be done in main thread
         _modeldata->init();
 
         // update LOD radius from loaded modeldata
-        auto radius = _modeldata->getRadius();
+        const auto radius = _modeldata->getRadius();
         if (radius > 0) {
             _model->setRadius(radius);
             _model->dirtyBound();
-        }
-        else {
+        } else {
             SG_LOG(SG_AI, SG_WARN, "AIBase: model radius not set.");
         }
 
@@ -312,11 +320,14 @@ void FGAIBase::update(double dt) {
         if (fgGetBool("/sim/sound/aimodels/enabled",false))
         {
             const string& fxpath = _modeldata->get_sound_path();
-            if (fxpath != "")
-            {
+            if (!fxpath.empty()) {
                 simgear::ErrorReportContext ec("ai-model", _name);
                 if (!_scenarioPath.empty()) {
                     ec.add("scenario-path", _scenarioPath);
+                }
+
+                if (_otype == object_type::otMultiplayer) {
+                    _modeldata->addErrorContext("multiplayer", getCallSign());
                 }
 
                 props->setStringValue("sim/sound/path", fxpath.c_str());
@@ -357,120 +368,60 @@ void FGAIBase::updateInterior()
         return;
 
     if (!_modeldata->getInteriorLoaded()) { // interior is not yet load
-        _interior = SGModelLib::loadPagedModel(_modeldata->getInteriorPath(), props, _modeldata);
-        _group->addChild(_interior);
-        if (_interior.valid()) {
-            bool pixel_mode = !fgGetBool("/sim/rendering/static-lod/aimp-range-mode-distance", false);
-            if (pixel_mode) {
-                _interior->setRangeMode(osg::LOD::PIXEL_SIZE_ON_SCREEN);
-                _interior->setRange(0, _maxRangeInterior, FLT_MAX);
-            }
-            else {
-                _interior->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
-                _interior->setRange(0, 0.0, _maxRangeInterior);
-            }
-            _modeldata->setInteriorLoaded(true);
-            SG_LOG(SG_AI, SG_INFO, "AIBase: Loaded interior model " << _interior->getName());
+        _model->setFileName(_model->getNumRanges(), _modeldata->getInteriorPath());
+
+        bool distance_mode = fgGetBool("/sim/rendering/static-lod/aimp-range-mode-distance", false);
+        double maxRangeInterior = fgGetDouble("/sim/rendering/static-lod/aimp-interior", 50.0);
+
+        if (distance_mode) {
+            _model->setRange(0, 0.0, maxRangeInterior);
+        } else {
+            _model->setRange(0, maxRangeInterior, FLT_MAX);
         }
+
+        _modeldata->setInteriorLoaded(true);
+        SG_LOG(SG_AI, SG_INFO, "AIBase: Loading interior model " << _modeldata->getInteriorPath());
     }
 }
 
 /** update LOD properties of the model */
 void FGAIBase::updateLOD()
 {
-    double maxRangeDetail = fgGetDouble("/sim/rendering/static-lod/aimp-detailed", 3000.0);
-    double maxRangeBare   = fgGetDouble("/sim/rendering/static-lod/aimp-bare", 10000.0);
-    _maxRangeInterior     = fgGetDouble("/sim/rendering/static-lod/aimp-interior", 50.0);
+    double maxRangeDetail   = fgGetDouble("/sim/rendering/static-lod/aimp-detailed", 3000.0);
+    double maxRangeBare     = fgGetDouble("/sim/rendering/static-lod/aimp-bare", 10000.0);
+    double maxRangeInterior = fgGetDouble("/sim/rendering/static-lod/aimp-interior", 50.0);
 
-    if (_model.valid())
-    {
-        bool pixel_mode = !fgGetBool("/sim/rendering/static-lod/aimp-range-mode-distance", false);
-        if (pixel_mode) {
-            _model->setRangeMode(osg::LOD::PIXEL_SIZE_ON_SCREEN);
-        }
-        else {
+    if (_model.valid()) {
+        bool distance_mode = fgGetBool("/sim/rendering/static-lod/aimp-range-mode-distance", false);
+        if (distance_mode) {
             _model->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
-        }
 
-        if (maxRangeDetail < 0)
-        {
-            // High detail model (only)
-            // - disables the low detail detail model by setting its visibility from 0 to 0
-            if (_high_res.valid()) {
-                _model->setRange(modelHighDetailIndex, 0.0, FLT_MAX); // all ranges.
-                _model->setRange(modelLowDetailIndex, 0.0, 0.0); // turn it off
-            }
-            else {
-                // only having low-res model
-                _model->setRange(modelLowDetailIndex, 0.0, FLT_MAX); // only having low-res model.
-                _model->setRange(modelHighDetailIndex, 0.0, 0.0); // only having low-res model.
-            }
-        }
-        else if ((int)maxRangeBare == (int)maxRangeDetail)
-        {
-            // low detail model  (only)
-            if (_low_res.valid()) {
-                _model->setRange(modelHighDetailIndex, 0, 0); // turn it off
-                _model->setRange(modelLowDetailIndex, 0, FLT_MAX);
-            }
-            else {
-                // Only having high_res model
-                _model->setRange(modelHighDetailIndex, 0, FLT_MAX);
-                _model->setRange(modelLowDetailIndex, 0, 0.0);
-            }
-        }
-        else
-        {
-            if(pixel_mode)
-            {
-                /* In pixel size mode, the range sense is reversed, so we want the
-                * detailed model [0] to be displayed when the "range" is really
-                * large (i.e. the object is taking up a large number of pixels on screen),
-                * and the less detailed model [1] to be displayed if the
-                * "range" is between the detailed range and the bare range.
-                * When the "range" is less than the bare value, the aircraft
-                * represents too few pixels to be worth displaying.
-                */
+            // In distance mode  we simple display a different LoD model depending on how far away the object is.  
 
-                if (maxRangeBare > maxRangeDetail) {
-                  // Sanity check that we have sensible values.
-                  maxRangeBare = maxRangeDetail;
-                  SG_LOG(SG_AI,
-                    SG_WARN,
-                    "/sim/rendering/static-lod/aimp-bare greater " <<
-                    "than /sim/rendering/static-lod/aimp-detailed when using " <<
-                    "/sim/rendering/static-lod/aimp-range-mode-distance=false.  Ignoring ai-bare."
-                  );
-                }
-
-                if (_low_res.valid() && _high_res.valid()) {
-                    /*if (_model->getRadius() < 0)
-                    {
-                        osg::BoundingSphere bs = _model->computeBound();
-                        if (bs.radius() > 0) {
-                            _model->setRadius(bs.radius());
-                            _model->setCenterMode(osg::LOD::CenterMode::USER_DEFINED_CENTER);
-                        }
-                    }*/
-                  _model->setRange(modelHighDetailIndex , maxRangeDetail, FLT_MAX); // most detailed
-                  _model->setRange(modelLowDetailIndex , maxRangeBare, maxRangeDetail); // least detailed
-                } else if (_low_res.valid() && !_high_res.valid()) {
-                  // we have only low_res_model model it obviously will have to be displayed from the smallest value
-                  _model->setRange(modelLowDetailIndex, std::min(maxRangeBare, maxRangeDetail), FLT_MAX );
-                  _model->setRange(modelHighDetailIndex, 0,0);
-                } else if (!_low_res.valid() && _high_res.valid()) {
-                    // we have only high_res model it obviously will have to be displayed from the smallest value
-                    _model->setRange(modelHighDetailIndex, std::min(maxRangeBare, maxRangeDetail), FLT_MAX );
-                    _model->setRange(modelLowDetailIndex, 0,0);
+            if (maxRangeDetail < 0) {
+                // Only use the highest level detail model (interior handled later)
+                if (_modeldata->hasHighResolutionModel()) {
+                    // Both high and low resolution models available, so disable the low resolution one.
+                    _model->setRange(_modeldata->getLowResolutionLoDIndex(), 0.0, 0.0);
+                    _model->setRange(_modeldata->getHighResolutionLoDIndex(), 0.0, maxRangeBare);
+                } else {
+                    // Only a single resolution model available.
+                    _model->setRange(_modeldata->getLowResolutionLoDIndex(), 0.0, maxRangeBare);
+                } 
+            } else if ((int)maxRangeBare == (int)maxRangeDetail) {
+                // Only use the low detail model if available, otherwise we will use whatever is available.
+                if (_modeldata->hasHighResolutionModel()) {
+                    _model->setRange(_modeldata->getLowResolutionLoDIndex(), 0.0, maxRangeBare);
+                    _model->setRange(_modeldata->getHighResolutionLoDIndex(), 0.0, 0.0);
+                } else {
+                    // Only a single resolution model available.
+                    _model->setRange(_modeldata->getLowResolutionLoDIndex(), 0.0, maxRangeBare);
                 }
             } else {
-                /* In non-pixel range mode we're dealing with straight distance.
-                 * We use the detailed model [0] for when we are up to the detailed
-                 * range, and the less complex model [1] (if available) for further
-                 * away up to the bare range.
-                 * - in this case the maxRangeBare is a delta on top of maxRangeDetail.
-                 */
-
+                // We have 3 visibility ranges:
+                // 1) 0 to maxRangeDetail we use the high resolution model (if available)
+                // 2) maxRangeDetail to (maxRangeDetail+maxRangeBare) we use the low resolution model
+                // 3) from (maxRangeDetail+maxRangeBare) to infinity we do not display anything
                 if (maxRangeBare <= 0) {
                     // Sanity check that we have sensible values.
                     maxRangeBare = 1;
@@ -479,29 +430,88 @@ void FGAIBase::updateLOD()
                         "/sim/rendering/static-lod/aimp-bare is <= 0. This should be a delta on top of aimp-detailed in meters mode. setting to 1.");
                 }
 
-
-                if (_low_res.valid() && _high_res.valid()) {
-                  _model->setRange(modelHighDetailIndex , 0, maxRangeDetail); // most detailed
-                  _model->setRange(modelLowDetailIndex , maxRangeDetail, maxRangeDetail+maxRangeBare); // least detailed
-                } else if (_low_res.valid() && !_high_res.valid()) {
-                  _model->setRange(modelLowDetailIndex, 0, maxRangeBare + maxRangeDetail); // only low_res, so display from 0 to the highest value in meters
-                  _model->setRange(modelHighDetailIndex, 0, 0);
-                } else if (!_low_res.valid() && _high_res.valid()) {
-                    _model->setRange(modelHighDetailIndex, 0, maxRangeBare + maxRangeDetail); // only high_res, so display from 0 to the highest value in meters
-                    _model->setRange(modelLowDetailIndex, 0, 0);
+                if (_modeldata->hasHighResolutionModel()) {
+                    _model->setRange(_modeldata->getLowResolutionLoDIndex(), maxRangeDetail, maxRangeDetail+maxRangeBare);
+                    _model->setRange(_modeldata->getHighResolutionLoDIndex(), 0.0, maxRangeDetail);
+                } else {
+                    // Only a single resolution model available.
+                    _model->setRange(_modeldata->getLowResolutionLoDIndex(), 0.0, maxRangeDetail+maxRangeBare);
                 }
             }
-        }
-        if (_modeldata->getInteriorLoaded() && _interior.valid()) {
-            if (pixel_mode) {
-                _interior->setRangeMode(osg::LOD::PIXEL_SIZE_ON_SCREEN);
-                _interior->setRange(0, _maxRangeInterior, FLT_MAX);
+
+            if (_modeldata->getInteriorLoaded()) {
+                // Handle the separate interior model.
+                _model->setRange(_modeldata->getInteriorLoDIndex(), 0.0, maxRangeInterior);
             }
-            else {
-                _interior->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
-                _interior->setRange(0, 0.0, _maxRangeInterior);
+        } else {
+            _model->setRangeMode(osg::LOD::PIXEL_SIZE_ON_SCREEN);
+
+            /* In pixel size mode, the range sense is reversed, so we want the
+            * detailed model [0] to be displayed when the "range" is really
+            * large (i.e. the object is taking up a large number of pixels on screen),
+            * and the less detailed model [1] to be displayed if the
+            * "range" is between the detailed range and the bare range.
+            * When the "range" is less than the bare value, the aircraft
+            * represents too few pixels to be worth displaying.
+            */
+
+            if (maxRangeDetail < 0) {
+                // Only use the highest level detail model available
+                if (_modeldata->hasHighResolutionModel()) {
+                    // Both high and low resolution models available, so disable the low resolution one.
+                    _model->setRange(_modeldata->getLowResolutionLoDIndex(), 0.0, 0.0);
+                    _model->setRange(_modeldata->getHighResolutionLoDIndex(), maxRangeBare, FLT_MAX);
+                } else {
+                    //Only a single resolution model available.
+                    _model->setRange(_modeldata->getLowResolutionLoDIndex(), maxRangeBare, FLT_MAX);
+                } 
+            } else if ((int)maxRangeBare == (int)maxRangeDetail) {
+                // Only use the low detail model if available, otherwise we will use whatever is available.
+                if (_modeldata->hasHighResolutionModel()) {
+                    // Both high and low resolution models available, so disable the high resolution one.
+                    _model->setRange(_modeldata->getLowResolutionLoDIndex(), maxRangeBare, FLT_MAX);
+                    _model->setRange(_modeldata->getHighResolutionLoDIndex(), 0.0, 0.0);
+                } else {
+                    // Only a single resolution model available.
+                    _model->setRange(_modeldata->getLowResolutionLoDIndex(), maxRangeBare, FLT_MAX);
+                } 
+            } else {
+                // We have three visibility ranges:
+                // 1) From closeby to a size of maxRangeDetail we will use the high resolution model
+                // 2) from maxRangeDetail to maxRangeBare we will use the low resolution model.
+                // 3) If the aircraft is smaller than maxRangeBare we don't display anything
+
+                if (maxRangeBare > maxRangeDetail) {
+                    // Sanity check that we have sensible values.
+                    maxRangeBare = maxRangeDetail;
+                    SG_LOG(SG_AI,
+                        SG_WARN,
+                        "/sim/rendering/static-lod/aimp-bare greater " <<
+                        "than /sim/rendering/static-lod/aimp-detailed when using " <<
+                        "/sim/rendering/static-lod/aimp-range-mode-distance=false.  Ignoring ai-bare."
+                    );
+                }
+
+                if (_modeldata->hasHighResolutionModel()) {
+                    _model->setRange(_modeldata->getLowResolutionLoDIndex(), maxRangeBare, maxRangeDetail);
+                    _model->setRange(_modeldata->getHighResolutionLoDIndex(), maxRangeDetail, FLT_MAX);
+                } else {
+                    // We only have a single model, so display it from the maxRangeBare
+                    _model->setRange(_modeldata->getLowResolutionLoDIndex(), maxRangeBare, FLT_MAX );
+                }
+            }
+
+            if (_modeldata->getInteriorLoaded()) {
+                // Handle the separate interior model.
+                _model->setRange(_modeldata->getInteriorLoDIndex(), maxRangeInterior, FLT_MAX);
             }
         }
+
+        // Irrespective of the mode, we want to set appropriate priority weighting.  AI models
+        // are low priority compared with scenery etc, and this scales the priority down.
+        _model->setPriorityScale(_modeldata->getLowResolutionLoDIndex(), 0.2);
+        if (_modeldata->hasHighResolutionModel()) _model->setPriorityScale(_modeldata->getHighResolutionLoDIndex(), 0.2);
+        if (_modeldata->getInteriorLoaded())      _model->setPriorityScale(_modeldata->getInteriorLoDIndex(), 0.2);
     }
 }
 
@@ -525,8 +535,8 @@ void FGAIBase::Transform() {
 }
 
 /*
- * Find a set of paths to the model, in order of LOD from most detailed to
- * least, and accounting for the user preference of detailed models vs. AI
+ * Find a set of paths to the model, in order of LOD from least detailed to
+ * most, and accounting for the user preference of detailed models vs. AI
  * low resolution models.
  *
  * This returns a vector of size 1 or 2.
@@ -604,7 +614,7 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
         if (!p.empty()) {
             _installed = true;
             SG_LOG(SG_AI, SG_DEBUG, "Found DATA model " << p);
-            path_list.insert(path_list.end(), p);
+            path_list.insert(path_list.end(), p);            
         }
     }
 
@@ -614,6 +624,8 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
      */
     assert(path_list.size() != 0);
     assert(path_list.size() <  3);
+
+    _modeldata->setHasHighResolutionModel(path_list.size() == 2);
 
     return path_list;
 }
@@ -639,43 +651,10 @@ bool FGAIBase::init(ModelSearchOrder searchOrder)
     }
 
     // Load models
-    _model = new osg::LOD();
     std::vector<string> model_list = resolveModelPath(searchOrder);
-    if(model_list.size() == 1 && _modeldata && _modeldata->hasInteriorPath()) {
-        // Only one model and interior available (expecting this to be a high_res model)
-        _low_res = new osg::PagedLOD(); // Dummy node to keep LOD node happy
-        _model->addChild(_low_res);
-        _high_res = SGModelLib::loadPagedModel(model_list[0], props, _modeldata);
-        _group = osg::ref_ptr<osg::Group>(new osg::Group());
-        _group->addChild(_high_res);
-        _model->addChild(_group);
-    } else if (model_list.size() == 1) {
-        // low_res model only (as we do not have any interior)
-        _low_res = SGModelLib::loadPagedModel(model_list[0], props, _modeldata);
-        _model->addChild(_low_res);
-        _group = osg::ref_ptr<osg::Group>(new osg::Group()); // Dummy node to keep LOD node happy
-        _model->addChild(_group);
-    } else {
-        // high and low-res model
-        assert(model_list.size() == 2);
-        _low_res = SGModelLib::loadPagedModel(model_list[0], props, _modeldata);
-        _model->addChild(_low_res);
-        _high_res = SGModelLib::loadPagedModel(model_list[1], props, _modeldata);
-        _group = osg::ref_ptr<osg::Group>(new osg::Group());
-        _group->addChild(_high_res);
-        _model->addChild(_group);
-    }
-
-    // Set PagedLODs to MAX Range. The visibility is controlled with the top-level LOD node
-    if(_high_res.valid()) {
-        _high_res->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
-        _high_res->setRange(0, 0, FLT_MAX);
-    }
-    if(_low_res.valid()) {
-        _low_res->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
-        _low_res->setRange(0, 0, FLT_MAX);
-    }
-
+    
+    // Now load the set of models as an LoD range.
+    _model = SGModelLib::loadPagedModel(model_list, props, _modeldata);
     _model->setName("AI-model range animation node");
     _model->setRadius(getDefaultModelRadius());
 
@@ -1197,11 +1176,7 @@ osg::LOD* FGAIBase::getSceneBranch() const
 
 bool FGAIBase::modelLoaded() const
 {
-    if(_low_res.valid())
-        return _low_res->getNumChildren() >= 1;
-    else if (_high_res.valid())
-        return _high_res->getNumChildren() >= 1;
-    return false;
+    return _model->getNumChildren() > 0;
 }
 
 SGGeod FGAIBase::getGeodPos() const

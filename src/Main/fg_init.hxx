@@ -97,6 +97,9 @@ void fgInitPackageRoot();
 // by the real installer).
 int fgUninstall();
 
+// flightgear specific exit(status) function
+void fgExit(int status);
+
 #endif // _FG_INIT_HXX
 
 

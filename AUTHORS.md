@@ -1,0 +1,179 @@
+# Authors
+
+FlightGear is the work of hundreds of volunteers around the world.
+
+It is impossible to keep an accurate record of all contributors, and this list is woefully out of date. It is mostly kept as a historical reference. That being said, feel free to add your name to the list if you have contributed to the project in any way, shape, or form.
+
+- Syd Adams
+- Mark Akermann
+- Raul Alonzo
+- Michele America
+- Emmanuel Baranger
+- Andrei Barbu
+- Michael Basler
+- Paul Beardsley
+- Jon S. Berndt
+- Paul Bleisch
+- Matthias Boerner
+- Thorsten Brehm
+- Alexis Bory
+- Jim Brennan
+- Bernie Bright
+- Francesco Brisa
+- Bernhard H. Buckel
+- Gene Buckle
+- Ralph Carmichael
+- Didier Chauveau
+- John Check
+- Bertrand Coconnier
+- Dave Cornish
+- Oliver Delise
+- John Denker
+- Martin Eschen
+- Torsten Dreyer
+- Dave Eberly
+- Jean-Francois Doue
+- Francine Evans
+- Oscar Everitt
+- Detlef Faber
+- Leidson Campos A. Ferreira
+- Olaf Flebbe
+- Bruce Finney
+- Thomas Forster
+- Melchior Franz
+- Jean-loup Gailly
+- Fernando García Liñán
+- Mark Adler
+- Thomas Gellekum
+- Ralf Gerlich
+- Anders Gidenstam
+- Neetha Girish
+- Jeff Goeke-Smith
+- Michael I. Gold
+- Habibie
+- Csaba Hal�sz
+- Ampere Hardraade
+- Brett Harrison
+- Dave Haskell
+- Mike Hill
+- Erik Hofman
+- Charlie Hotchkiss
+- Bruce Jackson of NASA
+- Ron Jensen
+- Maik Justus
+- Ove Kaaven
+- Richard Kaszeta
+- Vassilii Khachaturov
+- Tom Knienieder
+- Reto Koradi
+- Bob Kuehne
+- Chris Lampard
+- David Luff
+- Lewis Magruder
+- Christian Mayer
+- David Megginson
+- Eric Mitchell
+- Cameron Moore
+- Tim Moore
+- Anders Morken
+- Alan Murta
+- Phil Nelson
+- Tatsuhiro Nishioka
+- Alexei Novikov
+- Curt Olson
+- Brian Paul
+- Tony Peden
+- Robin Peel
+- Alex Perry
+- Pigeon
+- Friedemann Reinhard
+- Frederic Bouvier
+- Petter Reinholdtsen
+- William Riley
+- Gijs de Rooy
+- Gerard Robin
+- Andy Ross
+- Brian Schack
+- Paul Schlyter
+- Christian Schmitt
+- Chris Schoeneman
+- Phil Schubert
+- Heiko Schulz
+- Jonathan R Shewchuk
+- Gordan Sikic
+- Michael Smith
+- Martin Spott
+- Jon Stockill
+- Martin Dressler
+- U.S. Geological Survey
+- Durk Talsma
+- Gabor Toth
+- James Turner
+- UIUC - Department of Aeronautical and Astronautical Engineering
+- Jeff Scott
+- Bipin Sehgal
+- Michael Selig
+- Jay Thomas
+- Eunice Lee
+- Elizabeth Rendon
+- Sudhi Uppuluri
+- Mark Vallevand
+- Gary R. Van Sickle
+- Norman Vine
+- Roland Voegtli
+- Carmelo Volpe
+- Darrell Walisser
+- Davud Culp
+- Ed Williams
+- Jim Wilson
+- Jean-Claude Wippler
+- Holger Wirtz
+- John Wojnaroski
+- Marcus Zojer
+- Lee Elliot
+- Vivian Meazza
+- David Culp
+- Mathias Fröhlich
+- Harald Johnsen
+- Roy Vegard Ovesen
+- Stuart Buchanan
+- Stefan Seifert
+- Thorsten Renk
+- Space Imaging, Inc
+- Airservices Australia
+- SkyscraperPage.com
+- http://sky.aw.net.ua/
+- WoodSoup Project
+- Robert Allan Zeh
+- Dave Martin
+- Thomas Foerster
+- Chris Metzler
+- Roberto Inzerillo
+- Mike Round
+- Innis Cunningham
+- Josh Babcock
+- Esa Hyytia
+- Mircea Lutic
+- Jens Thoms Toerring
+- Martin C. Doege
+- Sebastian Bechtold
+- Julien Pierru
+- Bertrand Augras
+- Jakub Skibinski
+- Morten Oesterlund Joergensen
+- Carsten Vogel
+- Dominique Lemesre
+- Daniel Leygnat
+- Bertrand Gilot
+- Morten Skyt Eriksen
+- Alex Bamesreiter
+- Oliver Predelli
+- Georg Vollnhals
+- Paul Richter
+- Instituto Brasileiro de Geografia e Estatistica (IBGE)
+- Diogo Sergio
+- Maria Hsu
+- Leonardo "Leguas" Carvalho
+- Spoladore
+- Otávio Nogueira
+- P199

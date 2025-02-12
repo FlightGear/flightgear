@@ -66,7 +66,7 @@ public:
         auto it = findProp(n);
         if (it != _watchedProps.end()) {
             // this would happen if a preset somehow set the same property more than once
-            SG_LOG(SG_GUI, SG_ALERT, "GraphicsPresets: Duplicate registration for:" << n->getPath());
+            SG_LOG(SG_GUI, SG_ALERT, "GraphicsPresets: Duplicate registration for: " << n->getPath());
             return;
         }
 
@@ -96,8 +96,8 @@ public:
             return;
         }
 
-        SG_LOG(SG_GUI, SG_INFO, "GraphicsPreset clearing; setting:" << prop->getPath() << " was modified");
-        flightgear::addSentryBreadcrumb("clearing graphics preset, config was customised at:" + prop->getPath(), "info");
+        SG_LOG(SG_GUI, SG_INFO, "GraphicsPreset clearing; setting: " << prop->getPath() << " was modified");
+        flightgear::addSentryBreadcrumb("clearing graphics preset, config was customised at: " + prop->getPath(), "info");
         _presetProp->clearValue();
 
         auto gp = globals->get_subsystem<GraphicsPresets>();
@@ -155,7 +155,7 @@ public:
     void valueChanged(SGPropertyNode* prop) override
     {
         if (!_requiredProp->getBoolValue()) {
-            SG_LOG(SG_GUI, SG_INFO, "GraphicsPreset: saw modification of:" << prop->getPath() << ", setting:" << _requiredProp->getPath() << " to true");
+            SG_LOG(SG_GUI, SG_INFO, "GraphicsPreset: saw modification of: " << prop->getPath() << ", setting:" << _requiredProp->getPath() << " to true");
             _requiredProp->setBoolValue(true);
         }
     }
@@ -172,7 +172,7 @@ static bool do_apply_preset(const SGPropertyNode* arg, SGPropertyNode* root)
     if (arg->hasChild("path")) {
         SGPath p = SGPath::fromUtf8(arg->getStringValue("path"));
         if (!p.exists()) {
-            SG_LOG(SG_IO, SG_ALERT, "apply-graphics-preset: no file at:" << p);
+            SG_LOG(SG_IO, SG_ALERT, "apply-graphics-preset: no file at: " << p);
             return false;
         }
 
@@ -267,8 +267,8 @@ void GraphicsPresets::applyInitialPreset()
     const string currentPreset = fgGetString(kPresetPropPath);
     fgSetBool(kPresetActiveProp, false);
     if (!currentPreset.empty()) {
-        SG_LOG(SG_GUI, SG_INFO, "Applying graphics preset:" << currentPreset);
-        addSentryBreadcrumb("Startup selection of preset:" + currentPreset, "info");
+        SG_LOG(SG_GUI, SG_INFO, "Applying graphics preset: " << currentPreset);
+        addSentryBreadcrumb("Startup selection of preset: " + currentPreset, "info");
         applyCurrentPreset();
     }
 }
@@ -381,7 +381,7 @@ bool GraphicsPresets::applyCustomPreset(const SGPath& path)
         return false;
     }
 
-    addSentryBreadcrumb("loading graphics preset from:" + path.utf8Str(), "info");
+    addSentryBreadcrumb("loading graphics preset from: " + path.utf8Str(), "info");
     return innerApplyPreset(info, true);
 }
 
@@ -390,7 +390,7 @@ bool GraphicsPresets::applyPresetByName(const std::string& name)
     const auto presets = listPresets();
     auto it = std::find_if(presets.begin(), presets.end(), [name](const GraphicsPresetInfo& pi) { return simgear::strutils::iequals(name, pi.name); });
     if (it == presets.end()) {
-        SG_LOG(SG_GUI, SG_ALERT, "Couldn't find graphics preset with name:" << name);
+        SG_LOG(SG_GUI, SG_ALERT, "Couldn't find graphics preset with name: " << name);
         return false;
     }
 
@@ -540,7 +540,7 @@ bool GraphicsPresets::saveToXML(const SGPath& path, const std::string& name, con
         sg_ofstream os(path, std::ios::out | std::ios::trunc);
         writeProperties(os, presetXML, true /*write all*/);
     } catch (sg_exception& e) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Failed to save presets file to:" << path << "\nt\tFailed:" << e.getFormattedMessage());
+        SG_LOG(SG_GENERAL, SG_ALERT, "Failed to save presets file to: " << path << "\nt\tFailed: " << e.getFormattedMessage());
         return false;
     }
 

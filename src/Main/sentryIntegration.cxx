@@ -62,15 +62,16 @@ auto OSG_messageWhitelist = {
 };
 
 auto exception_messageWhitelist = {
-    "position is invalid, NaNs",    ///< avoid spam when NaNs occur
-    "bad AI flight plan",           ///< adjusting logic to avoid this is tricky
-    "couldn't find shader",         ///< handled seperately
+    "position is invalid, NaNs", ///< avoid spam when NaNs occur
+    "bad AI flight plan",        ///< adjusting logic to avoid this is tricky
+    "couldn't find shader",      ///< handled seperately
 
     /// supress noise from user-entered METAR values : we special case
     /// when live metar fails to parse
     "metar data bogus",
-    "metar data incomplete"
-};
+    "metar data incomplete",
+    "metar temperature data",
+    "metar pressure data"};
 
 // we don't want sentry enabled for the test suite
 #if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
@@ -269,13 +270,14 @@ void initSentry()
     sentry_options_set_dsn(options, SENTRY_API_KEY);
     
     if (strcmp(FG_BUILD_TYPE, "Dev") == 0) {
-        sentry_options_set_release(options, "flightgear-dev@" FLIGHTGEAR_VERSION);
+        sentry_options_set_release(options, "flightgear-dev@" REVISION);
+    } else if (strcmp(FG_BUILD_TYPE, "Nightly") == 0) {
+        sentry_options_set_release(options, "flightgear-nightly@" BUILD_DATE);
     } else {
         sentry_options_set_release(options, "flightgear@" FLIGHTGEAR_VERSION);
     }
-    
-    const auto buildString = std::to_string(JENKINS_BUILD_NUMBER);
-    sentry_options_set_dist(options, buildString.c_str());
+
+    sentry_options_set_dist(options, REVISION);
 
     // for dev / nightly builds, put Sentry in debug mode
     if (strcmp(FG_BUILD_TYPE, "Release")) {

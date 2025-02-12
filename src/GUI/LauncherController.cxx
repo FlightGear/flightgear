@@ -36,6 +36,9 @@
 #include "CarriersLocationModel.hxx"
 #include "DefaultAircraftLocator.hxx"
 #include "FlightPlanController.hxx"
+#include "GettingStartedScope.hxx"
+#include "GettingStartedTip.hxx"
+#include "GettingStartedTipsController.hxx"
 #include "HoverArea.hxx"
 #include "LaunchConfig.hxx"
 #include "LauncherArgumentTokenizer.hxx"
@@ -51,6 +54,7 @@
 #include "QmlAircraftInfo.hxx"
 #include "QmlPositioned.hxx"
 #include "QmlRadioButtonHelper.hxx"
+#include "QmlStringListModel.hxx"
 #include "QtLauncher.hxx"
 #include "RecentAircraftModel.hxx"
 #include "RecentLocationsModel.hxx"
@@ -58,12 +62,12 @@
 #include "SetupRootDialog.hxx"
 #include "StackController.hxx"
 #include "ThumbnailImageItem.hxx"
+#include "TipBackgroundBox.hxx"
 #include "UnitsModel.hxx"
 #include "UpdateChecker.hxx"
-#include "GettingStartedTipsController.hxx"
-#include "GettingStartedTip.hxx"
-#include "TipBackgroundBox.hxx"
-#include "GettingStartedScope.hxx"
+
+
+#include <flightgearBuildId.h>
 
 using namespace simgear::pkg;
 
@@ -206,6 +210,8 @@ void LauncherController::initQML(int& styleTypeId)
     qmlRegisterType<StackController>("FlightGear", 1, 0, "StackController");
 
     qmlRegisterType<ModelDataExtractor>("FlightGear", 1, 0, "ModelDataExtractor");
+    qmlRegisterType<QmlStringListModel>("FlightGear", 1, 0, "StringListModel");
+
 
     qmlRegisterSingletonType(QUrl("qrc:/qml/OverlayShared.qml"), "FlightGear", 1, 0, "OverlayShared");
     styleTypeId = qmlRegisterSingletonType(QUrl("qrc:/qml/Style.qml"), "FlightGear", 1, 0, "Style");
@@ -737,6 +743,14 @@ void LauncherController::queryMPServers()
 
 QString LauncherController::versionString() const
 {
+    if (strcmp(FG_BUILD_TYPE, "Nightly") == 0) {
+        return " Nightly " BUILD_DATE;
+    }
+
+    if (strcmp(FG_BUILD_TYPE, "Dev") == 0) {
+        return " (Dev)";
+    }
+
     return FLIGHTGEAR_VERSION;
 }
 

@@ -11,7 +11,6 @@ foreach( mylibfolder
 		Canvas
 		Radio
 		Autopilot
-		Cockpit
 		Environment
 		GUI
 		Input

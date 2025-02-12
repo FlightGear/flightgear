@@ -67,7 +67,6 @@
 #include <Main/sentryIntegration.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <Viewer/fgviewer.hxx>
-#include <flightgearBuildId.h>
 
 #include "fg_os.hxx"
 
@@ -349,19 +348,6 @@ int main ( int argc, char **argv )
         // is possible inside fgExitCleanup
         sglog();
 
-
-#if OSG_VERSION_LESS_THAN(3, 5, 0)
-        // similar to above, ensure some static maps inside OSG exist before
-        // we register our at-exit handler, otherwise the statics are gone
-        // when fg_terminate runs, which causes crashes.
-        osg::Texture::getTextureObjectManager(0);
-        osg::GLBufferObjectManager::getGLBufferObjectManager(0);
-
-        // ensure this is called early (and hence deleted) late,
-        // otherwise fgExitCleanup crahses: see
-        // Sentry FLIGHTEAR-M68
-        osgText::Font::getDefaultFont();
-#endif
         std::set_terminate(fg_terminate);
         atexit(fgExitCleanup);
         
@@ -403,10 +389,11 @@ int main ( int argc, char **argv )
 
 // do some clean up on exit.  Specifically we want to delete the sound-manager,
 // so OpenAL device and context are released cleanly
-void fgExitCleanup() {
+void fgExitCleanup() 
+{
+    flightgear::addSentryBreadcrumb("starting fgExitCleanup", "info");
 
     if (_bootstrap_OSInit != 0) {
-        fgSetMouseCursor(MOUSE_CURSOR_POINTER);
         fgOSCloseWindow();
     }
 
@@ -419,11 +406,18 @@ void fgExitCleanup() {
     // on the common exit path globals is already deleted, and NULL,
     // so this only happens on error paths.
     delete globals;
-    // avoid crash on exit (https://sourceforge.net/p/flightgear/codetickets/1935/)
-    simgear::GroundLightManager::instance()->getRunwayLightStateSet()->clear();
-    simgear::GroundLightManager::instance()->getTaxiLightStateSet()->clear();
-    simgear::GroundLightManager::instance()->getGroundLightStateSet()->clear();
+
+    flightgear::addSentryBreadcrumb("finished deleting globals", "info");
 
     simgear::shutdownLogging();
     flightgear::shutdownSentry();
 }
+
+void fgExit(int status)
+{
+#if defined(HAVE_QT)
+    flightgear::shutdownQtApp();
+#endif
+    exit(status);
+}
+

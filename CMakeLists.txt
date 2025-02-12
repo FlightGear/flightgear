@@ -7,6 +7,8 @@ include (CheckCXXSourceCompiles)
 include (CheckIncludeFile)
 include (CheckIncludeFileCXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # OpenGL VND policy : we need to use NEW, so we will set
 # OpenGL_GL_PREFERENCE to LEGACY
 if(POLICY CMP0072)
@@ -93,6 +95,12 @@ endif()
 string(STRIP "${versionFile}" FLIGHTGEAR_VERSION)
 # add a dependency on the version file
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS version)
+
+# split version string into components, note CMAKE_MATCH_0 is the entire regexp match
+string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" VERSION_REGEX ${FLIGHTGEAR_VERSION})
+set(FLIGHTGEAR_MAJOR_VERSION ${CMAKE_MATCH_1})
+set(FLIGHTGEAR_MINOR_VERSION ${CMAKE_MATCH_2})
+set(FLIGHTGEAR_PATCH_VERSION ${CMAKE_MATCH_3})
 
 # FlightGear packaging (to build a source tarball)
 include( ConfigureCPack )
@@ -205,15 +213,15 @@ option(ENABLE_METAR      "Set to ON to build the metar application (default)" ON
 option(ENABLE_STGMERGE   "Set to ON to build the stgmerge application (default)" OFF)
 option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" ON)
 option(ENABLE_QT         "Set to ON to build the internal Qt launcher" ON)
-option(ENABLE_TRAFFIC    "Set to ON to build the external traffic generator modules" ON)
 option(ENABLE_FGQCANVAS  "Set to ON to build the Qt-based remote canvas application" OFF)
 option(ENABLE_DEMCONVERT "Set to ON to build the dem conversion tool (default)" ON)
 option(ENABLE_HID_INPUT  "Set to ON to build HID-based input code" ${EVENT_INPUT_DEFAULT})
 option(ENABLE_PLIB_JOYSTICK  "Set to ON to enable legacy joystick code (default)" ON)
 option(ENABLE_SWIFT      "Set to ON to build the swift module" ON)
 option(ENABLE_SENTRY     "Set to ON to build the Sentry.io crash reporting" ON)
-option(ENABLE_HUD        "Set to ON to build the default head-up display" ON)
-option(ENABLE_PUI        "Set to ON to build the legacy PUI user-interface" ON)
+
+option(CHECK_FOR_QT5        "Set to ON to attempt to look for Qt5" ON)
+option(CHECK_FOR_QT6        "Set to ON to attempt to look for Qt6" ON)
 
 # Test-suite options.
 option(ENABLE_AUTOTESTING "Set to ON to execute the test suite after building the test_suite target (default)" ON)
@@ -288,7 +296,6 @@ find_package(OpenSceneGraph 3.6.0 REQUIRED
   osgSim
   osgDB
   osgParticle
-  osgFX
   osgUtil
   osgViewer
   osgGA
@@ -347,9 +354,24 @@ endif()
 ##############################################################################
 ## Qt5 setup setup
 if (ENABLE_QT)
-    find_package(QT NAMES Qt6 Qt5 COMPONENTS Core)
+    set(qtNames "")
+    if (CHECK_FOR_QT5)
+        message(STATUS "Will check for Qt5 libraries")
+        list(APPEND qtNames "Qt5")
+    endif()
+    if (CHECK_FOR_QT6)
+        list(APPEND qtNames "Qt6")
+    endif()
+
+
+    find_package(QT NAMES ${qtNames} COMPONENTS Core)
     if (QT_FOUND)
-        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Gui Network Qml Quick Svg)
+        if (${QT_VERSION_MAJOR} EQUAL "5")
+            # can't raise this until we update our AppImage build tooling
+            set(minQtVersion 5.12.1)
+        endif()
+
+        find_package(Qt${QT_VERSION_MAJOR} ${minQtVersion} REQUIRED COMPONENTS Widgets Gui Network Qml Quick Svg)
         if (NOT Qt${QT_VERSION_MAJOR}Widgets_FOUND)
             message(FATAL_ERROR "Qt support enabled, Qt was found but some required packages are missing, stopping.")
         endif()
@@ -379,25 +401,25 @@ endif (ENABLE_QT)
 
 ##############################################################################
 
-if (ENABLE_PUI)
-    message(STATUS "PLIB PUI user-interface enabled, checking for it")
-    find_package(PLIB REQUIRED puaux pu)
-    set(HAVE_PUI 1)
-endif()
-
-##############################################################################
-
 # FlightGear and SimGear versions need to match major + minor
-# split version string into components, note CMAKE_MATCH_0 is the entire regexp match
-string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" VERSION_REGEX ${FLIGHTGEAR_VERSION} )
-set(FG_VERSION_MAJOR ${CMAKE_MATCH_1})
-set(FG_VERSION_MINOR ${CMAKE_MATCH_2})
-set(FG_VERSION_PATCH ${CMAKE_MATCH_3})
-
-set(MIN_SIMGEAR_VERSION "${FG_VERSION_MAJOR}.${FG_VERSION_MINOR}.0")
+set(MIN_SIMGEAR_VERSION "${FLIGHTGEAR_MAJOR_VERSION}.${FLIGHTGEAR_MINOR_VERSION}.0")
 message(STATUS "Min Simgear version is ${MIN_SIMGEAR_VERSION}")
 
-find_package(SimGear ${MIN_SIMGEAR_VERSION} CONFIG REQUIRED)
+if (TARGET SimGearCore)
+    message(STATUS "Simgear targets exist, assuming superbuild")
+
+    # since we don't find(SimGear), we need to 
+    # find a few dependencies directly
+    if (SG_SOUND_USES_OPENALSOFT)
+        message((STATUS "Finding OpenAL"))
+        find_package(OpenAL CONFIG)
+    else()
+        find_package(OpenAL)
+    endif()
+
+else()
+    find_package(SimGear ${MIN_SIMGEAR_VERSION} CONFIG REQUIRED)
+endif()
 
 ##############################################################################
 
@@ -529,7 +551,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MSVC_LD_FLAGS}")
 add_definitions(-DHAVE_CONFIG_H)
 include (CheckPOSIXFeatures)
 
-set(FG_TEST_SUITE_DATA "${CMAKE_SOURCE_DIR}/test_suite/test_data")
+set(FG_TEST_SUITE_DATA "${PROJECT_SOURCE_DIR}/test_suite/test_data")
 
 # configure a header file to pass some of the CMake settings
 # to the source code
@@ -548,6 +570,8 @@ include_directories(${PROJECT_BINARY_DIR}/src) # for version.h
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
 
+include(OSGHelpers)
+
 #######################################################################
 
 include(SetupFGFSIncludes)
@@ -565,9 +589,9 @@ add_dependencies(fgfsObjects buildId)
 
 # remove once we use CMake 3.12, since then the dependency will be explicit
 add_dependencies(fgfsObjects fgembeddedresources)
-
+ 
 target_precompile_headers(fgfsObjects PRIVATE 
-        "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/src/Include/flightgear_precompile.h>")
+        "$<$<COMPILE_LANGUAGE:CXX>:${PROJECT_SOURCE_DIR}/src/Include/flightgear_precompile.h>")
 
 ########################################################################
 

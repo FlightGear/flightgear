@@ -40,7 +40,6 @@
 #include <GUI/MessageBox.hxx>
 #include <GUI/gui.h>
 #include <Main/locale.hxx>
-#include <Model/panelnode.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <Scenery/scenery.hxx>
 #include <Sound/soundmanager.hxx>
@@ -50,7 +49,6 @@
 #include <Viewer/WindowSystemAdapter.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/splash.hxx>
-#include <flightgearBuildId.h>
 
 #include "fg_commands.hxx"
 #include "fg_init.hxx"
@@ -190,13 +188,13 @@ static void fgSetVideoOptions()
     SGPath autosaveFile = globals->autosaveFilePath(userDataPath);
     if (autosaveFile.exists()) return;
 
-    std::string vendor = fgGetString("/sim/rendering/gl-vendor");
+    std::string vendor = fgGetString("/sim/rendering/gl-info/gl-vendor");
     SGPath path(globals->get_fg_root());
     path.append("Video");
     path.append(vendor);
     if (path.exists())
     {
-        std::string renderer = fgGetString("/sim/rendering/gl-renderer");
+        std::string renderer = fgGetString("/sim/rendering/gl-info/gl-renderer");
         size_t pos = renderer.find("x86/");
         if (pos == std::string::npos) {
             pos = renderer.find('/');
@@ -223,9 +221,9 @@ static void fgSetVideoOptions()
 
 static void checkOpenGLVersion()
 {
-    flightgear::addSentryTag("gl-version", fgGetString("/sim/rendering/gl-version"));
-    flightgear::addSentryTag("gl-renderer", fgGetString("/sim/rendering/gl-vendor"));
-    flightgear::addSentryTag("gl-vendor", fgGetString("/sim/rendering/gl-renderer"));
+    flightgear::addSentryTag("gl-version", fgGetString("/sim/rendering/gl-info/gl-version"));
+    flightgear::addSentryTag("gl-renderer", fgGetString("/sim/rendering/gl-info/gl-vendor"));
+    flightgear::addSentryTag("gl-vendor", fgGetString("/sim/rendering/gl-info/gl-renderer"));
     
 #if defined(SG_MAC)
     // Mac users can't upgrade their drivers, so complaining about
@@ -235,7 +233,7 @@ static void checkOpenGLVersion()
 
     // format of these strings is not standardised, so be careful about
     // parsing them.
-    std::string versionString(fgGetString("/sim/rendering/gl-version"));
+    std::string versionString(fgGetString("/sim/rendering/gl-info/gl-version"));
     string_list parts = simgear::strutils::split(versionString);
     if (parts.size() == 3) {
         if (parts[1].find("NVIDIA") != std::string::npos) {
@@ -303,8 +301,7 @@ static void fgIdleFunction ( void ) {
     auto mgr = globals->get_subsystem_mgr();
 
     if ( idle_state == 0 ) {
-        auto camera = flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
-        if (guiInit(camera->getGraphicsContext())) {
+        if (globals->get_renderer()->runInitOperation()) {
             checkOpenGLVersion();
             fgSetVideoOptions();
             idle_state+=2;
@@ -349,7 +346,6 @@ static void fgIdleFunction ( void ) {
         // Initialize the material manager
         ////////////////////////////////////////////////////////////////////
         globals->set_matlib( new SGMaterialLib );
-        simgear::SGModelLib::setPanelFunc(FGPanelNode::load);
 
     } else if (( idle_state == 5 ) || (idle_state == 2005)) {
         idle_state+=2;
@@ -414,11 +410,10 @@ static void fgIdleFunction ( void ) {
         // setup OpenGL view parameters
         globals->get_renderer()->setupView();
 
-        globals->get_renderer()->resize( fgGetInt("/sim/startup/xsize"),
-                                         fgGetInt("/sim/startup/ysize") );
+        globals->get_renderer()->resize(fgGetInt("/sim/startup/xsize"),
+                                        fgGetInt("/sim/startup/ysize"));
         WindowSystemAdapter::getWSA()->windows[0]->gc->add(
-          new simgear::canvas::VGInitOperation()
-        );
+            new simgear::canvas::VGInitOperation());
 
         int session = fgGetInt("/sim/session",0);
         session++;
@@ -475,22 +470,10 @@ void fgInitSecureMode()
                               SGPropertyNode::PROTECTED);
 }
 
-// this hack is needed to avoid weird viewport sizing within OSG on Windows.
-// still required as of March 2017, sad times.
-// see for example https://sourceforge.net/p/flightgear/codetickets/1958/
-static void ATIScreenSizeHack()
-{
-    osg::ref_ptr<osg::Camera> hackCam = new osg::Camera;
-    hackCam->setRenderOrder(osg::Camera::PRE_RENDER);
-    int prettyMuchAnyInt = 1;
-    hackCam->setViewport(0, 0, prettyMuchAnyInt, prettyMuchAnyInt);
-    globals->get_renderer()->addCamera(hackCam, false);
-}
-
 // Propose NVIDIA Optimus / AMD Xpress to use high-end GPU
 #if defined(SG_WINDOWS)
 extern "C" {
-    _declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+    _declspec(dllexport) unsigned int NvOptimusEnablement = 0x00000001;
     _declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
@@ -560,7 +543,7 @@ int fgMainInit( int argc, char **argv )
     auto initHomeResult = fgInitHome();
     if (initHomeResult == InitHomeAbort) {
         flightgear::fatalMessageBoxThenExit("Unable to create lock file",
-                                "Flightgear was unable to create the lock file in FG_HOME");
+                                "FlightGear was unable to create the lock file in FG_HOME");
     }
     
 #if defined(HAVE_QT)
@@ -575,7 +558,7 @@ int fgMainInit( int argc, char **argv )
 
 #if defined(HAVE_QT)
     if (showLauncher && (initHomeResult == InitHomeReadOnly)) {
-// show this message early, if we can
+        // show this message early, if we can
         auto r = flightgear::showLockFileDialog();
         if (r == flightgear::LockFileReset) {
             SG_LOG( SG_GENERAL, SG_MANDATORY_INFO, "Deleting lock file at user request");
@@ -623,8 +606,7 @@ int fgMainInit( int argc, char **argv )
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version " << version );
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Build Type " << FG_BUILD_TYPE );
     SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR);
-	SG_LOG( SG_GENERAL, SG_INFO, "Jenkins number/ID " << JENKINS_BUILD_NUMBER << ":"
-			<< JENKINS_BUILD_ID);
+
 
     flightgear::addSentryTag("osg-version", osgGetVersion());
     
@@ -677,6 +659,15 @@ int fgMainInit( int argc, char **argv )
     bool didUseLauncher = false; /* <didUseLauncher> is set but unused. */
 #if defined(HAVE_QT)
     if (showLauncher) {
+#if !defined(SG_MAC)
+        // Do a quick GL version check using OSG before running the launcher.
+        // We skip it on Mac because using OSG before Qt might be problematic.
+        if (!fgPreliminaryGLVersionCheck()) {
+            warnAboutGLVersion();
+            return EXIT_FAILURE;
+        }
+#endif
+
         flightgear::addSentryBreadcrumb("starting launcher", "info");
         if (!flightgear::runLauncherDialog()) {
             return EXIT_SUCCESS;
@@ -745,6 +736,9 @@ int fgMainInit( int argc, char **argv )
     // Copy the property nodes for the menus added by registered add-ons
     addons::AddonManager::instance()->addAddonMenusToFGMenubar();
 
+    // The GraphicsPreset subsystem is special - it's not added together with
+    // the rest of the subsystems because it should be present before all the
+    // graphics-related stuff is initialized.
     auto presets = globals->get_subsystem_mgr()->add<flightgear::GraphicsPresets>();
     presets->applyInitialPreset();
 
@@ -758,18 +752,10 @@ int fgMainInit( int argc, char **argv )
     // Initialize sockets (WinSock needs this)
     simgear::Socket::initSockets();
 
-    // Clouds3D requires an alpha channel
-    fgOSOpenWindow(true /* request stencil buffer */);
+    fgOSOpenWindow();
     fgOSResetProperties();
 
-    fntInit();
-    globals->get_renderer()->preinit();
-
-    if (fgGetBool("/sim/ati-viewport-hack", true)) {
-        SG_LOG(SG_GENERAL, SG_WARN, "Enabling ATI/AMD viewport hack");
-        flightgear::addSentryTag("ati-viewport-hack", "enabled");
-        ATIScreenSizeHack();
-    }
+    globals->get_renderer()->postinit();
 
     fgOutputSettings();
 
@@ -790,6 +776,7 @@ int fgMainInit( int argc, char **argv )
 #endif
 
     simgear::clearEffectCache();
+    simgear::canvas::vgShutdown();
 
     // clean up here; ensure we null globals to avoid
     // confusing the atexit() handler

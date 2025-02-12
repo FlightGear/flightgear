@@ -193,12 +193,12 @@ set(VERSION_MESSAGE "compiled from FlightGear ${FLIGHTGEAR_VERSION}")
 add_definitions("-DJSBSIM_VERSION=\"${VERSION_MESSAGE}\"")
 
 target_link_libraries(JSBSim SimGearCore)
-target_include_directories(JSBSim PRIVATE ${CMAKE_SOURCE_DIR}/src/FDM/JSBSim)
+target_include_directories(JSBSim PRIVATE ${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
 
 add_executable(JSBsim_bin JSBSim.cpp )
 set_target_properties(JSBsim_bin PROPERTIES OUTPUT_NAME "JSBSim" )
 target_Link_libraries(JSBsim_bin JSBSim)
-target_include_directories(JSBsim_bin PRIVATE ${CMAKE_SOURCE_DIR}/src/FDM/JSBSim)
+target_include_directories(JSBsim_bin PRIVATE ${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
 
 if (MSVC)
     set_target_properties(JSBsim_bin PROPERTIES DEBUG_POSTFIX d)

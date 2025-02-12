@@ -5,7 +5,7 @@ Item {
     Rectangle {
         id: hostPanel
         height: hostPanelContent.childrenRect.height + 16
-        width: 300
+        width: parent.width - 8
 
         anchors.top: parent.top
         anchors.topMargin: 8

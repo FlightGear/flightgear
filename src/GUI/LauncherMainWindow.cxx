@@ -38,9 +38,9 @@
 
 LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
 {
-    setTitle("FlightGear " FLIGHTGEAR_VERSION);
-
     m_controller = new LauncherController(this, this);
+
+    setTitle("FlightGear " + m_controller->versionString());
 
     int styleTypeId = 0;
     m_controller->initQML(styleTypeId);

@@ -32,12 +32,12 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 #include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.hxx>
-#include <simgear/misc/SimpleMarkdown.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/strutils.hxx>
@@ -707,7 +707,7 @@ static naRef f_interpolate(naContext c, naRef me, int argc, naRef* args)
 
   simgear::PropertyList value_nodes;
   value_nodes.reserve(nPoints);
-  double_list deltas;
+  std::vector<double> deltas;
   deltas.reserve(nPoints);
 
   for( int i = 0; i < nPoints; ++i )
@@ -982,19 +982,6 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
 }
 
 /**
- * Parse very simple and small subset of markdown
- *
- * parse_markdown(src)
- */
-static naRef f_parse_markdown(naContext c, naRef me, int argc, naRef* args)
-{
-  nasal::CallContext ctx(c, me, argc, args);
-  return ctx.to_nasal(
-    simgear::SimpleMarkdown::parse(ctx.requireArg<std::string>(0))
-  );
-}
-
-/**
  * Create md5 hash from given string
  *
  * md5(str)
@@ -1050,7 +1037,6 @@ static struct { const char* name; naCFunction func;
     {"resolvepath", f_resolveDataPath},
     {"finddata", f_findDataDir},
     {"parsexml", f_parsexml},
-    {"parse_markdown", f_parse_markdown},
     {"md5", f_md5},
     {"systime", f_systime},
     {"maketimestamp", f_maketimeStamp},
@@ -1504,26 +1490,11 @@ bool FGNasalSys::loadModule(SGPath file, const char* module)
         return false;
     }
 
-#if 1
-    // MMap the contents of the file.
-    // This saves an alloc, memcpy and free
     SGMMapFile mmap(file);
     mmap.open(SG_IO_IN);
 
     auto pathStr = file.utf8Str();
     return createModule(module, pathStr.c_str(), mmap.get(), mmap.get_size());
-#else
-    sg_ifstream file_in(file);
-    string buf;
-    while (!file_in.eof()) {
-        char bytes[8192];
-        file_in.read(bytes, 8192);
-        buf.append(bytes, file_in.gcount());
-    }
-    file_in.close();
-    auto pathStr = file.utf8Str();
-    return createModule(module, pathStr.c_str(), buf.data(), buf.length());
-#endif
 }
 
 // Parse and run.  Save the local variables namespace, as it will

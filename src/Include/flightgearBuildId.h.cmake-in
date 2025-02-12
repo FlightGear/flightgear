@@ -6,8 +6,8 @@
 // for more info, see:
 // https://stackoverflow.com/questions/31057208/force-cmake-to-generate-configure-file-target-every-build
 
-#define JENKINS_BUILD_NUMBER @JENKINS_BUILD_NUMBER@
-#define JENKINS_BUILD_ID "@JENKINS_BUILD_ID@"
+
+#define BUILD_DATE "@CURRENT_DATE@"
 #define REVISION "@REVISION@"
 
 

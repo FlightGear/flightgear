@@ -24,6 +24,9 @@ if(CMAKE_PROJECT_NAME STREQUAL osgXR)
     option(BUILD_OSGXR_EXAMPLES "Enable to build osgXR examples" OFF)
     option(OSGXR_WARNINGS "Enable compiler warnings for osgXR" OFF)
 
+    find_package(OpenGL REQUIRED)
+    find_package(OpenSceneGraph REQUIRED COMPONENTS osgViewer osgUtil)
+
     # Source files in src/
     add_subdirectory(src)
 

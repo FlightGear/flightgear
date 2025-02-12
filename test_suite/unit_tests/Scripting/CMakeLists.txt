@@ -4,6 +4,7 @@ set(TESTSUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/testNasalSys.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/testNasalLib.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/testGC.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/benchmarkPropsAccess.cxx
     PARENT_SCOPE
 )
 
@@ -12,5 +13,6 @@ set(TESTSUITE_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/testNasalSys.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/testNasalLib.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/testGC.hxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/benchmarkPropsAccess.hxx
     PARENT_SCOPE
 )

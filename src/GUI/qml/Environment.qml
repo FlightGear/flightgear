@@ -124,7 +124,7 @@ Item {
                         enabled: !fetchMetar.checked
                         label: qsTr("Weather scenario")
                         displayRole: "name"
-                        choices: _weatherScenarios
+                        model: _weatherScenarios
                         readonly property bool isCustomMETAR: (selectedIndex == 0);
                         description: _weatherScenarios.descriptionForItem(selectedIndex)
                         defaultIndex: 1

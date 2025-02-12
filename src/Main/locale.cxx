@@ -212,6 +212,9 @@ bool FGLocale::selectLanguage(const std::string& language)
     if (_currentLocaleString == "C") {
         _currentLocaleString.clear();
     }
+    // Record the current locale at /sim/intl/current-locale
+    _intl->getChild("current-locale", 0, true)
+         ->setStringValue(_currentLocaleString);
 
     _currentLocale = nullptr;
 

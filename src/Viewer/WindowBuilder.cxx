@@ -24,7 +24,6 @@
 #include <GUI/MessageBox.hxx>
 
 #include <sstream>
-#include <limits>
 
 #if defined(SG_MAC)
     #include <osgViewer/api/Cocoa/GraphicsWindowCocoa>
@@ -32,6 +31,13 @@
 
 using namespace std;
 using namespace osg;
+
+// forwarding proxy from QtLauncher.cxx to avoid weird double-gl.h include
+// errors from MSVC
+void fgqt_setPoseAsStandaloneApp(bool b)
+{
+    flightgear::WindowBuilder::setPoseAsStandaloneApp(b);
+}
 
 namespace flightgear
 {
@@ -50,54 +56,45 @@ string WindowBuilder::defaultWindowName("FlightGear");
 // we run another GUI.
 bool WindowBuilder::poseAsStandaloneApp = true;
 
-void WindowBuilder::initWindowBuilder(bool stencil)
+void WindowBuilder::initWindowBuilder()
 {
-    windowBuilder = new WindowBuilder(stencil);
+    windowBuilder = new WindowBuilder();
 }
 
-WindowBuilder::WindowBuilder(bool stencil) : defaultCounter(0)
+WindowBuilder::WindowBuilder() : defaultCounter(0)
 {
-    makeDefaultTraits(stencil);
+    makeDefaultTraits();
 }
 
-void WindowBuilder::makeDefaultTraits(bool stencil)
+void WindowBuilder::makeDefaultTraits()
 {
     GraphicsContext::WindowingSystemInterface* wsi
         = osg::GraphicsContext::getWindowingSystemInterface();
-#if defined(HAVE_QT) && OSG_VERSION_GREATER_THAN(3, 5, 9)
+#if defined(HAVE_QT)
     if (usingQtGraphicsWindow) {
         // use the correct WSI for OpenSceneGraph >= 3.6
         wsi = osg::GraphicsContext::getWindowingSystemInterface("FlightGearQt5");
     }
 #endif
 
-
     defaultTraits = new osg::GraphicsContext::Traits;
+
     auto traits = defaultTraits.get();
-    
     traits->readDISPLAY();
-    if (traits->displayNum < 0)
-        traits->displayNum = 0;
-    if (traits->screenNum < 0)
-        traits->screenNum = 0;
+    traits->setUndefinedScreenDetailsToDefaultScreen();
 
-    int bpp = fgGetInt("/sim/rendering/bits-per-pixel");
-    int cbits = (bpp <= 16) ?  5 :  8;
-    int zbits = (bpp <= 16) ? 16 : 24;
-    traits->red = traits->green = traits->blue = cbits;
-    traits->depth = zbits;
+    // Should be configurable by the Compositor on a per-window basis
+    // traits->red = traits->green = traits->blue = cbits;
+    // traits->depth = zbits;
+    // traits->stencil = 8;
+    // traits->sampleBuffers = fgGetInt("/sim/rendering/multi-sample-buffers", traits->sampleBuffers);
+    // traits->samples = fgGetInt("/sim/rendering/multi-samples", traits->samples);
 
-    if (stencil)
-        traits->stencil = 8;
-
+    traits->vsync = fgGetBool("/sim/rendering/vsync-enable", traits->vsync);
     traits->doubleBuffer = true;
     traits->mipMapGeneration = true;
-    traits->windowName = "FlightGear";
-    // XXX should check per window too.
-    traits->sampleBuffers = fgGetInt("/sim/rendering/multi-sample-buffers", traits->sampleBuffers);
-    traits->samples = fgGetInt("/sim/rendering/multi-samples", traits->samples);
-    traits->vsync = fgGetBool("/sim/rendering/vsync-enable", traits->vsync);
-    
+    traits->windowName = defaultWindowName;
+
     const bool wantFullscreen = fgGetBool("/sim/startup/fullscreen");
     unsigned screenwidth = 0;
     unsigned screenheight = 0;
@@ -171,7 +168,19 @@ inline int setFromProperty(bool& place, const SGPropertyNode* node,
 
 namespace flightgear
 {
-    
+
+GraphicsContext* WindowBuilder::attemptToCreateGraphicsContext(
+    const std::string& contextVersion, unsigned int profileMask) const
+{
+    // We create the traits object locally here because it gets deleted if
+    // context creation is unsuccessful.
+    GraphicsContext::Traits* traits = new GraphicsContext::Traits(*defaultTraits);
+    setMacPoseAsStandaloneApp(traits);
+    traits->glContextVersion = contextVersion;
+    traits->glContextProfileMask = profileMask;
+    return GraphicsContext::createGraphicsContext(traits);
+}
+
 void WindowBuilder::setFullscreenTraits(const SGPropertyNode* winNode, GraphicsContext::Traits* traits)
 {
     const SGPropertyNode* orrNode = winNode->getNode("overrideRedirect");
@@ -212,7 +221,7 @@ bool WindowBuilder::setWindowedTraits(const SGPropertyNode* winNode, GraphicsCon
     return customTraits;
 }
     
-void WindowBuilder::setMacPoseAsStandaloneApp(GraphicsContext::Traits* traits)
+void WindowBuilder::setMacPoseAsStandaloneApp(GraphicsContext::Traits* traits) const
 {
 #if defined(SG_MAC)
     // this logic is unecessary if using a Qt window, since everything
@@ -303,27 +312,39 @@ GraphicsWindow* WindowBuilder::getDefaultWindow()
     if (defaultWindow)
         return defaultWindow;
 
-    // create if it, if necessary
-    GraphicsContext::Traits* traits
-        = new GraphicsContext::Traits(*defaultTraits);
-    traits->windowName = "FlightGear";
+    auto display_settings = osg::DisplaySettings::instance();
+    GraphicsContext* gc = nullptr;
 
-    setMacPoseAsStandaloneApp(traits);
+#if !defined(SG_MAC)
+    // Attempt to create an OpenGL 4.3 core profile context first if we are not
+    // on MacOS (max version there is 4.1). We can optionally take advantage of
+    // 4.3 features like compute shaders.
+    display_settings->setValue("FG_GLSL_VERSION", "#version 430 core");
+    gc = attemptToCreateGraphicsContext("4.3", 0x1);
+#endif
 
-    // this may be the point, where we discover OpenGL is broken on the
-    // system.
-    GraphicsContext* gc = GraphicsContext::createGraphicsContext(traits);
     if (!gc) {
-        flightgear::fatalMessageBoxThenExit("Unable to create window",
-                                            "FlightGear was unable to create a window supporting 3D rendering (OpenGL). "
-                                            "This is normally due to outdated graphics drivers, please check if updates are available. ",
-                                            "Depending on your OS and graphics chipset, updates might come from AMD, nVidia or Intel.");
-        return nullptr; // unreachable anyway
+        // 4.3 is unsupported, so try with 4.1. This version is required, i.e.
+        // we crash if we can't successfully create an OpenGL context.
+        display_settings->setValue("FG_GLSL_VERSION", "#version 410 core");
+        gc = attemptToCreateGraphicsContext("4.1", 0x1);
+        if (!gc) {
+            flightgear::fatalMessageBoxThenExit(
+                "Unable to create OpenGL 4.1 core profile context",
+                "FlightGear was unable to create a window supporting 3D rendering. "
+                "This is normally due to outdated graphics drivers, please check if updates are available. ",
+                "Depending on your OS and graphics chipset, updates might come from AMD, nVidia or Intel.");
+            return nullptr; // unreachable anyway
+        }
     }
+
+    // Copy the winning OpenGL version to the default traits so subsequent
+    // windows can use it.
+    defaultTraits->glContextVersion = gc->getTraits()->glContextVersion;
+    defaultTraits->glContextProfileMask = gc->getTraits()->glContextProfileMask;
 
     defaultWindow = WindowSystemAdapter::getWSA()->registerWindow(gc, defaultWindowName);
     return defaultWindow;
-
 }
 
 void WindowBuilder::setPoseAsStandaloneApp(bool b)

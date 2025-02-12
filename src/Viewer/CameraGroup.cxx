@@ -134,7 +134,7 @@ public:
         _groupNode(gnode),
         _cameraGroup(cg) {
         listenToNode("znear", 0.1f);
-        listenToNode("zfar", 120000.0f);
+        listenToNode("zfar", 1000000.0f);
     }
 
     virtual ~CameraGroupListener() {
@@ -282,195 +282,6 @@ double CameraGroup::getMasterAspectRatio() const
         info->compositor->getGraphicsContext()->getTraits();
 
     return static_cast<double>(traits->height) / traits->width;
-}
-
-// FIXME: Port this to the Compositor
-#if 0
-// Mostly copied from osg's osgViewer/View.cpp
-
-static osg::Geometry* createPanoramicSphericalDisplayDistortionMesh(
-    const Vec3& origin, const Vec3& widthVector, const Vec3& heightVector,
-    double sphere_radius, double collar_radius,
-    Image* intensityMap = 0, const Matrix& projectorMatrix = Matrix())
-{
-    osg::Vec3d center(0.0,0.0,0.0);
-    osg::Vec3d eye(0.0,0.0,0.0);
-
-    double distance = sqrt(sphere_radius*sphere_radius - collar_radius*collar_radius);
-    bool flip = false;
-    bool texcoord_flip = false;
-
-    // create the quad to visualize.
-    osg::Geometry* geometry = new osg::Geometry();
-
-    geometry->setSupportsDisplayList(false);
-
-    osg::Vec3 xAxis(widthVector);
-    float width = widthVector.length();
-    xAxis /= width;
-
-    osg::Vec3 yAxis(heightVector);
-    float height = heightVector.length();
-    yAxis /= height;
-
-    int noSteps = 160;
-
-    osg::Vec3Array* vertices = new osg::Vec3Array;
-    osg::Vec2Array* texcoords0 = new osg::Vec2Array;
-    osg::Vec2Array* texcoords1 = intensityMap==0 ? new osg::Vec2Array : 0;
-    osg::Vec4Array* colors = new osg::Vec4Array;
-
-    osg::Vec3 top = origin + yAxis*height;
-
-    osg::Vec3 screenCenter = origin + widthVector*0.5f + heightVector*0.5f;
-    float screenRadius = heightVector.length() * 0.5f;
-
-    geometry->getOrCreateStateSet()->setMode(GL_CULL_FACE, osg::StateAttribute::OFF | osg::StateAttribute::PROTECTED);
-
-    for(int i=0;i<noSteps;++i)
-    {
-        //osg::Vec3 cursor = bottom+dy*(float)i;
-        for(int j=0;j<noSteps;++j)
-        {
-            osg::Vec2 texcoord(double(i)/double(noSteps-1), double(j)/double(noSteps-1));
-            double theta = texcoord.x() * 2.0 * osg::PI;
-            double phi = (1.0-texcoord.y()) * osg::PI;
-
-            if (texcoord_flip) texcoord.y() = 1.0f - texcoord.y();
-
-            osg::Vec3 pos(sin(phi)*sin(theta), sin(phi)*cos(theta), cos(phi));
-            pos = pos*projectorMatrix;
-
-            double alpha = atan2(pos.x(), pos.y());
-            if (alpha<0.0) alpha += 2.0*osg::PI;
-
-            double beta = atan2(sqrt(pos.x()*pos.x() + pos.y()*pos.y()), pos.z());
-            if (beta<0.0) beta += 2.0*osg::PI;
-
-            double gamma = atan2(sqrt(double(pos.x()*pos.x() + pos.y()*pos.y())), double(pos.z()+distance));
-            if (gamma<0.0) gamma += 2.0*osg::PI;
-
-
-            osg::Vec3 v = screenCenter + osg::Vec3(sin(alpha)*gamma*2.0/osg::PI, -cos(alpha)*gamma*2.0/osg::PI, 0.0f)*screenRadius;
-
-            if (flip)
-                vertices->push_back(osg::Vec3(v.x(), top.y()-(v.y()-origin.y()),v.z()));
-            else
-                vertices->push_back(v);
-
-            texcoords0->push_back( texcoord );
-
-            osg::Vec2 texcoord1(alpha/(2.0*osg::PI), 1.0f - beta/osg::PI);
-            if (intensityMap)
-            {
-                colors->push_back(intensityMap->getColor(texcoord1));
-            }
-            else
-            {
-                colors->push_back(osg::Vec4(1.0f,1.0f,1.0f,1.0f));
-                if (texcoords1) texcoords1->push_back( texcoord1 );
-            }
-
-
-        }
-    }
-
-    // pass the created vertex array to the points geometry object.
-    geometry->setVertexArray(vertices);
-
-    geometry->setColorArray(colors);
-    geometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
-
-    geometry->setTexCoordArray(0,texcoords0);
-    if (texcoords1) geometry->setTexCoordArray(1,texcoords1);
-
-    osg::DrawElementsUShort* elements = new osg::DrawElementsUShort(osg::PrimitiveSet::TRIANGLES);
-    geometry->addPrimitiveSet(elements);
-
-    for(int i=0;i<noSteps-1;++i)
-    {
-        for(int j=0;j<noSteps-1;++j)
-        {
-            int i1 = j+(i+1)*noSteps;
-            int i2 = j+(i)*noSteps;
-            int i3 = j+1+(i)*noSteps;
-            int i4 = j+1+(i+1)*noSteps;
-
-            osg::Vec3& v1 = (*vertices)[i1];
-            osg::Vec3& v2 = (*vertices)[i2];
-            osg::Vec3& v3 = (*vertices)[i3];
-            osg::Vec3& v4 = (*vertices)[i4];
-
-            if ((v1-screenCenter).length()>screenRadius) continue;
-            if ((v2-screenCenter).length()>screenRadius) continue;
-            if ((v3-screenCenter).length()>screenRadius) continue;
-            if ((v4-screenCenter).length()>screenRadius) continue;
-
-            elements->push_back(i1);
-            elements->push_back(i2);
-            elements->push_back(i3);
-
-            elements->push_back(i1);
-            elements->push_back(i3);
-            elements->push_back(i4);
-        }
-    }
-
-    return geometry;
-}
-
-#endif
-
-void CameraGroup::buildDistortionCamera(const SGPropertyNode* psNode,
-                                        Camera* camera)
-{
-    // FIXME: Port this to the Compositor
-#if 0
-    const SGPropertyNode* texNode = psNode->getNode("texture");
-    if (!texNode) {
-        // error
-        return;
-    }
-    string texName = texNode->getStringValue();
-    TextureMap::iterator itr = _textureTargets.find(texName);
-    if (itr == _textureTargets.end()) {
-        // error
-        return;
-    }
-    Viewport* viewport = camera->getViewport();
-    float width = viewport->width();
-    float height = viewport->height();
-    TextureRectangle* texRect = itr->second.get();
-    double radius = psNode->getDoubleValue("radius", 1.0);
-    double collar = psNode->getDoubleValue("collar", 0.45);
-    Geode* geode = new Geode();
-    geode->addDrawable(createPanoramicSphericalDisplayDistortionMesh(
-                           Vec3(0.0f,0.0f,0.0f), Vec3(width,0.0f,0.0f),
-                           Vec3(0.0f,height,0.0f), radius, collar));
-
-    // new we need to add the texture to the mesh, we do so by creating a
-    // StateSet to contain the Texture StateAttribute.
-    StateSet* stateset = geode->getOrCreateStateSet();
-    stateset->setTextureAttributeAndModes(0, texRect, StateAttribute::ON);
-    stateset->setMode(GL_LIGHTING, StateAttribute::OFF);
-
-    TexMat* texmat = new TexMat;
-    texmat->setScaleByTextureRectangleSize(true);
-    stateset->setTextureAttributeAndModes(0, texmat, osg::StateAttribute::ON);
-#if 0
-    if (!applyIntensityMapAsColours && intensityMap)
-    {
-        stateset->setTextureAttributeAndModes(1, new osg::Texture2D(intensityMap), osg::StateAttribute::ON);
-    }
-#endif
-    // add subgraph to render
-    camera->addChild(geode);
-    camera->setClearMask(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-    camera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
-    camera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-    camera->setCullingMode(osg::CullSettings::NO_CULLING);
-    camera->setName("DistortionCorrectionCamera");
-#endif
 }
 
 CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
@@ -678,8 +489,6 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         double sheary = cameraNode->getDoubleValue("shear-y", 0);
         pOff.makeTranslate(-shearx, -sheary, 0);
     }
-    const SGPropertyNode* psNode = cameraNode->getNode("panoramic-spherical");
-    //bool useMasterSceneGraph = !psNode;
 
     CameraInfo *info = new CameraInfo(cameraFlags);
     _cameras.push_back(info);
@@ -735,12 +544,6 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     } else {
         throw sg_exception(std::string("Failed to create Compositor in path '") +
                            compositor_path + "'");
-    }
-
-    // Distortion camera needs the viewport which is created by addCamera().
-    if (psNode) {
-        info->flags = info->flags | CameraInfo::VIEW_ABSOLUTE;
-        //buildDistortionCamera(psNode, camera);
     }
 
     return info;
@@ -1043,7 +846,7 @@ computeCameraIntersection(const CameraGroup *cgroup,
     osgUtil::IntersectionVisitor iv(picker);
     iv.setTraversalMask(simgear::PICK_BIT);
 
-    const_cast<CameraGroup *>(cgroup)->getView()->getCamera()->accept(iv);
+    const_cast<CameraGroup*>(cgroup)->getView()->getSceneData()->accept(iv);
     if (picker->containsIntersections()) {
         intersections = picker->getIntersections();
         return true;
@@ -1056,14 +859,10 @@ bool computeIntersections(const CameraGroup* cgroup,
                           const osg::Vec2d& windowPos,
                           osgUtil::LineSegmentIntersector::Intersections& intersections)
 {
-    // test the GUI first
-    CameraInfo* guiCamera = cgroup->getGUICamera();
-    if (guiCamera && computeCameraIntersection(cgroup, guiCamera, windowPos, intersections))
-        return true;
-
     // Find camera that contains event
     for (const auto &cinfo : cgroup->_cameras) {
-        if (cinfo == guiCamera)
+        // Skip the splash and GUI cameras
+        if (cinfo->flags & (CameraInfo::SPLASH | CameraInfo::GUI))
             continue;
 
         if (computeCameraIntersection(cgroup, cinfo, windowPos, intersections))

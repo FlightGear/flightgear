@@ -1,11 +1,5 @@
-if(NOT "$ENV{BUILD_ID}" STREQUAL "")
-  set(JENKINS_BUILD_ID $ENV{BUILD_ID})
-  set(JENKINS_BUILD_NUMBER $ENV{BUILD_NUMBER})
-  message(STATUS "running under Jenkins, build-number is ${JENKINS_BUILD_NUMBER}")
-else()
-  set(JENKINS_BUILD_NUMBER 0)
-  set(JENKINS_BUILD_ID "none")
-endif()
+
+
 
 find_package(Git)
 if (Git_FOUND)
@@ -16,5 +10,7 @@ if (Git_FOUND)
 else()
     set(REVISION "none")
 endif()
+
+string(TIMESTAMP CURRENT_DATE "%Y-%m-%d")
 
 configure_file (${SRC}/src/Include/flightgearBuildId.h.cmake-in ${DST})

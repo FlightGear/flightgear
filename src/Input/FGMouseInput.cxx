@@ -37,11 +37,10 @@
 #include <simgear/scene/model/SGPickAnimation.hxx>
 
 #include "FGButton.hxx"
-#include "Main/globals.hxx"
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/sview.hxx>
-#include <Model/panelnode.hxx>
-#include <Cockpit/panel.hxx>
 #include <Viewer/FGEventHandler.hxx>
 #include <GUI/MouseCursor.hxx>
 
@@ -662,7 +661,12 @@ void FGMouseInput::processMotion(int x, int y, const osgGA::GUIEventAdapter* ea)
   if (modeIndex == 0) {
     osg::Vec2d windowPos;
     flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
-    d->scheduleHoverPick(windowPos);
+
+    // omly do hover picks if no buttons are down
+    if (ea->getButtonMask() == 0) {
+        d->scheduleHoverPick(windowPos);
+    }
+
     // mouse has moved, so we may need to issue tooltip-timeout command again
     d->tooltipTimeoutDone = false;
   }

@@ -58,13 +58,6 @@ getLoggingClasses ()
     return loggingResult.c_str();
 }
 
-static void
-addLoggingClass (const string &name)
-{
-    sglog().addLogClass(name);
-}
-
-
 /**
  * Set the logging classes.
  */

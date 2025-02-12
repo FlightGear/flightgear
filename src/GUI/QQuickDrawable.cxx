@@ -64,10 +64,6 @@
 #include <GUI/OSGQtAdaption.hxx>
 #include <simgear/structure/commands.hxx>
 
-#if defined(HAVE_PUI)
-#include "FlightGear_pu.h"
-#endif
-
 using namespace osgGA;
 
 struct QtKey {

@@ -36,7 +36,6 @@ function(setup_fgfs_libraries target)
         ${OPENGL_LIBRARIES}
         ${OPENSCENEGRAPH_LIBRARIES}
         ${PLATFORM_LIBS}
-        ${PLIB_LIBRARIES}
     )
 
     if (ENABLE_SWIFT)
@@ -46,8 +45,6 @@ function(setup_fgfs_libraries target)
     if (ENABLE_PLIB_JOYSTICK)
         target_link_libraries(${target} PLIBJoystick)
     endif()
-
-    target_link_libraries(${target} PLIBFont)
 
     if (HAVE_QT)
         target_link_libraries(${target} fglauncher fgqmlui)

@@ -34,6 +34,8 @@ public:
 
     virtual void apply();
 
+    virtual void updateValue();
+
     naRef config() const;
     
     /// return the wrapped props,Node corresponding to our property
@@ -62,6 +64,36 @@ public:
 
     void setGeometry(const SGRectd& g);
 
+    bool visible() const;
+    bool enabled() const;
+    const std::string& type() const;
+
+    void setVisible(bool v);
+    void setEnabled(bool e);
+
+    /**
+     * @brief find an object (which might be us, or a descendant) with the 
+     * corresponding name, or nullptr.
+     * 
+     * @param name 
+     */
+    PUICompatObjectRef widgetByName(const std::string& name) const;
+
+
+    /**
+     * @brief return the radio group ID associated with this widget
+     (which is presumably a radio-button)
+     * 
+     * @return std::string the radio-group ID, or an empty string
+     */
+    std::string radioGroupIdent() const;
+
+    bool isLive() const
+    {
+        return _live != LiveValueMode::OnApply;
+    }
+
+    bool hasBindings() const;
 protected:
     PUICompatObject(naRef impl, const std::string& type);
 
@@ -73,7 +105,7 @@ protected:
 
     // emporary solution to decide which SGPropertyNode children of an
     // object, are children
-    static bool isNodeAChildObject(const std::string& nm);
+    static bool isNodeAChildObject(const std::string& nm, int uiVersion);
 
 private:
     enum class LiveValueMode {
@@ -90,12 +122,14 @@ private:
     void setDialog(PUICompatDialogRef dialog);
 
     void recursiveUpdate(const std::string& objectName = {});
+    void recursiveUpdateValues(const std::string& objectName = {});
     void recursiveApply(const std::string& objectName = {});
     void recursiveOnDelete();
 
     void doActivate();
     
     nasal::Hash gridLocation(const nasal::CallContext& ctx) const;
+
 
     SGWeakPtr<PUICompatObject> _parent;
     SGWeakPtr<FGPUICompatDialog> _dialog;

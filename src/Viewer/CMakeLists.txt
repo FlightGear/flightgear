@@ -14,6 +14,7 @@ set(SOURCES
 	viewmgr.cxx
 	sview.cxx
 	GraphicsPresets.cxx
+	PluginLoader.cxx
 	)
 
 set(HEADERS
@@ -35,11 +36,6 @@ if (ENABLE_OSGXR)
 	list(APPEND SOURCES
 		VRManager.cxx
 		)
-endif()
-
-if (YES)
-    list(APPEND HEADERS PUICamera.hxx)
-    list(APPEND SOURCES PUICamera.cxx)
 endif()
 
 flightgear_component(Viewer "${SOURCES}" "${HEADERS}")

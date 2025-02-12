@@ -200,6 +200,12 @@ FGIO::parse_port_config( const string_list& tokens, bool& o_ok )
                 fgSetInt("/sim/multiplay/txport", port);
                 fgSetString("/sim/multiplay/txhost", host.c_str());
                 fgSetInt("/sim/multiplay/tx-rate-hz", rate);
+                fgSetBool("/sim/multiplay/broadcast", false);
+            } else if (dir == "broadcast") {
+                fgSetInt("/sim/multiplay/txport", port);
+                fgSetString("/sim/multiplay/txhost", host.c_str());
+                fgSetInt("/sim/multiplay/tx-rate-hz", rate);
+                fgSetBool("/sim/multiplay/broadcast", true);
             }
             o_ok = true;
             return NULL;
@@ -240,11 +246,11 @@ FGIO::parse_port_config( const string_list& tokens, bool& o_ok )
 #if FG_HAVE_DDS
         SG_LOG( SG_IO, SG_ALERT, "Too few arguments for network protocol. At least 3 arguments required. " <<
                 "Usage: --" << protocol <<
-                "=(file|socket|broadcast|serial|dds), (in|out|bi), hertz");
+                "=(file|socket|serial|dds), (in|out|bi|broadcast), hertz");
 #else
         SG_LOG( SG_IO, SG_ALERT, "Too few arguments for network protocol. At least 3 arguments required. " <<
                 "Usage: --" << protocol <<
-                "=(file|socket|broadcast|serial), (in|out|bi), hertz");
+                "=(file|socket|serial), (in|out|bi|broadcast), hertz");
 #endif
         delete io;
         return NULL;
@@ -323,7 +329,7 @@ FGIO::parse_port_config( const string_list& tokens, bool& o_ok )
     } else if ( medium == "socket" ) {
         if ( tokens.size() < 7) {
             SG_LOG( SG_IO, SG_ALERT, "Too few arguments for socket communications. " <<
-                    "Usage --" << protocol << "=socket, (in|out|bi), hertz, hostname, port, (tcp|udp)");
+                    "Usage --" << protocol << "=socket, (in|out|bi|broadcast), hertz, hostname, port, (tcp|udp)");
             delete io;
             return NULL;
         }
@@ -339,27 +345,14 @@ FGIO::parse_port_config( const string_list& tokens, bool& o_ok )
             SG_LOG(SG_IO, SG_ALERT, "Non-Positive Hz rate may block generic I/O ");
         }
 
-        io->set_io_channel( new SGSocket( hostname, port, style ) );
-    } else if ( medium == "broadcast" ) {
-         if ( tokens.size() < 6) {
-             SG_LOG( SG_IO, SG_ALERT, "Too few arguments for socket communications. " <<
-                     "Usage --" << protocol << "=broadcast, out, hertz, hostname, port");
-             delete io;
-             return NULL;
-         }
-         string hostname = tokens[4];
-         string port = tokens[5];
-         string style = "udp";
- 
-         SG_LOG( SG_IO, SG_INFO, "  hostname = " << hostname );
-         SG_LOG( SG_IO, SG_INFO, "  port = " << port );
-         SG_LOG( SG_IO, SG_INFO, "  style = " << style );
- 
-         if (hertz <= 0) {
-             SG_LOG(SG_IO, SG_ALERT, "Non-Positive Hz rate may block generic I/O ");
-         }
- 
-         io->set_io_channel( new SGBroadcastSocket( hostname, port ) );
+        if (direction == "broadcast") {
+             if (style != "udp") {
+                  SG_LOG(SG_IO, SG_ALERT, "Socket broadcast style " + style + " must be udp. Using style udp.");
+             }
+             io->set_io_channel( new SGBroadcastSocket( hostname, port ) );
+	} else {
+             io->set_io_channel( new SGSocket( hostname, port, style ) );
+        }
     }
 #if FG_HAVE_DDS
     else if ( medium == "dds")  {

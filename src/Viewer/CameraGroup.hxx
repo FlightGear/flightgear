@@ -208,8 +208,6 @@ public:
      */
     void resized();
 
-    void buildDistortionCamera(const SGPropertyNode* psNode,
-                               osg::Camera* camera);
     /**
      * get aspect ratio of master camera's viewport
      */

@@ -24,3 +24,9 @@
 
 int _bootstrap_OSInit;
 std::string hostname;
+
+void fgExit(int status)
+{
+    exit(status);
+}
+

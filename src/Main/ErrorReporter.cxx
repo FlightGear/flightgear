@@ -708,24 +708,22 @@ ErrorReporter::ErrorReporter() : d(new ErrorReporterPrivate)
     d->_significantProperties = {
         "/sim/aircraft-id",
         "/sim/aircraft-dir",
-        "/sim/rendering/gl-version",
-        "/sim/rendering/gl-renderer",
-        "/sim/rendering/gl-shading-language-version",
-        "/sim/rendering/max-texture-size",
-        "/sim/rendering/max-texture-units",
-        "/sim/rendering/shaders/skydome",
-        "/sim/rendering/shaders/water",
-        "/sim/rendering/shaders/model",
-        "/sim/rendering/shaders/landmass",
-        "/sim/rendering/shaders/vegetation-effects",
-        "/sim/rendering/shaders/transition",
-        "/sim/rendering/max-paged-lod",
-        "/sim/rendering/photoscenery/enabled",
+
+        "/sim/rendering/gl-info/gl-vendor",
+        "/sim/rendering/gl-info/gl-renderer",
+        "/sim/rendering/gl-info/gl-version",
+        "/sim/rendering/gl-info/gl-shading-language-version",
+        "/sim/rendering/gl-info/gl-max-texture-size",
+        "/sim/rendering/gl-info/gl-max-texture-units",
+
         "/sim/rendering/preset-description",
+        "/sim/rendering/photoscenery/enabled",
+        "/sim/rendering/hdr/compute",
+
+        "/sim/rendering/max-paged-lod",
         "/sim/rendering/multithreading-mode",
-        "/sim/rendering/multi-sample-buffers",
-        "/sim/rendering/multi-samples",
-        "/scenery/use-vpb"};
+        "/scenery/use-vpb",
+    };
 }
 
 ErrorReporter::~ErrorReporter()

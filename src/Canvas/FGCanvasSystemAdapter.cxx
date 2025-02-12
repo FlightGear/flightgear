@@ -68,14 +68,15 @@ namespace canvas
   //----------------------------------------------------------------------------
   void FGCanvasSystemAdapter::addCamera(osg::Camera* camera) const
   {
-    globals->get_renderer()->addCamera(camera, false);
+    if( globals->get_renderer() )
+      globals->get_renderer()->addCanvasCamera(camera);
   }
 
   //----------------------------------------------------------------------------
   void FGCanvasSystemAdapter::removeCamera(osg::Camera* camera) const
   {
     if( globals->get_renderer() )
-      globals->get_renderer()->removeCamera(camera);
+      globals->get_renderer()->removeCanvasCamera(camera);
   }
 
   //----------------------------------------------------------------------------
@@ -109,7 +110,7 @@ namespace canvas
   SGSubsystem*
   FGCanvasSystemAdapter::getSubsystem(const std::string& name) const
   {
-    return globals->get_subsystem_mgr()->get_subsystem(name.c_str());
+    return globals->get_subsystem_mgr()->get_subsystem(name);
   }
 
   //----------------------------------------------------------------------------

@@ -1,13 +1,15 @@
-// new_gui.hxx - XML-configured GUI subsystem.
+/*
+ * SPDX-FileName: new_gui.hxx
+ * SPDX-FileComment: XML-configured GUI subsystem.
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
 
-#ifndef __NEW_GUI_HXX
-#define __NEW_GUI_HXX 1
+#pragma once
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-#include <vector>
 #include <map>
 #include <memory> // for unique_ptr on some systems
 #include <cstring> // for strcmp in lstr() (in this header, alas)
@@ -15,8 +17,6 @@
 class FGMenuBar;
 class FGDialog;
 class FGColor;
-class FGFontCache;
-class puFont;
 
 /**
  * XML-configured GUI subsystem.
@@ -157,8 +157,6 @@ public:
         return (it != _colors.end()) ? it->second : NULL;
     }
 
-    virtual puFont *getDefaultFont() { return _font; }
-
 protected:
     /**
      * Test if the menubar is visible.
@@ -175,7 +173,6 @@ protected:
     virtual void setMenuBarVisible (bool visible);
 
     virtual void setStyle ();
-    virtual void setupFont (SGPropertyNode *);
 
     /**
      * Used by reinit() and redraw() to close all dialogs and to apply
@@ -192,19 +189,10 @@ protected:
 private:
     void createMenuBarImplementation();
 
-    /*struct ltstr
-    {
-        bool operator()(const std::string& s1, const std::string& s2) const {
-            return s1 < s2;
-        }
-    };*/
-
-    puFont *_font;
     typedef std::map<std::string, FGColor*> ColourDict;
     ColourDict _colors;
     typedef ColourDict::iterator _itt_t;
     typedef ColourDict::const_iterator _citt_t;
-    bool _usePUI = false;
     void clear_colors();
 
     // Read all the configuration files in a directory.
@@ -226,6 +214,3 @@ private:
     typedef std::map<std::string,SGPropertyNode_ptr> NameDialogDict;
     NameDialogDict _dialog_props;
 };
-
-#endif // __NEW_GUI_HXX
-

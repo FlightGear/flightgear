@@ -33,16 +33,15 @@
 
 
 static osg::Node *
-fgLoad3DModelPanel(const SGPath &path, SGPropertyNode *prop_root)
+fgLoad3DModel(const SGPath &path, SGPropertyNode *prop_root)
 {
-    bool loadPanels = true;
     bool autoTooltipsMaster = fgGetBool("/sim/rendering/automatic-animation-tooltips/enabled");
     int autoTooltipsMasterMax = fgGetInt("/sim/rendering/automatic-animation-tooltips/max-count");
     SG_LOG(SG_INPUT, SG_DEBUG, ""
             << " autoTooltipsMaster=" << autoTooltipsMaster
             << " autoTooltipsMasterMax=" << autoTooltipsMasterMax
             );
-    osg::Node* node = simgear::SGModelLib::loadModel(path.utf8Str(), prop_root, NULL, loadPanels, autoTooltipsMaster, autoTooltipsMasterMax);
+    osg::Node* node = simgear::SGModelLib::loadModel(path.utf8Str(), prop_root, NULL, autoTooltipsMaster, autoTooltipsMasterMax);
     if (node)
         node->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
     return node;
@@ -52,12 +51,11 @@ fgLoad3DModelPanel(const SGPath &path, SGPropertyNode *prop_root)
 // Implementation of FGAircraftModel
 ////////////////////////////////////////////////////////////////////////
 
-FGAircraftModel::FGAircraftModel ()
-  : _velocity(SGVec3d::zeros()),
-    _fx(0),
-    _speed_n(0),
-    _speed_e(0),
-    _speed_d(0)
+FGAircraftModel::FGAircraftModel()
+    : _velocity(SGVec3d::zeros()),
+      _speed_n(0),
+      _speed_e(0),
+      _speed_d(0)
 {
 }
 
@@ -174,7 +172,7 @@ FGAircraftModel::init ()
 
         osg::Node* node = NULL;
         try {
-            node = fgLoad3DModelPanel( resolvedPath, globals->get_props());
+            node = fgLoad3DModel(resolvedPath, globals->get_props());
         } catch (const sg_exception &ex) {
             simgear::reportFailure(simgear::LoadFailure::BadData,
                                    simgear::ErrorCode::XMLModelLoad,
@@ -206,7 +204,7 @@ FGAircraftModel::init ()
     // no models loaded, load the glider instead
     if (!_aircraft.get()) {
         SG_LOG(SG_AIRCRAFT, SG_ALERT, "(Falling back to glider.ac.)");
-        osg::Node* model = fgLoad3DModelPanel( SGPath::fromUtf8("Models/Geometry/glider.ac"),
+        osg::Node* model = fgLoad3DModel(SGPath::fromUtf8("Models/Geometry/glider.ac"),
                                    globals->get_props());
         _aircraft.reset(new SGModelPlacement);
         _aircraft->init(model);

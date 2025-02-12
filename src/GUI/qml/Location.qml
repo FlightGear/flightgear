@@ -203,7 +203,7 @@ Item {
         autoSubmit: false
         placeholder: qsTr("Search for an airport or navaid");
 
-        onSearch: {
+        onSearch: function(term) {
             root.showCarriers = false;
             // when the search term is cleared, show the history
             if (term == "") {

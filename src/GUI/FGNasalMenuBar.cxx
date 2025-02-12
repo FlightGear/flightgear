@@ -22,7 +22,7 @@
 
 static bool nameIsSeparator(const std::string& n)
 {
-    return simgear::strutils::starts_with(n, "----");
+    return simgear::strutils::starts_with(simgear::strutils::strip(n), "----");
 }
 
 class NasalMenu;
@@ -244,7 +244,13 @@ void NasalMenuItem::valueChanged(SGPropertyNode* n)
 
 void NasalMenuItem::fire()
 {
-    fireBindingList(_bindings);
+    if (!_enabled) {
+        return;
+    }
+
+    SGPropertyNode_ptr args{new SGPropertyNode};
+    args->setBoolValue("checked", _checked);
+    fireBindingList(_bindings, args);
 }
 
 void NasalMenuItem::aboutToShow()

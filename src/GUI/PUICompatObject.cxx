@@ -18,8 +18,8 @@
 
 extern naRef propNodeGhostCreate(naContext c, SGPropertyNode* n);
 
-PUICompatObject::PUICompatObject(naRef impl, const std::string& type) : nasal::Object(impl),
-                                                                        _type(type)
+PUICompatObject::PUICompatObject(naRef impl, const std::string& type)
+    : nasal::Object(impl), _type(type)
 {
 }
 
@@ -58,6 +58,12 @@ void PUICompatObject::setupGhost(nasal::Hash& compatModule)
         .member("children", &PUICompatObject::children)
         .member("dialog", &PUICompatObject::dialog)
         .member("parent", &PUICompatObject::parent)
+        .member("live", &PUICompatObject::isLive)
+        .member("visible", &PUICompatObject::visible, &PUICompatObject::setVisible)
+        .member("enabled", &PUICompatObject::enabled, &PUICompatObject::setEnabled)
+        .member("type", &PUICompatObject::type)
+        .member("radioGroup", &PUICompatObject::radioGroupIdent)
+        .member("hasBindings", &PUICompatObject::hasBindings )
         .method("show", &PUICompatObject::show)
         .method("activateBindings", &PUICompatObject::activateBindings)
         .method("gridLocation", &PUICompatObject::gridLocation);
@@ -85,8 +91,7 @@ PUICompatObjectRef PUICompatObject::createForType(const std::string& type, SGPro
 
 void PUICompatObject::init()
 {
-    
-    // read conditions, bindings, etc
+    const auto uiVersion = dialog()->uiVersion();
 
     _name = _config->getStringValue("name");
     _label = _config->getStringValue("label");
@@ -137,6 +142,16 @@ void PUICompatObject::init()
         }
     }
 
+    // parse version 2 featrues
+    if (uiVersion >= 2) {
+        if (_type == "radio") {
+            auto g = _config->getStringValue("radio-group");
+            if (g.empty()) {
+                SG_LOG(SG_GUI, SG_DEV_WARN, "UIv2 radio button does not specify a group ID (at " << _config->getLocation() << ")");
+            }
+        }
+    }
+
     const auto bindings = _config->getChildren("binding");
     if (!bindings.empty()) {
         for (auto bindingNode : bindings) {
@@ -167,7 +182,7 @@ void PUICompatObject::init()
         auto childNode = _config->getChild(i);
 
         const auto nodeName = childNode->getNameString();
-        if (!isNodeAChildObject(nodeName)) {
+        if (!isNodeAChildObject(nodeName, uiVersion)) {
             continue;
         }
 
@@ -179,12 +194,22 @@ void PUICompatObject::init()
     auto nas = globals->get_subsystem<FGNasalSys>();
     callMethod<void>("init", nas->wrappedPropsNode(_config));
 
-    // recusively init children
+    // recursively init children
     for (auto c : _children) {
         c->init();
     }
 
     callMethod<void>("postinit");
+}
+
+std::string PUICompatObject::radioGroupIdent() const
+{
+    const auto uiVersion = dialog()->uiVersion();
+    if (uiVersion < 2) {
+        throw std::runtime_error("radioGroupIdent: Not allowed at UI version < 2");
+    }
+
+    return _config->getStringValue("radio-group");
 }
 
 naRef PUICompatObject::show(naRef viewParent)
@@ -193,14 +218,20 @@ naRef PUICompatObject::show(naRef viewParent)
     return callMethod<naRef>("show", viewParent);
 }
 
-bool PUICompatObject::isNodeAChildObject(const std::string& nm)
+bool PUICompatObject::isNodeAChildObject(const std::string& nm, int uiVersion)
 {
-    const string_list typeNames = {
+    string_list typeNames = {
         "button", "one-shot", "slider", "dial",
-        "text", "input",
+        "text", "input", "radio",
         "combo", "textbox", "select",
         "hrule", "vrule", "group", "frame",
         "checkbox"};
+
+    if (uiVersion >= 2) {
+        typeNames.push_back("standard-button");
+        typeNames.push_back("tabs");
+        typeNames.push_back("button-box");
+    }
 
     auto it = std::find(typeNames.begin(), typeNames.end(), nm);
     return it != typeNames.end();
@@ -247,10 +278,32 @@ void PUICompatObject::update()
     }
 }
 
+void PUICompatObject::updateValue()
+{
+    if (!_value) {
+        return;
+    }
+
+    if (_live != LiveValueMode::OnApply) {
+        return;
+    }
+
+    // avoid updates where the value didn't actually change
+    const auto nv = _value->getStringValue();
+    if (nv != _oldPolledValue) {
+        _valueChanged = true;
+        _oldPolledValue = nv;
+    }
+
+    // we don't call update here(), it will hapen next cycle.
+}
+
 void PUICompatObject::apply()
 {
     callMethod<void>("apply");
-    _valueChanged = false;
+    if (_live == LiveValueMode::OnApply) {
+        _valueChanged = false;
+    }
 }
 
 naRef PUICompatObject::property() const
@@ -311,6 +364,11 @@ void PUICompatObject::activateBindings()
     guiSub->setActiveDialog(nullptr);
 }
 
+bool PUICompatObject::hasBindings() const
+{
+    return !_bindings.empty();
+}
+
 void PUICompatObject::setGeometry(const SGRectd& g)
 {
     updateGeometry(g);
@@ -363,6 +421,72 @@ PUICompatObjectVec PUICompatObject::children() const
     return _children;
 }
 
+bool PUICompatObject::visible() const
+{
+    if (_visibleCondition) {
+        return _visibleCondition->test();
+    }
+
+    return _visible;
+}
+
+bool PUICompatObject::enabled() const
+{
+    if (_enableCondition) {
+        return _enableCondition->test();
+    }
+
+    return _enabled;
+}
+
+const std::string& PUICompatObject::type() const
+{
+    return _type;
+}
+
+void PUICompatObject::setVisible(bool v)
+{
+    if (_visibleCondition) {
+        SG_LOG(SG_GUI, SG_DEV_ALERT, "Trying to set visiblity on widget with visible condition already defined");
+        return;
+    }
+
+    if (_visible == v)
+        return;
+
+    _visible = v;
+    callMethod<void, bool>("visibleChanged", _visible);
+}
+
+void PUICompatObject::setEnabled(bool e)
+{
+    if (_enableCondition) {
+        SG_LOG(SG_GUI, SG_DEV_ALERT, "Trying to set enabled on widget with enable condition already defined");
+        return;
+    }
+
+    if (_enabled == e)
+        return;
+
+    _enabled = e;
+    callMethod<void, bool>("enabledChanged", _enabled);
+}
+
+PUICompatObjectRef PUICompatObject::widgetByName(const std::string& name) const
+{
+    if (name == _name) {
+        return PUICompatObjectRef(const_cast<PUICompatObject*>(this));
+    }
+
+    for (auto child : _children) {
+        auto r = child->widgetByName(name);
+        if (r) {
+            return r;
+        }
+    }
+
+    return {};
+}
 
 void PUICompatObject::recursiveUpdate(const std::string& objectName)
 {
@@ -374,6 +498,18 @@ void PUICompatObject::recursiveUpdate(const std::string& objectName)
         child->recursiveUpdate(objectName);
     }
 }
+
+void PUICompatObject::recursiveUpdateValues(const std::string& objectName)
+{
+    if (objectName.empty() || (objectName == _name)) {
+        updateValue();
+    }
+
+    for (auto child : _children) {
+        child->recursiveUpdateValues(objectName);
+    }
+}
+
 
 void PUICompatObject::recursiveApply(const std::string& objectName)
 {
@@ -417,6 +553,6 @@ nasal::Hash PUICompatObject::gridLocation(const nasal::CallContext& ctx) const
     result.set("column", _config->getIntValue("col"));
     result.set("row", _config->getIntValue("row"));
     result.set("columnSpan", _config->getIntValue("colspan", 1));
-    result.set("rowSpan", _config->getIntValue("rowpsan", 1));
+    result.set("rowSpan", _config->getIntValue("rowspan", 1));
     return result;
 }

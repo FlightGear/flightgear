@@ -22,7 +22,10 @@
 // I am not aware of any platforms that don't use 4 bytes for float
 // and 8 bytes for double.
 
-const uint32_t FG_NET_FDM_VERSION = 25;
+// Version was bumped to 25 following commit 932938cb. This has been 
+// reverted to restore backwards compatability. Structs should be 
+// considered frozen.
+const uint32_t FG_NET_FDM_VERSION = 24; 
 
 
 // Define a structure containing the top level flight dynamics model
@@ -90,13 +93,8 @@ public:
     float oil_px[FG_MAX_ENGINES];    // Oil pressure psi
 
     // Consumables
-    uint32_t num_tanks;                   // Max number of fuel tanks
-    float fuel_quantity[FG_MAX_TANKS];    // used by GPSsmooth and possibly others
-    uint32_t tank_selected[FG_MAX_TANKS]; // selected, capacity, usable, density and level required for multiple-pc setups to work
-    double capacity_m3[FG_MAX_TANKS];
-    double unusable_m3[FG_MAX_TANKS];
-    double density_kgpm3[FG_MAX_TANKS];
-    double level_m3[FG_MAX_TANKS];
+    uint32_t num_tanks;		// Max number of fuel tanks
+    float fuel_quantity[FG_MAX_TANKS];
 
 
     // Gear status

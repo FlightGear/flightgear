@@ -57,9 +57,6 @@ _fgfs_options=(
 		'--disable-clouds3d[Disable 3D (volumetric) cloud layers]' \
 	'--com1=[Set the COM1 radio frequency]' \
 	'--com2=[Set the COM2 radio frequency]' \
-	'--composite-viewer[Enable/disable CompositeViewer]:Boolean values:(true false 1 0 yes no)' \
-		'--enable-composite-viewer[Enable CompositeViewer]' \
-		'--disable-composite-viewer[Disable CompositeViewer]' \
 	'--compositor=[Specify the path to XML file for multi-pass rendering]' \
 		'--config=[Load additional properties from file]:Directories:_files' \
 		'--data=[Specify an additional base data directory (FGData)]:Directories:_directories' \

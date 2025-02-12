@@ -60,12 +60,16 @@ Item {
 
     Connections {
         target: _location
-        onSkipFromArgsChanged: startupPagesModel.setProperty(2, "buttonDisabled", _location.skipFromArgs)
+        function onSkipFromArgsChanged() {
+            startupPagesModel.setProperty(2, "buttonDisabled", _location.skipFromArgs);
+        }
     }
 
     Connections {
         target: _launcher
-        onSkipAircraftFromArgsChanged: startupPagesModel.setProperty(1, "buttonDisabled", _launcher.skipAircraftFromArgs)
+        function onSkipAircraftFromArgsChanged() { 
+            startupPagesModel.setProperty(1, "buttonDisabled", _launcher.skipAircraftFromArgs);
+        }
     }
 
     state: "loader"
@@ -94,7 +98,7 @@ Item {
 
     Connections {
         target: _launcher
-        onViewCommandLine: {
+        function onViewCommandLine() {
             sidebar.selectedPage = -1;
             pageLoader.source = "qrc:///qml/ViewCommandLine.qml"
             root.state = "loader";
@@ -117,7 +121,7 @@ Item {
 
         onShowMenu: menu.show();
 
-        onSelectPage: {
+        onSelectPage: function(pageSource) {
             pageLoader.source = pageSource
             root.state = pagesModel.get(selectedPage).state
         }
@@ -187,9 +191,9 @@ Item {
     Connections {
         target: pageLoader.item
         ignoreUnknownSignals: true
-        onShowSelectedAircraft: root.selectPage(1)
-        onShowSelectedLocation: root.selectPage(2)
-        onShowFlightPlan: root.enterFlightPlan()
+        function onShowSelectedAircraft() { root.selectPage(1); }
+        function onShowSelectedLocation() { root.selectPage(2); }
+        function onShowFlightPlan()       { root.enterFlightPlan(); }
     }
 
     Menu {

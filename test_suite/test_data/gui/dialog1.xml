@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<PropertyList>
+  <name>exit</name>
+  <modal>false</modal>
+  <layout>vbox</layout>
+
+  <text>
+    <label>Exit FlightGear?</label>
+  </text>
+
+  <group>
+    <name>main-hbox</name>
+    <layout>hbox</layout>
+    <halign>fill</halign>
+    <default-padding>10</default-padding>
+    <empty><stretch>true</stretch></empty>
+
+    <button>
+      <legend>Exit</legend>
+      <default>true</default>
+      <equal>true</equal>
+      <binding>
+        <command>exit</command>
+      </binding>
+      <binding>
+        <command>dialog-close</command>
+      </binding>
+    </button>
+
+    <empty><stretch>true</stretch></empty>
+
+    <button>
+        <name>cancel-button</name>
+      <legend>Cancel</legend>
+      <equal>true</equal>
+      <key>Esc</key>
+      <binding>
+        <command>dialog-close</command>
+      </binding>
+    </button>
+
+    <empty><stretch>true</stretch></empty>
+  </group>
+</PropertyList>

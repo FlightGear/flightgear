@@ -22,17 +22,17 @@ endif()
 
 add_custom_command(
     COMMAND
-      fgrcc --root=${CMAKE_SOURCE_DIR}
-            --output-cpp-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
+      fgrcc --root=${PROJECT_SOURCE_DIR}
+            --output-cpp-file=${CMAKE_CURRENT_BINARY_DIR}/FlightGear-resources.cxx
             --init-func-name=initFlightGearEmbeddedResources
-            --output-header-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
+            --output-header-file=${CMAKE_CURRENT_BINARY_DIR}/FlightGear-resources.hxx
             --output-header-identifier=_FG_FLIGHTGEAR_EMBEDDED_RESOURCES
-            ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
+            ${CMAKE_CURRENT_SOURCE_DIR}/FlightGear-resources.xml
     OUTPUT
-      ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
-      ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
+      ${CMAKE_CURRENT_BINARY_DIR}/FlightGear-resources.cxx
+      ${CMAKE_CURRENT_BINARY_DIR}/FlightGear-resources.hxx
     MAIN_DEPENDENCY
-      fgrcc ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
+      fgrcc ${CMAKE_CURRENT_SOURCE_DIR}/FlightGear-resources.xml
     COMMENT
       "Re-generating embedded resources"
 )
@@ -42,12 +42,12 @@ add_custom_command(
 #set_source_files_properties(${EMBEDDED_RESOURCE_HEADERS} PROPERTIES GENERATED TRUE)
 
 add_library(fgembeddedresources STATIC 
-  ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
-  ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
+  ${CMAKE_CURRENT_BINARY_DIR}/FlightGear-resources.cxx
+  ${CMAKE_CURRENT_BINARY_DIR}/FlightGear-resources.hxx
   )
 
 # users of the library include this as <EmbeddedResources/FlightGear-resources.hxx>
-target_include_directories(fgembeddedresources INTERFACE ${CMAKE_BINARY_DIR}/src)
+target_include_directories(fgembeddedresources INTERFACE ${PROJECT_BINARY_DIR}/src)
 
 target_link_libraries(fgembeddedresources SimGearCore)
 

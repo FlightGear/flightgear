@@ -33,12 +33,10 @@ class NonInstancedSubsystemTests : public CppUnit::TestFixture
 {
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(NonInstancedSubsystemTests);
-    //CPPUNIT_TEST(testagRadar);                    // Not registered yet.
     CPPUNIT_TEST(testAirportDynamicsManager);
     //CPPUNIT_TEST(testAreaSampler);                // Not registered yet.
     //CPPUNIT_TEST(testAutopilot);                  // Not registered yet.
     CPPUNIT_TEST(testCanvasMgr);
-    CPPUNIT_TEST(testCockpitDisplayManager);
     CPPUNIT_TEST(testDigitalFilter);
     CPPUNIT_TEST(testEphemeris);
     CPPUNIT_TEST(testErrorReporter);
@@ -96,12 +94,10 @@ class NonInstancedSubsystemTests : public CppUnit::TestFixture
     //CPPUNIT_TEST(testFGXMLAutopilotGroup);        // Not registered yet.
     CPPUNIT_TEST(testFlipFlop);
     CPPUNIT_TEST(testGraphicsPresets);
-    //CPPUNIT_TEST(testGroundRadar);                // Not registered yet.
     CPPUNIT_TEST(testGUIMgr);
     CPPUNIT_TEST(testHighlight);
     //CPPUNIT_TEST(testInstrumentGroup);            // Not registered yet.
     CPPUNIT_TEST(testLogic);
-    //CPPUNIT_TEST(testNavDisplay);                 // Not registered yet.
     //CPPUNIT_TEST(testNewGUI);                     // double free or corruption (fasttop): 0x000000000701d950
     //CPPUNIT_TEST(testNoaaMetarRealWxController);  // Not registered yet.
     CPPUNIT_TEST(testPerformanceDB);
@@ -118,7 +114,6 @@ class NonInstancedSubsystemTests : public CppUnit::TestFixture
     //CPPUNIT_TEST(testTimeManager);                // Segfault.
     //CPPUNIT_TEST(testVacuumSystem);               // Not registered yet.
     //CPPUNIT_TEST(testView);                       // Not registered yet.
-    //CPPUNIT_TEST(testwxRadarBg);                  // Not registered yet.
     //CPPUNIT_TEST(testYASim);                      // Not registered yet.
     CPPUNIT_TEST_SUITE_END();
 
@@ -130,12 +125,10 @@ public:
     void tearDown();
 
     // The subsystem tests.
-    void testagRadar();
     void testAirportDynamicsManager();
     void testAreaSampler();
     void testAutopilot();
     void testCanvasMgr();
-    void testCockpitDisplayManager();
     void testDigitalFilter();
     void testEphemeris();
     void testErrorReporter();
@@ -193,7 +186,6 @@ public:
     void testFGXMLAutopilotGroup();
     void testFlipFlop();
     void testGraphicsPresets();
-    void testGroundRadar();
     void testGUIMgr();
     void testHighlight();
     void testInstrumentGroup();
@@ -215,7 +207,6 @@ public:
     void testTimeManager();
     void testVacuumSystem();
     void testView();
-    void testwxRadarBg();
     void testYASim();
 
 private:

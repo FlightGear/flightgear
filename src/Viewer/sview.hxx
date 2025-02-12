@@ -2,8 +2,6 @@
 
 /*
 Support for extra view windows using 'Step' views system.
-
-Requires that composite-viewer is enabled at startup with --composite-viewer=1.
 */
 
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>

@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileName: FGWindowsMenuBar.cxx
+ * SPDX-FileComment: XML-configured menu bar.
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+
 #include "FGWindowsMenuBar.hxx"
 
 #include <windows.h>
@@ -17,13 +23,13 @@
 #include <Main/globals.hxx>
 #include <Viewer/renderer.hxx>
 
+#include "new_gui.hxx"
+
 #include <iostream>
 
-using namespace simgear;
+LONG_PTR g_prevWindowProc;
 
-namespace {
-
-HWND getMainViewerHWND()
+static HWND getMainViewerHWND()
 {
 	osgViewer::Viewer::Windows windows;
 	if (!globals->get_renderer() || !globals->get_renderer()->getViewerBase()) {
@@ -45,26 +51,28 @@ HWND getMainViewerHWND()
     return 0;
 }
 
-bool labelIsSeparator(const std::string& s)
+static bool nameIsSeparator(const std::string& n)
 {
-    std::string t = "---";
-    if (s.compare(0, t.length(), t) == 0)
-        return true;
-    else
-        return false;
+    return simgear::strutils::starts_with(n, "----");
 }
 
-LRESULT CALLBACK menubarWindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	SG_LOG(SG_GENERAL, SG_INFO, "called window proc");
+static LRESULT CALLBACK menubarWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{   
+	switch (Msg) {
+    case WM_COMMAND:
+        if (HIWORD(wParam) == 0) {
+            auto gui = globals->get_subsystem<NewGUI>();
+            auto menubar = (FGWindowsMenuBar*)gui->getMenuBar();
+            int commandId = (int)LOWORD(wParam);
+            if (commandId < menubar->getItemBindings().size()) {
+                fireBindingList(menubar->getItemBindings()[commandId]);
+            }
+        }
+        break;
+    }
 
-
-	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return CallWindowProc((WNDPROC)g_prevWindowProc, hWnd, Msg, wParam, lParam);
 }
-
-} // of anonymous namespace
-
-//
 
 class FGWindowsMenuBar::WindowsMenuBarPrivate
 {
@@ -72,34 +80,18 @@ public:
   WindowsMenuBarPrivate();
   ~WindowsMenuBarPrivate();
 
-  void fireBindingsForItem(UINT commandId)
-  {
-    fireBindingList(itemBindings[commandId]);
-  }
-
   HWND mainWindow;
   HMENU menuBar;
   bool visible;
-  WNDPROC baseMenuProc;
+  bool hideIfOverlapsWindow;
 
   typedef std::vector<SGBindingList> MenuItemBindings;
   MenuItemBindings itemBindings;
 
 };
 
-FGWindowsMenuBar::FGWindowsMenuBar() :
-  p(new WindowsMenuBarPrivate)
-{
-
-}
-
-FGWindowsMenuBar::~FGWindowsMenuBar()
-{
-
-}
-
 FGWindowsMenuBar::WindowsMenuBarPrivate::WindowsMenuBarPrivate() :
-	visible(true)
+    visible(true), hideIfOverlapsWindow(false)
 {
 	mainWindow = getMainViewerHWND();
 	menuBar = 0;
@@ -113,56 +105,67 @@ FGWindowsMenuBar::WindowsMenuBarPrivate::~WindowsMenuBarPrivate()
 	}
 }
 
+FGWindowsMenuBar::FGWindowsMenuBar() :
+    _p(new WindowsMenuBarPrivate)
+{
+}
+
 void FGWindowsMenuBar::init()
 {
     int menuIndex = 0;
     SGPropertyNode_ptr props = fgGetNode("/sim/menubar/default",true);
 
-    p->menuBar = CreateMenu();
-//	p->baseMenuProc = (WNDPROC) ::SetWindowLongPtr((HWND) p->mainWindow, GWL_WNDPROC, (LONG_PTR) menubarWindowProc);
+    _p->menuBar = CreateMenu();
+    LONG_PTR tempWindowProc = GetWindowLongPtr(_p->mainWindow, GWLP_WNDPROC);
+    if (tempWindowProc != (LONG_PTR)menubarWindowProc) {
+        g_prevWindowProc = tempWindowProc;
+        SetWindowLongPtr(_p->mainWindow, GWLP_WNDPROC, (LONG_PTR)menubarWindowProc);
+    }
 
-    for (auto n : props->getChildren("menu")) {
+    for (auto menu : props->getChildren("menu")) {
         // synchronise menu with properties
-        std::string l = getLocalizedLabel(n);
-        std::string label = strutils::simplify(l).c_str();
+        std::string l = getLocalizedLabel(menu);
+        std::string label = simgear::strutils::simplify(l);
         HMENU menuItems = CreatePopupMenu();
 
-        if (!n->hasValue("enabled")) {
-            n->setBoolValue("enabled", true);
+        if (!menu->hasValue("enabled")) {
+            menu->setBoolValue("enabled", true);
         }
 
-        bool enabled = n->getBoolValue("enabled");
+        bool enabled = menu->getBoolValue("enabled");
 
 		UINT flags = MF_POPUP;
-        AppendMenuA(p->menuBar, flags, (UINT)menuItems, label.c_str());
+        const auto wlabel = simgear::strutils::convertUtf8ToWString(label);
+        AppendMenuW(_p->menuBar, flags, (UINT_PTR)menuItems, wlabel.c_str());
 
         // submenu
         int subMenuIndex = 0;
-        SGPropertyNode* menuNode = n;
-        for (auto n2 : menuNode->getChildren("item")) {
+        SGPropertyNode* menuNode = menu;
+        for (auto menuItem : menuNode->getChildren("item")) {
 
-            if (!n2->hasValue("enabled")) {
-                n2->setBoolValue("enabled", true);
+            if (!menuItem->hasValue("enabled")) {
+                menuItem->setBoolValue("enabled", true);
             }
 
-            std::string l2 = getLocalizedLabel(n2);
-            std::string label2 = strutils::simplify(l2).c_str();
-            std::string shortcut = n2->getStringValue("key");
+            std::string l2 = getLocalizedLabel(menuItem);
+            std::string label2 = simgear::strutils::simplify(l2);
+            std::string shortcut = menuItem->getStringValue("key");
 
-            SGBindingList bl = readBindingList(n->getChildren("binding"), globals->get_props());
-			UINT commandId = p->itemBindings.size();
-			p->itemBindings.push_back(bl);
+            SGBindingList bl = readBindingList(menuItem->getChildren("binding"), globals->get_props());
+			UINT commandId = _p->itemBindings.size();
+			_p->itemBindings.push_back(bl);
 
-            if (labelIsSeparator(label2)) {
-                AppendMenuA(menuItems, MF_SEPARATOR, NULL, NULL);
+            if (nameIsSeparator(label2)) {
+                AppendMenu(menuItems, MF_SEPARATOR, NULL, NULL);
             } else {
                 if (!shortcut.empty()) {
                     label2 += "\t"+shortcut;
                 }
-                BOOL enabled = n2->getBoolValue("enabled");
+                BOOL enabled = menuItem->getBoolValue("enabled");
 
 				UINT flags = MF_STRING;
-                AppendMenuA(menuItems, flags, commandId, label2.c_str());
+                const auto wl2 = simgear::strutils::convertUtf8ToWString(label2);
+                AppendMenuW(menuItems, flags, commandId, wl2.c_str());
             }
             subMenuIndex++;
         }
@@ -172,46 +175,42 @@ void FGWindowsMenuBar::init()
 	show();
 }
 
-bool FGWindowsMenuBar::isVisible() const
-{
-    return p->visible;
-}
-
 void FGWindowsMenuBar::show()
 {
-    SetMenu(p->mainWindow, p->menuBar);
-	p->visible = true;
+    SetMenu(_p->mainWindow, _p->menuBar);
+	_p->visible = true;
 }
 
 void FGWindowsMenuBar::hide()
 {
-    SetMenu(p->mainWindow, NULL);
-	p->visible = false;
+    SetMenu(_p->mainWindow, NULL);
+	_p->visible = false;
 }
 
-#if 0
-LRESULT CALLBACK WndProcedure(HWND hwnd, UINT Msg,
-			   WPARAM wParam, LPARAM lParam)
+bool FGWindowsMenuBar::isVisible() const
 {
-    switch(Msg)
-    {
-	case WM_COMMAND:
-		switch(LOWORD(wParam))
-		{
-		case MY_MENU:
-			MessageBox(hwnd, "Menu Item Selected = Large", "Message", MB_OK);
-			break;
-		}
-		return 0;
-
-    case WM_DESTROY:
-        PostQuitMessage(WM_QUIT);
-        break;
-
-    default:
-        return DefWindowProc(hwnd, Msg, wParam, lParam);
-    }
-
-    return 0;
+    return _p->visible;
 }
-#endif
+
+void FGWindowsMenuBar::setHideIfOverlapsWindow(bool hideOverlapping)
+{
+    _p->hideIfOverlapsWindow = hideOverlapping;
+    if (_p->menuBar) {
+        const bool actualVis = _p->visible && (!_p->hideIfOverlapsWindow);
+        if (actualVis) {
+            show();
+        } else {
+            hide();
+        }
+    }
+}
+
+bool FGWindowsMenuBar::getHideIfOverlapsWindow() const
+{
+    return _p->hideIfOverlapsWindow;
+}
+
+std::vector<SGBindingList> FGWindowsMenuBar::getItemBindings() const
+{
+    return _p->itemBindings;
+}

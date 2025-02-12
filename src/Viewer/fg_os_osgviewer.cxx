@@ -69,104 +69,9 @@
 #include <process.h> // _getpid()
 #endif
 
-// Static linking of OSG needs special macros
-#ifdef OSG_LIBRARY_STATIC
-#include <osgDB/Registry>
-USE_GRAPHICSWINDOW();
-// Image formats
-USE_OSGPLUGIN(bmp);
-USE_OSGPLUGIN(dds);
-USE_OSGPLUGIN(hdr);
-USE_OSGPLUGIN(pic);
-USE_OSGPLUGIN(pnm);
-USE_OSGPLUGIN(rgb);
-USE_OSGPLUGIN(tga);
-#ifdef OSG_JPEG_ENABLED
-USE_OSGPLUGIN(jpeg);
-#endif
-#ifdef OSG_PNG_ENABLED
-USE_OSGPLUGIN(png);
-#endif
-#ifdef OSG_TIFF_ENABLED
-USE_OSGPLUGIN(tiff);
-#endif
-// Model formats
-USE_OSGPLUGIN(3ds);
-USE_OSGPLUGIN(ac);
-USE_OSGPLUGIN(ive);
-USE_OSGPLUGIN(osg);
-USE_OSGPLUGIN(txf);
-#endif
-
-// fg_os implementation using OpenSceneGraph's osgViewer::Viewer class
-// to create the graphics window and run the event/update/render loop.
-
-//
-// fg_os implementation
-//
-
 using namespace std;
 using namespace flightgear;
 using namespace osg;
-
-osg::ref_ptr<osgViewer::Viewer> viewer;
-
-static void setStereoMode(const char* mode)
-{
-    DisplaySettings::StereoMode stereoMode = DisplaySettings::QUAD_BUFFER;
-    bool stereoOn = true;
-
-    if (strcmp(mode, "QUAD_BUFFER") == 0) {
-        stereoMode = DisplaySettings::QUAD_BUFFER;
-    } else if (strcmp(mode, "ANAGLYPHIC") == 0) {
-        stereoMode = DisplaySettings::ANAGLYPHIC;
-    } else if (strcmp(mode, "HORIZONTAL_SPLIT") == 0) {
-        stereoMode = DisplaySettings::HORIZONTAL_SPLIT;
-    } else if (strcmp(mode, "VERTICAL_SPLIT") == 0) {
-        stereoMode = DisplaySettings::VERTICAL_SPLIT;
-    } else if (strcmp(mode, "LEFT_EYE") == 0) {
-        stereoMode = DisplaySettings::LEFT_EYE;
-    } else if (strcmp(mode, "RIGHT_EYE") == 0) {
-        stereoMode = DisplaySettings::RIGHT_EYE;
-    } else if (strcmp(mode, "HORIZONTAL_INTERLACE") == 0) {
-        stereoMode = DisplaySettings::HORIZONTAL_INTERLACE;
-    } else if (strcmp(mode, "VERTICAL_INTERLACE") == 0) {
-        stereoMode = DisplaySettings::VERTICAL_INTERLACE;
-    } else if (strcmp(mode, "CHECKERBOARD") == 0) {
-        stereoMode = DisplaySettings::CHECKERBOARD;
-    } else {
-        stereoOn = false;
-    }
-    DisplaySettings::instance()->setStereo(stereoOn);
-    DisplaySettings::instance()->setStereoMode(stereoMode);
-}
-
-static const char* getStereoMode()
-{
-    DisplaySettings::StereoMode stereoMode = DisplaySettings::instance()->getStereoMode();
-    bool stereoOn = DisplaySettings::instance()->getStereo();
-    if (!stereoOn) return "OFF";
-    if (stereoMode == DisplaySettings::QUAD_BUFFER) {
-        return "QUAD_BUFFER";
-    } else if (stereoMode == DisplaySettings::ANAGLYPHIC) {
-        return "ANAGLYPHIC";
-    } else if (stereoMode == DisplaySettings::HORIZONTAL_SPLIT) {
-        return "HORIZONTAL_SPLIT";
-    } else if (stereoMode == DisplaySettings::VERTICAL_SPLIT) {
-        return "VERTICAL_SPLIT";
-    } else if (stereoMode == DisplaySettings::LEFT_EYE) {
-        return "LEFT_EYE";
-    } else if (stereoMode == DisplaySettings::RIGHT_EYE) {
-        return "RIGHT_EYE";
-    } else if (stereoMode == DisplaySettings::HORIZONTAL_INTERLACE) {
-        return "HORIZONTAL_INTERLACE";
-    } else if (stereoMode == DisplaySettings::VERTICAL_INTERLACE) {
-        return "VERTICAL_INTERLACE";
-    } else if (stereoMode == DisplaySettings::CHECKERBOARD) {
-        return "CHECKERBOARD";
-    }
-    return "OFF";
-}
 
 class NotifyLevelListener : public SGPropertyChangeListener
 {
@@ -196,18 +101,14 @@ void updateOSGNotifyLevel()
 {
 }
 
-void fgOSOpenWindow(bool stencil)
+void fgOSOpenWindow()
 {
     osg::setNotifyHandler(new SGNotifyHandler);
 
     auto composite_viewer = dynamic_cast<osgViewer::CompositeViewer*>(
         globals->get_renderer()->getViewerBase());
-    if (0) {
-    } else if (composite_viewer) {
-        /* We are using CompositeViewer. */
-        SG_LOG(SG_VIEW, SG_DEBUG, "Using CompositeViewer");
+    if (composite_viewer) {
         osgViewer::ViewerBase* viewer = globals->get_renderer()->getViewerBase();
-        SG_LOG(SG_VIEW, SG_DEBUG, "Creating osgViewer::View");
         osgViewer::View* view = new osgViewer::View;
         view->setFrameStamp(composite_viewer->getFrameStamp());
         globals->get_renderer()->setView(view);
@@ -216,9 +117,12 @@ void fgOSOpenWindow(bool stencil)
 
         // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg29820.html
         view->getDatabasePager()->setUnrefImageDataAfterApplyPolicy(true, false);
-        osg::GraphicsContext::createNewContextID();
+        // XXX: Creating a new context ID makes FG segfault/double free at exit.
+        // Comment this for now...
+        // osg::GraphicsContext::createNewContextID();
 
-        //viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
+        // Disable the main camera, use slaves instead
+        view->getCamera()->setGraphicsContext(nullptr);
 
         std::string mode;
         mode = fgGetString("/sim/rendering/multithreading-mode", "SingleThreaded");
@@ -234,7 +138,7 @@ void fgOSOpenWindow(bool stencil)
         else
             viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
 
-        WindowBuilder::initWindowBuilder(stencil);
+        WindowBuilder::initWindowBuilder();
         CameraGroup::buildDefaultGroup(view);
 
         FGEventHandler* manipulator = globals->get_renderer()->getEventHandler();
@@ -248,45 +152,9 @@ void fgOSOpenWindow(bool stencil)
         viewer->setKeyEventSetsDone(0);
         // The viewer won't start without some root.
         view->setSceneData(new osg::Group);
-        globals->get_renderer()->setView(view);
-    } else {
-        /* Not using CompositeViewer. */
-        SG_LOG(SG_VIEW, SG_DEBUG, "Not CompositeViewer.");
-        SG_LOG(SG_VIEW, SG_DEBUG, "Creating osgViewer::Viewer");
-        viewer = new osgViewer::Viewer;
-        viewer->setDatabasePager(FGScenery::getPagerSingleton());
-
-        std::string mode;
-        mode = fgGetString("/sim/rendering/multithreading-mode", "SingleThreaded");
-        flightgear::addSentryTag("osg-thread-mode", mode);
-
-        if (mode == "AutomaticSelection")
-            viewer->setThreadingModel(osgViewer::Viewer::AutomaticSelection);
-        else if (mode == "CullDrawThreadPerContext")
-            viewer->setThreadingModel(osgViewer::Viewer::CullDrawThreadPerContext);
-        else if (mode == "DrawThreadPerContext")
-            viewer->setThreadingModel(osgViewer::Viewer::DrawThreadPerContext);
-        else if (mode == "CullThreadPerCameraDrawThreadPerContext")
-            viewer->setThreadingModel(osgViewer::Viewer::CullThreadPerCameraDrawThreadPerContext);
-        else
-            viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
-        WindowBuilder::initWindowBuilder(stencil);
-        CameraGroup::buildDefaultGroup(viewer.get());
-
-        FGEventHandler* manipulator = globals->get_renderer()->getEventHandler();
-        WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
-        if (wsa->windows.size() != 1) {
-            manipulator->setResizable(false);
-        }
-        viewer->getCamera()->setProjectionResizePolicy(osg::Camera::FIXED);
-        viewer->addEventHandler(manipulator);
-        // Let FG handle the escape key with a confirmation
-        viewer->setKeyEventSetsDone(0);
-        // The viewer won't start without some root.
-        viewer->setSceneData(new osg::Group);
-        globals->get_renderer()->setView(viewer.get());
     }
 }
+
 SGPropertyNode *simHost = 0, *simFrameCount, *simTotalHostTime, *simFrameResetCount, *frameWait;
 
 // Getter/Setter to work around lack of unsigned int properties.  Note that we have a minimum of 1 DB thread as otherwise
@@ -313,17 +181,6 @@ void fgOSResetProperties()
         fgSetInt("/sim/startup/xsize", guiViewport->width());
         fgSetInt("/sim/startup/ysize", guiViewport->height());
     }
-
-    DisplaySettings* displaySettings = DisplaySettings::instance();
-    fgTie("/sim/rendering/osg-displaysettings/split-stereo-autoadjust-aspect-ratio", displaySettings, &DisplaySettings::getSplitStereoAutoAdjustAspectRatio, &DisplaySettings::setSplitStereoAutoAdjustAspectRatio);
-    fgTie("/sim/rendering/osg-displaysettings/eye-separation", displaySettings, &DisplaySettings::getEyeSeparation, &DisplaySettings::setEyeSeparation);
-    fgTie("/sim/rendering/osg-displaysettings/screen-distance", displaySettings, &DisplaySettings::getScreenDistance, &DisplaySettings::setScreenDistance);
-    fgTie("/sim/rendering/osg-displaysettings/screen-width", displaySettings, &DisplaySettings::getScreenWidth, &DisplaySettings::setScreenWidth);
-    fgTie("/sim/rendering/osg-displaysettings/screen-height", displaySettings, &DisplaySettings::getScreenHeight, &DisplaySettings::setScreenHeight);
-    fgTie("/sim/rendering/osg-displaysettings/stereo-mode", getStereoMode, setStereoMode);
-    fgTie("/sim/rendering/osg-displaysettings/double-buffer", displaySettings, &DisplaySettings::getDoubleBuffer, &DisplaySettings::setDoubleBuffer);
-    fgTie("/sim/rendering/osg-displaysettings/depth-buffer", displaySettings, &DisplaySettings::getDepthBuffer, &DisplaySettings::setDepthBuffer);
-    fgTie("/sim/rendering/osg-displaysettings/rgb", displaySettings, &DisplaySettings::getRGB, &DisplaySettings::setRGB);
 
     fgTie("/sim/rendering/database-pager/threads", &getNumDatabaseThreads, &setNumDatabaseThreads);
 
@@ -453,11 +310,10 @@ int fgOSMainLoop()
     if (!viewer_base->isRealized()) {
         viewer_base->realize();
         std::string affinity = fgGetString("/sim/thread-cpu-affinity");
-        SG_LOG(SG_VIEW, SG_ALERT, "affinity=" << affinity);
         if (affinity != "") {
             ShowAffinities();
             if (affinity == "osg") {
-                SG_LOG(SG_VIEW, SG_ALERT, "Resetting affinity of current thread getpid()=" << getpid());
+                SG_LOG(SG_VIEW, SG_INFO, "Resetting affinity of current thread getpid()=" << getpid());
                 OpenThreads::Affinity affinity;
                 OpenThreads::SetProcessorAffinityOfCurrentThread(affinity);
                 ShowAffinities();
@@ -528,12 +384,17 @@ void fgOSInit(int* argc, char** argv)
     cocoaRegisterTerminateHandler();
 #endif
 
+    globals->set_renderer(new FGRenderer);
     globals->get_renderer()->init();
     WindowSystemAdapter::setWSA(new WindowSystemAdapter);
 }
 
 void fgOSCloseWindow()
 {
+    // reset the cursor before we close the window
+
+    fgSetMouseCursor(FGMouseCursor::CURSOR_ARROW);
+
     if (globals && globals->get_renderer()) {
         osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
         if (viewer_base) {
@@ -552,7 +413,6 @@ void fgOSCloseWindow()
     flightgear::addSentryBreadcrumb("fgOSCloseWindow, clearing camera group", "info");
     flightgear::CameraGroup::setDefault(NULL);
     WindowSystemAdapter::setWSA(NULL);
-    viewer = NULL;
 }
 
 void fgOSFullScreen()
@@ -635,68 +495,12 @@ void fgOSFullScreen()
     window->grabFocusIfPointerInWindow();
 }
 
-static void setMouseCursor(osgViewer::GraphicsWindow* gw, int cursor)
+void fgSetMouseCursor(FGMouseCursor::Cursor cursor)
 {
-    if (!gw) {
-        return;
-    }
-
-    osgViewer::GraphicsWindow::MouseCursor mouseCursor;
-    mouseCursor = osgViewer::GraphicsWindow::InheritCursor;
-    if (cursor == MOUSE_CURSOR_NONE)
-        mouseCursor = osgViewer::GraphicsWindow::NoCursor;
-    else if (cursor == MOUSE_CURSOR_POINTER)
-#ifdef SG_MAC
-        // osgViewer-Cocoa lacks RightArrowCursor, use Left
-        mouseCursor = osgViewer::GraphicsWindow::LeftArrowCursor;
-#else
-        mouseCursor = osgViewer::GraphicsWindow::RightArrowCursor;
-#endif
-    else if (cursor == MOUSE_CURSOR_WAIT)
-        mouseCursor = osgViewer::GraphicsWindow::WaitCursor;
-    else if (cursor == MOUSE_CURSOR_CROSSHAIR)
-        mouseCursor = osgViewer::GraphicsWindow::CrosshairCursor;
-    else if (cursor == MOUSE_CURSOR_LEFTRIGHT)
-        mouseCursor = osgViewer::GraphicsWindow::LeftRightCursor;
-    else if (cursor == MOUSE_CURSOR_TOPSIDE)
-        mouseCursor = osgViewer::GraphicsWindow::TopSideCursor;
-    else if (cursor == MOUSE_CURSOR_BOTTOMSIDE)
-        mouseCursor = osgViewer::GraphicsWindow::BottomSideCursor;
-    else if (cursor == MOUSE_CURSOR_LEFTSIDE)
-        mouseCursor = osgViewer::GraphicsWindow::LeftSideCursor;
-    else if (cursor == MOUSE_CURSOR_RIGHTSIDE)
-        mouseCursor = osgViewer::GraphicsWindow::RightSideCursor;
-    else if (cursor == MOUSE_CURSOR_TOPLEFT)
-        mouseCursor = osgViewer::GraphicsWindow::TopLeftCorner;
-    else if (cursor == MOUSE_CURSOR_TOPRIGHT)
-        mouseCursor = osgViewer::GraphicsWindow::TopRightCorner;
-    else if (cursor == MOUSE_CURSOR_BOTTOMLEFT)
-        mouseCursor = osgViewer::GraphicsWindow::BottomLeftCorner;
-    else if (cursor == MOUSE_CURSOR_BOTTOMRIGHT)
-        mouseCursor = osgViewer::GraphicsWindow::BottomRightCorner;
-
-    gw->setCursor(mouseCursor);
+    FGMouseCursor::instance()->setCursor(cursor);
 }
 
-static int _cursor = -1;
-
-void fgSetMouseCursor(int cursor)
+FGMouseCursor::Cursor fgGetMouseCursor()
 {
-    _cursor = cursor;
-    if (!globals || !globals->get_renderer())
-        return;
-    osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
-    if (!viewer_base)
-        return;
-
-    std::vector<osgViewer::GraphicsWindow*> windows;
-    viewer_base->getWindows(windows);
-    for (osgViewer::GraphicsWindow* gw : windows) {
-        setMouseCursor(gw, cursor);
-    }
-}
-
-int fgGetMouseCursor()
-{
-    return _cursor;
+    return FGMouseCursor::instance()->getCursor();
 }

@@ -1,36 +1,36 @@
 The commands are of the form:
 
---multiplay=in | out,Hz,destination address,destination port
+--multiplay=[in | out | broadcast],Hz,destination address,destination port
 --callsign=a_unique_name
 
 
-Below are some examples of startup commands that demonstrate the use of the 
+Below are some examples of startup commands that demonstrate the use of the
 multiplayer facilities.
 
 For two players on a local network or across the internet:
 ----------------------------------------------------------
 Player1:
---multiplay=out,10,192.168.0.3,5500 --multiplay=in,10,192.168.0.2,5501 
+--multiplay=out,10,192.168.0.3,5500 --multiplay=in,10,192.168.0.2,5501
 --callsign=player1
 
 Player2:
---multiplay=out,10,192.168.0.2,5501 --multiplay=in,10,192.168.0.3,5500 
+--multiplay=out,10,192.168.0.2,5501 --multiplay=in,10,192.168.0.3,5500
 --callsign=player2
 
 
-For multiple players on a local network:
+For multiple players on a local network whose subnet is 192.168.0.0/24:
 ----------------------------------------
 Player1:
---multiplay=out,10,255.255.255.255,5500 
---multiplay=in,10,255.255.255.255,5500 --callsign=player1
+--multiplay=broadcast,10,192.168.0.255,5500
+--multiplay=in,10,,5500 --callsign=player1
 
 Playern:
---multiplay=out,10,255.255.255.255,5500 
---multiplay=in,10,255.255.255.255,5500 --callsign=playern
+--multiplay=broadcast,10,192.168.0.255,5500
+--multiplay=in,10,,5500 --callsign=playern
 
-Note that the callsign is used to identify each player in a multiplayer game 
-so the callsigns must be unique. The multiplayer code ignores packets that 
-are sent back to itself, as would occur with broadcasting when the rx and tx 
+Note that the callsign is used to identify each player in a multiplayer game
+so the callsigns must be unique. The multiplayer code ignores packets that
+are sent back to itself, as would occur with broadcasting when the rx and tx
 ports are the same.
 
 
@@ -48,9 +48,9 @@ Player3:
 Player4 (rx only):
 --multiplay=in,10,192.168.0.2,5500 --callsign=player4
 
-This demonstrates that it is possible to have multiple instances of 
-Flightgear that send to a single instance that displays all the traffic. This 
-is the sort of implementation that we are considering for use as a tower 
+This demonstrates that it is possible to have multiple instances of
+Flightgear that send to a single instance that displays all the traffic. This
+is the sort of implementation that we are considering for use as a tower
 visual simulator.
 
 
@@ -72,17 +72,17 @@ See <http://pigeond.net/flightgear/fg_server_map.html>.
 
 Options needed to enable multiplayer game with a server:
 Player1:
---multiplay=out,10,serveraddress,5002 --multiplay=in,10,myaddress,5002
+--multiplay=out,10,serveraddress,5000 --multiplay=in,10,myaddress,5000
 --callsign=player1
 
 Player2:
---multiplay=out,10,serveraddress,5002 --multiplay=in,10,myaddress,5002
+--multiplay=out,10,serveraddress,5000 --multiplay=in,10,myaddress,5000
 --callsign=player2
 
 ...
 
 PlayerN:
---multiplay=out,10,serveraddress,5002 --multiplay=in,10,myaddress,5002
+--multiplay=out,10,serveraddress,5000 --multiplay=in,10,myaddress,5000
 --callsign=playerN
 
 Note that if every player using a particular server, such as one of those
@@ -91,12 +91,12 @@ already in use on that server.
 
 If you are sitting behind a NAT'ting firewall, then you need to forward
 the incoming traffic on the firewall outer (visible to the internet)
-address arriving at the UDP port you use (5002 in the case above)
+address arriving at the UDP port you use (5000 in the case above)
 over to your private LAN address. In this case, use your PRIVATE LAN address
 as <myaddress>. Example (if your private LAN address is 10.0.0.1,
 in order to play on pigeond.net):
 
-fgfs --multiplay=in,10,10.0.0.1,5002 --multiplay=out,10,pigeond.net,5002
+fgfs --multiplay=in,10,10.0.0.1,5000 --multiplay=out,10,pigeond.net,5000
 	--callsign=...UNIQUE callsign here...
 
 If you and the server are in the same address space (i.e., both have a public
@@ -119,7 +119,7 @@ control-fdm-atmosphere properties.
 
 Further reading (a must if you have a problem):
 -----------------------------------------------
-[1] The flightgear server homepage <http://www.o-schroeder.de/fg_server/>
-[2] The flightgear wiki multiplayer howto <http://www.seedwiki.com/wiki/flight_gear/flightgear_multiplayer_documentation.cfm>
+[1] The flightgear server homepage <http://fgms.sourceforge.net/>
+[2] The wiki howto <http://wiki.flightgear.org/index.php/Howto:_Multiplayer>
 [3] If everything else fails, ask for help on
 the IRC channel #flightgear on irc.flightgear.org

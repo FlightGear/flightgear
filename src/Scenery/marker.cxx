@@ -99,14 +99,6 @@ osg::Node* fgCreateMarkerNode(const osgText::String& label, float font_size, flo
         pinGeo->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUAD_STRIP, 0, vtx->size()));
         geoNode->addDrawable(pinGeo);
 
-        auto stateSet = geoNode->getOrCreateStateSet();
-
-        stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
-        stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-        stateSet->setMode(GL_BLEND, osg::StateAttribute::OFF);
-        stateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON);
-        stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
-
         osg::ref_ptr<simgear::SGReaderWriterOptions> opt;
         opt = simgear::SGReaderWriterOptions::copyOrCreate(osgDB::Registry::instance()->getOptions());
         simgear::Effect* effect = simgear::makeEffect("Effects/marker-pin", true, opt);

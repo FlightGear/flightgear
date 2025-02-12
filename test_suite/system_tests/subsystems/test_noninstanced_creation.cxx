@@ -60,12 +60,10 @@ void NonInstancedSubsystemTests::create(const char* name)
 
 
 // The non-instanced subsystems.
-void NonInstancedSubsystemTests::testagRadar()                    { create("air-ground-radar"); }
 void NonInstancedSubsystemTests::testAirportDynamicsManager()     { create("airport-dynamics"); }
 void NonInstancedSubsystemTests::testAreaSampler()                { create("area"); }
 void NonInstancedSubsystemTests::testAutopilot()                  { create("autopilot"); }
 void NonInstancedSubsystemTests::testCanvasMgr()                  { create("Canvas"); }
-void NonInstancedSubsystemTests::testCockpitDisplayManager()      { create("cockpit-displays"); }
 void NonInstancedSubsystemTests::testDigitalFilter()              { create("filter"); }
 void NonInstancedSubsystemTests::testEphemeris()                  { create("ephemeris"); }
 void NonInstancedSubsystemTests::testErrorReporter()              { create("error-reporting"); }
@@ -122,12 +120,10 @@ void NonInstancedSubsystemTests::testFGVoiceMgr()                 { create("voic
 void NonInstancedSubsystemTests::testFGXMLAutopilotGroup()        { create("xml-rules"); }
 void NonInstancedSubsystemTests::testFlipFlop()                   { create("flipflop"); }
 void NonInstancedSubsystemTests::testGraphicsPresets()            { create("graphics-presets"); }
-void NonInstancedSubsystemTests::testGroundRadar()                { create("groundradar"); }
 void NonInstancedSubsystemTests::testGUIMgr()                     { create("CanvasGUI"); }
 void NonInstancedSubsystemTests::testHighlight()                  { create("reflect"); }
 void NonInstancedSubsystemTests::testInstrumentGroup()            { create("instruments"); }
 void NonInstancedSubsystemTests::testLogic()                      { create("logic"); }
-void NonInstancedSubsystemTests::testNavDisplay()                 { create("navigation-display"); }
 void NonInstancedSubsystemTests::testNewGUI()                     { create("gui"); }
 void NonInstancedSubsystemTests::testNoaaMetarRealWxController()  { create("noaa-metar"); }
 void NonInstancedSubsystemTests::testPerformanceDB()              { create("aircraft-performance-db"); }
@@ -144,5 +140,4 @@ void NonInstancedSubsystemTests::testStaticSystem()               { create("stat
 void NonInstancedSubsystemTests::testTimeManager()                { create("time"); }
 void NonInstancedSubsystemTests::testVacuumSystem()               { create("vacuum"); }
 void NonInstancedSubsystemTests::testView()                       { create("view"); }
-void NonInstancedSubsystemTests::testwxRadarBg()                  { create("radar"); }
 void NonInstancedSubsystemTests::testYASim()                      { create("yasim"); }

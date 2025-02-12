@@ -67,12 +67,11 @@ void Ephemeris::init()
   tieMoonPos("/ephemeris/moon/ze", _impl->get_moon(), &MoonPos::getze);
   tieMoonPos("/ephemeris/moon/ye", _impl->get_moon(), &MoonPos::getye);
   tieMoonPos("/ephemeris/moon/lat-deg", _impl->get_moon(), &MoonPos::getLat);
-  tieMoonPos("/ephemeris/moon/age", _impl->get_moon(), &MoonPos::getAge);
+  tieMoonPos("/ephemeris/moon/distance", _impl->get_moon(), &MoonPos::getDistance);
   tieMoonPos("/ephemeris/moon/phase", _impl->get_moon(), &MoonPos::getPhase);
+  tieMoonPos("/ephemeris/moon/phase-angle", _impl->get_moon(), &MoonPos::getPhaseAngle);
 
     _latProp = fgGetNode("/position/latitude-deg", true);
-
-    _moonlight = fgGetNode("/environment/moonlight", true);
 
     update(0.0);
 }
@@ -94,16 +93,12 @@ void Ephemeris::unbind()
 {
     _latProp = 0;
     _latProp.reset();
-    _moonlight.reset();
 }
 
 void Ephemeris::update(double)
 {
     SGTime* st = globals->get_time_params();
     _impl->update(st->getMjd(), st->getLst(), _latProp->getDoubleValue());
-
-    // Update the moonlight intensity.
-    _moonlight->setDoubleValue(_impl->get_moon()->getIlluminanceFactor());
 }
 
 

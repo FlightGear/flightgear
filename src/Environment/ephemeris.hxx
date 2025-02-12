@@ -55,7 +55,6 @@ public:
 private:
     std::unique_ptr<SGEphemeris> _impl;
     SGPropertyNode_ptr _latProp;
-    SGPropertyNode_ptr _moonlight;
 };
 
 #endif // of FG_ENVIRONMENT_EPHEMERIS_HXX

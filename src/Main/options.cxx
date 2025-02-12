@@ -244,13 +244,8 @@ void fgSetDefaults ()
     v->setValueReadOnly("flightgear", FLIGHTGEAR_VERSION);
     v->setValueReadOnly("simgear", SG_STRINGIZE(SIMGEAR_VERSION));
     v->setValueReadOnly("openscenegraph", osgGetVersion());
-#if OSG_VERSION_LESS_THAN(3,5,2)
-    v->setValueReadOnly("openscenegraph-thread-safe-reference-counting",
-                         osg::Referenced::getThreadSafeReferenceCounting());
-#endif
     v->setValueReadOnly("revision", REVISION);
-    v->setValueReadOnly("build-number", JENKINS_BUILD_NUMBER);
-    v->setValueReadOnly("build-id", JENKINS_BUILD_ID);
+    v->setValueReadOnly("build-date", BUILD_DATE);
     v->setValueReadOnly("hla-support", bool(FG_HAVE_HLA));
     v->setValueReadOnly("build-type", FG_BUILD_TYPE);
 
@@ -2030,9 +2025,6 @@ const std::initializer_list<OptionDesc> fgOptionArray = {
     {"clouds3d",                         ParamType::VAL_BOOL, OptionType::OPT_BOOL,   "/sim/rendering/clouds3d-enable", true,  "", nullptr },
     {"disable-clouds3d",                 ParamType::NONE,     OptionType::OPT_BOOL,   "/sim/rendering/clouds3d-enable", false, "", nullptr },
     {"enable-clouds3d",                  ParamType::NONE,     OptionType::OPT_BOOL,   "/sim/rendering/clouds3d-enable", true,  "", nullptr },
-    {"composite-viewer",                 ParamType::VAL_BOOL, OptionType::OPT_BOOL,   "/sim/rendering/composite-viewer-enabled", true,  "", nullptr},
-    {"disable-composite-viewer",         ParamType::NONE,     OptionType::OPT_BOOL,   "/sim/rendering/composite-viewer-enabled", false, "", nullptr},
-    {"enable-composite-viewer",          ParamType::NONE,     OptionType::OPT_BOOL,   "/sim/rendering/composite-viewer-enabled", true,  "", nullptr},
     {"developer",                        ParamType::VAL_BOOL, OptionType::OPT_IGNORE | OptionType::OPT_BOOL, "", true,  "", nullptr },
     {"disable-developer",                ParamType::NONE,     OptionType::OPT_IGNORE | OptionType::OPT_BOOL, "", false, "", nullptr },
     {"enable-developer",                 ParamType::NONE,     OptionType::OPT_IGNORE | OptionType::OPT_BOOL, "", true,  "", nullptr },
@@ -2421,11 +2413,11 @@ OptionResult Options::init(int argc, char** argv, const SGPath& appDataPath)
     } else {
     // XML properties file
         SGPath f = SGPath::fromUtf8(argv[i]);
-      if (!f.exists()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << f);
-      } else {
-        p->propertyFiles.push_back(f);
-      }
+        if (!f.exists()) {
+          SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << f);
+        } else {
+          p->propertyFiles.push_back(f);
+        }
     }
   } // of arguments iteration
   p->insertGroupMarker(); // command line is one group
@@ -2687,17 +2679,19 @@ void Options::processArgResult(int result)
     }
     devices.clear();
     smgr.stop();
-    exit(0);
+    fgExit(0);
   } else if (result == FG_OPTIONS_EXIT) {
-    exit(0);
+    fgExit(0);
   }
 }
 
 void Options::readConfig(const SGPath& path)
 {
-  sg_gzifstream in( path );
-  if ( !in.is_open() ) {
-    return;
+    using namespace simgear;
+
+    sg_gzifstream in(path);
+    if (!in.is_open()) {
+        return;
   }
 
   SG_LOG( SG_GENERAL, SG_INFO, "Processing config file: " << path );
@@ -2707,12 +2701,14 @@ void Options::readConfig(const SGPath& path)
     string line;
     getline( in, line, '\n' );
 
-    // catch extraneous (DOS) line ending character
-    int i;
-    for (i = line.length(); i > 0; i--)
-      if (line[i - 1] > 32)
-        break;
-    line = line.substr( 0, i );
+    line = strutils::strip(line);
+
+    // avoid processing empty lines
+    // https://sourceforge.net/p/flightgear/codetickets/2927/
+    if (line.empty()) {
+        in >> skipcomment;
+        continue;
+    }
 
     simgear::optional<std::string> value;
     const size_t space = line.find(' ');
@@ -2721,7 +2717,7 @@ void Options::readConfig(const SGPath& path)
       // We assume that the value is separated by a space from the option name, like:
       // --metar XXXX 280900Z 28007KT 9999 20/16 Q1010 instead of
       // --metar=XXXX 280900Z 28007KT 9999 20/16 Q1010
-      value = line.substr(space + 1);
+      value = strutils::strip(line.substr(space + 1));
       line = line.substr(0, space);
     }
 
@@ -2812,6 +2808,8 @@ int Options::parseOption(const string& s, const simgear::optional<std::string>& 
     }
 
     return addOption(key, value);
+  } else if (s.empty()) {
+      return FG_OPTIONS_OK;
   } else {
       flightgear::modalMessageBox("Unknown option", "Unknown command-line option: " + s);
     return FG_OPTIONS_ERROR;
@@ -3297,12 +3295,22 @@ void Options::showUsage() const
               // then split it up in several pieces.
 
               while ( t_str.size() > 47 ) {
-
                 string::size_type m = t_str.rfind(' ', 47);
-                msg += t_str.substr(0, m) + '\n';
-                msg.append( 32, ' ');
 
-                t_str.erase(t_str.begin(), t_str.begin() + m + 1);
+                if (m == string::npos) {
+                    m = t_str.find(' '); // fallback: find the first space
+                }
+
+                if (m == string::npos) {
+                    // No line wrapping at all. Maybe this is not the best for
+                    // some languages like Chinese, but at least this will
+                    // prevent FG from eating all memory.
+                    break;
+                } else {
+                    msg += t_str.substr(0, m) + '\n';
+                    msg.append( 32, ' ');
+                    t_str.erase(t_str.begin(), t_str.begin() + m + 1);
+                }
               }
               msg += t_str + '\n';
             }
@@ -3334,7 +3342,7 @@ void Options::showVersion() const
 {
     cout << "FlightGear version: " << FLIGHTGEAR_VERSION << endl;
     cout << "Revision: " << REVISION << endl;
-    cout << "Build-Id: " << JENKINS_BUILD_ID << endl;
+    cout << "Build-Date: " << BUILD_DATE << endl;
     cout << "Build-Type: " << FG_BUILD_TYPE << endl;
     cout << "FG_ROOT=" << globals->get_fg_root().utf8Str() << endl;
     cout << "FG_HOME=" << globals->get_fg_home().utf8Str() << endl;
@@ -3344,7 +3352,6 @@ void Options::showVersion() const
     cout << SGPath::join(scn, SGPath::pathListSep) << endl;
     cout << "SimGear version: " << SG_STRINGIZE(SIMGEAR_VERSION) << endl;
     cout << "OSG version: " << osgGetVersion() << endl;
-    cout << "PLIB version: " << PLIB_VERSION << endl;
 }
 
 // Print a report using JSON syntax on the standard output, encoded in UTF-8.
@@ -3371,7 +3378,7 @@ void Options::printJSONReport() const
   cJSON_AddItemToObject(rootNode, "general", generalNode);
   cJSON_AddStringToObject(generalNode, "name", "FlightGear");
   cJSON_AddStringToObject(generalNode, "version", FLIGHTGEAR_VERSION);
-  cJSON_AddStringToObject(generalNode, "build ID", JENKINS_BUILD_ID);
+  cJSON_AddStringToObject(generalNode, "build date", BUILD_DATE);
   cJSON_AddStringToObject(generalNode, "build type", FG_BUILD_TYPE);
 
   cJSON *configNode = cJSON_CreateObject();

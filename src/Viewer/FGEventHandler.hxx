@@ -134,8 +134,6 @@ private:
     int m_setWindowRectangle_delta_x = 0;
     int m_setWindowRectangle_delta_y = 0;
 
-    SGPropertyNode_ptr  m_composite_viewer_enabled;
-
     enum WindowType
     {
         WindowType_NONE,

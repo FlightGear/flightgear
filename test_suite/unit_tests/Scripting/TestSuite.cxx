@@ -4,8 +4,10 @@
 #include "testGC.hxx"
 #include "testNasalLib.hxx"
 #include "testNasalSys.hxx"
+#include "benchmarkPropsAccess.hxx"
 
 // Set up the unit tests.
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(NasalSysTests, "Unit tests");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(NasalGCTests, "Unit tests");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(NasalLibTests, "Unit tests");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(BenchmarkPropsAccess, "Unit tests");

@@ -223,16 +223,6 @@ do_print_visible_scene_info(const SGPropertyNode*, SGPropertyNode*)
 }
 
 /**
- * Built-in command: hires capture screen.
- */
-static bool
-do_hires_screen_capture (const SGPropertyNode * arg, SGPropertyNode * root)
-{
-  fgHiResDump();
-  return true;
-}
-
-/**
  * Reload all Compositor instances in the default CameraGroup.
  */
 static bool
@@ -551,7 +541,6 @@ static struct {
     { "preferences-load", do_preferences_load },
     { "toggle-fullscreen", do_toggle_fullscreen },
     { "screen-capture", do_screen_capture },
-    { "hires-screen-capture", do_hires_screen_capture },
     { "tile-cache-reload", do_tile_cache_reload },
     { "dialog-new", do_dialog_new },
     { "dialog-show", do_dialog_show },

@@ -427,7 +427,6 @@ BEGIN { carrier=0; name=0; parkpos=0; }
         --save-on-exit|\
         --restore-defaults|\
         --gui|\
-        --composite-viewer|\
         --panel|\
         --freeze|\
         --fuel-freeze|\
@@ -484,7 +483,6 @@ BEGIN { carrier=0; name=0; parkpos=0; }
                                   --enable-save-on-exit --disable-save-on-exit \
                                   --enable-restore-defaults --disable-restore-defaults \
                                   --enable-gui --disable-gui \
-                                  --enable-composite-viewer --disable-composite-viewer \
                                   --enable-panel --disable-panel \
                                   --enable-freeze --disable-freeze \
                                   --enable-fuel-freeze --disable-fuel-freeze \

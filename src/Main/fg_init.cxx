@@ -34,6 +34,7 @@
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/structure/commands.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/structure/SGPerfMon.hxx>
@@ -75,9 +76,6 @@
 
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/autopilotgroup.hxx>
-
-#include <Cockpit/panel.hxx>
-#include <Cockpit/panel_io.hxx>
  
 #include <Canvas/canvas_mgr.hxx>
 #include <Canvas/gui_mgr.hxx>
@@ -110,13 +108,9 @@
 #if defined(ENABLE_SWIFT)
 #include <Network/Swift/swift_connection.hxx>
 #endif
-#include <Cockpit/cockpitDisplayManager.hxx>
 #include <Environment/environment_mgr.hxx>
 #include <Environment/ephemeris.hxx>
 #include <FDM/fdm_shell.hxx>
-#ifdef ENABLE_HUD
-#include <Instrumentation/HUD/HUD.hxx>
-#endif
 #include <Navaids/NavDataCache.hxx>
 #include <Network/DNSClient.hxx>
 #include <Network/HTTPClient.hxx>
@@ -129,33 +123,28 @@
 #include <Viewer/splash.hxx>
 #include <Viewer/viewmgr.hxx>
 
+#include "AircraftDirVisitorBase.hxx"
+#include "FGInterpolator.hxx"
 #include "fg_init.hxx"
 #include "fg_io.hxx"
-#include "fg_commands.hxx"
 #include "fg_props.hxx"
-#include "FGInterpolator.hxx"
-#include "options.hxx"
 #include "globals.hxx"
 #include "logger.hxx"
 #include "main.hxx"
+#include "options.hxx"
 #include "positioninit.hxx"
 #include "util.hxx"
-#include "AircraftDirVisitorBase.hxx"
-#include <Main/sentryIntegration.hxx>
 #include <Main/ErrorReporter.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #if defined(SG_MAC)
 #include <GUI/CocoaHelpers.h> // for Mac impl of platformDefaultDataPath()
 #endif
 
-using std::string;
 using std::endl;
-using std::cerr;
-using std::cout;
+using std::string;
 
 using namespace simgear::pkg;
-
-extern osg::ref_ptr<osgViewer::Viewer> viewer;
 
 // Return the current base package version
 string fgBasePackageVersion(const SGPath& base_path) {
@@ -1090,11 +1079,6 @@ void fgCreateSubsystems(bool duringReset) {
     
     // SGSubsystemMgr::DISPLAY
     {
-#ifdef ENABLE_HUD
-        mgr->add<HUD>();
-#endif
-        mgr->add<flightgear::CockpitDisplayManager>();
-
         simgear::canvas::Canvas::setSystemAdapter(
           simgear::canvas::SystemAdapterPtr(new canvas::FGCanvasSystemAdapter)
         );
@@ -1356,7 +1340,6 @@ void fgStartNewReset()
     flightgear::unregisterMainLoopProperties();
     FGReplay::resetStatisticsProperties();
 
-    simgear::clearSharedTreeGeometry();
     simgear::clearEffectCache();
     simgear::VPBTechnique::clearConstraints();
     simgear::SGModelLib::resetPropertyRoot();
@@ -1413,45 +1396,32 @@ void fgStartNewReset()
 
     fgInitAircraftPaths(true);
     fgInitAircraft(true, false /* not from launcher */);
-    
-    render = new FGRenderer(composite_viewer);
+
+    auto presets = globals->get_subsystem_mgr()->add<flightgear::GraphicsPresets>();
+    presets->applyInitialPreset();
+
+    render = new FGRenderer;
+    render->setCompositeViewer(composite_viewer);
     render->setEventHandler(eventHandler);
     eventHandler->reset();
     globals->set_renderer(render);
     render->init();
-    
-    if (composite_viewer) {
-        render->setView(composite_viewer_view);
-    }
-    else {
-        render->setView(viewer.get());
-    }
-
-    sgUserDataInit( globals->get_props() );
+    render->setView(composite_viewer_view);
 
     unsigned int numDBPagerThreads = std::max(fgGetNode("/sim/rendering/database-pager/threads", true)->getIntValue(1), 1);
+    composite_viewer_view->setDatabasePager(FGScenery::getPagerSingleton());
+    composite_viewer_view->getDatabasePager()->setUnrefImageDataAfterApplyPolicy(true, false);
+    composite_viewer_view->getDatabasePager()->setUpThreads(numDBPagerThreads, 0);
+    composite_viewer_view->getDatabasePager()->setAcceptNewDatabaseRequests(true);
+    composite_viewer_view->setFrameStamp(composite_viewer->getFrameStamp());
 
-    if (composite_viewer) {
-        composite_viewer_view->setDatabasePager(FGScenery::getPagerSingleton());
-        composite_viewer_view->getDatabasePager()->setUnrefImageDataAfterApplyPolicy(true, false);
-        composite_viewer_view->getDatabasePager()->setUpThreads(numDBPagerThreads, 0);
-        composite_viewer_view->getDatabasePager()->setAcceptNewDatabaseRequests(true);
-        flightgear::CameraGroup::buildDefaultGroup(composite_viewer_view);
-        composite_viewer_view->setFrameStamp(composite_viewer->getFrameStamp());
-        osg::GraphicsContext::createNewContextID();
-        render->setView(composite_viewer_view);
-        render->preinit();
-        composite_viewer->startThreading();
-    }
-    else {
-        viewer->getDatabasePager()->setUpThreads(numDBPagerThreads, 0);
-        viewer->getDatabasePager()->setAcceptNewDatabaseRequests(true);
-        // must do this before preinit for Rembrandthe
-        flightgear::CameraGroup::buildDefaultGroup(viewer.get());
-        render->preinit();
-        viewer->startThreading();
-    }
-    
+    flightgear::CameraGroup::buildDefaultGroup(composite_viewer_view);
+    osg::GraphicsContext::createNewContextID();
+
+    render->setView(composite_viewer_view);
+    render->postinit();
+    composite_viewer->startThreading();
+
     fgOSResetProperties();
 
 // init some things manually

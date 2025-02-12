@@ -60,7 +60,7 @@ set(MAIN_SOURCE
     bootstrap.cxx
     # we only want this file when building FGFS, so it can't be
     # part of fgfsObjects
-    ${CMAKE_SOURCE_DIR}/src/Scripting/NasalUnitTesting.cxx
+    ${PROJECT_SOURCE_DIR}/src/Scripting/NasalUnitTesting.cxx
 )
 
 # Set up the embedded resources.
@@ -94,7 +94,7 @@ if(APPLE)
 endif()
 
 target_precompile_headers(fgfs PRIVATE 
-        "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/src/Include/flightgear_precompile.h>")
+        "$<$<COMPILE_LANGUAGE:CXX>:${PROJECT_SOURCE_DIR}/src/Include/flightgear_precompile.h>")
 
 # Set up the target links.
 setup_fgfs_libraries(fgfs)
@@ -107,7 +107,7 @@ setup_fgfs_includes(fgfs)
 
 add_executable(nasal
     nasal-bin.cxx
-    ${CMAKE_SOURCE_DIR}/src/Scripting/sqlitelib.cxx
+    ${PROJECT_SOURCE_DIR}/src/Scripting/sqlitelib.cxx
 )
 setup_fgfs_libraries(nasal)
 install(TARGETS nasal RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -123,7 +123,13 @@ if (MSVC)
   file(TO_NATIVE_PATH "${FG_QT_BIN_DIR}" _qt_bin_dir_native)
   file(TO_NATIVE_PATH "${FINAL_MSVC_3RDPARTY_DIR}/bin" _msvc_3rdparty_bin_dir)
   file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}" _install_bin_dir)
+  file(TO_NATIVE_PATH "${OSG_BASE_DIR}/bin" _osg_bin_dir_native)
+
+  file(TO_NATIVE_PATH "${FG_QT_BIN_DIR}/../plugins" _qt_plugin_dir_native)
+  file(TO_NATIVE_PATH "${FG_QT_BIN_DIR}/../qml" _qt_qml_dir_native)
 
   set_property(TARGET fgfs PROPERTY
-  VS_GLOBAL_LocalDebuggerEnvironment "PATH=${_install_bin_dir};${_msvc_3rdparty_bin_dir};${_qt_bin_dir_native}")
+  VS_GLOBAL_LocalDebuggerEnvironment 
+    "PATH=${_osg_bin_dir_native};${_install_bin_dir};${_msvc_3rdparty_bin_dir};${_qt_bin_dir_native}\nQT_PLUGIN_PATH=${_qt_plugin_dir_native}\nQML_IMPORT_PATH=${_qt_qml_dir_native}"
+)
 endif()

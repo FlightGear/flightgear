@@ -70,7 +70,6 @@
 #include <Main/locale.hxx>
 #include <Main/options.hxx>
 #include <Network/HTTPClient.hxx>
-#include <Viewer/WindowBuilder.hxx>
 
 #include "LaunchConfig.hxx"
 #include "LauncherMainWindow.hxx"
@@ -91,6 +90,14 @@ using namespace flightgear;
 using namespace simgear::pkg;
 using std::string;
 
+#if defined(OSG_OPENGL)
+  #error "Don't include osg/GL in this file, it will cause problems"
+#endif
+// this function is defined in WindowBuilder.cxx, but we can't include that here, since
+// it will mean we include <osg/GL>, and we *also* include <QOpenGLContext> here, and including
+// both is *bad*. So we just declare this function, implement it in WindowBuilder.cxx, and ensure
+// we don't include any OSG headers here
+extern void fgqt_setPoseAsStandaloneApp(bool b);
 namespace { // anonymous namespace
 
 struct ProgressLabel {
@@ -277,58 +284,6 @@ private:
     bool m_abandoned = false;
 };
 
-enum class OpenGLStatus
-{
-    OpenGL21,
-    Unknown,
-    GDIGeneric,
-    Intel14
-};
-
-OpenGLStatus checkForWorkingOpenGL()
-{
-    // request an OpenGL comptability profile, version 2.1
-    // anything lower and we'll crash
-    QSurfaceFormat fmt;
-    fmt.setProfile(QSurfaceFormat::CompatibilityProfile);
-    fmt.setMajorVersion(2);
-    fmt.setMinorVersion(1);
-
-    QOpenGLContext ctx;
-    ctx.setFormat(fmt);
-    if (!ctx.create()) {
-        return OpenGLStatus::Unknown;
-    }
-
-    // from here on, we need to ensure orderly cleanup or some drivers
-    // crash. So we can't early return.
-
-    OpenGLStatus result = OpenGLStatus::Unknown;
-    QOffscreenSurface offSurface;
-    offSurface.setFormat(ctx.format()); // ensure it's compatible
-    offSurface.create();
-
-    if (ctx.makeCurrent(&offSurface)) {
-        result = OpenGLStatus::OpenGL21;
-        std::string renderer = (char*)glGetString(GL_RENDERER);
-        if (renderer == "GDI Generic") {
-            flightgear::addSentryBreadcrumb("Detected GDI generic renderer", "info");
-            result = OpenGLStatus::GDIGeneric;
-        } else if (simgear::strutils::starts_with(renderer, "Intel")) {
-            if (ctx.format().majorVersion() < 2) {
-                flightgear::addSentryBreadcrumb("Detected Intel < 2.1 renderer", "info");
-                result = OpenGLStatus::Intel14;
-            }
-        }
-
-        // ensure the context is no longer current on the offscreen
-        ctx.doneCurrent();
-    }
-
-    offSurface.destroy();
-    return result;
-}
-
 } // of anonymous namespace
 
 static void initQtResources()
@@ -383,7 +338,7 @@ void selectUITranslation()
     QStringList uiLanguages = QLocale::system().uiLanguages();
     //qWarning() << "UI languages:" << uiLanguages;
 
-    for (QString locale : qAsConst(uiLanguages)) {
+    for (auto locale : uiLanguages) {
         // remove script if it exists, eg zh-Hans-CN -> zh-CN
         locale = QLocale(locale).name();
         locale.replace('-', '_');
@@ -435,7 +390,7 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
 		// leave things unset here, so users can use env var
 		// QT_AUTO_SCREEN_SCALE_FACTOR=1 to enable it at runtime
 
-#if !defined (SG_WINDOWS)
+#if !defined (SG_WINDOWS) && (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
         QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
         static_qApp.reset(new QApplication(s_argc, argv));
@@ -639,14 +594,6 @@ void launcherSetSceneryPaths()
 
 bool runLauncherDialog()
 {
-    auto glCheckResult = checkForWorkingOpenGL();
-    if (glCheckResult != OpenGLStatus::OpenGL21) {
-        QMessageBox::critical(nullptr, "Failed to find graphics drivers",
-                              "This computer is missing suitable graphics drivers (OpenGL) to run FlightGear. "
-                              "Please download and install drivers from your graphics card vendor.");
-        return false;
-    }
-
     // Used for NavDataCache initialization: needed to find the apt.dat files
     launcherSetSceneryPaths();
     // startup the nav-cache now. This pre-empts normal startup of
@@ -692,7 +639,7 @@ bool runLauncherDialog()
 
     // avoid double Apple menu and other weirdness if both Qt and OSG
     // try to initialise various Cocoa structures.
-    flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
+    fgqt_setPoseAsStandaloneApp(false);
 
     LauncherMainWindow dlg(false);
 
@@ -782,6 +729,15 @@ bool showSetupRootDialog(bool usingDefaultRoot)
 SetupRootResult restoreUserSelectedRoot(SGPath& path)
 {
     return SetupRootDialog::restoreUserSelectedRoot(path);
+}
+
+void warnAboutGLVersion()
+{
+    QMessageBox::critical(
+        nullptr,
+        "Unable to create OpenGL 4.1 core profile context",
+        "FlightGear detected that your system does not support the required OpenGL version. "
+        "This is normally due to outdated graphics drivers, please check if updates are available.");
 }
 
 } // of namespace flightgear

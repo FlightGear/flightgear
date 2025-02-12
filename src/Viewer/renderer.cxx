@@ -1,30 +1,11 @@
-// renderer.cxx -- top level sim routines
-//
-// Written by Curtis Olson, started May 1997.
-// This file contains parts of main.cxx prior to october 2004
-//
-// Copyright (C) 1997 - 2002  Curtis L. Olson  - http://www.flightgear.org/~curt
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+/*
+ * SPDX-FileName: renderer.cxx
+ * SPDX-FileComment: Written by Curtis Olson, started May 1997.
+ * SPDX-FileCopyrightText: Copyright (C) 1997 - 2002  Curtis L. Olson  - http://www.flightgear.org/~curt
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
 
 #include <config.h>
-
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <simgear/compiler.h>
 
 #include <algorithm>
@@ -33,356 +14,102 @@
 #include <vector>
 #include <typeinfo>
 
-#include <osg/ref_ptr>
-#include <osg/AlphaFunc>
-#include <osg/BlendFunc>
 #include <osg/Camera>
 #include <osg/CullFace>
 #include <osg/CullStack>
-#include <osg/Depth>
-#include <osg/Fog>
+#include <osg/GraphicsContext>
 #include <osg/Group>
 #include <osg/Hint>
-#include <osg/Light>
-#include <osg/LightModel>
-#include <osg/LightSource>
-#include <osg/Material>
 #include <osg/Math>
 #include <osg/NodeCallback>
 #include <osg/Notify>
 #include <osg/PolygonMode>
-#include <osg/PolygonOffset>
 #include <osg/Program>
-#include <osg/Version>
-#include <osg/TexEnv>
-
 #include <osgUtil/LineSegmentIntersector>
-
-#include <osg/io_utils>
 #include <osgDB/WriteFile>
-#include <osgViewer/Renderer>
 
-#include <simgear/scene/material/matlib.hxx>
+#include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
-#include <simgear/scene/material/Effect.hxx>
-#include <simgear/scene/material/EffectGeode.hxx>
-#include <simgear/scene/material/EffectBuilder.hxx>
-#include <simgear/scene/model/animation.hxx>
-#include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/sky/sky.hxx>
-#include <simgear/scene/util/DeletionManager.hxx>
+#include <simgear/scene/tgdb/GroundLightManager.hxx>
+#include <simgear/scene/tgdb/pt_lights.hxx>
+#include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/scene/util/SGUpdateVisitor.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/util/OsgUtils.hxx>
-#include <simgear/scene/tgdb/GroundLightManager.hxx>
-#include <simgear/scene/tgdb/pt_lights.hxx>
-#include <simgear/scene/tgdb/userdata.hxx>
-#include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
-#include <simgear/ephemeris/ephemeris.hxx>
-#include <simgear/math/sg_random.hxx>
 
-#include <Time/light.hxx>
-#include <Time/light.hxx>
-#include <Cockpit/panel.hxx>
-
-#include <Model/panelnode.hxx>
+#include <Main/sentryIntegration.hxx>
 #include <Model/modelmgr.hxx>
 #include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
-#include <Scenery/redout.hxx>
 #include <GUI/new_gui.hxx>
 #include <GUI/gui.h>
 #include <GUI/Highlight.hxx>
+#include <Time/light.hxx>
 
-#ifdef ENABLE_HUD
-#  include <Instrumentation/HUD/HUD.hxx>
-#endif
 #include <Environment/precipitation_mgr.hxx>
 #include <Environment/environment_mgr.hxx>
 #include <Environment/ephemeris.hxx>
 
-//#include <Main/main.hxx>
-#include "view.hxx"
-#include "viewmgr.hxx"
-#include "splash.hxx"
-#include "renderer.hxx"
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
-#include <Main/sentryIntegration.hxx>
+#include "splash.hxx"
+#include "view.hxx"
+#include "viewmgr.hxx"
+#include "WindowSystemAdapter.hxx"
+
+#include "renderer.hxx"
 
 #if defined(ENABLE_QQ_UI)
 #include <GUI/QQuickDrawable.hxx>
 #endif
 
-#if defined(HAVE_PUI)
-#include <Viewer/PUICamera.hxx>
-#endif
-
-using namespace osg;
 using namespace flightgear;
 
-class FGHintUpdateCallback : public osg::StateAttribute::Callback {
+// Operation for querying OpenGL parameters. This must be done in a
+// valid OpenGL context, potentially in another thread.
+class QueryGLParametersOperation : public GraphicsContextOperation {
 public:
-  FGHintUpdateCallback(const char* configNode) :
-    mConfigNode(fgGetNode(configNode, true))
-  { }
-  virtual void operator()(osg::StateAttribute* stateAttribute,
-                          osg::NodeVisitor*)
-  {
-    assert(dynamic_cast<osg::Hint*>(stateAttribute));
-    osg::Hint* hint = static_cast<osg::Hint*>(stateAttribute);
-
-    std::string value = mConfigNode->getStringValue();
-    if (value.empty())
-      hint->setMode(GL_DONT_CARE);
-    else if (value == "nicest")
-      hint->setMode(GL_NICEST);
-    else if (value == "fastest")
-      hint->setMode(GL_FASTEST);
-    else
-      hint->setMode(GL_DONT_CARE);
-  }
-private:
-  SGPropertyNode_ptr mConfigNode;
-};
-
-#ifdef ENABLE_HUD
-
-class SGHUDDrawable : public osg::Drawable {
-public:
-  SGHUDDrawable()
-  {
-    // Dynamic stuff, do not store geometry
-    setUseDisplayList(false);
-    setDataVariance(Object::DYNAMIC);
-
-    osg::StateSet* stateSet = getOrCreateStateSet();
-    stateSet->setRenderBinDetails(1000, "RenderBin");
-
-    // speed optimization?
-    stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
-    stateSet->setAttribute(new osg::BlendFunc(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA));
-    stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
-    stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
-    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-
-    stateSet->setTextureAttribute(0, new osg::TexEnv(osg::TexEnv::MODULATE));
-  }
-  virtual void drawImplementation(osg::RenderInfo& renderInfo) const
-  { drawImplementation(*renderInfo.getState()); }
-  void drawImplementation(osg::State& state) const
-  {
-    state.setActiveTextureUnit(0);
-    state.setClientActiveTextureUnit(0);
-    state.disableAllVertexArrays();
-
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
-    glPushClientAttrib(~0u);
-
-      // HUD can be NULL
-      auto hud = globals->get_subsystem<HUD>();
-      if (hud) {
-          hud->draw(state);
-      }
-
-    glPopClientAttrib();
-    glPopAttrib();
-  }
-
-  virtual osg::Object* cloneType() const { return new SGHUDDrawable; }
-  virtual osg::Object* clone(const osg::CopyOp&) const { return new SGHUDDrawable; }
-
-private:
-};
-
-#endif
-
-class FGLightSourceUpdateCallback : public osg::NodeCallback {
-public:
-
-  /**
-   * @param isSun true if the light is the actual sun i.e., for
-   * illuminating the moon.
-   */
-  FGLightSourceUpdateCallback(bool isSun = false) : _isSun(isSun) {}
-  FGLightSourceUpdateCallback(const FGLightSourceUpdateCallback& nc,
-                              const CopyOp& op)
-    : NodeCallback(nc, op), _isSun(nc._isSun)
-  {}
-  META_Object(flightgear,FGLightSourceUpdateCallback);
-
-  virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
-  {
-    assert(dynamic_cast<osg::LightSource*>(node));
-    osg::LightSource* lightSource = static_cast<osg::LightSource*>(node);
-    osg::Light* light = lightSource->getLight();
-
-    auto l = globals->get_subsystem<FGLight>();
-      if (!l) {
-          // lighting is down during re-init
-          return;
-      }
-
-    if (_isSun) {
-      light->setAmbient(Vec4(0.0f, 0.0f, 0.0f, 0.0f));
-      light->setDiffuse(Vec4(1.0f, 1.0f, 1.0f, 1.0f));
-      light->setSpecular(Vec4(0.0f, 0.0f, 0.0f, 0.0f));
-    } else {
-      light->setAmbient(toOsg(l->scene_ambient()));
-      light->setDiffuse(toOsg(l->scene_diffuse()));
-      light->setSpecular(toOsg(l->scene_specular()));
-    }
-    osg::Vec4f position(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2], 0);
-    light->setPosition(position);
-
-    traverse(node, nv);
-  }
-private:
-  const bool _isSun;
-};
-
-class FGWireFrameModeUpdateCallback : public osg::StateAttribute::Callback {
-public:
-  FGWireFrameModeUpdateCallback() :
-    mWireframe(fgGetNode("/sim/rendering/wireframe", true))
-  { }
-  virtual void operator()(osg::StateAttribute* stateAttribute,
-                          osg::NodeVisitor*)
-  {
-    assert(dynamic_cast<osg::PolygonMode*>(stateAttribute));
-    osg::PolygonMode* polygonMode;
-    polygonMode = static_cast<osg::PolygonMode*>(stateAttribute);
-
-    if (mWireframe->getBoolValue())
-      polygonMode->setMode(osg::PolygonMode::FRONT_AND_BACK,
-                           osg::PolygonMode::LINE);
-    else
-      polygonMode->setMode(osg::PolygonMode::FRONT_AND_BACK,
-                           osg::PolygonMode::FILL);
-  }
-private:
-  SGPropertyNode_ptr mWireframe;
-};
-
-class FGLightModelUpdateCallback : public osg::StateAttribute::Callback {
-public:
-  FGLightModelUpdateCallback() :
-    mHighlights(fgGetNode("/sim/rendering/specular-highlight", true))
-  { }
-  virtual void operator()(osg::StateAttribute* stateAttribute,
-                          osg::NodeVisitor*)
-  {
-    assert(dynamic_cast<osg::LightModel*>(stateAttribute));
-    osg::LightModel* lightModel;
-    lightModel = static_cast<osg::LightModel*>(stateAttribute);
-
-#if 0
-    auto l = globals->get_subsystem<FGLight>();
-    lightModel->setAmbientIntensity(toOsg(l->scene_ambient());
-#else
-    lightModel->setAmbientIntensity(osg::Vec4(0, 0, 0, 1));
-#endif
-    lightModel->setTwoSided(true);
-    lightModel->setLocalViewer(false);
-
-    if (mHighlights->getBoolValue()) {
-      lightModel->setColorControl(osg::LightModel::SEPARATE_SPECULAR_COLOR);
-    } else {
-      lightModel->setColorControl(osg::LightModel::SINGLE_COLOR);
-    }
-  }
-private:
-  SGPropertyNode_ptr mHighlights;
-};
-
-class FGFogEnableUpdateCallback : public osg::StateSet::Callback {
-public:
-  FGFogEnableUpdateCallback() :
-    mFogEnabled(fgGetNode("/sim/rendering/fog", true))
-  { }
-  virtual void operator()(osg::StateSet* stateSet, osg::NodeVisitor*)
-  {
-    if (mFogEnabled->getStringValue() == "disabled") {
-      stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
-    } else {
-      stateSet->setMode(GL_FOG, osg::StateAttribute::ON);
-    }
-  }
-private:
-  SGPropertyNode_ptr mFogEnabled;
-};
-
-class FGFogUpdateCallback : public osg::StateAttribute::Callback {
-public:
-  virtual void operator () (osg::StateAttribute* sa, osg::NodeVisitor* nv)
-  {
-    assert(dynamic_cast<SGUpdateVisitor*>(nv));
-    assert(dynamic_cast<osg::Fog*>(sa));
-    SGUpdateVisitor* updateVisitor = static_cast<SGUpdateVisitor*>(nv);
-    osg::Fog* fog = static_cast<osg::Fog*>(sa);
-    fog->setMode(osg::Fog::EXP2);
-    fog->setColor(toOsg(updateVisitor->getFogColor()));
-    fog->setDensity(updateVisitor->getFogExp2Density());
-  }
-};
-
-// update callback for the switch node guarding that splash
-class FGScenerySwitchCallback : public osg::NodeCallback {
-public:
-  virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
-  {
-    assert(dynamic_cast<osg::Switch*>(node));
-    osg::Switch* sw = static_cast<osg::Switch*>(node);
-
-    bool enabled = scenery_enabled;
-    sw->setValue(0, enabled);
-    if (!enabled)
-      return;
-    traverse(node, nv);
-  }
-
-  static bool scenery_enabled;
-};
-
-bool FGScenerySwitchCallback::scenery_enabled = false;
-
-FGRenderer::FGRenderer() :
-    _sky(NULL),
-    MaximumTextureSize(0),
-    _splash(nullptr)
-{
-	_root = new osg::Group;
-	_root->setName("fakeRoot");
-    _updateVisitor = new SGUpdateVisitor;
-}
-
-FGRenderer::FGRenderer(osg::ref_ptr<osgViewer::CompositeViewer> composite_viewer) :
-    composite_viewer(composite_viewer),
-    _sky(NULL),
-    MaximumTextureSize(0)
-{
-	_root = new osg::Group;
-	_root->setName("fakeRoot");
-    _updateVisitor = new SGUpdateVisitor;
-}
-
-
-FGRenderer::~FGRenderer()
-{
-    SGPropertyChangeListenerVec::iterator i = _listeners.begin();
-    for (; i != _listeners.end(); ++i) {
-        delete *i;
+    QueryGLParametersOperation() : GraphicsContextOperation(std::string("Query OpenGL Parameters"))
+    {
     }
 
-	// replace the viewer's scene completely
-    if (getView()) {
-        getView()->setSceneData(new osg::Group);
+    void run(osg::GraphicsContext* gc)
+    {
+        OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
+
+        SGPropertyNode* p_rendering = fgGetNode("/sim/rendering/gl-info", true);
+        auto query_gl_string =
+            [p_rendering](const std::string& prop_name, GLenum name) {
+                const char* value = (const char*)glGetString(name);
+                // glGetString may return a null string
+                std::string str(value ? value : "");
+                p_rendering->setStringValue(prop_name, str);
+                SG_LOG(SG_GL, SG_INFO, "  " << prop_name << ": " << str);
+            };
+
+        auto query_gl_int =
+            [p_rendering](const std::string& prop_name, GLenum name) {
+                GLint value = 0;
+                glGetIntegerv(name, &value);
+                p_rendering->setIntValue(prop_name, value);
+                SG_LOG(SG_GL, SG_INFO, "  " << prop_name << ": " << value);
+            };
+
+        SG_LOG(SG_GL, SG_INFO, "OpenGL context info:");
+        query_gl_string("gl-vendor", GL_VENDOR);
+        query_gl_string("gl-renderer", GL_RENDERER);
+        query_gl_string("gl-version", GL_VERSION);
+        query_gl_string("gl-shading-language-version", GL_SHADING_LANGUAGE_VERSION);
+        query_gl_int("gl-max-texture-size", GL_MAX_TEXTURE_SIZE);
+        query_gl_int("gl-max-texture-units", GL_MAX_TEXTURE_UNITS);
     }
 
-    delete _sky;
-}
+private:
+    OpenThreads::Mutex _mutex;
+};
 
 class PointSpriteListener : public SGPropertyChangeListener {
 public:
@@ -408,127 +135,148 @@ public:
     }
 };
 
-void
-FGRenderer::addChangeListener(SGPropertyChangeListener* l, const char* path)
-{
-    _listeners.push_back(l);
-    fgAddChangeListener(l, path);
-}
-
-// Initialize various GL/view parameters
-//
-// Note that this appears to be called *after* FGRenderer::init().
-//
-void
-FGRenderer::preinit( void )
-{
-    // important that we reset the viewer sceneData here, to ensure the reference
-    // time for everything is in sync; otherwise on reset the Viewer and
-    // GraphicsWindow clocks are out of sync.
-    osgViewer::View* view = getView();
-    view->setName("osgViewer");
-    _viewerSceneRoot = new osg::Group;
-    _viewerSceneRoot->setName("viewerSceneRoot");
-    view->setSceneData(_viewerSceneRoot);
-    view->setDatabasePager(FGScenery::getPagerSingleton());
-
-    _quickDrawable = nullptr;
-    getSplash();
-
-    if (composite_viewer) {
-        // Nothing to do - composite_viewer->addView() will tell view to use
-        // composite_viewer's FrameStamp.
+class FGHintUpdateCallback : public osg::StateAttribute::Callback {
+public:
+    FGHintUpdateCallback(const char* configNode) :
+        mConfigNode(fgGetNode(configNode, true))
+    {
     }
-    else {
-        _frameStamp = new osg::FrameStamp;
-        view->setFrameStamp(_frameStamp.get());
+    void operator()(osg::StateAttribute* stateAttribute, osg::NodeVisitor*) override
+    {
+        assert(dynamic_cast<osg::Hint*>(stateAttribute));
+        osg::Hint* hint = static_cast<osg::Hint*>(stateAttribute);
+        std::string value = mConfigNode->getStringValue();
+        if (value.empty())
+            hint->setMode(GL_DONT_CARE);
+        else if (value == "nicest")
+            hint->setMode(GL_NICEST);
+        else if (value == "fastest")
+            hint->setMode(GL_FASTEST);
+        else
+            hint->setMode(GL_DONT_CARE);
     }
-    
-    // Scene doesn't seem to pass the frame stamp to the update
-    // visitor automatically.
-    _updateVisitor->setFrameStamp(getFrameStamp());
-    getViewerBase()->setUpdateVisitor(_updateVisitor.get());
-    fgSetDouble("/sim/startup/splash-alpha", 1.0);
+private:
+    SGPropertyNode_ptr mConfigNode;
+};
 
-    // hide the menubar if it overlaps the window, so the splash screen
-    // is completely visible. We reset this value when the splash screen
-    // is fading out.
-    fgSetBool("/sim/menubar/overlap-hide", true);
-}
-
-void
-FGRenderer::init( void )
-{
-    if (!eventHandler)
-        eventHandler = new FGEventHandler();
-
-    sgUserDataInit( globals->get_props() );
-
-    SGPropertyNode* composite_viewer_enabled_prop = fgGetNode("/sim/rendering/composite-viewer-enabled", true);
-    // After we've read composite_viewer_enabled_prop here, changing its value
-    // will have no affect, so mark it as read-only for clarity.
-    composite_viewer_enabled_prop->setAttributes(SGPropertyNode::READ);
-    if (composite_viewer_enabled_prop->getBoolValue()) {
-        const char* osg_version = osgGetVersion();
-        if (simgear::strutils::starts_with(osg_version, "3.4")) {
-            SG_LOG( SG_GENERAL, SG_POPUP,
-                    "CompositeViewer is enabled and requires OpenSceneGraph-3.6, but\n"
-                    " Flightgear has been built with OpenSceneGraph-" << osg_version << ".\n"
-                    " There may be problems when opening/closing extra view windows.\n"
-                    );
+class FGWireFrameModeUpdateCallback : public osg::StateAttribute::Callback {
+public:
+    FGWireFrameModeUpdateCallback() :
+        mWireframe(fgGetNode("/sim/rendering/wireframe", true))
+    {
+    }
+    void operator()(osg::StateAttribute* stateAttribute, osg::NodeVisitor*) override
+    {
+        assert(dynamic_cast<osg::PolygonMode*>(stateAttribute));
+        osg::PolygonMode* polygonMode = static_cast<osg::PolygonMode*>(stateAttribute);
+        if (mWireframe->getBoolValue()) {
+            polygonMode->setMode(osg::PolygonMode::FRONT_AND_BACK,
+                                 osg::PolygonMode::LINE);
+        } else {
+            polygonMode->setMode(osg::PolygonMode::FRONT_AND_BACK,
+                                 osg::PolygonMode::FILL);
         }
-        composite_viewer_enabled = 1;
-        SG_LOG(SG_VIEW, SG_ALERT, "Creating osgViewer::CompositeViewer");
-        if (composite_viewer) {
-            // reinit.
+    }
+private:
+    SGPropertyNode_ptr mWireframe;
+};
+
+// update callback for the switch node guarding that splash
+class FGScenerySwitchCallback : public osg::NodeCallback {
+public:
+    void operator()(osg::Node* node, osg::NodeVisitor* nv) override
+    {
+        assert(dynamic_cast<osg::Switch*>(node));
+        osg::Switch* sw = static_cast<osg::Switch*>(node);
+        bool enabled = scenery_enabled;
+        sw->setValue(0, enabled);
+        if (!enabled)
+            return;
+        traverse(node, nv);
+    }
+    static bool scenery_enabled;
+};
+
+bool FGScenerySwitchCallback::scenery_enabled = false;
+
+FGRenderer::FGRenderer()
+{
+}
+
+FGRenderer::~FGRenderer()
+{
+    SGPropertyChangeListenerVec::iterator i = _listeners.begin();
+    for (; i != _listeners.end(); ++i) {
+        delete *i;
+    }
+    // replace the viewer's scene completely
+    if (getView()) {
+        getView()->setSceneData(new osg::Group);
+    }
+    if (_sky) {
+        delete _sky;
+        _sky = nullptr;
+    }
+}
+
+void
+FGRenderer::init()
+{
+    osg::initNotifyLevel();
+
+    osg::DisplaySettings* display_settings = osg::DisplaySettings::instance();
+    assert(display_settings);
+    // Don't let OSG do automatic shader generation
+    display_settings->setShaderHint(osg::DisplaySettings::SHADER_NONE, false);
+
+    // Create the update visitor
+    _update_visitor = new SGUpdateVisitor;
+
+    if (!_event_handler)
+        _event_handler = new FGEventHandler;
+    _event_handler->setChangeStatsCameraRenderOrder(true);
+
+    sgUserDataInit(globals->get_props());
+
+    if (_composite_viewer) {
+        // reinit.
+    } else {
+        _composite_viewer = new osgViewer::CompositeViewer;
+        std::string affinity = fgGetString("/sim/thread-cpu-affinity");
+        bool osg_affinity_flag = true;
+        if (affinity == "") {}
+        else if (affinity == "none") {
+            osg_affinity_flag = false;
+        }
+        else if (affinity == "osg") {
+            /* This is handled elsewhere. */
         }
         else {
-            composite_viewer = new osgViewer::CompositeViewer;
-            std::string affinity = fgGetString("/sim/thread-cpu-affinity");
-            SG_LOG(SG_GENERAL, SG_ALERT, "affinity=" << affinity);
-            bool osg_affinity_flag = true;
-            if (affinity == "") {}
-            else if (affinity == "none") {
-                osg_affinity_flag = false;
-            }
-            else if (affinity == "osg") {
-                /* This is handled elsewhere. */
-            }
-            else {
-                SG_LOG(SG_VIEW, SG_ALERT, "Unrecognised value for /sim/thread-cpu-affinity: " << affinity);
-            }
-            SG_LOG(SG_VIEW, SG_ALERT, "Calling composite_viewer->setUseConfigureAffinity() with flag=" << osg_affinity_flag);
-            composite_viewer->setUseConfigureAffinity(osg_affinity_flag);
+            SG_LOG(SG_VIEW, SG_ALERT, "Unrecognised value for /sim/thread-cpu-affinity: " << affinity);
         }
+        _composite_viewer->setUseConfigureAffinity(osg_affinity_flag);
+    }
         
-        // https://stackoverflow.com/questions/15207076/openscenegraph-and-multiple-viewers
-        composite_viewer->setReleaseContextAtEndOfFrameHint(false);
-        composite_viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
-    }
-    else {
-        composite_viewer_enabled = 0;
-        SG_LOG(SG_VIEW, SG_ALERT, "Not creating osgViewer::CompositeViewer");
-    }
-    _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
+    // https://stackoverflow.com/questions/15207076/openscenegraph-and-multiple-viewers
+    _composite_viewer->setReleaseContextAtEndOfFrameHint(false);
+    _composite_viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
+
+    _scenery_loaded     = fgGetNode("/sim/sceneryloaded", true);
     _position_finalized = fgGetNode("/sim/position-finalized", true);
+    _panel_hotspots     = fgGetNode("/sim/panel-hotspots", true);
 
-    _panel_hotspots   = fgGetNode("/sim/panel-hotspots", true);
-    _virtual_cockpit  = fgGetNode("/sim/virtual-cockpit", true);
+    _sim_delta_sec      = fgGetNode("/sim/time/delta-sec", true);
 
-    _sim_delta_sec = fgGetNode("/sim/time/delta-sec", true);
+    _xsize              = fgGetNode("/sim/startup/xsize", true);
+    _ysize              = fgGetNode("/sim/startup/ysize", true);
+    _xpos               = fgGetNode("/sim/startup/xpos", true);
+    _ypos               = fgGetNode("/sim/startup/ypos", true);
+    _splash_alpha       = fgGetNode("/sim/startup/splash-alpha", true);
 
-    _xsize         = fgGetNode("/sim/startup/xsize", true);
-    _ysize         = fgGetNode("/sim/startup/ysize", true);
-    _xpos          = fgGetNode("/sim/startup/xpos", true);
-    _ypos          = fgGetNode("/sim/startup/ypos", true);
-    _splash_alpha  = fgGetNode("/sim/startup/splash-alpha", true);
+    _altitude_ft        = fgGetNode("/position/altitude-ft", true);
 
-    _horizon_effect       = fgGetNode("/sim/rendering/horizon-effect", true);
-
-    _altitude_ft = fgGetNode("/position/altitude-ft", true);
-
-    _cloud_status = fgGetNode("/environment/clouds/status", true);
-    _visibility_m = fgGetNode("/environment/visibility-m", true);
+    _cloud_status       = fgGetNode("/environment/clouds/status", true);
+    _visibility_m       = fgGetNode("/environment/visibility-m", true);
 
     // configure the lighting related parameters and add change listeners.
     bool use_point_sprites = fgGetBool("/sim/rendering/point-sprites", true);
@@ -540,28 +288,30 @@ FGRenderer::init( void )
     addChangeListener(new DistanceAttenuationListener, "/sim/rendering/distance-attenuation");
     addChangeListener(new DirectionalLightsListener, "/sim/rendering/triangle-directional-lights");
 
+    // Setup texture compression
     std::string tc = fgGetString("/sim/rendering/texture-compression");
     if (!tc.empty()) {
-      if (tc == "false" || tc == "off" ||
-          tc == "0" || tc == "no" ||
-          tc == "none"
-      ) {
-        SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::DoNotUseCompression);
-      } else if (tc == "arb") {
-        SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::UseARBCompression);
-      } else if (tc == "dxt1") {
-        SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::UseDXT1Compression);
-      } else if (tc == "dxt3") {
-        SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::UseDXT3Compression);
-      } else if (tc == "dxt5") {
-        SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::UseDXT5Compression);
-      } else {
-        SG_LOG(SG_VIEW, SG_WARN, "Unknown texture compression setting!");
-      }
+        if (tc == "false" || tc == "off" ||
+            tc == "0" || tc == "no" ||
+            tc == "none"
+            ) {
+            SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::DoNotUseCompression);
+        } else if (tc == "arb") {
+            SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::UseARBCompression);
+        } else if (tc == "dxt1") {
+            SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::UseDXT1Compression);
+        } else if (tc == "dxt3") {
+            SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::UseDXT3Compression);
+        } else if (tc == "dxt5") {
+            SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::UseDXT5Compression);
+        } else {
+            SG_LOG(SG_VIEW, SG_WARN, "Unknown texture compression setting!");
+        }
     }
     SGSceneFeatures::instance()->setTextureCompressionPath(globals->get_texture_cache_dir());
-// create sky, but can't build until setupView, since we depend
-// on other subsystems to be inited, eg Ephemeris
+
+    // create sky, but can't build until setupView, since we depend
+    // on other subsystems to be inited, eg Ephemeris
     _sky = new SGSky;
 
     const SGPath texture_path = globals->get_fg_root() / "Textures" / "Sky";
@@ -569,71 +319,58 @@ FGRenderer::init( void )
         SGCloudLayer * layer = new SGCloudLayer(texture_path);
         _sky->add_cloud_layer(layer);
     }
-
-    _sky->set_texture_path( texture_path );
-
-    // XXX: Should always be true
-    eventHandler->setChangeStatsCameraRenderOrder( true );
-}
-
-void FGRenderer::setupRoot()
-{
-    osg::StateSet* stateSet = _root->getOrCreateStateSet();
-
-    stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-
-    stateSet->setAttribute(new osg::Depth(osg::Depth::LESS));
-    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-
-    stateSet->setAttribute(new osg::BlendFunc);
-    stateSet->setMode(GL_BLEND, osg::StateAttribute::OFF);
-
-    stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
-
-    // this will be set below
-    stateSet->setMode(GL_NORMALIZE, osg::StateAttribute::OFF);
-
-    osg::Material* material = new osg::Material;
-    stateSet->setAttribute(material);
-
-    stateSet->setTextureAttribute(0, new osg::TexEnv);
-    stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::OFF);
-
-    osg::Hint* hint = new osg::Hint(GL_FOG_HINT, GL_DONT_CARE);
-    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/fog"));
-    stateSet->setAttribute(hint);
-    hint = new osg::Hint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
-    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/polygon-smooth"));
-    stateSet->setAttribute(hint);
-    hint = new osg::Hint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
-    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/line-smooth"));
-    stateSet->setAttribute(hint);
-    hint = new osg::Hint(GL_POINT_SMOOTH_HINT, GL_DONT_CARE);
-    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/point-smooth"));
-    stateSet->setAttribute(hint);
-    hint = new osg::Hint(GL_PERSPECTIVE_CORRECTION_HINT, GL_DONT_CARE);
-    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/perspective-correction"));
-    stateSet->setAttribute(hint);
 }
 
 void
-FGRenderer::setupView( void )
+FGRenderer::postinit()
 {
-    osgViewer::View* view = globals->get_renderer()->getView();
-    osg::initNotifyLevel();
+    // important that we reset the viewer sceneData here, to ensure the reference
+    // time for everything is in sync; otherwise on reset the Viewer and
+    // GraphicsWindow clocks are out of sync.
+    osgViewer::View* view = getView();
+    _scene_root = new osg::Group;
+    _scene_root->setName("viewerSceneRoot");
+    view->setSceneData(_scene_root);
+    view->setDatabasePager(FGScenery::getPagerSingleton());
 
-    // The number of polygon-offset "units" to place between layers.  In
-    // principle, one is supposed to be enough.  In practice, I find that
-    // my hardware/driver requires many more.
-    osg::PolygonOffset::setUnitsMultiplier(1);
-    osg::PolygonOffset::setFactorMultiplier(1);
+    // Scene doesn't seem to pass the frame stamp to the update
+    // visitor automatically.
+    _update_visitor->setFrameStamp(getFrameStamp());
+    getViewerBase()->setUpdateVisitor(_update_visitor.get());
 
-    setupRoot();
+    fgSetDouble("/sim/startup/splash-alpha", 1.0);
+    // hide the menubar if it overlaps the window, so the splash screen
+    // is completely visible. We reset this value when the splash screen
+    // is fading out.
+    fgSetBool("/sim/menubar/overlap-hide", true);
+}
 
-    // build the sky
-    auto ephemerisSub = globals->get_subsystem<Ephemeris>();
+void
+FGRenderer::setupView()
+{
+    // Do not automatically compute near far values
+    getView()->getCamera()->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 
+    // Attach empty program to the scene root so that shader programs
+    // don't leak into state sets (effects) that shouldn't have one.
+    _scene_root->getOrCreateStateSet()->setAttributeAndModes(
+        new osg::Program, osg::StateAttribute::ON);
 
+    // Specify implementation-specific hints
+    // osg::Hint* hint = new osg::Hint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, GL_DONT_CARE);
+    // hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/hints/fragment-shader-derivative"));
+    // stateSet->setAttribute(hint);
+    // hint = new osg::Hint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
+    // hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/hints/line-smooth"));
+    // stateSet->setAttribute(hint);
+    // hint = new osg::Hint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
+    // hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/hints/polygon-smooth"));
+    // stateSet->setAttribute(hint);
+    // hint = new osg::Hint(GL_TEXTURE_COMPRESSION_HINT, GL_DONT_CARE);
+    // hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/hints/texture-compression"));
+    // stateSet->setAttribute(hint);
+
+    // Build the sky
     // The sun and moon radius are scaled down numbers of the actual
     // diameters. This is needed to fit both the sun and the moon
     // within the distance to the far clip plane.
@@ -651,97 +388,39 @@ FGRenderer::setupView( void )
     // 1UA = 149,597,870.700 km
     // => Rendered Sun radius = 695,700/149,597,870.700 * 50000 = 180.8
     //
-
+    auto ephemerisSub = globals->get_subsystem<Ephemeris>();
     osg::ref_ptr<simgear::SGReaderWriterOptions> opt;
     opt = simgear::SGReaderWriterOptions::fromPath(globals->get_fg_root());
     opt->setPropertyNode(globals->get_props());
-    _sky->build( 80000.0, 80000.0,
-                  232.5, 180.8,
-                  *ephemerisSub->data(),
-                  fgGetNode("/environment", true),
-                  opt.get());
+    _sky->build(80000.0, 80000.0,
+                232.5, 180.8,
+                *ephemerisSub->data(),
+                fgGetNode("/environment", true),
+                opt.get());
 
-    view->getCamera()
-        ->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    // Add the sky to the root
+    _scene_root->addChild(_sky->getPreRoot());
+    // Add the clouds as well
+    _scene_root->addChild(_sky->getCloudRoot());
 
+    // Add the main scenery (including models and aircraft) to the root with
+    // a switch to enable/disable it on demand.
+    osg::Group* scenery_group = globals->get_scenery()->get_scene_graph();
+    scenery_group->setName("Scenery group");
+    scenery_group->setNodeMask(~simgear::BACKGROUND_BIT);
+    osg::Switch* scenery_switch = new osg::Switch;
+    scenery_switch->setName("Scenery switch");
+    scenery_switch->setUpdateCallback(new FGScenerySwitchCallback);
+    scenery_switch->addChild(scenery_group);
+    _scene_root->addChild(scenery_switch);
 
-    // need to update the light on every frame
-    // OSG LightSource objects are rather confusing. OSG only supports
-    // the 10 lights specified by OpenGL itself; if more than one
-    // LightSource in the scene graph have the same light number, it's
-    // indeterminate which values will be used to render geometry that
-    // has that light number enabled. Also, adding children to a
-    // LightSource is just a shortcut for setting up a state set that
-    // has the corresponding OpenGL light enabled: a LightSource will
-    // affect geometry anywhere in the scene graph that has its light
-    // number enabled in a state set.
-    osg::ref_ptr<LightSource> lightSource = new LightSource;
-    lightSource->setName("FGLightSource");
-    lightSource->getLight()->setDataVariance(Object::DYNAMIC);
-    // relative because of CameraView being just a clever transform node
-    lightSource->setReferenceFrame(osg::LightSource::RELATIVE_RF);
-    lightSource->setLocalStateSetModes(osg::StateAttribute::ON);
-    lightSource->setUpdateCallback(new FGLightSourceUpdateCallback);
-    _viewerSceneRoot->addChild(lightSource);
-
-    // we need a white diffuse light for the phase of the moon
-    osg::ref_ptr<LightSource> sunLight = new osg::LightSource;
-    sunLight->setName("sunLightSource");
-    sunLight->getLight()->setDataVariance(Object::DYNAMIC);
-    sunLight->getLight()->setLightNum(1);
-    sunLight->setUpdateCallback(new FGLightSourceUpdateCallback(true));
-    sunLight->setReferenceFrame(osg::LightSource::RELATIVE_RF);
-    sunLight->setLocalStateSetModes(osg::StateAttribute::ON);
-
-    // Hang a StateSet above the sky subgraph in order to turn off
-    // light 0
-    Group* skyGroup = _sky->getPreRoot();
-    StateSet* skySS = skyGroup->getOrCreateStateSet();
-    skySS->setMode(GL_LIGHT0, StateAttribute::OFF);
-    sunLight->addChild(skyGroup);
-
-	_root->addChild(sunLight);
-
-    osg::Group* sceneGroup = globals->get_scenery()->get_scene_graph();
-    sceneGroup->setName("rendererScene");
-    sceneGroup->setNodeMask(~simgear::BACKGROUND_BIT);
-    _root->addChild(sceneGroup);
-
-    // setup state-set for main scenery (including models and aircraft)
-    osg::StateSet* stateSet = sceneGroup->getOrCreateStateSet();
-    stateSet->setMode(GL_LIGHTING, osg::StateAttribute::ON);
-    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
-
-    // enable disable specular highlights.
-    // is the place where we might plug in an other fragment shader ...
-    osg::LightModel* lightModel = new osg::LightModel;
-    lightModel->setUpdateCallback(new FGLightModelUpdateCallback);
-    stateSet->setAttribute(lightModel);
-
-    // switch to enable wireframe
+    // Switch to enable wireframe mode on the scenery group
     osg::PolygonMode* polygonMode = new osg::PolygonMode;
     polygonMode->setUpdateCallback(new FGWireFrameModeUpdateCallback);
-    stateSet->setAttributeAndModes(polygonMode);
-
-    // scene fog handling
-    osg::Fog* fog = new osg::Fog;
-    fog->setUpdateCallback(new FGFogUpdateCallback);
-    stateSet->setAttributeAndModes(fog);
-    stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
+    scenery_group->getOrCreateStateSet()->setAttributeAndModes(polygonMode);
 
     osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
     if (guiCamera) {
-#ifdef ENABLE_HUD
-        osg::Geode* hudGeode = new osg::Geode;
-        hudGeode->addDrawable(new SGHUDDrawable);
-        guiCamera->addChild(hudGeode);
-#endif
-
-#if defined(HAVE_PUI)
-        _puiCamera = new flightgear::PUICamera;
-        _puiCamera->init(guiCamera, view);
-#endif
-
 #if defined(ENABLE_QQ_UI)
         osgViewer::Viewer* viewer = dynamic_cast<osgViewer::Viewer*>(view);
         if (viewer) {
@@ -759,51 +438,56 @@ FGRenderer::setupView( void )
             }
         }
 #endif
-        guiCamera->insertChild(0, FGPanelNode::create2DPanelNode());
     }
-
-    osg::Switch* sw = new osg::Switch;
-    sw->setName("scenerySwitch");
-    sw->setUpdateCallback(new FGScenerySwitchCallback);
-    sw->addChild(_root.get());
-    _viewerSceneRoot->addChild(sw);
-    // The clouds are attached directly to the scene graph root
-    // because, in theory, they don't want the same default state set
-    // as the rest of the scene. This may not be true in practice.
-	_viewerSceneRoot->addChild(_sky->getCloudRoot());
-	_viewerSceneRoot->addChild(FGCreateRedoutNode());
-
-    // Attach empty program to the scene root so that shader programs
-    // don't leak into state sets (effects) that shouldn't have one.
-    stateSet = _viewerSceneRoot->getOrCreateStateSet();
-    stateSet->setAttributeAndModes(new osg::Program, osg::StateAttribute::ON);
 }
 
-// Update all Visuals (redraws anything graphics related)
-// Called every frame.
+bool
+FGRenderer::runInitOperation()
+{
+    static osg::ref_ptr<QueryGLParametersOperation> genOp;
+    static bool didInit = false;
+
+    if (didInit) {
+        return true;
+    }
+
+    if (!genOp.valid()) {
+        genOp = new QueryGLParametersOperation;
+        WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
+        wsa->windows[0]->gc->add(genOp.get());
+        return false; // not ready yet
+    } else {
+        if (!genOp->isFinished())
+            return false;
+
+        genOp = nullptr;
+        didInit = true;
+        // we're done
+        return true;
+    }
+}
+
 void
-FGRenderer::update( ) {
-    if (!_position_finalized || !_scenery_loaded->getBoolValue())
-    {
+FGRenderer::update()
+{
+    if (!_position_finalized || !_scenery_loaded->getBoolValue()) {
         _splash_alpha->setDoubleValue(1.0);
 
-        if (!MaximumTextureSize) {
+        if (!_maximum_texture_size) {
             osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
             if (guiCamera) {
-                GraphicsContext *gc = guiCamera->getGraphicsContext();
+                osg::GraphicsContext *gc = guiCamera->getGraphicsContext();
                 osg::GLExtensions* gl2ext = gc->getState()->get<osg::GLExtensions>();
                 if (gl2ext) {
-                    MaximumTextureSize = gl2ext->maxTextureSize;
-                    SGSceneFeatures::instance()->setMaxTextureSize(MaximumTextureSize);
-                    SG_LOG(SG_VIEW, SG_INFO, "FGRenderer:: Maximum texture size " << MaximumTextureSize);
+                    _maximum_texture_size = gl2ext->maxTextureSize;
+                    SGSceneFeatures::instance()->setMaxTextureSize(_maximum_texture_size);
                 }
             }
         }
         return;
     }
 
-    if (_splash_alpha->getDoubleValue()>0.0)
-    {
+    if (_splash_alpha->getDoubleValue() > 0.0) {
         // Fade out the splash screen
         const double fade_time = 0.5;
         const double fade_steps_per_sec = 10;
@@ -842,51 +526,24 @@ FGRenderer::update( ) {
     // Force update of center dependent values ...
     current__view->set_dirty();
 
-    assert(composite_viewer_enabled != -1);
-    std::vector<osg::Camera*> cameras;
-    if (composite_viewer) {
-        assert(!viewer);
-        unsigned n = composite_viewer->getNumViews();
-        for (unsigned i=0; i<n; ++i) {
-            osgViewer::View* view = composite_viewer->getView(i);
-            osg::Camera* camera = view->getCamera();
-            cameras.push_back(camera);
-        }
-    }
-    else {
-        cameras.push_back(viewer->getCamera());
-    }
-    for (osg::Camera* camera: cameras) {
-        osg::Vec4 clear_color = _altitude_ft->getDoubleValue() < 250000
-                              ? toOsg(l->adj_fog_color())
-                              // skydome ends at ~262000ft (default rendering)
-                              // ~328000 ft (ALS) and would produce a strange
-                              // looking greyish space -> black looks much
-                              // better :-)
-                              : osg::Vec4(0, 0, 0, 1);
-        camera->setClearColor(clear_color);
+    // Update the sky
+    updateSky();
 
-        updateSky();
+    // need to call the update visitor once
+    getFrameStamp()->setCalendarTime(*globals->get_time_params()->getGmt());
+    _update_visitor->setViewData(current__view->getViewPosition(),
+                                current__view->getViewOrientation());
 
-        // need to call the update visitor once
-        getFrameStamp()->setCalendarTime(*globals->get_time_params()->getGmt());
-        _updateVisitor->setViewData(current__view->getViewPosition(),
-                                    current__view->getViewOrientation());
-        //_updateVisitor->setViewData(eye2, center3);
-        SGVec3f sundirection(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
-	SGVec3f moondirection(l->moon_vec()[0], l->moon_vec()[1], l->moon_vec()[2]);
-	
-	_updateVisitor->setLight(sundirection,moondirection, l->scene_ambient(),
-                                 l->scene_diffuse(), l->scene_specular(),
-                                 l->adj_fog_color(),
-                                 l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
-        _updateVisitor->setVisibility(actual_visibility);
-        simgear::GroundLightManager::instance()->update(_updateVisitor.get());
-    }
+    SGVec3f sundirection(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
+    SGVec3f moondirection(l->moon_vec()[0], l->moon_vec()[1], l->moon_vec()[2]);
+
+    _update_visitor->setLight(sundirection, moondirection,
+                             l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
+    _update_visitor->setVisibility(actual_visibility);
 
     osg::Node::NodeMask cullMask = ~simgear::LIGHTS_BITS & ~simgear::PICK_BIT;
     cullMask |= simgear::GroundLightManager::instance()
-        ->getLightNodeMask(_updateVisitor.get());
+        ->getLightNodeMask(_update_visitor.get());
     if (_panel_hotspots->getBoolValue())
         cullMask |= simgear::PICK_BIT;
     CameraGroup::getDefault()->setCameraCullMasks(cullMask);
@@ -919,10 +576,6 @@ FGRenderer::updateSky()
     sstate.sun_angle = l->get_sun_angle();
 
     SGSkyColor scolor;
-    scolor.sky_color   = SGVec3f(l->sky_color().data());
-    scolor.adj_sky_color = SGVec3f(l->adj_sky_color().data());
-    scolor.fog_color   = SGVec3f(l->adj_fog_color().data());
-    scolor.cloud_color = SGVec3f(l->cloud_color().data());
     scolor.sun_angle   = l->get_sun_angle();
     scolor.moon_angle  = l->get_moon_angle();
     scolor.altitude_m =  altitude_m;
@@ -934,7 +587,7 @@ FGRenderer::updateSky()
 }
 
 void
-FGRenderer::resize( int width, int height, int x, int y )
+FGRenderer::resize(int width, int height, int x, int y)
 {
     SG_LOG(SG_VIEW, SG_DEBUG, "FGRenderer::resize: new size " << width << " x " << height);
     // must guard setting these, or PLIB-PUI fails with too many live interfaces
@@ -953,92 +606,86 @@ FGRenderer::resize( int width, int height, int x, int y )
 }
 
 void
-FGRenderer::resize( int width, int height )
+FGRenderer::resize(int width, int height)
 {
     resize(width, height, _xpos->getIntValue(), _ypos->getIntValue());
 }
 
+namespace {
+
 typedef osgUtil::LineSegmentIntersector::Intersection Intersection;
+
 SGVec2d uvFromIntersection(const Intersection& hit)
 {
-  // Taken from http://trac.openscenegraph.org/projects/osg/browser/OpenSceneGraph/trunk/examples/osgmovie/osgmovie.cpp
+    // Taken from http://trac.openscenegraph.org/projects/osg/browser/OpenSceneGraph/trunk/examples/osgmovie/osgmovie.cpp
 
-  osg::Drawable* drawable = hit.drawable.get();
-  osg::Geometry* geometry = drawable ? drawable->asGeometry() : 0;
-  osg::Vec3Array* vertices =
-    geometry ? dynamic_cast<osg::Vec3Array*>(geometry->getVertexArray()) : 0;
+    osg::Drawable* drawable = hit.drawable.get();
+    osg::Geometry* geometry = drawable ? drawable->asGeometry() : nullptr;
+    osg::Vec3Array* vertices = geometry ?
+        dynamic_cast<osg::Vec3Array*>(geometry->getVertexArray()) : nullptr;
 
-  if( !vertices )
-  {
-    SG_LOG(SG_INPUT, SG_WARN, "Unable to get vertices for intersection.");
-    return SGVec2d(-9999,-9999);
-  }
+    if (!vertices) {
+        SG_LOG(SG_INPUT, SG_WARN, "Unable to get vertices for intersection.");
+        return SGVec2d(-9999,-9999);
+    }
 
-  // get the vertex indices.
-  const Intersection::IndexList& indices = hit.indexList;
-  const Intersection::RatioList& ratios = hit.ratioList;
+    // get the vertex indices.
+    const Intersection::IndexList& indices = hit.indexList;
+    const Intersection::RatioList& ratios = hit.ratioList;
 
-  if( indices.size() != 3 || ratios.size() != 3 )
-  {
-    SG_LOG( SG_INPUT,
-            SG_WARN,
-            "Intersection has insufficient indices to work with." );
-    return SGVec2d(-9999,-9999);
-  }
+    if (indices.size() != 3 || ratios.size() != 3) {
+        SG_LOG(SG_INPUT, SG_WARN, "Intersection has insufficient indices to work with.");
+        return SGVec2d(-9999,-9999);
+    }
 
-  unsigned int i1 = indices[0];
-  unsigned int i2 = indices[1];
-  unsigned int i3 = indices[2];
+    unsigned int i1 = indices[0];
+    unsigned int i2 = indices[1];
+    unsigned int i3 = indices[2];
 
-  float r1 = ratios[0];
-  float r2 = ratios[1];
-  float r3 = ratios[2];
+    float r1 = ratios[0];
+    float r2 = ratios[1];
+    float r3 = ratios[2];
 
-  osg::Array* texcoords =
-    (geometry->getNumTexCoordArrays() > 0) ? geometry->getTexCoordArray(0) : 0;
-  osg::Vec2Array* texcoords_Vec2Array =
-    dynamic_cast<osg::Vec2Array*>(texcoords);
+    osg::Array* texcoords = (geometry->getNumTexCoordArrays() > 0) ?
+        geometry->getTexCoordArray(0) : nullptr;
+    osg::Vec2Array* texcoords_Vec2Array = dynamic_cast<osg::Vec2Array*>(texcoords);
 
-  if( !texcoords_Vec2Array )
-  {
-    SG_LOG(SG_INPUT, SG_WARN, "Unable to get texcoords for intersection.");
-    return SGVec2d(-9999,-9999);
-  }
+    if (!texcoords_Vec2Array) {
+        SG_LOG(SG_INPUT, SG_WARN, "Unable to get texcoords for intersection.");
+        return SGVec2d(-9999,-9999);
+    }
 
-  // we have tex coord array so now we can compute the final tex coord at the
-  // point of intersection.
-  osg::Vec2 tc1 = (*texcoords_Vec2Array)[i1];
-  osg::Vec2 tc2 = (*texcoords_Vec2Array)[i2];
-  osg::Vec2 tc3 = (*texcoords_Vec2Array)[i3];
+    // we have tex coord array so now we can compute the final tex coord at the
+    // point of intersection.
+    osg::Vec2 tc1 = (*texcoords_Vec2Array)[i1];
+    osg::Vec2 tc2 = (*texcoords_Vec2Array)[i2];
+    osg::Vec2 tc3 = (*texcoords_Vec2Array)[i3];
 
-  return toSG( osg::Vec2d(tc1 * r1 + tc2 * r2 + tc3 * r3) );
+    return toSG(osg::Vec2d(tc1 * r1 + tc2 * r2 + tc3 * r3));
 }
 
-PickList FGRenderer::pick(const osg::Vec2& windowPos)
+} // anonymous namespace
+
+FGRenderer::PickList FGRenderer::pick(const osg::Vec2& windowPos)
 {
     PickList result;
-
-    typedef osgUtil::LineSegmentIntersector::Intersections Intersections;
-    Intersections intersections;
+    osgUtil::LineSegmentIntersector::Intersections intersections;
 
     if (!computeIntersections(CameraGroup::getDefault(), windowPos, intersections))
-        return result;
+        return result; // return empty list
     
     // We attempt to highlight nodes until Highlight::highlight_nodes()
     // succeeds and returns +ve, or highlighting is disabled and it returns -1.
     auto highlight = globals->get_subsystem<Highlight>();
-    int higlight_num_props = 0;
+    int highlight_num_props = 0;
     
-    for (Intersections::iterator hit = intersections.begin(),
-             e = intersections.end();
-         hit != e;
-         ++hit) {
-        const osg::NodePath& np = hit->nodePath;
+    for (const auto& hit : intersections) {
+        const osg::NodePath& np = hit.nodePath;
         osg::NodePath::const_reverse_iterator npi;
 
         for (npi = np.rbegin(); npi != np.rend(); ++npi) {
-            if (!higlight_num_props && highlight) {
-                higlight_num_props = highlight->highlightNodes(*npi);
+            if (!highlight_num_props && highlight) {
+                highlight_num_props = highlight->highlightNodes(*npi);
             }
             SGSceneUserData* ud = SGSceneUserData::getSceneUserData(*npi);
             if (!ud || (ud->getNumPickCallbacks() == 0))
@@ -1049,11 +696,11 @@ PickList FGRenderer::pick(const osg::Vec2& windowPos)
                 if (!pickCallback)
                     continue;
                 SGSceneryPick sceneryPick;
-                sceneryPick.info.local = toSG(hit->getLocalIntersectPoint());
-                sceneryPick.info.wgs84 = toSG(hit->getWorldIntersectPoint());
+                sceneryPick.info.local = toSG(hit.getLocalIntersectPoint());
+                sceneryPick.info.wgs84 = toSG(hit.getWorldIntersectPoint());
 
                 if( pickCallback->needsUV() )
-                  sceneryPick.info.uv = uvFromIntersection(*hit);
+                    sceneryPick.info.uv = uvFromIntersection(hit);
 
                 sceneryPick.callback = pickCallback;
                 result.push_back(sceneryPick);
@@ -1064,39 +711,97 @@ PickList FGRenderer::pick(const osg::Vec2& windowPos)
     return result;
 }
 
-osgViewer::ViewerBase* FGRenderer::getViewerBase()
+void
+FGRenderer::addCanvasCamera(osg::Camera* camera)
 {
-    if (composite_viewer) {
-        return composite_viewer.get();
+    assert(camera);
+
+    bool should_restart_threading = getViewerBase()->areThreadsRunning();
+    if (should_restart_threading) {
+        getViewerBase()->stopThreading();
     }
-    else {
-        return viewer.get();
+
+    // Use the same graphics context as the GUI camera
+    osg::Camera *guiCamera = getGUICamera(CameraGroup::getDefault());
+    osg::GraphicsContext *gc = guiCamera->getGraphicsContext();
+    camera->setGraphicsContext(gc);
+
+    // Add it as a slave to the viewer
+    _composite_viewer->getView(0)->addSlave(camera, false);
+    simgear::installEffectCullVisitor(camera);
+
+    if (should_restart_threading) {
+        getViewerBase()->startThreading();
     }
 }
 
-osg::ref_ptr<osgViewer::CompositeViewer> FGRenderer::getCompositeViewer()
+void
+FGRenderer::removeCanvasCamera(osg::Camera* camera)
 {
-    return composite_viewer;
+    assert(camera);
+
+    bool should_restart_threading = getViewerBase()->areThreadsRunning();
+    if (should_restart_threading) {
+        getViewerBase()->stopThreading();
+    }
+
+    // Remove all children before removing the slave to prevent the graphics
+    // window from automatically cleaning up all associated OpenGL objects.
+    camera->removeChildren(0, camera->getNumChildren());
+
+    auto view = _composite_viewer->getView(0);
+    unsigned int index = view->findSlaveIndexForCamera(camera);
+    if (index < view->getNumSlaves()) {
+        view->removeSlave(index);
+    } else {
+        SG_LOG(SG_GL, SG_WARN, "Attempted to remove unregistered Canvas camera");
+    }
+
+    if (should_restart_threading) {
+        getViewerBase()->startThreading();
+    }
 }
 
-osgViewer::View* FGRenderer::getView()
+osgViewer::ViewerBase*
+FGRenderer::getViewerBase() const
 {
-    /* Would like to assert that FGRenderer::init() has always been called
-    before we are called, with:
-        assert(composite_viewer_enabled != -1);
-    But this fails if user specifies -h, when we are called by
-    FGGlobals::~FGGlobals().
-    */
-    if (composite_viewer && composite_viewer->getNumViews() > 0) {
-        assert(composite_viewer->getNumViews());
-        return composite_viewer->getView(0);
-    }
-    else {
-        return viewer.get();
-    }
+    return _composite_viewer;
 }
 
-const osgViewer::View* FGRenderer::getView() const
+osg::ref_ptr<osgViewer::CompositeViewer>
+FGRenderer::getCompositeViewer()
+{
+    return _composite_viewer;
+}
+
+void
+FGRenderer::setCompositeViewer(osg::ref_ptr<osgViewer::CompositeViewer> composite_viewer)
+{
+    _composite_viewer = composite_viewer;
+}
+
+osg::FrameStamp*
+FGRenderer::getFrameStamp() const
+{
+    assert(_composite_viewer);
+    return _composite_viewer->getFrameStamp();
+}
+
+osgViewer::View*
+FGRenderer::getView()
+{
+    // Would like to assert that FGRenderer::init() has always been called
+    // before we are called, but this fails if user specifies -h, when we are
+    // called by FGGlobals::~FGGlobals().
+    if (_composite_viewer && _composite_viewer->getNumViews() > 0) {
+        assert(_composite_viewer->getNumViews());
+        return _composite_viewer->getView(0);
+    }
+    return nullptr;
+}
+
+const osgViewer::View*
+FGRenderer::getView() const
 {
     FGRenderer* this_ = const_cast<FGRenderer*>(this);
     return this_->getView();
@@ -1105,90 +810,36 @@ const osgViewer::View* FGRenderer::getView() const
 void
 FGRenderer::setView(osgViewer::View* view)
 {
-    assert(composite_viewer_enabled != -1);
-    if (composite_viewer) {
-        if (composite_viewer->getNumViews() == 0) {
-            SG_LOG(SG_VIEW, SG_DEBUG, "adding view to composite_viewer.");
-            composite_viewer->stopThreading();
-            composite_viewer->addView(view);
-            composite_viewer->startThreading();
-        }
-    }
-    else {
-        osgViewer::Viewer* viewer_ = dynamic_cast<osgViewer::Viewer*>(view);
-        assert(viewer_);
-        viewer = viewer_;
+    if (_composite_viewer && _composite_viewer->getNumViews() == 0) {
+        SG_LOG(SG_VIEW, SG_DEBUG, "adding view to composite_viewer.");
+        _composite_viewer->stopThreading();
+        _composite_viewer->addView(view);
+        _composite_viewer->startThreading();
     }
 }
 
-osg::FrameStamp*
-FGRenderer::getFrameStamp()
+FGEventHandler*
+FGRenderer::getEventHandler()
 {
-    assert(composite_viewer_enabled != -1);
-    if (composite_viewer) {
-        assert(!viewer);
-        return composite_viewer->getFrameStamp();
-    }
-    else {
-        assert(viewer);
-        return viewer->getFrameStamp();
-    }
+    return _event_handler.get();
+}
+
+const FGEventHandler*
+FGRenderer::getEventHandler() const
+{
+    return _event_handler.get();
 }
 
 void
-FGRenderer::setEventHandler(FGEventHandler* eventHandler_)
+FGRenderer::setEventHandler(FGEventHandler* event_handler)
 {
-    eventHandler = eventHandler_;
+    _event_handler = event_handler;
 }
 
-void
-FGRenderer::addCamera(osg::Camera* camera, bool useSceneData)
+SGSky*
+FGRenderer::getSky() const
 {
-    bool should_restart_threading = getViewerBase()->areThreadsRunning();
-    if (should_restart_threading) {
-        getViewerBase()->stopThreading();
-    }
-    osg::Camera *guiCamera = getGUICamera(CameraGroup::getDefault());
-    osg::GraphicsContext *gc = guiCamera->getGraphicsContext();
-    camera->setGraphicsContext(gc);
-    if (composite_viewer) {
-        composite_viewer->getView(0)->addSlave(camera, false);
-    } else {
-        viewer->addSlave(camera, false);
-    }
-    simgear::installEffectCullVisitor(camera);
-    if (should_restart_threading) {
-        getViewerBase()->startThreading();
-    }
-}
-
-void
-FGRenderer::removeCamera(osg::Camera* camera)
-{
-    bool should_restart_threading = getViewerBase()->areThreadsRunning();
-    if (should_restart_threading) {
-        getViewerBase()->stopThreading();
-    }
-    // Remove all children before removing the slave to prevent the graphics
-    // window from automatically cleaning up all associated OpenGL objects.
-    camera->removeChildren(0, camera->getNumChildren());
-    if (composite_viewer) {
-        unsigned int index = composite_viewer->getView(0)
-            ->findSlaveIndexForCamera(camera);
-        composite_viewer->getView(0)->removeSlave(index);
-    } else {
-        unsigned int index = viewer->findSlaveIndexForCamera(camera);
-        viewer->removeSlave(index);
-    }
-    if (should_restart_threading) {
-        getViewerBase()->startThreading();
-    }
-}
-
-void
-FGRenderer::setPlanes( double zNear, double zFar )
-{
-//	_planes->set( osg::Vec3f( - zFar, - zFar * zNear, zFar - zNear ) );
+    return _sky;
 }
 
 SplashScreen*
@@ -1198,6 +849,15 @@ FGRenderer::getSplash()
         _splash = new SplashScreen;
     return _splash;
 }
+
+void
+FGRenderer::addChangeListener(SGPropertyChangeListener* l, const char* path)
+{
+    _listeners.push_back(l);
+    fgAddChangeListener(l, path);
+}
+
+//------------------------------------------------------------------------------
 
 bool
 fgDumpSceneGraphToFile(const char* filename)
@@ -1209,40 +869,38 @@ fgDumpSceneGraphToFile(const char* filename)
 bool
 fgDumpTerrainBranchToFile(const char* filename)
 {
-    return osgDB::writeNodeFile( *globals->get_scenery()->get_terrain_branch(),
-                                 filename );
+    return osgDB::writeNodeFile(*globals->get_scenery()->get_terrain_branch(),
+                                filename);
 }
 
-// For debugging
 bool
 fgDumpNodeToFile(osg::Node* node, const char* filename)
 {
     return osgDB::writeNodeFile(*node, filename);
 }
 
-namespace flightgear
-{
+namespace {
+
 using namespace osg;
 
-class VisibleSceneInfoVistor : public NodeVisitor, CullStack
-{
+class VisibleSceneInfoVisitor : public NodeVisitor, CullStack {
 public:
-    VisibleSceneInfoVistor()
-        : NodeVisitor(CULL_VISITOR, TRAVERSE_ACTIVE_CHILDREN)
+    VisibleSceneInfoVisitor() :
+        NodeVisitor(CULL_VISITOR, TRAVERSE_ACTIVE_CHILDREN)
     {
         setCullingMode(CullSettings::SMALL_FEATURE_CULLING
                        | CullSettings::VIEW_FRUSTUM_CULLING);
         setComputeNearFarMode(CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     }
 
-    VisibleSceneInfoVistor(const VisibleSceneInfoVistor& rhs)
-    :  osg::Object(rhs), NodeVisitor(rhs), CullStack(rhs)
+    VisibleSceneInfoVisitor(const VisibleSceneInfoVisitor& rhs) :
+        osg::Object(rhs), NodeVisitor(rhs), CullStack(rhs)
     {
     }
 
     META_NodeVisitor("flightgear","VisibleSceneInfoVistor")
 
-    typedef std::map<const std::string,int> InfoMap;
+    typedef std::map<const std::string, int> InfoMap;
 
     void getNodeInfo(Node* node)
     {
@@ -1257,6 +915,9 @@ public:
     {
         using namespace std;
         typedef vector<InfoMap::iterator> FreqVector;
+        auto freqComp = [](const InfoMap::iterator& lhs, const InfoMap::iterator& rhs) {
+            return lhs->second > rhs->second;
+        };
         cout << "class info:\n";
         FreqVector classes;
         for (InfoMap::iterator itr = classInfo.begin(), end = classInfo.end();
@@ -1313,6 +974,7 @@ public:
         traverse(node);
         popCurrentMask();
     }
+
     void apply(Group& node)
     {
         if (isCulled(node))
@@ -1400,20 +1062,17 @@ public:
     }
 
 protected:
-    // sort in reverse
-    static bool freqComp(const InfoMap::iterator& lhs, const InfoMap::iterator& rhs)
-    {
-        return lhs->second > rhs->second;
-    }
     InfoMap classInfo;
     InfoMap nodeInfo;
 };
 
-bool printVisibleSceneInfo(FGRenderer* renderer)
+} // anonymous namespace
+
+bool fgPrintVisibleSceneInfo(FGRenderer* renderer)
 {
     osgViewer::View* view = renderer->getView();
-    VisibleSceneInfoVistor vsv;
-    Viewport* vp = 0;
+    VisibleSceneInfoVisitor vsv;
+    osg::Viewport* vp = 0;
     if (!view->getCamera()->getViewport() && view->getNumSlaves() > 0) {
         const osg::View::Slave& slave = view->getSlave(0);
         vp = slave._camera->getViewport();
@@ -1422,5 +1081,31 @@ bool printVisibleSceneInfo(FGRenderer* renderer)
     return true;
 }
 
+bool fgPreliminaryGLVersionCheck()
+{
+    osg::ref_ptr<osg::GraphicsContext::Traits> traits =
+        new osg::GraphicsContext::Traits;
+
+    // 1x1 is enough for the check
+    traits->x = 0; traits->y = 0;
+    traits->width = 1; traits->height = 1;
+    // RGBA8
+    traits->red = 8; traits->green = 8; traits->blue = 8; traits->alpha = 8;
+    // Use an off-screen pbuffer, not an actual window surface. This prevents
+    // flashing from opening and closing a window very fast.
+    traits->pbuffer = true;
+
+    traits->windowDecoration = false;
+    traits->doubleBuffer = true;
+    traits->sharedContext = nullptr;
+    traits->readDISPLAY();
+    traits->setUndefinedScreenDetailsToDefaultScreen();
+
+    // Our minimum is OpenGL 4.1 core
+    traits->glContextVersion = "4.1";
+    traits->glContextProfileMask = 0x1;
+
+    osg::ref_ptr<osg::GraphicsContext> pbuffer
+        = osg::GraphicsContext::createGraphicsContext(traits.get());
+    return pbuffer.valid();
 }
-// end of renderer.cxx

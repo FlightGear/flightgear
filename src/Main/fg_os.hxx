@@ -12,6 +12,7 @@
 #include <osg/Camera>
 #include <osg/GraphicsContext>
 
+#include <GUI/MouseCursor.hxx>
 
 enum { MOUSE_BUTTON_LEFT,
        MOUSE_BUTTON_MIDDLE,
@@ -19,21 +20,6 @@ enum { MOUSE_BUTTON_LEFT,
 
 enum { MOUSE_BUTTON_DOWN,
        MOUSE_BUTTON_UP };
-
-enum { MOUSE_CURSOR_NONE,
-       MOUSE_CURSOR_POINTER,
-       MOUSE_CURSOR_WAIT,
-       MOUSE_CURSOR_CROSSHAIR,
-       MOUSE_CURSOR_LEFTRIGHT,
-       MOUSE_CURSOR_TOPSIDE,
-       MOUSE_CURSOR_BOTTOMSIDE,
-       MOUSE_CURSOR_LEFTSIDE,
-       MOUSE_CURSOR_RIGHTSIDE,
-       MOUSE_CURSOR_TOPLEFT,
-       MOUSE_CURSOR_TOPRIGHT,
-       MOUSE_CURSOR_BOTTOMLEFT,
-       MOUSE_CURSOR_BOTTOMRIGHT,
-};
 
 enum { KEYMOD_NONE     = 0,
        KEYMOD_RELEASED = 1, // Not a mod key, indicates "up" action
@@ -58,15 +44,16 @@ enum { KEYMOD_NONE     = 0,
 //
 
 void fgOSInit(int* argc, char** argv);
-void fgOSOpenWindow(bool stencil);
+void fgOSOpenWindow();
 void fgOSCloseWindow();
 void fgOSFullScreen();
 int fgOSMainLoop();
 void fgOSExit(int code);
 void fgOSResetProperties();
 
-void fgSetMouseCursor(int cursor);
-int  fgGetMouseCursor();
+void fgSetMouseCursor(FGMouseCursor::Cursor cursor);
+FGMouseCursor::Cursor fgGetMouseCursor();
+
 void fgWarpMouse(int x, int y);
 
 int  fgGetKeyModifiers();

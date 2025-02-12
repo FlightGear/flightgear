@@ -1,151 +1,158 @@
-#ifndef __FG_RENDERER_HXX
-#define __FG_RENDERER_HXX 1
+/*
+ * SPDX-FileName: renderer.hxx
+ * SPDX-FileComment: Written by Curtis Olson, started May 1997.
+ * SPDX-FileCopyrightText: Copyright (C) 1997 - 2002  Curtis L. Olson  - http://www.flightgear.org/~curt
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
 
-#include <simgear/scene/util/SGPickCallback.hxx>
-#include <simgear/props/props.hxx>
-#include <simgear/timing/timestamp.hxx>
+#pragma once
 
 #include <osg/ref_ptr>
-#include <osg/Matrix>
-#include <osg/Vec2>
-#include <osg/Vec3>
-
 #include <osgViewer/CompositeViewer>
 
+#include <simgear/props/props.hxx>
+#include <simgear/scene/util/SGPickCallback.hxx>
+#include <simgear/timing/timestamp.hxx>
 
-namespace osg
-{
+
+namespace osg {
 class Camera;
 class Group;
-class GraphicsContext;
 class FrameStamp;
 }
-
-namespace osgGA
-{
-class GUIEventAdapter;
-}
-
-namespace osgViewer
-{
-class Viewer;
-}
-
-namespace flightgear
-{
+namespace flightgear {
 class FGEventHandler;
-class CameraGroup;
-class PUICamera;
 }
-
 class SGSky;
 class SGUpdateVisitor;
 class SplashScreen;
-class QQuickDrawable;
 
-typedef std::vector<SGSceneryPick> PickList;
-
-class FGRenderer {
-
+class FGRenderer final {
 public:
-
     FGRenderer();
-    FGRenderer(osg::ref_ptr<osgViewer::CompositeViewer> composite_viewer);
     ~FGRenderer();
 
-    void preinit();
+    /**
+     * @brief Initialize the renderer.
+     * Constructor does nothing. This is the first function that must be called
+     * when initializing the renderer.
+     */
     void init();
 
+    /**
+     * Called after init() was called, the graphics window has been created and
+     * the CameraGroup has been initialized.
+     */
+    void postinit();
+
+    /**
+     * @brief Setup the scene graph root.
+     * Add the sky and scenery to the scene graph root and initialize some
+     * common rendering options.
+     */
     void setupView();
 
+    /**
+     * @brief Run a graphics operation that retrieves some OpenGL parameters.
+     * Should be called until it returns true.
+     *
+     * @return True when done, false when still busy (call again).
+     */
+    bool runInitOperation();
+
+    /**
+     * @brief Handle a window resize event.
+     *
+     * @param width Window width.
+     * @param height Window height.
+     * @param x Window horizontal position.
+     * @param y Window vertical position.
+     */
     void resize(int width, int height);
     void resize(int width, int height, int x, int y);
 
+    /**
+     * @brief Update rendering-related parameters.
+     * This is called right before OSG's viewer->frame() on the main thread.
+     * The actual drawing/rendering is done internally by OSG.
+     */
     void update();
 
-    /** Just pick into the scene and return the pick callbacks on the way ...
+    typedef std::vector<SGSceneryPick> PickList;
+    /**
+     * @brief Pick into the scene and return the pick callbacks on the way.
+     * @param windowPos A 2D coordinate in window space.
      */
     PickList pick(const osg::Vec2& windowPos);
-    
-    /* Returns either composite_viewer or viewer. */
-    osgViewer::ViewerBase* getViewerBase();
-    
-    /** For handling reset. */
-    osg::ref_ptr<osgViewer::CompositeViewer> getCompositeViewer();
 
-    /** Get and set the OSG Viewer object, if any.
+    /**
+     * @brief Add a Canvas RTT camera to the renderer.
+     * @param camera A valid pointer to an already configured osg::Camera.
      */
+    void addCanvasCamera(osg::Camera* camera);
+
+    /**
+     * @brief Remove a Canvas RTT camera from the renderer.
+     * @param camera A valid pointer to a previously added Canvas camera.
+     */
+    void removeCanvasCamera(osg::Camera* camera);
+
+    osgViewer::ViewerBase* getViewerBase() const;
+    
+    /** Both should only be used on reset. */
+    osg::ref_ptr<osgViewer::CompositeViewer> getCompositeViewer();
+    void setCompositeViewer(osg::ref_ptr<osgViewer::CompositeViewer> composite_viewer);
+
+    osg::FrameStamp* getFrameStamp() const;
+
     osgViewer::View* getView();
     const osgViewer::View* getView() const;
     void setView(osgViewer::View* view);
 
-    /** Calls osgViewer::CompositeViewer::getFrameStamp() if we are using
-    composite viewer, otherwise osgViewer::Viewer::getFrameStamp(). */
-    osg::FrameStamp* getFrameStamp();
+    flightgear::FGEventHandler* getEventHandler();
+    const flightgear::FGEventHandler* getEventHandler() const;
+    void setEventHandler(flightgear::FGEventHandler* event_handler);
 
-    /** Get and set the manipulator object, if any.
-     */
-    flightgear::FGEventHandler* getEventHandler() { return eventHandler.get(); }
-    const flightgear::FGEventHandler* getEventHandler() const { return eventHandler.get(); }
-    void setEventHandler(flightgear::FGEventHandler* manipulator);
-
-    /** Add a top level camera.
-     */
-    void addCamera(osg::Camera* camera, bool useSceneData);
-
-    void removeCamera(osg::Camera* camera);
-
-    SGSky* getSky() const { return _sky; }
-
-	void setPlanes( double zNear, double zFar );
+    SGSky* getSky() const;
 
     SplashScreen* getSplash();
 
-protected:
-    int composite_viewer_enabled = -1;
-    osg::ref_ptr<osgViewer::Viewer> viewer;
-    osg::ref_ptr<osgViewer::CompositeViewer> composite_viewer;
-    osg::ref_ptr<flightgear::FGEventHandler> eventHandler;
+private:
+    void addChangeListener(SGPropertyChangeListener* l, const char* path);
+    void updateSky();
 
-    osg::ref_ptr<osg::FrameStamp> _frameStamp;
-    osg::ref_ptr<SGUpdateVisitor> _updateVisitor;
-    osg::ref_ptr<osg::Group> _viewerSceneRoot;
-    osg::ref_ptr<osg::Group> _root;
+    osg::ref_ptr<osgViewer::CompositeViewer> _composite_viewer;
+    osg::ref_ptr<flightgear::FGEventHandler> _event_handler;
+    osg::ref_ptr<SGUpdateVisitor> _update_visitor;
+    osg::ref_ptr<osg::Group> _scene_root;
 
     SGPropertyNode_ptr _scenery_loaded, _position_finalized;
-
     SGPropertyNode_ptr _splash_alpha;
-    SGPropertyNode_ptr _enhanced_lighting;
     SGPropertyNode_ptr _textures;
     SGPropertyNode_ptr _cloud_status, _visibility_m;
     SGPropertyNode_ptr _xsize, _ysize;
     SGPropertyNode_ptr _xpos, _ypos;
-    SGPropertyNode_ptr _panel_hotspots, _sim_delta_sec, _horizon_effect, _altitude_ft;
-    SGPropertyNode_ptr _virtual_cockpit;
+    SGPropertyNode_ptr _panel_hotspots, _sim_delta_sec, _altitude_ft;
     SGTimeStamp _splash_time;
-    SGSky* _sky;
-    int MaximumTextureSize;
+    int _maximum_texture_size{0};
 
     typedef std::vector<SGPropertyChangeListener*> SGPropertyChangeListenerVec;
     SGPropertyChangeListenerVec _listeners;
 
-    void addChangeListener(SGPropertyChangeListener* l, const char* path);
-
-    void updateSky();
-
-    void setupRoot();
-
     osg::ref_ptr<SplashScreen> _splash;
-    QQuickDrawable* _quickDrawable = nullptr;
-    flightgear::PUICamera* _puiCamera = nullptr;
+
+    // NOTE: Raw pointer, must be deleted in destructor
+    SGSky* _sky;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);
 bool fgDumpTerrainBranchToFile(const char* filename);
+bool fgDumpNodeToFile(osg::Node* node, const char* filename);
+bool fgPrintVisibleSceneInfo(FGRenderer* renderer);
 
-namespace flightgear
-{
-bool printVisibleSceneInfo(FGRenderer* renderer);
-}
-
-#endif
+/**
+ * Attempt to create an off-screen pixel buffer to check whether our target
+ * OpenGL version is available on this computer.
+ * @return Whether the version check was successful or not.
+ */
+bool fgPreliminaryGLVersionCheck();

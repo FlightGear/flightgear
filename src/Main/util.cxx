@@ -39,10 +39,6 @@
 #include "globals.hxx"
 #include "util.hxx"
 
-#ifdef OSG_LIBRARY_STATIC
-#include "osgDB/Registry"
-#endif
-
 using std::vector;
 
 // Originally written by Alex Perry.

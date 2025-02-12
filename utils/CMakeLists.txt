@@ -31,10 +31,6 @@ if(ENABLE_STGMERGE)
     add_subdirectory(stgmerge)
 endif()
 
-if(ENABLE_TRAFFIC)
-    add_subdirectory(traffic)
-endif()
-
 if (ENABLE_FGQCANVAS)
     add_subdirectory(fgqcanvas)
 endif()

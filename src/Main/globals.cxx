@@ -56,7 +56,6 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Viewer/renderer.hxx>
-#include <GUI/FGFontCache.hxx>
 #include <GUI/MessageBox.hxx>
 
 #include <simgear/sound/soundmgr.hxx>
@@ -145,7 +144,7 @@ FGGlobals *globals = NULL;
 
 // Constructor
 FGGlobals::FGGlobals() :
-    renderer( new FGRenderer ),
+    renderer( NULL ),
     subsystem_mgr( new SGSubsystemMgr ),
     event_mgr( new SGEventMgr ),
     sim_time_sec( 0.0 ),
@@ -200,9 +199,8 @@ FGGlobals::~FGGlobals()
     // stop OSG threading first, to avoid thread races while we tear down
     // scene-graph pieces
     // there are some scenarios where renderer is already gone.
-    osg::ref_ptr<osgViewer::ViewerBase> vb;
     if (renderer) {
-        vb = renderer->getViewerBase();
+        osgViewer::ViewerBase* vb = renderer->getViewerBase();
         if (vb) {
             // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
             // explicitly stop trheading before we delete the renderer or
@@ -217,10 +215,12 @@ FGGlobals::~FGGlobals()
 
     // don't cancel the pager until after shutdown, since AIModels (and
     // potentially others) can queue delete requests on the pager.
-    osgViewer::View* v = renderer->getView();
-    if (v && v->getDatabasePager()) {
-        v->getDatabasePager()->cancel();
-        v->getDatabasePager()->clear();
+    if (renderer) {
+        osgViewer::View* v = renderer->getView();
+        if (v && v->getDatabasePager()) {
+            v->getDatabasePager()->cancel();
+            v->getDatabasePager()->clear();
+        }
     }
 
     osgDB::Registry::instance()->clearObjectCache();
@@ -231,12 +231,10 @@ FGGlobals::~FGGlobals()
     // renderer touches subsystems during its destruction
     set_renderer(nullptr);
 
-    FGFontCache::shutdown();
     fgCancelSnapShot();
 
     delete subsystem_mgr;
     subsystem_mgr = nullptr; // important so ::get_subsystem returns NULL
-    vb = nullptr;
     set_matlib(NULL);
 
     delete time_params;
@@ -581,8 +579,9 @@ void FGGlobals::set_renderer(FGRenderer *render)
     if (render == renderer) {
         return;
     }
-
-    delete renderer;
+    if (renderer) {
+        delete renderer;
+    }
     renderer = render;
 }
 
@@ -915,13 +914,16 @@ FGGlobals::saveUserSettings(SGPath userDataPath)
 
       SGPath autosaveFile = autosaveFilePath(userDataPath);
       autosaveFile.create_dir( 0700 );
-      SG_LOG(SG_IO, SG_INFO, "Saving user settings to " << autosaveFile);
+
+      SGPath tmpFile = autosaveFile.dirPath() / "autosave.tmp";
+      SG_LOG(SG_IO, SG_DEBUG, "Saving user settings to " << tmpFile);
       try {
-        writeProperties(autosaveFile, globals->get_props(), false, SGPropertyNode::USERARCHIVE);
+        writeProperties(tmpFile, globals->get_props(), false, SGPropertyNode::USERARCHIVE);
+        tmpFile.rename(autosaveFile);
+        SG_LOG(SG_IO, SG_INFO, "Saved user settings to " << autosaveFile);
       } catch (const sg_exception &e) {
         guiErrorMessage("Error writing autosave:", e);
       }
-      SG_LOG(SG_INPUT, SG_DEBUG, "Finished Saving user settings");
     }
 }
 

@@ -218,6 +218,7 @@ MessageBoxResult fatalMessageBoxWithoutExit(const std::string& caption,
     int exitStatus,
     bool reportToSentry)
 {
+    SG_LOG(SG_GENERAL, SG_ALERT, msg);
     fatalMessageBoxWithoutExit(caption, msg, moreText, reportToSentry);
     // we can't use exit() here or QGuiApplication crashes
     // let's instead throw a sepcial exception which we catch

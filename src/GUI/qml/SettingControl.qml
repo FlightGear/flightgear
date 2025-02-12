@@ -40,13 +40,13 @@ Item {
         // this requires Qt 5.7, so we simulate it
        // enabled: root.option != ""
 
-        onCollect: apply();
+        function onCollect() { apply(); }
     }
 
     Connections {
         target: _config
-        onRestore: root.restoreState();
-        onSave: root.saveState();
+        function onRestore() { root.restoreState(); }
+        function onSave() { root.saveState(); }
     }
 
     Rectangle {

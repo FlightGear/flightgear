@@ -21,26 +21,14 @@
  * $Id$
  **************************************************************************/
 
-
-#ifndef _GUI_H_
-#define _GUI_H_
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#pragma once
 
 #include <simgear/structure/exception.hxx>
-
-#include "FlightGear_pu.h"
-
-#define TR_HIRES_SNAP   1
 
 namespace osg
 {
 class GraphicsContext;
 }
-// gui.cxx
-extern bool guiInit(osg::GraphicsContext* gc = nullptr);
 
 extern bool openBrowser(const std::string& address);
 extern void mkDialog(const char *txt);
@@ -54,16 +42,10 @@ extern void fgDumpSceneGraph();
 extern void fgDumpTerrainBranch();
 extern void fgPrintVisibleSceneInfoCommand();
 
-extern puFont guiFnt;
-extern fntTexFont *guiFntHandle;
 extern int gui_menu_on;
 
 // from gui_funcs.cxx
 extern void fgDumpSnapShotWrapper();
-#ifdef TR_HIRES_SNAP
-extern void fgHiResDumpWrapper();
-extern void fgHiResDump();
-#endif
 
 extern void helpCb();
 
@@ -76,5 +58,3 @@ typedef struct {
         void (*fn)();
 } __fg_gui_fn_t;
 extern const __fg_gui_fn_t __fg_gui_fn[];
-
-#endif // _GUI_H_

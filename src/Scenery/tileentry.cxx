@@ -119,11 +119,14 @@ TileEntry::removeFromSceneGraph()
         SG_LOG( SG_TERRAIN, SG_DEBUG, "removing a fully loaded tile!  _node = " << _node.get() );
     }
 
-    // find the nodes branch parent
-    if ( _node->getNumParents() > 0 ) {
+    // Only remove Ocean Tiles.  All other tiles are removed by the DatabasePager
+    if ((_node->getNumChildren() > 0) &&
+        (_node->getChild(0)->getName() == "Ocean") &&
+        (_node->getNumParents() > 0 )  ) {
         // find the first parent (should only be one)
         osg::Group *parent = _node->getParent( 0 ) ;
         if( parent ) {
+
             parent->removeChild( _node.get() );
         }
     }

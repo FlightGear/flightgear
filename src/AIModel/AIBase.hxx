@@ -58,12 +58,6 @@ public:
     FGAIBase(object_type ot, bool enableHot);
     virtual ~FGAIBase();
 
-    // these depend on the order in which the models are loaded. OSG is a little vague about this, but
-    // from experimentation it seems to work best if the LODs are in the range list in terms of detail
-    // from lowest to highest
-    const int modelLowDetailIndex = 0;
-    const int modelHighDetailIndex = 1;
-
     virtual void readFromScenario(SGPropertyNode* scFileNode);
 
     enum class ModelSearchOrder {
@@ -176,8 +170,6 @@ public:
 
 protected:
     double _elevation_m = 0.0;
-
-    double _maxRangeInterior = 50.0;
 
     double _x_offset;
     double _y_offset;
@@ -296,11 +288,7 @@ private:
     int _refID;
     object_type _otype;
     bool _initialized = false;
-    osg::ref_ptr<osg::LOD> _model;
-    osg::ref_ptr<osg::PagedLOD> _low_res;
-    osg::ref_ptr<osg::PagedLOD> _high_res;
-    osg::ref_ptr<osg::Group> _group;
-    osg::ref_ptr<osg::PagedLOD> _interior;
+    osg::ref_ptr<osg::PagedLOD> _model;
     osg::ref_ptr<FGAIModelData> _modeldata;
 
     SGSharedPtr<FGFX> _fx;

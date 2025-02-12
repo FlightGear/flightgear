@@ -1,8 +1,9 @@
 // dialog.hxx - XML-configured dialog box.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef __DIALOG_HXX
-#define __DIALOG_HXX 1
+#pragma once
 
+#include <cstdint>
 #include <string>
 
 #include <simgear/structure/SGWeakReferenced.hxx>
@@ -71,6 +72,21 @@ public:
      */
     virtual void close() = 0;
 
+    enum WindowStyle {
+        Window,      // regular window with titlebar
+        ModalDialog, // dialog (probably without a title-bar)
+        MessageBox   // for alerts, yes/no choices, progress bars, etc
+    };
+
+    enum WindowFlags {
+        Resizable = 1 << 0,
+        Closeable = 1 << 1,
+        ButtonBox = 1 << 2
+    };
+
+    WindowStyle windowStyle() const;
+    bool isFlagSet(WindowFlags f) const;
+
 protected:
     /**
      * Construct a new GUI widget configured by a property tree.
@@ -84,7 +100,8 @@ protected:
     FGDialog (SGPropertyNode * props);
 
 private:
+    void updateFlagFromProperty(WindowFlags f, SGPropertyNode* props, const std::string& name);
 
+    const WindowStyle _windowStyle;
+    uint32_t _flags = 0;
 };
-
-#endif // __DIALOG_HXX

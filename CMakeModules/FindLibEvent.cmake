@@ -24,7 +24,7 @@ else()
 		pkg_check_modules(libEvent  IMPORTED_TARGET libevent)
 	endif()
 
-	if(libEvent_FOUND)
+	if(libEvent_FOUND AND NOT TARGET libEvent::libEvent)
 		add_library(libEvent::libEvent ALIAS PkgConfig::libEvent)
 	endif()
 endif(WIN32)

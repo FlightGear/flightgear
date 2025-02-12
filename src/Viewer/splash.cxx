@@ -37,7 +37,6 @@
 #include "VRManager.hxx"
 #include "renderer.hxx"
 #include "splash.hxx"
-#include <GUI/gui.h>
 #include <Main/fg_os.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -249,7 +248,7 @@ void SplashScreen::createNodes()
     geometry->setSupportsDisplayList(false);
 
     _splashSpinnerVertexArray = new osg::Vec3Array;
-    for (int i=0; i < 8; ++i) {
+    for (int i = 0; i < 12; ++i) {
         _splashSpinnerVertexArray->push_back(osg::Vec3(0.0f, 0.0f, -0.1f));
     }
     geometry->setVertexArray(_splashSpinnerVertexArray);
@@ -259,7 +258,7 @@ void SplashScreen::createNodes()
     colorArray->push_back(osg::Vec4(27 / 255.0f, 122 / 255.0f, 211 / 255.0f, 0.75f));
     geometry->setColorArray(colorArray);
     geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
-    geometry->addPrimitiveSet(new osg::DrawArrays(GL_QUADS, 0, 8));
+    geometry->addPrimitiveSet(new osg::DrawArrays(GL_TRIANGLES, 0, 12));
 
     geode->addDrawable(geometry);
 
@@ -276,7 +275,6 @@ void SplashScreen::createNodes()
     osg::StateSet* stateSet = _splashQuadCamera->getOrCreateStateSet();
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     stateSet->setAttribute(new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA), osg::StateAttribute::ON);
-    stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     stateSet->setRenderBinDetails(1000, "RenderBin");
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 
@@ -400,11 +398,8 @@ osg::ref_ptr<osg::Camera> SplashScreen::createFBOCamera()
 #endif
 
     osg::StateSet* stateSet = c->getOrCreateStateSet();
-    stateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::OFF);
     stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-    stateSet->setAttribute(new osg::Depth(osg::Depth::ALWAYS, 0, 1, false));
-    stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
 
     bool use_vertex_attribute_aliasing = false;
     osg::Camera* guiCamera = flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
@@ -497,7 +492,7 @@ const SplashScreen::ImageItem *SplashScreen::addImage(const std::string &path, b
     imageColorArray->push_back(osg::Vec4(1, 1, 1, 1));
     geometry->setColorArray(imageColorArray);
     geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
-    geometry->addPrimitiveSet(new osg::DrawArrays(GL_POLYGON, 0, 4));
+    geometry->addPrimitiveSet(new osg::DrawArrays(GL_TRIANGLE_FAN, 0, 4));
 
     osg::StateSet* stateSet = geometry->getOrCreateStateSet();
     stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::ON);
@@ -648,7 +643,7 @@ std::string SplashScreen::selectSplashImage()
 
 void SplashScreen::doUpdate()
 {
-    if (!guiInit()) {
+    if (!globals->get_renderer()->runInitOperation()) {
         // don't createNodes until OSG init operations have completed
         return;
     }
@@ -732,19 +727,25 @@ void SplashScreen::updateSplashSpinner()
     wrapStartPos = scaleAndOffset(wrapStartPos, halfWidth);
     wrapEndPos = scaleAndOffset(wrapEndPos, halfWidth);
 
-    osg::Vec3 positions[8] = {
+    osg::Vec3 positions[12] = {
         osg::Vec3(splashSpinnerPos, bottomY, z),
         osg::Vec3(endPos, bottomY, z),
-        osg::Vec3(endPos,topY, z),
+        osg::Vec3(endPos, topY, z),
+
+        osg::Vec3(splashSpinnerPos, bottomY, z),
+        osg::Vec3(endPos, topY, z),
         osg::Vec3(splashSpinnerPos, topY, z),
+
         osg::Vec3(wrapStartPos, bottomY, z),
         osg::Vec3(wrapEndPos, bottomY, z),
-        osg::Vec3(wrapEndPos,topY, z),
-        osg::Vec3(wrapStartPos, topY, z)
+        osg::Vec3(wrapEndPos, topY, z),
 
+        osg::Vec3(wrapStartPos, bottomY, z),
+        osg::Vec3(wrapEndPos, topY, z),
+        osg::Vec3(wrapStartPos, topY, z)
     };
 
-    for (int i=0; i<8; ++i) {
+    for (int i = 0; i < 12; ++i) {
         (*_splashSpinnerVertexArray)[i] = positions[i];
     }
 

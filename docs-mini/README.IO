@@ -12,7 +12,7 @@ The general form of the command line option is as follows:
 
     protocol = { native, nmea, garmin, fgfs, rul, pve, ray, etc. }
     medium = { serial, socket, file, etc. }
-    direction = { in, out, bi }
+    direction = { in, out, bi, broadcast }
     hz = number of times to process channel per second (floating
          point values are ok.
 

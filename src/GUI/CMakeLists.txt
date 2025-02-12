@@ -1,16 +1,11 @@
 include(FlightGearComponent)
 
 set(SOURCES
- 
-  dialog.cxx
-  gui.cxx
-  gui_funcs.cxx
-  layout-props.cxx
-  layout.cxx
-  menubar.cxx
-  new_gui.cxx
-  FGFontCache.cxx
-  FGColor.cxx
+    dialog.cxx
+    gui_funcs.cxx
+    menubar.cxx
+    new_gui.cxx
+    FGColor.cxx
     FileDialog.cxx
     MouseCursor.cxx
     MessageBox.cxx
@@ -18,16 +13,14 @@ set(SOURCES
     FGPUICompatDialog.cxx
     PUICompatObject.cxx
     FGNasalMenuBar.cxx
-  )
+)
 
 set(HEADERS
-  dialog.hxx
-  gui.h
-  layout.hxx
-  menubar.hxx
-  new_gui.hxx
-  FGFontCache.hxx
-  FGColor.hxx
+    dialog.hxx
+    gui.h
+    menubar.hxx
+    new_gui.hxx
+    FGColor.hxx
     FileDialog.hxx
     MouseCursor.hxx
     MessageBox.hxx
@@ -35,7 +28,7 @@ set(HEADERS
     FGPUICompatDialog.hxx
     PUICompatObject.hxx
     FGNasalMenuBar.hxx
-  )
+)
 
 if(WIN32)
   list(APPEND HEADERS WindowsMouseCursor.hxx
@@ -56,31 +49,6 @@ if (APPLE)
         CocoaFileDialog.mm
         CocoaMouseCursor.mm
         CocoaHelpers.mm)
-endif()
-
-if (HAVE_PUI)
-  list(APPEND HEADERS 
-    FGPUIMenuBar.hxx
-    FGPUIDialog.hxx
-    PUIFileDialog.hxx
-    AirportList.hxx
-    CanvasWidget.hxx
-    MapWidget.hxx
-    WaypointList.hxx
-    property_list.hxx
-  )
-
-  list(APPEND SOURCES
-    FGPUIMenuBar.cxx
-    FGPUIDialog.cxx
-    PUIFileDialog.cxx
-    AirportList.cxx
-    CanvasWidget.cxx
-    MapWidget.cxx
-    WaypointList.cxx
-    fonts.cxx
-    property_list.cxx
-  )
 endif()
 
 if (HAVE_QT)
@@ -209,6 +177,8 @@ if (HAVE_QT)
                         QmlPropertyModel.cxx
                         QmlPositioned.hxx
                         QmlPositioned.cxx
+                        QmlPositionedModel.cxx
+                        QmlPositionedModel.hxx
                         QmlNavCacheWrapper.hxx
                         QmlNavCacheWrapper.cxx
                         QmlRadioButtonHelper.cxx
@@ -243,6 +213,8 @@ if (HAVE_QT)
                         GettingStartedScope.cxx
                         QmlColoredImageProvider.hxx
                         QmlColoredImageProvider.cxx
+                        QmlStringListModel.hxx
+                        QmlStringListModel.cxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)

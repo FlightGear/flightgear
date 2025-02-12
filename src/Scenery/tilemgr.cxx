@@ -152,6 +152,13 @@ FGTileMgr::FGTileMgr():
     _disableNasalHooks(fgGetNode("/sim/temp/disable-scenery-nasal", true)),
     _scenery_loaded(fgGetNode("/sim/sceneryloaded", true)),
     _scenery_override(fgGetNode("/sim/sceneryloaded-override", true)),
+    _pager_file_queue_size(fgGetNode("/sim/rendering/statistics/database-pager/file-queue-size", true)),
+    _pager_compile_queue_size(fgGetNode("/sim/rendering/statistics/database-pager/compile-queue-size", true)),
+    _pager_merge_queue_size(fgGetNode("/sim/rendering/statistics/database-pager/merge-queue-size", true)),
+    _pager_min_merge_time(fgGetNode("/sim/rendering/statistics/database-pager/min-merge-time", true)),
+    _pager_mean_merge_time(fgGetNode("/sim/rendering/statistics/database-pager/mean-merge-time", true)),
+    _pager_max_merge_time(fgGetNode("/sim/rendering/statistics/database-pager/max-merge-time", true)),
+    _pager_active_lod_count(fgGetNode("/sim/rendering/statistics/database-pager/active-paged-lod-count", true)),
     _pager(FGScenery::getPagerSingleton()),
     _enableCache(true),
     _use_vpb(false)
@@ -337,10 +344,9 @@ bool FGTileMgr::sched_tile( const SGBucket& b, double priority, bool current_vie
             SG_LOG( SG_TERRAIN, SG_DEBUG, "  New tile cache size " << (int)tile_cache.get_size() );
         }
 
-        // update tile's properties.  We ensure VPB tiles have maximum priority - priority is calculated as
-        // _negative_ the square of the distance from the viewer to the tile.
-        // so by multiplying by 0.1 we increase the number towards 0.
-        tile_cache.request_tile(v,priority * 0.1,current_view,duration);
+        // update tile's properties.  We ensure the top level VPB tiles have maximum priority.  
+        // The LoD system will take care of appropriate prioritization of the subtiles
+        tile_cache.request_tile(v, 1.0, current_view, duration);
     }
 
     return t->is_loaded();
@@ -399,16 +405,20 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
 
     /* schedule all tiles, use distance-based loading priority,
      * so tiles are loaded in innermost-to-outermost sequence. */
+    SGGeod centerPos = curr_bucket.get_center();
+
     for ( x = -xrange; x <= xrange; ++x )
     {
         for ( y = -yrange; y <= yrange; ++y )
         {
             SGBucket b = curr_bucket.sibling(x, y);
-            if (!b.isValid()) {
-                continue;
-            }
+            SGGeod bPos = b.get_center();
 
-            float priority = (-1.0) * (x*x+y*y);
+            double d = SGGeodesy::distanceM(centerPos, bPos);
+
+            // Priority goes out to 2xtileRangeM because we round up the xrange/yrange above, so d is sometimes > tileRangeM.
+            double priority = (2.0 * tileRangeM - d) / (2.0 * tileRangeM);
+            SG_LOG(SG_TERRAIN, SG_DEBUG, " Scheduling Tile STG file " << b.get_center_lat() << ", " << b.get_center_lon() << " distance " << d << " priority: " << priority);
             sched_tile( b, priority, true, 0.0 );
 
             if (terraSync) {
@@ -521,6 +531,17 @@ void FGTileMgr::update(double)
     bool waitingOnTerrasync = false;
     update_queues(waitingOnTerrasync);
 
+    if (_pager) {
+        // Update various useful statistics
+        _pager_file_queue_size->setIntValue(_pager->getFileRequestListSize());
+        _pager_compile_queue_size->setIntValue(_pager->getDataToCompileListSize());
+        _pager_merge_queue_size->setIntValue(_pager->getDataToMergeListSize());
+        _pager_active_lod_count->setIntValue(_pager->getActivePagedLODCount());
+        _pager_min_merge_time->setFloatValue(_pager->getMinimumTimeToMergeTile());
+        _pager_mean_merge_time->setFloatValue(_pager->getAverageTimeToMergeTiles());
+        _pager_max_merge_time->setFloatValue(_pager->getMaximumTimeToMergeTile());
+    }
+
     // scenery loading check, triggers after each sim (tile manager) reinit
     if (!_scenery_loaded->getBoolValue())
     {
@@ -607,11 +628,11 @@ bool FGTileMgr::schedule_scenery(const SGGeod& position, double range_m, double 
     // sanity check (unfortunately needed!)
     if (!position.isValid())
         return false;
-    const float priority = 0.0;
+
     bool available = true;
 
     SGBucket bucket(position);
-    available = sched_tile( bucket, priority, false, duration );
+    available = sched_tile( bucket, 1.0, false, duration);
 
     if ((!available)&&(duration==0.0)) {
         SG_LOG( SG_TERRAIN, SG_DEBUG, "schedule_scenery: Scheduling tile at bucket:" << bucket << " return false" );
@@ -646,6 +667,7 @@ bool FGTileMgr::schedule_scenery(const SGGeod& position, double range_m, double 
                 // Do not ask if it is just the next tile but way out of range.
                 if (distance2 <= max_dist2)
                 {
+                    float priority = (max_dist2 - distance2) / max_dist2;
                     available &= sched_tile( b, priority, false, duration );
                     if ((!available)&&(duration==0.0))
                         return false;

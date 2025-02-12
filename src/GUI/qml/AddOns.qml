@@ -5,7 +5,16 @@ import FlightGear.Launcher 1.0
 import FlightGear 1.0
 
 Item {
-     id: root
+    id: root
+
+    function showDetails(index)
+    {
+        // set URI, start animation
+        // change state
+        detailsView.mdx = index;
+        detailsView.visible = true
+    }
+
     Flickable {
         id: flick
         height: parent.height
@@ -14,31 +23,6 @@ Item {
 
         flickableDirection: Flickable.VerticalFlick
         contentHeight: contents.childrenRect.height
-        function showDetails(index)
-        {
-            // set URI, start animation
-            // change state
-            detailsView.mdx = index;
-            detailsView.visible = true
-            contents.visible = false
-        }
-
-        function goBack()
-        {
-            detailsView.visible = false
-            contents.visible = true
-        }
-
-        AddonsDetailsView
-        {
-            id: detailsView
-            anchors.fill: parent
-            visible: false
-            onGoBack: {
-                flick.goBack();
-            }
-
-        }
 
         Column {
             id: contents
@@ -156,15 +140,15 @@ Item {
                                 _addOns.modulePaths = modifiedPaths;
                             }
 
-                            onPerformMove: {
+                            onPerformMove: function(newIndex) {
                                 var modifiedPaths = _addOns.modulePaths.slice()
                                 modifiedPaths.splice(model.index, 1);
                                 modifiedPaths.splice(newIndex, 0, model.path)
                                 _addOns.modulePaths = modifiedPaths;
                             }
 
-                            onShowDetails: {
-                                flick.showDetails(detailIndex)
+                            onShowDetails: function(detailIndex) {
+                                root.showDetails(detailIndex);
                             }
                         }
                     }
@@ -333,6 +317,17 @@ Item {
                 }
             } // of install-tarbal item
         } // of column
+    } // of Flickable
+
+    AddonsDetailsView
+    {
+        id: detailsView
+        anchors.fill: parent
+        visible: false
+        onGoBack: {
+            visible = false;
+        }
+
     }
 }
 

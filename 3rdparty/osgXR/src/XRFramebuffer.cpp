@@ -10,19 +10,11 @@
 
 using namespace osgXR;
 
-#if(OSG_VERSION_GREATER_OR_EQUAL(3, 4, 0))
 typedef osg::GLExtensions OSG_GLExtensions;
-#else
-typedef osg::FBOExtensions OSG_GLExtensions;
-#endif
 
 static const OSG_GLExtensions* getGLExtensions(const osg::State& state)
 {
-#if(OSG_VERSION_GREATER_OR_EQUAL(3, 4, 0))
     return state.get<osg::GLExtensions>();
-#else
-    return osg::FBOExtensions::instance(state.getContextID(), true);
-#endif
 }
 
 XRFramebuffer::XRFramebuffer(uint32_t width, uint32_t height,

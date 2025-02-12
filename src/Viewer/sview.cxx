@@ -1618,7 +1618,6 @@ std::shared_ptr<SviewView> SviewCreate(SGPropertyNode* config)
     osgViewer::ViewerBase* viewer_base = renderer->getViewerBase();
     osgViewer::CompositeViewer* composite_viewer = dynamic_cast<osgViewer::CompositeViewer*>(viewer_base);
     if (!composite_viewer) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "SviewCreate() doing nothing because not composite-viewer mode not enabled.");
         return nullptr;
     }
 
@@ -1675,8 +1674,8 @@ std::shared_ptr<SviewView> SviewCreate(SGPropertyNode* config)
     if (1) {
         /* Create a new window. */
         
-        osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
-        assert(wsi);
+        // osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
+        // assert(wsi);
         flightgear::WindowBuilder* window_builder = flightgear::WindowBuilder::getWindowBuilder();
         flightgear::GraphicsWindow* main_window = window_builder->getDefaultWindow();
         osg::ref_ptr<osg::GraphicsContext> main_gc = main_window->gc;
