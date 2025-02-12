@@ -101,7 +101,7 @@ void FGTowerController::announcePosition(int id,
         rec->setAircraft(ref);
         SGSharedPtr<FGTrafficRecord> sharedRec = static_cast<FGTrafficRecord*>(rec);
         activeTraffic.push_back(sharedRec);
-        airportGroundRadar->add(sharedRec);
+
         if (leg<AILeg::CRUISE) {
             // Don't just schedule the aircraft for the tower controller, also assign if to the correct active runway.
             ActiveRunwayVecIterator rwy = activeRunways.begin();
@@ -130,9 +130,19 @@ void FGTowerController::announcePosition(int id,
             SG_LOG(SG_ATC, SG_DEBUG, ref->getTrafficRef()->getCallSign() << "(" << ref->getID() << ") You are number " << rwy->getdepartureQueueSize() << " for takeoff from " << parent->parent()->getId() << "/" << rwy->getRunwayName());
         } else {
             SG_LOG(SG_ATC, SG_DEBUG, ref->getTrafficRef()->getCallSign() << "(" << ref->getID() << ") Welcome to " << intendedRoute->arrivalAirport()->getId());
+            airportGroundRadar->add(sharedRec);
         }
     } else {
-        airportGroundRadar->move(SGRect<double>(lat, lon), *i);
+        if ((*i)->getLeg() == AILeg::TAXI &&
+            leg == AILeg::TAKEOFF ) {
+            airportGroundRadar->add(*i);
+        }
+        bool moved = airportGroundRadar->move(SGRect<double>(lat, lon), *i);
+        if (!moved) {
+                    SG_LOG(SG_ATC, SG_ALERT,
+               "Not moved " << (*i)->getCallsign() << "("  << (*i)->getId() << ")");
+
+        }
         (*i)->setPositionAndHeading(lat, lon, heading, speed, alt);
         auto blocker = airportGroundRadar->getBlockedBy(*i);
         if (blocker!=nullptr) {

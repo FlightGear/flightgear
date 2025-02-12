@@ -41,7 +41,7 @@ AirportGroundRadar::~AirportGroundRadar() {
 bool AirportGroundRadar::add(SGSharedPtr<FGTrafficRecord> aiObject) {
 	bool ret = index.add(aiObject);
 	if (ret) {
-		SG_LOG(SG_ATC, SG_BULK, "Added Aircraft " << aiObject->getId() );	
+		SG_LOG(SG_ATC, SG_DEBUG, "Added Aircraft " << aiObject->getCallsign() << "(" << aiObject->getId() << ")" << " Leg : " << aiObject->getLeg() << " " << aiObject->getPos().getLatitudeDeg() << " " << aiObject->getPos().getLongitudeDeg() );	
 		//index.printPath(aiObject);
 	} else {
 		double distM = SGGeodesy::distanceM(aiObject->getPos(), airport->geod());
@@ -52,17 +52,25 @@ bool AirportGroundRadar::add(SGSharedPtr<FGTrafficRecord> aiObject) {
 
 bool AirportGroundRadar::move(const SGRectd& newPos, SGSharedPtr<FGTrafficRecord> aiObject)
 {
-	// TODO check for actual move
-	return index.move(newPos, aiObject);
+	bool ret = index.move(newPos, aiObject);
+	if (!ret) {
+		SG_LOG(SG_ATC, SG_ALERT, "Couldn't move Aircraft " << aiObject->getCallsign() << "(" << aiObject->getId() << ") to " << airport->getId() << " Leg " << aiObject->getLeg() );	
+	}
+	return ret;
 }
 
 bool AirportGroundRadar::remove(SGSharedPtr<FGTrafficRecord> aiObject)
 {
+	if (aiObject==nullptr) {
+		SG_LOG(SG_ATC, SG_ALERT, "Couldn't remove aiObject null" );	
+		return false;
+	}
+
 	bool ret = index.remove(aiObject);
 	if (!ret) {
-		SG_LOG(SG_ATC, SG_ALERT, "Couldn't remove " << aiObject->getId());	
+		SG_LOG(SG_ATC, SG_ALERT, "Couldn't remove " << aiObject->getCallsign() << "(" << aiObject->getId() << ")");	
 	}
-	SG_LOG(SG_ATC, SG_BULK, "Removed Aircraft " << aiObject->getId());	
+	SG_LOG(SG_ATC, SG_DEBUG, "Removed Aircraft " << aiObject->getCallsign() << "(" << aiObject->getId() << ")");	
 	return ret;
 }
 
@@ -84,8 +92,8 @@ bool AirportGroundRadar::isBlocked(SGSharedPtr<FGTrafficRecord> aiObject)
 	index.query(queryBox, values);
     SG_LOG(SG_ATC, SG_BULK, "Search Id : " << aiObject->getCallsign() << "(" << aiObject->getId() <<  ") Index Size : " << index.size() << " Result Size : " << values.size() );
 	for (SGSharedPtr<FGTrafficRecord> other: values) {
+		double distM = SGGeodesy::distanceM(aiObject->getPos(), other->getPos());
         if (other->getId()!=aiObject->getId()){
-			double distM = SGGeodesy::distanceM(aiObject->getPos(), other->getPos());
 
 			const double courseTowardOther = SGGeodesy::courseDeg(aiObject->getPos(), other->getPos());
             // For right before left priority
@@ -110,10 +118,20 @@ bool AirportGroundRadar::isBlocked(SGSharedPtr<FGTrafficRecord> aiObject)
 					return true;
 				}
 			}
+		} else {
+			if (distM>10)
+			{
+                SG_LOG(SG_ATC, SG_ALERT, aiObject->getCallsign() << "(" << aiObject->getId() << ") is not near it's shadow in index " << other->getId() << " Dist " << distM );
+			}
+			
 		}
 	}
     return false;
 }
+
+/**
+ * Check if the aircraft could push back
+ */
 
 bool AirportGroundRadar::isBlockedForPushback(SGSharedPtr<FGTrafficRecord> aiObject)
 {
@@ -133,11 +151,14 @@ bool AirportGroundRadar::isBlockedForPushback(SGSharedPtr<FGTrafficRecord> aiObj
             // For right before left priority
             const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, aiObject->getHeading() - courseTowardOther);
             const double otherHeadingDiff = SGMiscd::normalizePeriodic(-180, 180, other->getHeading() - courseTowardOther);
-            SG_LOG(SG_ATC, SG_BULK, "Found " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
-			const int threshold = getSize(aiObject) + getSize(other) + SEPARATION;
-			if ( distM < threshold && (abs(headingDiff) > 90) ){
+
+			// We want ample space 
+			const int threshold = 2 * getSize(aiObject) + 2 * getSize(other) + SEPARATION;
+            SG_LOG(SG_ATC, SG_DEBUG, "Search Id : " << aiObject->getId() <<  " Found Id : " << other->getId() << " Dist \t" << distM << "m Threshold " << threshold << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff  << " courseTowardOther " << courseTowardOther << " Turning "  << aiObject->getHeadingDiff() << " Speeds : " << aiObject->getSpeed() << "/" << other->getSpeed() << " " << (other->getSpeed()==0?"Other Stopped":""));
+
+			if ( distM < threshold && (abs(headingDiff) > 135) ){
 				// from the right and in front or other is stopped
-                SG_LOG(SG_ATC, SG_BULK, aiObject->getId() << " blocked for pushback by " << other->getId());
+                SG_LOG(SG_ATC, SG_DEBUG, aiObject->getCallsign() << "(" << aiObject->getId() << ") blocked for pushback by " << other->getCallsign() << "(" << other->getId() << ")");
 				return true;
 			}
 		}
@@ -158,59 +179,65 @@ const SGSharedPtr<FGTrafficRecord> AirportGroundRadar::getBlockedBy(SGSharedPtr<
 	SGSharedPtr<FGTrafficRecord> nearestTrafficRecord = nullptr;
 	double nearestDist = HUGE_VAL;
 	for (SGSharedPtr<FGTrafficRecord> other: values) {
+		double distM = SGGeodesy::distanceM(aiObject->getPos(), other->getPos());
         if (other->getId()!=aiObject->getId()){
-			double distM = SGGeodesy::distanceM(aiObject->getPos(), other->getPos());
 
 			const double courseTowardOther = SGGeodesy::courseDeg(aiObject->getPos(), other->getPos());
 			const double turningRate = aiObject->getHeadingDiff();
             // For right before left priority
-            const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, aiObject->getHeading() - courseTowardOther);
+            const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, aiObject->getHeading() - courseTowardOther - turningRate);
             const double otherHeadingDiff = SGMiscd::normalizePeriodic(-180, 180, other->getHeading() - courseTowardOther);
-			const int threshold = getSize(aiObject) + getSize(other);
+			const double threshold = getSize(aiObject) + getSize(other);
             SG_LOG(SG_ATC, SG_DEBUG, "Search Id : " << aiObject->getId() <<  " Found Id : " << other->getId() << " NearestDist " << nearestDist << " Dist \t" << distM << "m Threshold " << threshold << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff  << " courseTowardOther " << courseTowardOther << " Turning "  << aiObject->getHeadingDiff() << " Speeds : " << aiObject->getSpeed() << "/" << other->getSpeed() << " " << (other->getSpeed()==0?"Other Stopped":""));
-			if ( distM < 10 && aiObject->getSpeed() != 0) {
+			if ( distM < 20 && aiObject->getSpeed() != 0) {
 					// We can't have aircraft < 10m of each other 
-                SG_LOG(SG_ATC, SG_ALERT, aiObject->getId() << " running into " << other->getId() << " Dist " << distM << " Heading " << aiObject->getHeading() << " Other Heading " << other->getHeading() << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff << " courseTowardOther " << courseTowardOther << " Speeds : " << aiObject->getSpeed() << "/" << other->getSpeed() << " Turning " << aiObject->getHeadingDiff());
-				if (aiObject->getAircraft()!=nullptr) {
+                SG_LOG(SG_ATC, SG_ALERT, aiObject->getCallsign() << "(" << aiObject->getId() << ") running into " << other->getCallsign() << "(" << other->getId() << ") Dist " << distM << " Heading " << aiObject->getHeading() << " Other Heading " << other->getHeading() << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff << " courseTowardOther " << courseTowardOther << " Speeds : " << aiObject->getSpeed() << "/" << other->getSpeed() << " Turning: " << aiObject->getHeadingDiff() << " Legs: " << aiObject->getLeg() << "/" << other->getLeg());
+				if (aiObject->getAircraft()!=nullptr && other->getAircraft()!=nullptr) {
                 	SG_LOG(SG_ATC, SG_ALERT, "Offending type " << aiObject->getAircraft()->getAcType() << " " << aiObject->getAircraft()->getCompany() << " " << aiObject->getAircraft()->getPerformance()->decelerationOnGround() );
-                	SG_LOG(SG_ATC, SG_ALERT, "Speeds " << aiObject->getSpeed() << " " << aiObject->getAircraft()->getSpeed() );
+                	SG_LOG(SG_ATC, SG_ALERT, "Speeds " << aiObject->getSpeed() << " " << other->getAircraft()->getSpeed() );
 				}
 			}
 			if ( distM < threshold && distM < nearestDist ) {				
-			    if (headingDiff < 0 
+			    if (headingDiff < 0 // from the left
 				    && aiObject->getSpeed() >= 0 
-					&& abs(headingDiff) < 90 
-					&& abs(otherHeadingDiff) > 90 
+					&& abs(headingDiff) < 90 // in front
+					&& abs(otherHeadingDiff) > 90 // towards us
 					&& other->getLeg() != AILeg::STARTUP_PUSHBACK){
 					// from the right and in front or other is stopped
                 	SG_LOG(SG_ATC, SG_BULK, aiObject->getId() << " blocked by " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
 					nearestDist = distM;
 					nearestTrafficRecord = other;
 				}
-			    if (headingDiff < 0 && aiObject->getSpeed() < 0 
+			    if (aiObject->getSpeed() < 0 
 				    && abs(headingDiff) > 90){
-					// from the right and in front or other is stopped
+					// moving backwards 
                 	SG_LOG(SG_ATC, SG_BULK, aiObject->getId() << " blocked reversing by " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
 					nearestDist = distM;
 					nearestTrafficRecord = other;
 				}
 			    if (other->getSpeed() == 0 
-				&& abs(headingDiff) < 10) {
-					// in front or other is stopped
+				&& abs(headingDiff) < 20
+				&& abs(otherHeadingDiff) > 90) {
+					// in front or other is stopped which means other heading is not relevant
                 	SG_LOG(SG_ATC, SG_WARN, aiObject->getId() << " blocked by stopped opposing " << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
 					nearestDist = distM;
 					nearestTrafficRecord = other;
 				}
-			    if (other->getSpeed() == 0 
-				&& abs(headingDiff) < 90  
-				&& abs(otherHeadingDiff) < 90) {
-					// from the right and in front or other is stopped
-					// and pointing away
+			    if (other->getSpeed() >= 0 
+				&& abs(headingDiff) < 20  
+				&& abs(otherHeadingDiff) < 30) {
+					// in front and pointing away
                 	SG_LOG(SG_ATC, SG_BULK, aiObject->getId() << " blocked by stopped pointing away" << other->getId() << " Dist " << distM << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff);
 					nearestDist = distM;
 					nearestTrafficRecord = other;
 				}
 			}
+		}  else {
+			if (distM>10)
+			{
+                SG_LOG(SG_ATC, SG_ALERT, aiObject->getCallsign() << "(" << aiObject->getId() << ") is not near it's shadow in index Leg : " << aiObject->getLeg() << "/" << other->getLeg() << " Dist " << distM );
+			}
+			
 		}
 	}
     return nearestTrafficRecord;

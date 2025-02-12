@@ -50,6 +50,8 @@ class QuadtreeTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testAddSplit2);
     CPPUNIT_TEST(testAddSplit3);
     CPPUNIT_TEST(testAddSplit4);
+    CPPUNIT_TEST(testMove);
+    CPPUNIT_TEST(testMove2);
     CPPUNIT_TEST_SUITE_END();
 
 	/**Function implementing calculation of dimension for Quadtree*/
@@ -80,4 +82,8 @@ public:
     void testAddSplit3();
     /**Filling of the Quadtree with split*/
     void testAddSplit4();
+    /**Filling and move*/
+    void testMove();
+    /**Filling and move*/
+    void testMove2();
 };

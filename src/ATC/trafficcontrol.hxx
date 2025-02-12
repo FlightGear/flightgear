@@ -283,6 +283,7 @@ public:
     double getHeading  () const {
         return heading  ;
     };
+    /**The last diff of heading when turning.*/
     double getHeadingDiff  () const {
         return headingDiff  ;
     };

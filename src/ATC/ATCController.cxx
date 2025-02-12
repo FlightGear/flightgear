@@ -431,10 +431,14 @@ void FGATCController::signOff(int id)
     // if taken off or parked 
     if (((*i)->getLeg() > AILeg::TAKEOFF && (*i)->getLeg() < AILeg::APPROACH) ||
         ((*i)->getLeg() >= AILeg::PARKING_TAXI)) {
-        airportGroundRadar->remove(*i);
+        bool result = airportGroundRadar->remove(*i);
+        if (!result) {
+            SG_LOG(SG_ATC, SG_DEBUG, "Couldn't remove from index " << (*i));
+        }
+
         SG_LOG(SG_ATC, SG_DEBUG, (*i)->getCallsign() << " (" << (*i)->getId() << ") signing off from " << getName() << "(" << getFrequency() << ") and removed from AirportGroundradar");
     } else {
-        SG_LOG(SG_ATC, SG_DEBUG, (*i)->getCallsign() << " (" << (*i)->getId() << ") signing off from " << getName() << "(" << getFrequency() << ") Leg " << (*i)->getLeg());
+        SG_LOG(SG_ATC, SG_DEBUG, (*i)->getCallsign() << " (" << (*i)->getId() << ") signing off from " << getName() << "(" << getFrequency() << ") Leg " << (*i)->getLeg() << " at " << (*i)->getPos().getLatitudeDeg() << " "  << (*i)->getPos().getLongitudeDeg());
     }
 
     int oldSize = activeTraffic.size();
@@ -511,10 +515,16 @@ void FGATCController::eraseDeadTraffic()
 {
     auto it = std::remove_if(activeTraffic.begin(), activeTraffic.end(), [](const FGTrafficRecord* traffic) {
         if (traffic->isDead()) {
-            SG_LOG(SG_ATC, SG_DEBUG, "Remove dead " << traffic->getId() << " " << traffic->isDead());
-        }
+            SG_LOG(SG_ATC, SG_DEBUG, "Remove dead " << traffic->getCallsign() << "(" << traffic->getId() << ") " << traffic->isDead());
+        }        
         return traffic->isDead();
     });
+    if (it!=activeTraffic.end()) {
+        bool result = airportGroundRadar->remove(*it);
+        if (!result) {
+            SG_LOG(SG_ATC, SG_DEBUG, "Couldn't remove from index " << (*it));
+        }
+    }
     activeTraffic.erase(it, activeTraffic.end());
 }
 

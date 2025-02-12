@@ -747,7 +747,7 @@ void FGAIAircraft::announcePositionToController()
         controller = nullptr;
         break;
     default:
-        SG_LOG(SG_AI, SG_ALERT, "AILeg " << leg << " not covered");        
+        SG_LOG(SG_AI, SG_ALERT, "AILeg " << leg << " not covered by a controller type");        
         if (prevController) {
             SG_LOG(SG_AI, SG_BULK, "Will be signing off from " << prevController->getName());
         }
@@ -756,6 +756,11 @@ void FGAIAircraft::announcePositionToController()
     }
 
     if ((controller != prevController) && prevController && !getDie()) {
+        // We update one last time to update the Radar state.
+        // FIXME Share the traffic record between controllers
+        prevController->announcePosition(getID(), fp.get(), fp->getCurrentWaypoint()->getRouteIndex(),
+                                     _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
+                                     trafficRef->getRadius(), leg, this);
         //If we are dead we are automatically erased
         prevController->signOff(getID());
     }
@@ -764,6 +769,8 @@ void FGAIAircraft::announcePositionToController()
         controller->announcePosition(getID(), fp.get(), fp->getCurrentWaypoint()->getRouteIndex(),
                                      _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
                                      trafficRef->getRadius(), leg, this);
+    } else {
+        SG_LOG(SG_AI, SG_ALERT, "Can't announcePosition " << this->getCallSign() << " no controller");        
     }
 }
 

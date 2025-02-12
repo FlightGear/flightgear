@@ -101,7 +101,12 @@ void FGStartupController::announcePosition(int id,
         activeTraffic.push_back(sharedRec);
         airportGroundRadar->add(sharedRec);
     } else {
-        airportGroundRadar->move(SGRect<double>(lat, lon), *i);
+        bool moved = airportGroundRadar->move(SGRect<double>(lat, lon), *i);
+        if (!moved) {
+                    SG_LOG(SG_ATC, SG_ALERT,
+               "Not moved " << (*i)->getCallsign() << "" );
+
+        }
         (*i)->setPositionAndIntentions(currentPosition, intendedRoute);
         (*i)->setPositionAndHeading(lat, lon, heading, speed, alt);
     }

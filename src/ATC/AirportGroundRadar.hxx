@@ -25,12 +25,17 @@ public:
 // for index
 	/**Function implementing calculation of dimension for Quadtree*/
     static SGRect<double> getBox(SGSharedPtr<FGTrafficRecord> aiObject) {
-		//SG_LOG(SG_ATC, SG_ALERT, "getBox " << (*aiObject).getId() );
+		if ((*aiObject).getCallsign() == "BA780") {
+		  SG_LOG(SG_ATC, SG_ALERT, "getBox " << (*aiObject).getCallsign() << "(" << (*aiObject).getId() << ") " << aiObject << " " << (*aiObject).getPos().getLatitudeDeg() << " " << (*aiObject).getPos().getLongitudeDeg());
+		}
 		return SGRect<double>((*aiObject).getPos().getLatitudeDeg(),
 		(*aiObject).getPos().getLongitudeDeg());
 	};
 	/**Function implementing equals for Quadtree*/
     static bool equal(SGSharedPtr<FGTrafficRecord> o, SGSharedPtr<FGTrafficRecord> o2) {
+//		if ((*o).getCallsign() == "BA780") {
+		  SG_LOG(SG_ATC, SG_DEBUG, (*o).getCallsign() << "(" << (*o).getId() << ")" << o << "/" << (*o2).getCallsign() << "(" << (*o2).getId() << ")" << o2);
+//		}
 		return (*o).getId() == (*o2).getId();
 	};
 

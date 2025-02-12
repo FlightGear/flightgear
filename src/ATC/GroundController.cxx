@@ -133,7 +133,12 @@ void FGGroundController::announcePosition(int id,
         }
         airportGroundRadar->add(sharedRec);
     } else {
-        airportGroundRadar->move(SGRect<double>(lat, lon), *i);
+        bool moved = airportGroundRadar->move(SGRect<double>(lat, lon), *i);
+        if (!moved) {
+                    SG_LOG(SG_ATC, SG_ALERT,
+               "Not moved " << (*i)->getCallsign() << "" );
+
+        }
         (*i)->setPositionAndIntentions(currentPosition, intendedRoute);
         (*i)->setPositionAndHeading(lat, lon, heading, speed, alt);
     }
@@ -265,10 +270,14 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
         if(oldWaitsForId!=blocker->getId()) {
             (*i)->setWaitingSince(now);
         }
+        // https://wiki.flightgear.org/AI_Traffic#Braking
         double distM = SGGeodesy::distanceM((*i)->getPos(), blocker->getPos());
-        double distanceSlowdown = ((distM-20) / 100); // At 20 m we want to correct to zero
-        int newSpeed = blocker->getSpeed() * (distanceSlowdown>1?1:distanceSlowdown); // clamp to max speed of other aircraft
-        newSpeed = newSpeed>1?newSpeed:0; // ensure we don't crawl
+        double sizeA = (*i)->getRadius()*2;
+        double sizeB = blocker->getRadius();
+        double distanceSlowdown = std::min((distM-20-sizeB), sizeA); // At 20 m we want to correct to zero
+        double speedCorrection = std::min(std::max((distanceSlowdown/sizeA),0.0),1.0);
+        int newSpeed = blocker->getSpeed() * speedCorrection; // clamp to max speed of other aircraft
+        newSpeed = newSpeed>2?newSpeed:0; // ensure we don't crawl
         int waittime = (now-(*i)->getWaitingSince());
         const sgDebugPriority level = waittime > 600?SG_ALERT:SG_DEBUG; 
         if (blocker->getWaitsForId()) {
