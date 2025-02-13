@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <simgear/props/props_io.hxx>
 
 #include <map>
+#include <string>
 #include <vector>
 
 using std::string;
@@ -35,10 +36,21 @@ static string NO_ATIS("nil");
 static string EMPTY("");
 #define SPACE append(1,' ')
 
+static string getSpokenForm(const string& text)
+{
+    return globals->get_locale()->getLocalizedString(text, "atc", text);
+}
+
+static string getSpokenFormWithDefault(const string& text,
+                                       const string& defaultValue)
+{
+    return globals->get_locale()->getLocalizedString(text, "atc", defaultValue);
+}
+
 std::string ATCSpeech::getSpokenDigit( int i )
 {
   string key = "n" + std::to_string(i);
-  return globals->get_locale()->getLocalizedString(key.c_str(), "atc", "" );
+  return getSpokenFormWithDefault(key, "");
 }
 
 string ATCSpeech::getSpokenNumber( string number )
@@ -76,7 +88,7 @@ string ATCSpeech::getSpokenNumber( int number, bool leadingZero, int digits )
 
   string result;
   if( negative ) {
-    result.append( globals->get_locale()->getLocalizedString("minus", "atc", "minus" ) );
+    result.append(getSpokenForm("minus"));
   }
 
   while( !spokenDigits.empty() ) {
@@ -391,11 +403,13 @@ string ATISEncoder::getApproachType( SGPropertyNode_ptr )
 {
   FGRunwayRef runway = findBestRunwayForWind( airport, _atis->getWindDeg(), _atis->getWindSpeedKt() );
   if( runway.valid() ) {
-    if( NULL != runway->ILS() ) return globals->get_locale()->getLocalizedString("ils", "atc", "ils" );
+    if (runway->ILS() != nullptr) {
+      return getSpokenForm("ils");
+    }
     // TODO: any chance to find other approach types? localizer-dme, vor-dme, vor, ndb?
   }
 
-  return globals->get_locale()->getLocalizedString("visual", "atc", "visual" );
+  return getSpokenForm("visual");
 }
 
 string ATISEncoder::getLandingRunway( SGPropertyNode_ptr )
@@ -452,7 +466,7 @@ string ATISEncoder::getTransitionLevel(SGPropertyNode_ptr)
 
 string ATISEncoder::getWindDirection( SGPropertyNode_ptr )
 {
-  string variable = globals->get_locale()->getLocalizedString("variable", "atc", "variable" );
+  string variable = getSpokenForm("variable");
 
   bool vrb = _atis->getWindMinDeg() == 0 && _atis->getWindMaxDeg() == 359;
   return vrb ? variable : getSpokenNumber( _atis->getWindDeg(), true, 3 );
@@ -481,16 +495,16 @@ string ATISEncoder::getGustsKnots( SGPropertyNode_ptr )
 
 string ATISEncoder::getCavok( SGPropertyNode_ptr )
 {
-  string CAVOK = globals->get_locale()->getLocalizedString("cavok", "atc", "cavok" );
+  string CAVOK = getSpokenForm("cavok");
 
   return _atis->isCavok() ? CAVOK : EMPTY;
 }
 
 string ATISEncoder::getVisibilityMetric( SGPropertyNode_ptr )
 {
-  string m = globals->get_locale()->getLocalizedString("meters", "atc", "meters" );
-  string km = globals->get_locale()->getLocalizedString("kilometers", "atc", "kilometers" );
-  string or_more = globals->get_locale()->getLocalizedString("ormore", "atc", "or more" );
+  string m = getSpokenForm("meters");
+  string km = getSpokenForm("kilometers");
+  string or_more = getSpokenFormWithDefault("ormore", "or more");
 
   int v = _atis->getVisibilityMeters();
   string reply;
@@ -501,7 +515,7 @@ string ATISEncoder::getVisibilityMetric( SGPropertyNode_ptr )
 
 string ATISEncoder::getVisibilityMiles( SGPropertyNode_ptr )
 {
-  string feet = globals->get_locale()->getLocalizedString("feet", "atc", "feet" );
+  string feet = getSpokenForm("feet");
 
   int v = _atis->getVisibilityMeters();
   int vft = int( v * SG_METER_TO_FEET / 100 + 0.5 ) * 100; // Rounded to 100 ft
@@ -520,7 +534,7 @@ string ATISEncoder::getPhenomena( SGPropertyNode_ptr )
 
 string ATISEncoder::getClouds( SGPropertyNode_ptr )
 {
-  string FEET =  globals->get_locale()->getLocalizedString("feet", "atc", "feet" );
+  string FEET = getSpokenForm("feet");
   string reply;
 
   ATISInformationProvider::CloudEntries cloudEntries = _atis->getClouds();
@@ -579,7 +593,7 @@ string ATISEncoder::getInhgFraction( SGPropertyNode_ptr )
 
 string ATISEncoder::getInhg( SGPropertyNode_ptr node)
 {
-  string DECIMAL = globals->get_locale()->getLocalizedString("dp", "atc", "decimal" );
+  string DECIMAL = getSpokenFormWithDefault("dp", "decimal");
   return getInhgInteger(node)
     .SPACE.append(DECIMAL).SPACE
     .append(getInhgFraction(node));

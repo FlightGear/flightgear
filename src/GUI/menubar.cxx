@@ -9,8 +9,6 @@
 
 FGMenuBar::FGMenuBar()
 {
-    // load locale's menu resources (default and current language)
-    globals->get_locale()->loadResource("menu");
 }
 
 FGMenuBar::~FGMenuBar ()

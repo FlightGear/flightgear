@@ -30,6 +30,8 @@
 #include <cassert>
 
 #include <simgear/misc/strutils.hxx>
+#include <simgear/misc/sg_dir.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
@@ -38,11 +40,13 @@
 #include "locale.hxx"
 #include "XLIFFParser.hxx"
 
+#include <Add-ons/AddonManager.hxx>
 #include <Add-ons/AddonMetadataParser.hxx>
 
-using std::vector;
 using std::string;
+using std::vector;
 namespace strutils = simgear::strutils;
+using flightgear::addons::Addon;
 
 FGLocale::FGLocale(SGPropertyNode* root) :
 	_intl(root->getNode("/sim/intl", 0, true)),
@@ -225,22 +229,19 @@ bool FGLocale::selectLanguage(const std::string& language)
 
         if (_currentLocale) {
             SG_LOG(SG_GENERAL, SG_DEBUG,
-                   "Found locale for '" << lang << "' at '" <<
-                   _currentLocale->getPath() << "'");
+                   "Found locale for '" << lang << "' at " <<
+                   _currentLocale->getPath());
             break;
         }
     }
 
-    if (_currentLocale && _currentLocale->hasChild("xliff")) {
-        parseXLIFF(_currentLocale);
+    if (_currentLocale &&
+       _currentLocale->getNode("core", 0, true)->hasChild("xliff")) {
+        loadXLIFF(globals->get_fg_root(), _currentLocale, "core");
     }
-   
-    
-    // load resource for system messages (translations for fgfs internal messages)
-    loadResource("sys");
-    loadResource("atc");
-    loadResource("tips");
-    loadResource("weather-scenarios");
+
+    // Default translation for 'atc', 'menu', 'options', etc.
+    loadCoreResourcesForDefaultTranslation();
 
     _inited = true;
     if (!_currentLocale && !_currentLocaleString.empty()) {
@@ -252,6 +253,92 @@ bool FGLocale::selectLanguage(const std::string& language)
     return true;
 }
 
+void FGLocale::loadCoreResourcesForDefaultTranslation()
+{
+    for (const string resource : {
+             "atc", "menu", "options", "sys", "tips", "weather-scenarios"}) {
+        loadResourceForDefaultTranslation_indirect(
+            globals->get_fg_root(), "core", resource);
+    }
+}
+
+void FGLocale::loadAircraftTranslations()
+{
+    loadResourcesFromAircraftOrAddonDir(fgGetString("/sim/aircraft-dir"),
+                                        "aircraft");
+}
+
+void FGLocale::loadAddonTranslations()
+{
+    const auto& addonManager = flightgear::addons::AddonManager::instance();
+    if (addonManager) {
+        for (const Addon* addon : addonManager->registeredAddons()) {
+            const string domain = "addons/" + addon->getId();
+            loadResourcesFromAircraftOrAddonDir(addon->getBasePath(), domain);
+        }
+    } else {
+        SG_LOG(SG_GENERAL, SG_WARN,
+               "FGLocale: not loading add-on translations: AddonManager "
+               "instance not found");
+    }
+}
+
+void FGLocale::loadResourcesFromAircraftOrAddonDir(const SGPath& basePath,
+                                                   const string& domain)
+{
+    const simgear::Dir d = simgear::Dir(basePath / "Translations" / "default");
+
+    if (d.exists()) {
+        loadDefaultTranslationFromAircraftOrAddonDir(d, domain);
+    }
+
+    loadXLIFFFromAircraftOrAddonDir(basePath, domain);
+}
+
+void FGLocale::loadDefaultTranslationFromAircraftOrAddonDir(
+    const simgear::Dir& defaultTranslationDir, const string& domain)
+{
+    const auto xmlFiles = defaultTranslationDir.children(
+        simgear::Dir::TYPE_FILE | simgear::Dir::NO_DOT_OR_DOTDOT, ".xml");
+
+    for (const SGPath& file : xmlFiles) {
+        loadResourceForDefaultTranslation(file, domain, file.file_base());
+    }
+}
+
+void FGLocale::loadXLIFFFromAircraftOrAddonDir(const SGPath& basePath,
+                                               const string& domain)
+{
+    const simgear::Dir translDir = simgear::Dir(basePath / "Translations");
+    if (!translDir.exists()) {
+        return;
+    }
+
+    const auto subdirs = translDir.children(
+        simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
+    const auto langNodes = _currentLocale->getChildren("lang");
+
+    for (const SGPath& subdir : subdirs) {
+        const string name = subdir.file(); // name of subdir of 'Translations'
+        if (name == "default") {
+            continue;
+        }
+
+        for (const auto& n : langNodes) {
+            if (n->getStringValue() != name) {
+                continue;
+            }
+
+            // Subdir 'name' matches the current locale, try to load XLIFF
+            SGPropertyNode* xliffNode = _currentLocale->getNode(
+                domain + "/xliff", 0, true);
+            xliffNode->setStringValue(
+                "Translations/"  + name + "/FlightGear-nonQt.xlf");
+            loadXLIFF(basePath, _currentLocale, domain);
+        }
+    }
+}
+
 void FGLocale::clear()
 {
     _inited = false;
@@ -259,8 +346,10 @@ void FGLocale::clear()
     _languages.clear();
 
     if (_currentLocale && (_currentLocale != _defaultLocale)) {
-        // remove loaded strings, so we don't duplicate
-        _currentLocale->removeChild("strings");
+        // Remove loaded strings, so we don't duplicate them
+        if (_currentLocale->hasChild("core")) {
+            _currentLocale->getNode("core", 0)->removeChild("strings");
+        }
     }
 
     _currentLocale.clear();
@@ -274,70 +363,76 @@ FGLocale::getPreferredLanguage() const
     return _currentLocaleString;
 }
 
-void FGLocale::parseXLIFF(SGPropertyNode* localeNode)
+void FGLocale::loadXLIFF(const SGPath& basePath, SGPropertyNode* localeNode,
+                         const string& domain)
 {
-    SGPath path(globals->get_fg_root());
-    SGPath xliffPath = path / localeNode->getStringValue("xliff");
+    SGPropertyNode* domainNode = localeNode->getNode(domain, 0, true);
+    const string relPath = domainNode->getStringValue("xliff");
+    const SGPath xliffPath = basePath / relPath;
+
     if (!xliffPath.exists()) {
         SG_LOG(SG_GENERAL, SG_ALERT, "No XLIFF file at " << xliffPath);
     } else {
         SG_LOG(SG_GENERAL, SG_INFO, "Loading XLIFF file at " << xliffPath);
-        SGPropertyNode_ptr stringNode = localeNode->getNode("strings", 0, true);
+        SGPropertyNode_ptr stringsNode = domainNode->getNode("strings", 0, true);
         try {
-            flightgear::XLIFFParser visitor(stringNode);
+            flightgear::XLIFFParser visitor(stringsNode);
             readXML(xliffPath, visitor);
         } catch (sg_io_exception& ex) {
-            SG_LOG(SG_GENERAL, SG_WARN, "failure parsing XLIFF: " << path <<
+            SG_LOG(SG_GENERAL, SG_WARN, "failure parsing XLIFF: " << xliffPath <<
                    "\n\t" << ex.getMessage() << "\n\tat:" << ex.getLocation().asString());
         } catch (sg_exception& ex) {
-            SG_LOG(SG_GENERAL, SG_WARN, "failure parsing XLIFF: " << path <<
+            SG_LOG(SG_GENERAL, SG_WARN, "failure parsing XLIFF: " << xliffPath <<
                    "\n\t" << ex.getMessage());
         }
     }
 }
 
-// Load strings for requested resource and locale.
-// Result is stored below "strings" in the property tree of the given locale.
-bool
-FGLocale::loadResource(SGPropertyNode* localeNode, const char* resource)
+// Load the default translation of the requested resource.
+// This function gets the resource relative path from the Property Tree.
+bool FGLocale::loadResourceForDefaultTranslation_indirect(
+    const SGPath& basePath, const string& domain, const string& resource)
 {
-    SGPath path( globals->get_fg_root() );
+    SGPropertyNode* domainNode = _defaultLocale->getNode(domain, 0, true);
+    SGPropertyNode* stringsNode = domainNode->getNode("strings", 0, true);
+    SGPropertyNode* resourceNode = stringsNode->getNode(resource);
 
-    // already loaded
-    if (localeNode->hasChild("xliff")) {
-        return true;
-    }
-    
-    SGPropertyNode* stringNode = localeNode->getNode("strings", 0, true);
-    SGPropertyNode* resourceNode = stringNode->getNode(resource);
+    const string path_str = resourceNode ? resourceNode->getStringValue() : "";
 
-    if (!resourceNode)
+    if (path_str.empty()) {
+        SG_LOG(SG_GENERAL, SG_WARN, "No path in " << stringsNode->getPath()
+               << " for resource '" << resource << "'.");
         return false;
+    }
+
+    return loadResourceForDefaultTranslation(basePath / path_str, domain,
+                                             resource);
+}
+
+bool FGLocale::loadResourceForDefaultTranslation(
+    const SGPath& xmlFile, const std::string& domain,
+    const std::string& resource)
+{
+    SGPropertyNode* resourceNode = _defaultLocale->getNode(domain, 0, true)
+                                                 ->getNode("strings", 0, true)
+                                                 ->getNode(resource, 0, true);
 
     if (resourceNode->getBoolValue("__loaded")) {
         // already loaded previously
         return true;
     }
 
-    string path_str = resourceNode->getStringValue();
-    if (path_str.empty())
-    {
-        SG_LOG(SG_GENERAL, SG_WARN, "No path in " << stringNode->getPath() << "/" << resource << ".");
-        return false;
-    }
-
-    path.append(path_str);
-    SG_LOG(SG_GENERAL, SG_INFO, "Reading localized strings for '" <<
-           localeNode->getStringValue("lang", "<none>")
-           <<"' from " << path);
+    SG_LOG(SG_GENERAL, SG_INFO, "Reading localized strings for " <<
+           domain << "/" << resource << " in language '"
+           << _defaultLocale->getStringValue("lang", "<none>")
+           <<"' from " << xmlFile);
 
     // load the actual file
-    try
-    {
-        readProperties(path, resourceNode);
-    } catch (const sg_exception &e)
-    {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Unable to read the localized strings from " << path <<
+    try {
+        readProperties(xmlFile, resourceNode);
+    } catch (const sg_exception &e) {
+        SG_LOG(SG_GENERAL, SG_ALERT,
+               "Unable to read the localized strings from " << xmlFile <<
                ". Error: " << e.getFormattedMessage());
         return false;
     }
@@ -347,27 +442,12 @@ FGLocale::loadResource(SGPropertyNode* localeNode, const char* resource)
     return true;
 }
 
-// Load strings for requested resource (for current and default locale).
-// Result is stored below "strings" in the property tree of the locales.
-bool
-FGLocale::loadResource(const char* resource)
-{
-    // load defaults first
-    bool Ok = loadResource(_defaultLocale, resource);
-
-    // also load language specific resource, unless identical
-    if ((_currentLocale != nullptr) && (_defaultLocale != _currentLocale))
-    {
-        Ok &= loadResource(_currentLocale, resource);
-    }
-
-    return Ok;
-}
-
 std::string
 FGLocale::innerGetLocalizedString(SGPropertyNode* localeNode, const char* id, const char* context, int index) const
 {
-    SGPropertyNode *n = localeNode->getNode("strings",0, true)->getNode(context);
+    SGPropertyNode* n = localeNode->getNode("core", 0, true)
+                            ->getNode("strings", 0, true)
+                            ->getNode(context);
     if (!n) {
         return std::string();
     }
@@ -438,9 +518,10 @@ FGLocale::getLocalizedStringWithIndex(const char* id, const char* resource, unsi
 simgear::PropertyList
 FGLocale::getLocalizedStrings(SGPropertyNode *localeNode, const char* id, const char* context)
 {
-    SGPropertyNode *n = localeNode->getNode("strings",0, true)->getNode(context);
-    if (n)
-    {
+    SGPropertyNode* n = localeNode->getNode("core", 0, true)
+                            ->getNode("strings", 0, true)
+                            ->getNode(context);
+    if (n) {
         return n->getChildren(id);
     }
     return simgear::PropertyList();
@@ -450,7 +531,9 @@ size_t FGLocale::getLocalizedStringCount(const char* id, const char* resource) c
 {
     assert(_inited);
     if (_currentLocale) {
-        SGPropertyNode* resourceNode = _currentLocale->getNode("strings",0, true)->getNode(resource);
+        SGPropertyNode* resourceNode = _currentLocale->getNode("core", 0, true)
+                                           ->getNode("strings", 0, true)
+                                           ->getNode(resource);
         if (resourceNode) {
             const size_t count = resourceNode->getChildren(id).size();
             if (count > 0) {
@@ -460,7 +543,9 @@ size_t FGLocale::getLocalizedStringCount(const char* id, const char* resource) c
     }
 
     if (_defaultLocale) {
-        auto resourceNode = _defaultLocale->getNode("strings", 0, true)->getNode(resource);
+        SGPropertyNode* resourceNode = _defaultLocale->getNode("core", 0, true)
+                                           ->getNode("strings", 0, true)
+                                           ->getNode(resource);
         if (!resourceNode)
             return 0;
 

@@ -3218,12 +3218,6 @@ void Options::showUsage() const
     exit(-1);
   }
 
-  if (!locale->loadResource("options"))
-  {
-      cout << "Unable to read the language resource." << endl;
-      exit(-1);
-  }
-
   std::string usage = locale->getLocalizedString(options->getStringValue("usage"), "options");
   if (!usage.empty()) {
     cout << usage << endl;

@@ -29,6 +29,8 @@
 
 // forward decls
 class SGPath;
+namespace simgear { class Dir; }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // FGLocale  //////////////////////////////////////////////////////////////////
@@ -58,13 +60,8 @@ public:
      */
     std::string getPreferredLanguage() const;
 
-    /**
-     * Load strings for requested resource, i.e. "menu", "options", "dialogs".
-     * Loads data for current and default locale (the latter is the fallback).
-     * Result is stored below the "strings" node in the property tree of the
-     * respective locale.
-     */
-    bool        loadResource        (const char* resource);
+    void loadAircraftTranslations();
+    void loadAddonTranslations();
 
     /**
      * Obtain a single string from the localized resource matching the given identifier.
@@ -131,9 +128,48 @@ protected:
     SGPropertyNode* findLocaleNode      (const std::string& language);
 
     /**
-     * Load resource data for given locale node.
+     * Load default strings for the requested resource ("atc", "menu",  etc.).
+     *
+     * The strings are stored in the property tree under
+     * /sim/intl/locale[0]/⟨domain⟩/strings/⟨resource⟩.
+     *
+     * To avoid confusing unrelated things, translatable strings from the
+     * simulator core (FGData), from an add-on or from the current aircraft
+     * are all stored in different *domains*. There are three kinds of domains:
+     *   - 'core' for strings coming from FGData;
+     *   - 'addons/⟨addonId⟩' for strings coming from an add-on;
+     *   - 'aircraft' for strings coming from the current aircraft.
      */
-    bool            loadResource        (SGPropertyNode* localeNode, const char* resource);
+    bool loadResourceForDefaultTranslation(
+        const SGPath& xmlFile, const std::string& domain,
+        const std::string& resource);
+    /**
+     * Similar to loadResourceForDefaultTranslation(), except it gets the
+     * resource path from the Property Tree.
+     *
+     * The path is the string value of property node
+     * /sim/intl/locale[0]/⟨domain⟩/strings/⟨resource⟩; it is interpreted
+     * relatively to basePath.
+     */
+    bool loadResourceForDefaultTranslation_indirect(
+        const SGPath& basePath, const std::string& domain,
+        const std::string& resource);
+    /**
+     * Load the default translation of core resources 'atc', 'menu',
+     * 'options', 'sys', 'tips', etc.
+     */
+    void loadCoreResourcesForDefaultTranslation();
+
+    /**
+     * From an add-on or aircraft directory, load the default translation and,
+     * if available, the XLIFF file for the current locale.
+     */
+    void loadResourcesFromAircraftOrAddonDir(const SGPath& basePath,
+                                             const std::string& domain);
+    void loadDefaultTranslationFromAircraftOrAddonDir(
+        const simgear::Dir& defaultTranslationDir, const std::string& domain);
+    void loadXLIFFFromAircraftOrAddonDir(const SGPath& basePath,
+                                         const std::string& domain);
 
     /**
      * Obtain a single string from locale node matching the given identifier and context.
@@ -156,10 +192,17 @@ protected:
     std::string _currentLocaleString;
 
     /**
-     * Parse an XLIFF 1.2 file into the standard property structure underneath
-     * the provided locale node
+     * Load an XLIFF 1.2 file into the Property Tree under
+     * /sim/intl/locale[n]/⟨domain⟩/strings/⟨resource⟩.
+     *
+     * @param basePath base for the relative path to XLIFF file that is the
+     *                 string value of node /sim/intl/locale[n]/⟨domain⟩/xliff.
+     * @param localeNode pointer to the /sim/intl/locale[n] node for the
+     *                 current locale
+     * @param domain a string such as 'core' or 'addons/⟨addonId⟩'
      */
-    void parseXLIFF(SGPropertyNode* node);
+    void loadXLIFF(const SGPath& basePath, SGPropertyNode* localeNode,
+                   const std::string& domain);
 private:
     /** Return a new string with the character encoding part of the locale
      *  spec removed., i.e., "de_DE.UTF-8" becomes "de_DE". If there is no

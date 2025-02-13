@@ -733,6 +733,9 @@ int fgMainInit( int argc, char **argv )
         flightgear::modalMessageBox(title, msg);
     }
 
+    globals->get_locale()->loadAircraftTranslations();
+    globals->get_locale()->loadAddonTranslations();
+
     // Copy the property nodes for the menus added by registered add-ons
     addons::AddonManager::instance()->addAddonMenusToFGMenubar();
 

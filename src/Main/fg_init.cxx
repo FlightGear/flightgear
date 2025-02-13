@@ -1397,6 +1397,9 @@ void fgStartNewReset()
     fgInitAircraftPaths(true);
     fgInitAircraft(true, false /* not from launcher */);
 
+    globals->get_locale()->loadAircraftTranslations();
+    globals->get_locale()->loadAddonTranslations();
+
     auto presets = globals->get_subsystem_mgr()->add<flightgear::GraphicsPresets>();
     presets->applyInitialPreset();
 
