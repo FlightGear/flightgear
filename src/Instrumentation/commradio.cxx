@@ -658,7 +658,7 @@ void CommRadioImpl::update(double dt)
       case FGPositioned::FREQ_AWOS: {
       if (_signalQuality_norm > 0.01) {
         _metarBridge->requestMetarForId(_airportId);
-        _receivingFlag = _fullDuplex || !_pushtoTalk;
+        _receivingFlag = _fullDuplex || !_pushToTalk;
       } else {
         _metarBridge->clearMetar();
         _atis = "";
@@ -729,19 +729,18 @@ void CommRadioImpl::updateAudio()
   _atis_enabled_prev = atis_enabled;
   
   // adjust volumes
-  double tgt_volume = _volume_norm;
-  if (_pushToTalk && !_fullDuplex) tgt_volume = 0.0;
+  const auto targetVolume = (_pushToTalk && !_fullDuplex) ? 0.0 : _volume_norm;
   const bool doSquelch = (_signalQuality_norm < _cutoffSignalQuality);
-  double atisVolume = doSquelch ? 0.0 : tgt_volume;
+  double atisVolume = doSquelch ? 0.0 : targetVolume;
   if (_addNoise) {
-    double noiseVol = (1.0 - _signalQuality_norm) * tgt_volume;
+    double noiseVol = (1.0 - _signalQuality_norm) * targetVolume;
     if (_cutoffSignalQuality < 0.01) {
       // ensure noise is still heard disabling squelch
       // see https://sourceforge.net/p/flightgear/codetickets/2846/
-      noiseVol = tgt_volume;
+      noiseVol = targetVolume;
     }
 
-    atisVolume = _signalQuality_norm * tgt_volume;
+    atisVolume = _signalQuality_norm * targetVolume;
     noiseSample->set_volume(doSquelch ? 0.0: noiseVol);
   }
   
