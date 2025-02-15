@@ -3,10 +3,18 @@
 
 include(FlightGearComponent)
 
-set(SOURCES XLIFFParser.cxx
+set(SOURCES DefaultTranslationParser.cxx
+            TranslationDomain.cxx
+            TranslationResource.cxx
+            TranslationUnit.cxx
+            XLIFFParser.cxx
             )
 
-set(HEADERS XLIFFParser.hxx
+set(HEADERS DefaultTranslationParser.hxx
+            TranslationDomain.hxx
+            TranslationResource.hxx
+            TranslationUnit.hxx
+            XLIFFParser.hxx
             )
 
 flightgear_component(Translations "${SOURCES}" "${HEADERS}")
