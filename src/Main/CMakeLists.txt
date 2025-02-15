@@ -27,7 +27,6 @@ set(SOURCES
     screensaver_control.cxx
     subsystemFactory.cxx
     util.cxx
-    XLIFFParser.cxx
     ErrorReporter.cxx
     ${MS_RESOURCE_FILE}
 )
@@ -48,7 +47,6 @@ set(HEADERS
     screensaver_control.hxx
     subsystemFactory.hxx
     util.hxx
-    XLIFFParser.hxx
     ErrorReporter.hxx
     sentryIntegration.hxx
 )

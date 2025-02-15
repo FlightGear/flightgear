@@ -1,20 +1,6 @@
-// XLIFFParser.cxx -- parse an XLIFF 1.2 XML file
-////
-// Copyright (C) 2018  James Turner <james@flightgear.org>
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// SPDX-FileCopyrightText: (C) 2018  James Turner <james@flightgear.org>
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileComment: parse an XLIFF 1.2 XML file
 
 #include "config.h"
 
@@ -33,17 +19,17 @@ using namespace flightgear;
 XLIFFParser::XLIFFParser(SGPropertyNode_ptr lroot) :
     _localeRoot(lroot)
 {
-    
+
 }
 
 void XLIFFParser::startXML()
 {
-    
+
 }
 
 void XLIFFParser::endXML()
 {
-    
+
 }
 
 void XLIFFParser::startElement(const char *name, const XMLAttributes &atts)
@@ -103,7 +89,7 @@ void XLIFFParser::finishTransUnit()
         // skip un-approved or missing translations
         return;
     }
-    
+
     const auto slashPos = _unitId.find('/');
     const auto indexPos = _unitId.find(':');
 
@@ -112,7 +98,7 @@ void XLIFFParser::finishTransUnit()
                _unitId << "' at line " << getLine() << " of " << getPath());
         return;
     }
-    
+
     const auto res = _unitId.substr(0, slashPos);
     if (res != _resource) {
         // this implies the <group> node resname doesn't match the
@@ -122,7 +108,7 @@ void XLIFFParser::finishTransUnit()
                << getLine() << " of " << getPath());
         return;
     }
-    
+
     const auto id = _unitId.substr(slashPos + 1, indexPos - (slashPos + 1));
     const int index = std::stoi(_unitId.substr(indexPos+1));
     _resourceNode->getNode(id, index, true)->setStringValue(_target);

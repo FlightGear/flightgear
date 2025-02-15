@@ -38,10 +38,10 @@
 
 #include "fg_props.hxx"
 #include "locale.hxx"
-#include "XLIFFParser.hxx"
 
 #include <Add-ons/AddonManager.hxx>
 #include <Add-ons/AddonMetadataParser.hxx>
+#include <Translations/XLIFFParser.hxx>
 
 using std::string;
 using std::vector;
