@@ -153,7 +153,7 @@ class Node {
             auto it = std::find_if(std::begin(data), std::end(data),
                 [equalFkt, value](auto rhs){ return equalFkt(value, rhs); });
             if (it == std::end(data)) {
-                SG_LOG(SG_ATC, SG_ALERT , "Trying to move non existant data " << value << " " << data.size() );
+                SG_LOG(SG_ATC, SG_DEBUG , "Trying to move non existant data " << value << " " << data.size() );
                 return false;
             }
             // No need to do anything since in same node
@@ -287,7 +287,7 @@ class Node {
             auto it = std::find_if(std::begin(data), std::end(data),
                 [equalFkt, value](auto rhs){ return equalFkt(value, rhs); });
             if (it == std::end(data)) {
-                SG_LOG(SG_ATC, SG_ALERT , "Not found when printing path" );
+                SG_LOG(SG_ATC, SG_DEBUG , "Not found when printing path" );
                 return false;
             } else {
                 return true;
@@ -576,7 +576,11 @@ class QuadTree {
                 rootNode.get()->printPath(getBoxFunction(value), "Error/");
                 rootNode.get()->findFullScan(value, equalFunction, "Error/");
             }
-            rootNode.get()->removeFullScan(value, equalFunction, "Error/");
+            bool removed = rootNode.get()->removeFullScan(value, equalFunction, "Error/");
+            if (!removed) {
+                SG_LOG(SG_ATC, SG_ALERT , "Not removed " );
+                rootNode.get()->findFullScan(value, equalFunction, "Error/");
+            }
             return rootNode.get()->add(getBoxFunction(value), value, equalFunction, getBoxFunction);
         }
         /*

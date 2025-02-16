@@ -32,6 +32,7 @@ extern double fgIsFinite(double x);
 #include "performancedata.hxx"
 #include "performancedb.hxx"
 
+#include <ATC/atc_mgr.hxx>
 #include <ATC/ATCController.hxx>
 #include <ATC/trafficcontrol.hxx>
 
@@ -693,6 +694,7 @@ void FGAIAircraft::announcePositionToController()
         // throw an exception so this aircraft gets killed by the AIManager.
         throw sg_exception("bad AI flight plan. No current WP");
     }
+    auto mgr = globals->get_subsystem<FGATCManager>();
 
     // Note that leg has been incremented after creating the current leg, so we should use
     // leg numbers here that are one higher than the number that is used to create the leg
@@ -717,6 +719,12 @@ void FGAIAircraft::announcePositionToController()
             towerController = nullptr;
         } else {
             SG_LOG(SG_AI, SG_BULK, "Error: Could not find Dynamics at airport : " << trafficRef->getDepartureAirport()->getId());
+        }
+        break;
+    case AILeg::CLIMB:
+    case AILeg::CRUISE:
+        if (mgr && mgr->getEnRouteController()) {
+            controller = mgr->getEnRouteController();
         }
         break;
     case AILeg::APPROACH:

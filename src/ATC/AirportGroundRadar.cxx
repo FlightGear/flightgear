@@ -54,7 +54,7 @@ bool AirportGroundRadar::move(const SGRectd& newPos, SGSharedPtr<FGTrafficRecord
 {
 	bool ret = index.move(newPos, aiObject);
 	if (!ret) {
-		SG_LOG(SG_ATC, SG_ALERT, "Couldn't move Aircraft " << aiObject->getCallsign() << "(" << aiObject->getId() << ") to " << airport->getId() << " Leg " << aiObject->getLeg() );	
+		SG_LOG(SG_ATC, SG_DEBUG, "Couldn't move Aircraft " << aiObject->getCallsign() << "(" << aiObject->getId() << ") to " << airport->getId() << " Leg " << aiObject->getLeg() );	
 	}
 	return ret;
 }
@@ -154,11 +154,11 @@ bool AirportGroundRadar::isBlockedForPushback(SGSharedPtr<FGTrafficRecord> aiObj
 
 			// We want ample space 
 			const int threshold = 2 * getSize(aiObject) + 2 * getSize(other) + SEPARATION;
-            SG_LOG(SG_ATC, SG_DEBUG, "Search Id : " << aiObject->getId() <<  " Found Id : " << other->getId() << " Dist \t" << distM << "m Threshold " << threshold << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff  << " courseTowardOther " << courseTowardOther << " Turning "  << aiObject->getHeadingDiff() << " Speeds : " << aiObject->getSpeed() << "/" << other->getSpeed() << " " << (other->getSpeed()==0?"Other Stopped":""));
+            SG_LOG(SG_ATC, SG_BULK, "Search Id : " << aiObject->getId() <<  " Found Id : " << other->getId() << " Dist \t" << distM << "m Threshold " << threshold << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff  << " courseTowardOther " << courseTowardOther << " Turning "  << aiObject->getHeadingDiff() << " Speeds : " << aiObject->getSpeed() << "/" << other->getSpeed() << " " << (other->getSpeed()==0?"Other Stopped":""));
 
 			if ( distM < threshold && (abs(headingDiff) > 135) ){
 				// from the right and in front or other is stopped
-                SG_LOG(SG_ATC, SG_DEBUG, aiObject->getCallsign() << "(" << aiObject->getId() << ") blocked for pushback by " << other->getCallsign() << "(" << other->getId() << ")");
+                SG_LOG(SG_ATC, SG_BULK, aiObject->getCallsign() << "(" << aiObject->getId() << ") blocked for pushback by " << other->getCallsign() << "(" << other->getId() << ")");
 				return true;
 			}
 		}
@@ -188,7 +188,7 @@ const SGSharedPtr<FGTrafficRecord> AirportGroundRadar::getBlockedBy(SGSharedPtr<
             const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, aiObject->getHeading() - courseTowardOther - turningRate);
             const double otherHeadingDiff = SGMiscd::normalizePeriodic(-180, 180, other->getHeading() - courseTowardOther);
 			const double threshold = getSize(aiObject) + getSize(other);
-            SG_LOG(SG_ATC, SG_DEBUG, "Search Id : " << aiObject->getId() <<  " Found Id : " << other->getId() << " NearestDist " << nearestDist << " Dist \t" << distM << "m Threshold " << threshold << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff  << " courseTowardOther " << courseTowardOther << " Turning "  << aiObject->getHeadingDiff() << " Speeds : " << aiObject->getSpeed() << "/" << other->getSpeed() << " " << (other->getSpeed()==0?"Other Stopped":""));
+            SG_LOG(SG_ATC, SG_BULK, "Search Id : " << aiObject->getId() <<  " Found Id : " << other->getId() << " NearestDist " << nearestDist << " Dist \t" << distM << "m Threshold " << threshold << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff  << " courseTowardOther " << courseTowardOther << " Turning "  << aiObject->getHeadingDiff() << " Speeds : " << aiObject->getSpeed() << "/" << other->getSpeed() << " " << (other->getSpeed()==0?"Other Stopped":""));
 			if ( distM < 20 && aiObject->getSpeed() != 0) {
 					// We can't have aircraft < 10m of each other 
                 SG_LOG(SG_ATC, SG_ALERT, aiObject->getCallsign() << "(" << aiObject->getId() << ") running into " << other->getCallsign() << "(" << other->getId() << ") Dist " << distM << " Heading " << aiObject->getHeading() << " Other Heading " << other->getHeading() << " Headingdiff " << headingDiff << " Other heading diff " << otherHeadingDiff << " courseTowardOther " << courseTowardOther << " Speeds : " << aiObject->getSpeed() << "/" << other->getSpeed() << " Turning: " << aiObject->getHeadingDiff() << " Legs: " << aiObject->getLeg() << "/" << other->getLeg());

@@ -10,6 +10,7 @@ set(SOURCES
         CurrentWeatherATISInformationProvider.cxx
         ATCController.cxx
         ApproachController.cxx
+        EnRouteController.cxx
         GroundController.cxx
         StartupController.cxx
         TowerController.cxx
@@ -25,6 +26,7 @@ set(HEADERS
         CurrentWeatherATISInformationProvider.hxx
         ATCController.hxx
         ApproachController.hxx
+        EnRouteController.hxx
         GroundController.hxx
         StartupController.hxx
         TowerController.hxx

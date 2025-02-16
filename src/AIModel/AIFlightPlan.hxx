@@ -19,6 +19,7 @@
 
 // forward decls
 class SGPath;
+class ParkingAssignment;
 
 class FGAIWaypoint
 {

@@ -14,6 +14,7 @@
 #include <simgear/timing/timestamp.hxx>
 
 #include <ATC/ApproachController.hxx>
+#include <ATC/EnRouteController.hxx>
 #include <ATC/GroundController.hxx>
 #include <ATC/StartupController.hxx>
 #include <ATC/TowerController.hxx>

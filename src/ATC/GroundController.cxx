@@ -136,7 +136,7 @@ void FGGroundController::announcePosition(int id,
         bool moved = airportGroundRadar->move(SGRect<double>(lat, lon), *i);
         if (!moved) {
                     SG_LOG(SG_ATC, SG_ALERT,
-               "Not moved " << (*i)->getCallsign() << "" );
+               "Not moved " << (*i)->getCallsign() << "(" << (*i)->getId() << ")");
 
         }
         (*i)->setPositionAndIntentions(currentPosition, intendedRoute);

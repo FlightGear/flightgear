@@ -429,8 +429,9 @@ void FGATCController::signOff(int id)
         return;
     }
     // if taken off or parked 
-    if (((*i)->getLeg() > AILeg::TAKEOFF && (*i)->getLeg() < AILeg::APPROACH) ||
-        ((*i)->getLeg() >= AILeg::PARKING_TAXI)) {
+    if ((((*i)->getLeg() > AILeg::TAKEOFF && (*i)->getLeg() < AILeg::APPROACH) ||
+        ((*i)->getLeg() >= AILeg::PARKING_TAXI)) && 
+        airportGroundRadar != nullptr) {
         bool result = airportGroundRadar->remove(*i);
         if (!result) {
             SG_LOG(SG_ATC, SG_DEBUG, "Couldn't remove from index " << (*i));
@@ -473,7 +474,7 @@ FGATCInstruction FGATCController::getInstruction(int id)
             return (*i)->getInstruction();
     }
 
-    SG_LOG(SG_ATC, SG_ALERT, "AI error: requesting ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
+    SG_LOG(SG_ATC, SG_ALERT, "AI error: requesting ATC instruction for aircraft without traffic record from " << getName());
     return FGATCInstruction();
 }
 
