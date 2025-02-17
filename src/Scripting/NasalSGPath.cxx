@@ -30,28 +30,12 @@
 typedef std::shared_ptr<SGPath> SGPathRef;
 typedef nasal::Ghost<SGPathRef> NasalSGPath;
 
-SGPath::Permissions checkIORules(const SGPath& path)
-{
-  SGPath::Permissions perm;
-  if (!path.isAbsolute()) {
-    // SGPath caches permissions, which breaks for relative paths
-    // if the current directory changes
-    SG_LOG(SG_NASAL, SG_ALERT, "os.path: file operation on '" <<
-        path<< "' access denied (relative paths not accepted; use "
-        "realpath() to make a path absolute)");
-  }
-
-  perm.read  = path.isAbsolute() && !SGPath(path).validate(false).isNull();
-  perm.write = path.isAbsolute() && !SGPath(path).validate(true).isNull();
-
-  return perm;
-}
-
 // TODO make exposing such function easier...
 static naRef validatedPathToNasal( const nasal::CallContext& ctx,
                                    const SGPath& p )
 {
-  return ctx.to_nasal( SGPathRef(new SGPath(p.utf8Str(), &checkIORules)) );
+    return ctx.to_nasal(SGPathRef(new SGPath(p.utf8Str(),
+                                             &SGPath::NasalIORulesChecker)));
 }
 
 /**
@@ -78,7 +62,8 @@ static void f_path_set(SGPath& p, const nasal::CallContext& ctx)
  */
 static naRef f_desktop(const nasal::CallContext& ctx)
 {
-  return validatedPathToNasal(ctx, SGPath::desktop(SGPath(&checkIORules)));
+    return validatedPathToNasal(
+        ctx, SGPath::desktop(SGPath(&SGPath::NasalIORulesChecker)));
 }
 
 /**
