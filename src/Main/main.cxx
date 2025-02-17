@@ -536,6 +536,7 @@ static void logToHome(const std::string& pri)
         rotateOldLogFiles();
     }
 
+    fgSetString("/sim/logging/log-file-path", logPath.utf8Str());
     sglog().logToFile(logPath, SG_ALL, fileLogLevel);
 }
 

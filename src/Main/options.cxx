@@ -1164,6 +1164,7 @@ fgOptLogDir(const char* arg)
         }
     }
 
+    fgSetString("/sim/logging/log-file-path", logFile.utf8Str());
     sglog().logToFile(logFile, sglog().get_log_classes(), sglog().get_log_priority());
 
     return FG_OPTIONS_OK;
@@ -3459,7 +3460,8 @@ SGPath Options::downloadedDataRoot() const
 
 SGPath Options::platformDefaultRoot() const
 {
-    return SGPath::fromUtf8(PKGLIBDIR);
+//    return SGPath::fromUtf8(PKGLIBDIR);
+  return SGPath{};
 }
 
 string_list Options::extractOptions() const
@@ -3521,6 +3523,16 @@ OptionResult Options::setupRoot(int argc, char** argv)
         } else {
             SG_LOG(SG_GENERAL, SG_INFO, "Qt launcher set fg_root = " << root );
         }
+
+#if defined(HAVE_QT)
+        if (restoreResult == flightgear::SetupRootResult::UpdateRequired) {
+          flightgear::initApp(argc, argv);
+          bool ok = flightgear::showUpdateRootDialog(usingDefaultRoot);
+          if (!ok) {
+              return FG_OPTIONS_EXIT;
+        }
+        }
+#endif
     }
   }
 
