@@ -53,6 +53,7 @@ void NasalGCTests::setUp()
 // Clean up after each test.
 void NasalGCTests::tearDown()
 {
+    global_nasalMinimalInit = false;
     FGTestApi::tearDown::shutdownTestGlobals();
 }
 

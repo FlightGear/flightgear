@@ -33,6 +33,8 @@
 
 #include <Main/FGInterpolator.hxx>
 
+extern bool global_nasalMinimalInit;
+
 // Set up function for each test.
 void NasalSysTests::setUp()
 {
@@ -47,6 +49,7 @@ void NasalSysTests::setUp()
   globals->get_subsystem_mgr()->bind();
   globals->get_subsystem_mgr()->init();
 
+  global_nasalMinimalInit = false;
   globals->add_new_subsystem<FGNasalSys>(SGSubsystemMgr::INIT);
 
   globals->get_subsystem_mgr()->postinit();
