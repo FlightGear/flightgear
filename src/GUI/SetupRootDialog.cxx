@@ -66,6 +66,11 @@ public:
                                                                    m_networkManager(nam)
     {
         const auto rp = flightgear::Options::sharedInstance()->downloadedDataRoot();
+        // ensure we remove any existing data, since it failed validation
+        if (rp.exists()) {
+            simgear::Dir ed(rp);
+            ed.remove(true);
+        }
 
         m_downloadPath = rp.dirPath() / ("_download_data_" + std::to_string(FLIGHTGEAR_MAJOR_VERSION) + "_" + std::to_string(FLIGHTGEAR_MINOR_VERSION));
         m_downloadPath.set_cached(false);
