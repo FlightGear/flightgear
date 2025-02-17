@@ -157,7 +157,9 @@ public:
             QByteArray localBytes;
             {
                 std::unique_lock g(m_mutex);
-                m_bufferWait.wait_for(g, 100ms);
+                if (m_buffer.isEmpty()) {
+                    m_bufferWait.wait_for(g, 100ms);
+                }
 
                 // don't start passing bytes to the archive extractor, until we have 1MB
                 // this is necssary to avoid passing redirect/404 page bytes in, and breaking
@@ -168,7 +170,9 @@ public:
                     m_haveFirstMByte = true;
                 }
 
-                localBytes.swap(m_buffer);
+                // take at most 1MB
+                localBytes = m_buffer.left(0x100000);
+                m_buffer.remove(0, localBytes.length());
             }
 
             if (!localBytes.isEmpty()) {
