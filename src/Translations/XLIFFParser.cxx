@@ -86,7 +86,7 @@ void XLIFFParser::finishTransUnit()
         return;
     }
 
-    if (!_approved || _target.empty()) {
+    if (_target.empty()) {
         // skip un-approved or missing translations
         return;
     }
