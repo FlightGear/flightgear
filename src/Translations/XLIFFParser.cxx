@@ -46,20 +46,19 @@ void XLIFFParser::startElement(const char *name, const XMLAttributes &atts)
         _source.clear();
         _target.clear();
         const char* ac = atts.getValue("approved");
-        if (!ac || !strcmp(ac, "")) {
+        if (!ac || !std::strcmp(ac, "")) {
             _approved = false;
         } else {
             _approved = simgear::strutils::to_bool(std::string{ac});
         }
     } else if (tag == "group") {
-        _resource = atts.getValue("resname");
-        if (_resource.empty()) {
-            SG_LOG(SG_GENERAL, SG_WARN, "XLIFF group with missing resname: line "
-                   << getLine() << " of " << getPath());
-        } else {
-            // This is where the strings will be stored. getResourceCreate()
-            // creates the TranslationResource if necessary.
-            _currentResource = _domain->getResourceCreate(_resource);
+        const char* resType_c = atts.getValue("restype");
+
+        if (resType_c && !std::strcmp(resType_c,
+                                      "x-trolltech-linguist-context")) {
+            startContextGroup(atts.getValue("resname"));
+        } else if (resType_c && !std::strcmp(resType_c, "x-gettext-plurals")) {
+            startPluralGroup(atts.getValue("id"));
         }
     }
 }
@@ -74,8 +73,89 @@ void XLIFFParser::endElement(const char* name)
     } else if (tag == "trans-unit") {
         finishTransUnit();
     } else if (tag == "group") {
-        _resource.clear();
+        assert(_groupsStack.size() > 0);
+
+        switch (_groupsStack.top()->type) {
+        case GroupType::context:
+            endContextGroup();
+            break;
+        case GroupType::plural:
+            endPluralGroup();
+            break;
+        default:
+            std::abort();
+        }
     }
+}
+
+void XLIFFParser::startContextGroup(const char* resname_c)
+{
+    if (resname_c == nullptr) {
+        SG_LOG(SG_GENERAL, SG_WARN,
+               "XLIFF group with restype=\"x-trolltech-linguist-context\" has "
+               "no 'resname' attribute: line " << getLine() << " of " <<
+               getPath());
+        return;
+    }
+
+    const std::string resname{resname_c};
+
+    if (resname.empty()) {
+        SG_LOG(SG_GENERAL, SG_WARN,
+               "XLIFF group with restype=\"x-trolltech-linguist-context\" has "
+               "an empty 'resname' attribute: line " << getLine() << " of " <<
+               getPath());
+        return;
+    }
+
+    _resource = resname;
+    // This is where the strings will be stored. getResourceCreate()
+    // creates the TranslationResource if necessary.
+    _currentResource = _domain->getResourceCreate(resname);
+    _groupsStack.push(std::make_unique<ContextGroup>(resname));
+}
+
+void XLIFFParser::startPluralGroup(const char* id_c)
+{
+    if (id_c == nullptr) {
+        SG_LOG(SG_GENERAL, SG_WARN,
+               "XLIFF group with restype=\"x-gettext-plurals\" has "
+               "no 'id' attribute: line " << getLine() << " of " <<
+               getPath());
+        return;
+    }
+
+    const std::string id{id_c};
+
+    if (id.empty()) {
+        SG_LOG(SG_GENERAL, SG_WARN,
+               "XLIFF group with restype=\"x-gettext-plurals\" has "
+               "an empty 'id' attribute: line " << getLine() << " of " <<
+               getPath());
+        return;
+    }
+
+    _pluralGroupId = id;
+    _groupsStack.push(std::make_unique<PluralGroup>(id));
+}
+
+void XLIFFParser::endContextGroup()
+{
+    assert(dynamic_cast<ContextGroup*>(_groupsStack.top().get())->name
+           == _resource);
+
+    _groupsStack.pop();
+    _resource.clear();
+    _currentResource.reset();
+}
+
+void XLIFFParser::endPluralGroup()
+{
+    assert(dynamic_cast<PluralGroup*>(_groupsStack.top().get())->id
+           == _pluralGroupId);
+
+    _groupsStack.pop();
+    _pluralGroupId.clear();
 }
 
 void XLIFFParser::finishTransUnit()
@@ -131,3 +211,15 @@ void XLIFFParser::pi (const char * target, const char * data)
 void XLIFFParser::warning (const char * message, int line, int column) {
     SG_LOG(SG_GENERAL, SG_WARN, "Warning: " << message << " (" << line << ',' << column << ')');
 }
+
+// For the elements of the <group> stack
+XLIFFParser::Group::Group(GroupType type_) : type(type_)
+{ }
+
+XLIFFParser::ContextGroup::ContextGroup(const std::string& name_)
+    : Group(GroupType::context), name(name_)
+{ }
+
+XLIFFParser::PluralGroup::PluralGroup(const std::string& id_)
+    : Group(GroupType::context), id(id_)
+{ }
