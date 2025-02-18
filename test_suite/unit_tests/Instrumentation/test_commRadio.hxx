@@ -39,6 +39,7 @@ class CommRadioTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testEightPointThree);
     CPPUNIT_TEST(testEPLLTuning833);
     CPPUNIT_TEST(testEPLLTuning25);
+    CPPUNIT_TEST(testFullDuplex);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -58,4 +59,5 @@ public:
     void testEightPointThree();
     void testEPLLTuning833();
     void testEPLLTuning25();
+    void testFullDuplex();
 };
