@@ -470,7 +470,7 @@ private:
 
     PropertyObject<double> _volume_norm;
     PropertyObject<bool> _pushToTalk;
-    bool _fullDuplexCfg = true;
+    bool _fullDuplexConfig = true;
     PropertyObject<bool> _fullDuplex;
     PropertyObject<bool> _receivingFlag;
     PropertyObject<string> _atis;
@@ -499,7 +499,7 @@ CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node) :
   readConfig(node, "comm");
   _soundPrefix = name() + "_" + std::to_string(number()) + "_";
   _useEightPointThree = node->getBoolValue("eight-point-three", false );
-  _fullDuplexCfg = node->getBoolValue("full-duplex", _fullDuplexCfg);
+  _fullDuplexConfig = node->getBoolValue("full-duplex", _fullDuplexConfig);
 }
 
 CommRadioImpl::~CommRadioImpl()
@@ -512,10 +512,8 @@ void CommRadioImpl::bind()
   OutputProperties::bind(n);
 
   _pushToTalk = PropertyObject<bool>(_rootNode->getNode("ptt", true));
-  _fullDuplex = PropertyObject<bool>(_rootNode->getNode("full-duplex", true));
-  _fullDuplex = _fullDuplexCfg;
-  _receivingFlag = PropertyObject<bool>(_rootNode->getNode("receiving-flag", true));
-  _receivingFlag = false;
+  _fullDuplex = PropertyObject<bool>::create(_rootNode->getNode("full-duplex", true), _fullDuplexConfig);
+  _receivingFlag = PropertyObject<bool>::create(_rootNode->getNode("receiving-flag", true), false);
   _volume_norm = PropertyObject<double>(_rootNode->getNode("volume", true));
   _atis = PropertyObject<string>(_rootNode->getNode("atis", true));
   if (!fgHasNode("/sim/atis/enabled")) fgSetBool("/sim/atis/enabled", true);
