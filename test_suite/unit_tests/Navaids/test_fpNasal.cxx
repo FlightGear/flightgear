@@ -463,8 +463,8 @@ void FPNasalTests::testAirwaysAPI()
         var wps = airwayStore.viaWaypoints(cln, "TULIP");
         unitTest.assert_equal(size(wps), 3);
 
-        unitTest.assert_equal(wps[1].wp_ident, 'REDFA');
-        unitTest.assert_equal(wps[1].airway.ident, 'L620');
+        unitTest.assert_equal(wps[1].id, 'REDFA');
+        unitTest.assert_equal(wps[1].airway.id, 'L620');
 
     )");
 
