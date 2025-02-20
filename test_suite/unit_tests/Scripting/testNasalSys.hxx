@@ -31,6 +31,7 @@ class NasalSysTests : public CppUnit::TestFixture
 {
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(NasalSysTests);
+    CPPUNIT_TEST(testNasalTestAPI);
     CPPUNIT_TEST(testStructEquality);
     CPPUNIT_TEST(testCommands);
     CPPUNIT_TEST(testAirportGhost);
@@ -53,6 +54,7 @@ public:
     void tearDown();
 
     // The tests.
+    void testNasalTestAPI();
     void testStructEquality();
     void testCommands();
     void testAirportGhost();

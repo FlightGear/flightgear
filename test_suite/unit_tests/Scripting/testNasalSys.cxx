@@ -61,6 +61,33 @@ void NasalSysTests::tearDown()
     FGTestApi::tearDown::shutdownTestGlobals();
 }
 
+// Check that nasal test API reports failures where expected.
+void NasalSysTests::testNasalTestAPI()
+{
+    std::string good = "var x = 42;";
+    std::string runtimeError = "foo;";
+    std::string parseError = "{";
+
+    bool ok;
+    std::optional<string_list> errors;
+
+    ok = FGTestApi::executeNasal(good);
+    CPPUNIT_ASSERT(ok);
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(good);
+    CPPUNIT_ASSERT(errors && errors->empty());
+
+    ok = FGTestApi::executeNasal(runtimeError);
+    CPPUNIT_ASSERT(!ok);
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(runtimeError);
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+
+    ok = FGTestApi::executeNasal(parseError);
+    CPPUNIT_ASSERT(!ok);
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(parseError);
+    CPPUNIT_ASSERT(!errors);
+}
+
 // Test test
 void NasalSysTests::testStructEquality()
 {
