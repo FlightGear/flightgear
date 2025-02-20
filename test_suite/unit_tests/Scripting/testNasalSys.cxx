@@ -129,15 +129,14 @@ void NasalSysTests::testCommands()
     CPPUNIT_ASSERT(ok);
     CPPUNIT_ASSERT_EQUAL(15, fgGetInt("/foo/test"));
 
-    ok = FGTestApi::executeNasal(R"(
+    auto maybe_errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
        var g = func { print('fail'); };
        addcommand('do-foo', g);
     )");
-    
-    CPPUNIT_ASSERT(ok);
-    auto errors = nasalSys->getAndClearErrorList();
-    CPPUNIT_ASSERT_EQUAL(errors.size(), static_cast<size_t>(1));
-    
+
+    CPPUNIT_ASSERT(maybe_errors);
+    CPPUNIT_ASSERT_EQUAL(maybe_errors->size(), static_cast<size_t>(1));
+
     // old command should still be registered and work
     ok = globals->get_commands()->execute("do-foo", args);
     CPPUNIT_ASSERT(ok);
@@ -154,7 +153,7 @@ void NasalSysTests::testCommands()
   )");
     CPPUNIT_ASSERT(ok);
 
-    errors = nasalSys->getAndClearErrorList();
+    auto errors = nasalSys->getAndClearErrorList();
     CPPUNIT_ASSERT_EQUAL(0UL, (unsigned long) errors.size());
 
     // should fail, command is removed

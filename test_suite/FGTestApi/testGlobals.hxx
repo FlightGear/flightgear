@@ -8,7 +8,9 @@ SPDX-License-Identifier: GPL-2.0-or-later
 #include <string>
 #include <functional>
 #include <vector>
+#include <optional>
 
+#include <simgear/math/sg_types.hxx>
 #include <simgear/math/SGGeod.hxx>
 #include <simgear/props/propsfwd.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
@@ -69,7 +71,18 @@ void writeFlightPlanToKML(flightgear::FlightPlanRef fp);
 void writeGeodsToKML(const std::string &label, const flightgear::SGGeodVec& geods);
 void writePointToKML(const std::string& ident, const SGGeod& pos);
 
+/** Run nasal code.
+ *
+ * Return false in case of parse or runtime error.
+ */
 bool executeNasal(const std::string& code);
+
+/** Run nasal code and return runtime errors.
+ *
+ * In case of parse error, return empty optional.
+ * Otherwise, return the list of runtime errors.
+ */
+std::optional<string_list> executeNasalExpectRuntimeErrors(const std::string& code);
 
 bool geodsApproximatelyEqual(const SGGeod& a, const SGGeod& b);
 

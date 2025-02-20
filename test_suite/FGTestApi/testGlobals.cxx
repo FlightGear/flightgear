@@ -436,6 +436,23 @@ void writePointToKML(const std::string& ident, const SGGeod& pos)
 
 bool executeNasal(const std::string& code)
 {
+    auto runtimeErrors = executeNasalExpectRuntimeErrors(code);
+
+    if (!runtimeErrors) {
+        // parse error
+        return false;
+    } else if (!runtimeErrors->empty()) {
+        for (auto error : *runtimeErrors) {
+            SG_LOG(SG_NASAL, SG_ALERT, "Nasal runtime error:" << error);
+        }
+        return false;
+    }
+
+    return true;
+}
+
+std::optional<string_list> executeNasalExpectRuntimeErrors(const std::string& code)
+{
     auto nasal = globals->get_subsystem<FGNasalSys>();
     if (!nasal) {
         throw sg_exception("Nasal not available");
@@ -444,12 +461,12 @@ bool executeNasal(const std::string& code)
     nasal->getAndClearErrorList();
     std::string output, parseErrors;
     bool ok = nasal->parseAndRunWithOutput(code, output, parseErrors);
-    if (!parseErrors.empty()) {
-        SG_LOG(SG_NASAL, SG_ALERT, "Errors running Nasal:" << parseErrors);
-        return false;
+    if (!ok) {
+        SG_LOG(SG_NASAL, SG_ALERT, "Nasal parse errors:" << parseErrors);
+        return {};
     }
 
-    return ok;
+    return std::optional(nasal->getAndClearErrorList());
 }
 
 SGPropertyNode_ptr propsFromString(const std::string& s)
