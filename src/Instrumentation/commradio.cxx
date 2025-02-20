@@ -470,7 +470,7 @@ private:
 
     PropertyObject<double> _volume_norm;
     PropertyObject<bool> _pushToTalk;
-    bool _fullDuplexConfig = true;
+    bool _fullDuplexConfig = false;
     PropertyObject<bool> _fullDuplex;
     PropertyObject<bool> _receivingFlag;
     PropertyObject<string> _atis;

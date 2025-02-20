@@ -219,8 +219,9 @@ void CommRadioTests::testFullDuplex()
     r3->bind();
     r3->init();
     SGPropertyNode_ptr n3 = globals->get_props()->getNode("instrumentation/commduplextest[3]");
-    CPPUNIT_ASSERT_EQUAL(true, n3->getBoolValue("full-duplex"));
+    CPPUNIT_ASSERT_EQUAL(false, n3->getBoolValue("full-duplex"));
     
+    // Test setting "full-duplex" config prop
     configNode->setIntValue("number", 4);
     configNode->setBoolValue("full-duplex", true);
     auto r4 = Instrumentation::CommRadio::createInstance(configNode);
@@ -229,7 +230,6 @@ void CommRadioTests::testFullDuplex()
     SGPropertyNode_ptr n4 = globals->get_props()->getNode("instrumentation/commduplextest[4]");
     CPPUNIT_ASSERT_EQUAL(true, n4->getBoolValue("full-duplex"));
     
-    // Test setting "full-duplex" config prop
     configNode->setIntValue("number", 5);
     configNode->setBoolValue("full-duplex", false);
     auto r5 = Instrumentation::CommRadio::createInstance(configNode);
