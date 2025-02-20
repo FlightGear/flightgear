@@ -324,11 +324,128 @@ void NasalSysTests::testKeywordArgInHash()
     CPPUNIT_ASSERT(ok);
 }
 
+void NasalSysTests::testMemberAccess()
+{
+    // Hash
+    bool ok = FGTestApi::executeNasal(R"(
+        var h = {
+            foo: 42,
+        };
+
+        unitTest.assert_equal(h.foo, 42);
+        unitTest.assert_equal(h["foo"], h.foo);
+        unitTest.assert_equal(h["bar"], nil);
+
+        h.foo = "baz";
+        h.bar = 42;
+
+        unitTest.assert_equal(h.foo, "baz");
+        unitTest.assert_equal(h.bar, 42);
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    // Ghost
+    ok = FGTestApi::executeNasal(R"(
+        var wp = createWP(1, 2, "TEST");
+        unitTest.assert_equal(wp.id, "TEST");
+        wp.wp_role = "sid";
+        unitTest.assert_equal(wp.wp_role, "sid");
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    // Not found
+    auto errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
+        var h = {};
+        h.foo;
+    )");
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+
+    // Wrong type
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
+        nil.foo;
+    )");
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
+        var x = 42;
+        x.foo;
+    )");
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
+        [42].foo;
+    )");
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+}
+
+void NasalSysTests::testRecursiveMemberAccess()
+{
+    bool ok = FGTestApi::executeNasal(R"(
+        var p = {
+            foo: 1,
+            bar: 2,
+        };
+
+        var p2 = {
+            bar: 3,
+            baz: 4,
+        };
+
+        var h = {
+            parents: [p, p2],
+            foo: 42,
+        };
+
+        unitTest.assert_equal(h.foo, 42);
+        unitTest.assert_equal(h.bar, 2);
+        unitTest.assert_equal(h.baz, 4);
+
+        h.bar = 5;
+
+        unitTest.assert_equal(h.bar, 5);
+        unitTest.assert_equal(p.bar, 2);
+        unitTest.assert_equal(p2.bar, 3);
+
+        p2 = { foo: 42 };
+        p = { parents: [p2] };
+        h = { parents: [p] };
+
+        unitTest.assert_equal(h.foo, 42);
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    // parents must be a vector
+    auto errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
+        var p = {
+            foo: 42,
+        };
+        var h = {
+            parents: p,
+        };
+        h.foo;
+    )");
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+
+    // loop
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
+        var p = {
+            foo: 42,
+        };
+        var h = {};
+        h.parents = [h, p];
+        h.foo;
+    )");
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+}
+
 void NasalSysTests::testNullAccess()
 {
-    auto nasalSys = globals->get_subsystem<FGNasalSys>();
-    nasalSys->getAndClearErrorList();
-
     bool ok = FGTestApi::executeNasal(R"(
         var s =  {
            bar: 42
@@ -339,8 +456,6 @@ void NasalSysTests::testNullAccess()
         var t = nil;
         var z = t?.bar;
         unitTest.assert_equal(z, nil);
-        
-
     )");
     CPPUNIT_ASSERT(ok);
 }
