@@ -13,8 +13,6 @@
 #include <Main/FGInterpolator.hxx>
 #include <simgear/debug/debug_types.h>
 
-extern bool global_nasalMinimalInit;
-
 // Set up function for each test.
 void BenchmarkPropsAccess::setUp()
 {
@@ -27,7 +25,6 @@ void BenchmarkPropsAccess::setUp()
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
 
-    global_nasalMinimalInit = true;
     globals->get_subsystem_mgr()->add<FGNasalSys>();
 
     globals->get_subsystem_mgr()->postinit();
@@ -37,7 +34,6 @@ void BenchmarkPropsAccess::setUp()
 // Clean up after each test.
 void BenchmarkPropsAccess::tearDown()
 {
-    global_nasalMinimalInit = false;
     FGTestApi::tearDown::shutdownTestGlobals();
 }
 
@@ -67,9 +63,9 @@ void BenchmarkPropsAccess::benchPropsNodeSet()
 
     bool ok = FGTestApi::executeNasal(R"(
         var iter = 4000;
-        var node = props.Node.getNode('/foo/bar/v', 1);
-        var node2 = props.Node.getNode('/foo/bar/zot', 1);
-        var node3 = props.Node.getNode('/foo/bar/w', 1);
+        var node = props.globals.getNode('/foo/bar/v', 1);
+        var node2 = props.globals.getNode('/foo/bar/zot', 1);
+        var node3 = props.globals.getNode('/foo/bar/w', 1);
 
         for (var i=0; i < iter; i += 1) {
             node.setValue(i);
