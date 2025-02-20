@@ -423,13 +423,18 @@ void FGLocale::loadXLIFF(const SGPath& basePath, SGPropertyNode* localeNode,
     SGPropertyNode* domainNode = localeNode->getNode(domain, 0, true);
     const string relPath = domainNode->getStringValue("xliff");
     const SGPath xliffPath = basePath / relPath;
+    const string languageId = localeNode->getStringValue("id");
 
     if (!xliffPath.exists()) {
         SG_LOG(SG_GENERAL, SG_ALERT, "No XLIFF file at " << xliffPath);
+    } else if (languageId.empty()) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Unable to load " << xliffPath
+               << ": empty or missing subnode 'id' of "
+               << localeNode->getPath());
     } else {
         SG_LOG(SG_GENERAL, SG_INFO, "Loading XLIFF file at " << xliffPath);
         try {
-            flightgear::XLIFFParser visitor(&_domains[domain]);
+            flightgear::XLIFFParser visitor(languageId, &_domains[domain]);
             readXML(xliffPath, visitor);
         } catch (sg_io_exception& ex) {
             SG_LOG(SG_GENERAL, SG_WARN, "failure parsing XLIFF: " << xliffPath

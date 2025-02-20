@@ -4,9 +4,12 @@
 
 #pragma once
 
+#include <cstddef>
 #include <memory>
 #include <stack>
 #include <string>
+#include <tuple>
+#include <vector>
 
 #include <simgear/props/propsfwd.hxx>
 #include <simgear/xml/easyxml.hxx>
@@ -20,7 +23,7 @@ namespace flightgear
 class XLIFFParser : public XMLVisitor
 {
 public:
-    XLIFFParser(TranslationDomain* domain);
+    XLIFFParser(const std::string& languageId, TranslationDomain* domain);
 
 protected:
     void startXML () override;
@@ -32,19 +35,33 @@ protected:
     void warning (const char * message, int line, int column) override;
 
 private:
-    void finishTransUnit();
+    void startTransUnitElement(const XMLAttributes &atts);
+    void finishTransUnit(bool hasPlural);
     void startContextGroup(const char* resname_c);
-    void startPluralGroup(const char* id_c);
     void endContextGroup();
+    void startPluralGroup(const char* id_c);
     void endPluralGroup();
 
+    // Return the context (i.e. “resource”), the basic id and the element index
+    // (sibling elements with the same basic id differ by their indices).
+    std::tuple<std::string, std::string, int>
+    parseSimpleTransUnitId(const std::string& id);
+    // If we are inside <group restype="x-gettext-plurals" id="food/banana:0">,
+    // <trans-unit> elements inside this group are plural forms associated to
+    // the same source text; expected values for their 'id' attributes are
+    // 'food/banana:0[0]', 'food/banana:0[1]', etc.
+    void checkIdOfPluralTransUnit(std::string id);
+    void checkNumberOfPluralForms(std::size_t nbPluralFormsInTransUnit);
+
+    const std::string _languageId; // string value of /sim/intl/locale[n]/id
     TranslationDomain* _domain;
     std::shared_ptr<TranslationResource> _currentResource;
 
     std::string _text;
-    std::string _unitId, _resource, _pluralGroupId;
-    std::string _source, _target;
-    bool _approved = false;
+    std::string _resource, _basicId, _pluralGroupId;
+    int _index, _expectedPluralFormIndex;
+    std::string _sourceText;
+    std::vector<std::string> _targetTexts; // several elements = plural forms
 
     // We'll keep track of the <group> nesting state in a stack containing
     // std::unique_ptr<Group> instances.

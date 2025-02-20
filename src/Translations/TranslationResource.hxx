@@ -20,9 +20,13 @@ class TranslationResource
 public:
     void addTranslationUnit(std::string name, int index, std::string sourceText,
                             bool hasPlural = false);
-    void setTargetText_simple(std::string name, int index, std::string targetText);
+    void setFirstTargetText(std::string name, int index,
+                            std::string targetText);
+    void setTargetTexts(std::string name, int index,
+                        std::vector<std::string> targetTexts);
+
     std::string getTranslation(const std::string& name, int index,
-                               int pluralFormIndex) const;
+                               std::size_t pluralFormIndex) const;
     /**
      * Get translations for all strings with a given tag name.
      *
@@ -46,7 +50,7 @@ public:
      */
     std::vector<std::string> getTranslations(
         const std::string& name,
-        const std::initializer_list<int> pluralFormIndices) const;
+        const std::initializer_list<std::size_t> pluralFormIndices) const;
 
     /**
      * Get the number of translated strings with the given tag name.

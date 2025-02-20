@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // SPDX-FileComment: Container class for related translation units
 
+#include <algorithm>
+#include <cassert>
 #include <initializer_list>
 #include <string>
 #include <utility>
@@ -25,7 +27,7 @@ void TranslationResource::addTranslationUnit(std::string name, int index,
                  TranslationUnit(std::move(sourceText), {}, hasPlural));
 }
 
-void TranslationResource::setTargetText_simple(
+void TranslationResource::setFirstTargetText(
     std::string name, int index, std::string targetText)
 {
     SG_LOG(SG_GENERAL, SG_DEBUG,
@@ -34,23 +36,51 @@ void TranslationResource::setTargetText_simple(
 
     const auto key = std::make_pair(std::move(name), index);
     auto& translationUnit = _map[key];
-    // XXX First plural form hardcoded
+    // Set the first plural form
     translationUnit.setTargetText(0, std::move(targetText));
 }
 
-std::string TranslationResource::getTranslation(const std::string& name,
-                                                int index,
-                                                int pluralFormIndex) const
+void TranslationResource::setTargetTexts(
+    std::string name, int index, std::vector<std::string> targetTexts)
+{
+    SG_LOG(SG_GENERAL, SG_DEBUG,
+           "Setting target texts for '" << name << ":" << index << ":\n\n");
+    std::for_each(targetTexts.begin(), targetTexts.end(),
+                  [](const std::string& t) {
+                      SG_LOG(SG_GENERAL, SG_DEBUG, "\t" << t); });
+
+    const auto key = std::make_pair(std::move(name), index);
+    auto& translationUnit = _map[key];
+    translationUnit.setTargetTexts(std::move(targetTexts));
+}
+
+std::string TranslationResource::getTranslation(
+    const std::string& name, int index, std::size_t pluralFormIndex) const
 {
     std::string res;            // empty result by default
 
     auto it = _map.find(std::make_pair(name, index));
     if (it != _map.end()) {
         const auto transUnit = it->second;
-        res = transUnit.getTargetText(pluralFormIndex);
+        const std::size_t nbTargetTexts = transUnit.getNumberOfTargetTexts();
 
-        if (res.empty()) {
+        if (nbTargetTexts == 0) { // e.g., in the default translation
             res = transUnit.getSourceText();
+        } else if (pluralFormIndex > 0 && !transUnit.getPluralStatus()) {
+            SG_LOG(SG_GENERAL, SG_WARN,
+                   "Requested plural form " << pluralFormIndex << " of the "
+                   "translation of " << name << "[" << index << "] (source "
+                   "text = “" << transUnit.getSourceText() << "”), "
+                   "however this string wasn't declared with "
+                   "has-plural=\"true\" in the default translation");
+            res = transUnit.getSourceText();
+        } else {
+            assert(pluralFormIndex < nbTargetTexts);
+            res = transUnit.getTargetText(pluralFormIndex);
+
+            if (res.empty()) {
+                res = transUnit.getSourceText();
+            }
         }
     }
 
@@ -77,7 +107,8 @@ vector<string> TranslationResource::getTranslations(const string& name) const
 
 // Really useful?..
 vector<string> TranslationResource::getTranslations(
-    const string& name, const std::initializer_list<int> pluralFormIndices) const
+    const string& name,
+    const std::initializer_list<std::size_t> pluralFormIndices) const
 {
     const int nbStrings = pluralFormIndices.size();
     auto pluralFormIndex = pluralFormIndices.begin();
