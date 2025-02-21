@@ -23,6 +23,7 @@
 
 #include <config.h>
 
+#include <ostream>
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
@@ -3277,9 +3278,11 @@ void Options::showUsage() const
             string t = desc[l]->getStringValue();
 
             // There may be more than one translation line.
-            vector<SGPropertyNode_ptr>trans_desc = locale->getLocalizedStrings(t.c_str(),"options");
-            for ( unsigned int m = 0; m < trans_desc.size(); m++ ) {
-              string t_str = trans_desc[m]->getStringValue();
+            vector<string> transDesc = locale->getLocalizedStrings(t, "options");
+            auto it = transDesc.begin();
+
+            for (int m = 0; it != transDesc.end(); it++, m++) {
+              string t_str = *it; // translated string
 
               if ((m > 0) || ((l > 0) && m == 0)) {
                 msg.append( 32, ' ');

@@ -21,11 +21,14 @@
 #ifndef __FGLOCALE_HXX
 #define __FGLOCALE_HXX
 
-#include <string>
 #include <cstdarg> // for va_start/_end
+#include <string>
+#include <vector>
 
 #include <simgear/props/propsfwd.hxx>
 #include <simgear/misc/strutils.hxx>
+
+#include <Translations/TranslationDomain.hxx>
 
 // forward decls
 class SGPath;
@@ -64,31 +67,35 @@ public:
     void loadAddonTranslations();
 
     /**
+     * Obtain a single translation with the given identifier, context and index.
+     */
+    std::string getLocalizedStringWithIndex(const std::string& id,
+                                            const std::string& context,
+                                            int index) const;
+    /**
      * Obtain a single string from the localized resource matching the given identifier.
      * Selected context refers to "menu", "options", "dialog" etc.
      */
-    std::string getLocalizedString(const char* id, const char* resource,
-                                   const char* Default = nullptr);
-
-    std::string getLocalizedString(const std::string& id, const char* resource, const std::string& defaultValue = {});
+    std::string getLocalizedString(const std::string& id,
+                                   const std::string& resource,
+                                   const std::string& defaultValue = {});
 
     /**
-      * Obtain a list of strings from the localized resource matching the given identifier.
-      * Selected context refers to "menu", "options", "dialog" etc.
-      * Returns a list of (string) properties.
+      * Obtain a list of translations that share the same tag name (id stem).
+      *
+      * @param id       name of the tag in the default translation XML file
+      * @param resource a string such as "menu", "options", etc.
+      *
+      * @return A vector of translated strings
       */
-    simgear::PropertyList getLocalizedStrings(const char* id, const char* resource);
-
-
-    /**
-     * Obtain a single string from the resource matching an identifier and ID.
-     */
-    std::string getLocalizedStringWithIndex(const char* id, const char* resource, unsigned int index) const;
+    std::vector<std::string> getLocalizedStrings(const std::string& id,
+                                                 const std::string& resource);
 
     /**
-     * Return the number of strings matching a resource
+     * Return the number of strings with the given id
      */
-    size_t getLocalizedStringCount(const char* id, const char* resource) const;
+    std::size_t getLocalizedStringCount(const std::string& id,
+                                        const std::string& context) const;
 
     /**
      * Obtain default font for current locale.
@@ -128,7 +135,7 @@ protected:
     SGPropertyNode* findLocaleNode      (const std::string& language);
 
     /**
-     * Load default strings for the requested resource ("atc", "menu",  etc.).
+     * XXXLoad default strings for the requested resource ("atc", "menu",  etc.).
      *
      * The strings are stored in the property tree under
      * /sim/intl/locale[0]/⟨domain⟩/strings/⟨resource⟩.
@@ -140,7 +147,7 @@ protected:
      *   - 'addons/⟨addonId⟩' for strings coming from an add-on;
      *   - 'aircraft' for strings coming from the current aircraft.
      */
-    bool loadResourceForDefaultTranslation(
+    void loadResourceForDefaultTranslation(
         const SGPath& xmlFile, const std::string& domain,
         const std::string& resource);
     /**
@@ -172,11 +179,6 @@ protected:
                                          const std::string& domain);
 
     /**
-     * Obtain a single string from locale node matching the given identifier and context.
-     */
-    std::string innerGetLocalizedString(SGPropertyNode* localeNode, const char* id, const char* context, int index) const;
-
-    /**
      * Obtain a list of strings from locale node matching the given identifier and context.
      */
     simgear::PropertyList getLocalizedStrings(SGPropertyNode *localeNode, const char* id, const char* context);
@@ -188,7 +190,7 @@ protected:
 
     SGPropertyNode_ptr _intl;
     SGPropertyNode_ptr _currentLocale;
-    SGPropertyNode_ptr _defaultLocale;
+    SGPropertyNode_ptr _fallbackLocale;
     std::string _currentLocaleString;
 
     /**
@@ -216,6 +218,10 @@ private:
 
     string_list _languages;
     bool _inited = false;
+
+    // Keys are domain names such as "core", "addons/⟨addonId⟩", etc.
+    using DomainsMap = std::map<std::string, flightgear::TranslationDomain>;
+    DomainsMap _domains;
 };
 
 // global translation wrappers

@@ -4,10 +4,14 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include <simgear/props/propsfwd.hxx>
 #include <simgear/xml/easyxml.hxx>
+
+#include "TranslationDomain.hxx"
+#include "TranslationResource.hxx"
 
 namespace flightgear
 {
@@ -15,7 +19,7 @@ namespace flightgear
 class XLIFFParser : public XMLVisitor
 {
 public:
-    XLIFFParser(SGPropertyNode_ptr lroot);
+    XLIFFParser(TranslationDomain* domain);
 
 protected:
     void startXML () override;
@@ -29,8 +33,8 @@ protected:
 private:
     void finishTransUnit();
 
-    SGPropertyNode_ptr _localeRoot;
-    SGPropertyNode_ptr _resourceNode;
+    TranslationDomain* _domain;
+    std::shared_ptr<TranslationResource> _currentResource;
 
     std::string _text;
     std::string _unitId, _resource;

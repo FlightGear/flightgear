@@ -16,8 +16,8 @@
 
 using namespace flightgear;
 
-XLIFFParser::XLIFFParser(SGPropertyNode_ptr lroot) :
-    _localeRoot(lroot)
+XLIFFParser::XLIFFParser(TranslationDomain* domain) :
+    _domain(domain)
 {
 
 }
@@ -57,7 +57,9 @@ void XLIFFParser::startElement(const char *name, const XMLAttributes &atts)
             SG_LOG(SG_GENERAL, SG_WARN, "XLIFF group with missing resname: line "
                    << getLine() << " of " << getPath());
         } else {
-            _resourceNode = _localeRoot->getChild(_resource, 0, true /* create */);
+            // This is where the strings will be stored. getResourceCreate()
+            // creates the TranslationResource if necessary.
+            _currentResource = _domain->getResourceCreate(_resource);
         }
     }
 }
@@ -72,14 +74,13 @@ void XLIFFParser::endElement(const char* name)
     } else if (tag == "trans-unit") {
         finishTransUnit();
     } else if (tag == "group") {
-        _resource.erase();
-        _resourceNode.reset();
+        _resource.clear();
     }
 }
 
 void XLIFFParser::finishTransUnit()
 {
-    if (!_resourceNode) {
+    if (!_currentResource) {
         SG_LOG(SG_GENERAL, SG_WARN, "XLIFF trans-unit without enclosing resource group: line "
                << getLine() << " of " << getPath());
         return;
@@ -111,7 +112,7 @@ void XLIFFParser::finishTransUnit()
 
     const auto id = _unitId.substr(slashPos + 1, indexPos - (slashPos + 1));
     const int index = std::stoi(_unitId.substr(indexPos+1));
-    _resourceNode->getNode(id, index, true)->setStringValue(_target);
+    _currentResource->setTargetText_simple(id, index, _target);
 }
 
 void XLIFFParser::data (const char * s, int len)
