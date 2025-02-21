@@ -145,7 +145,7 @@ protected:
      * are all stored in different *domains*. There are three kinds of domains:
      *   - 'core' for strings coming from FGData;
      *   - 'addons/⟨addonId⟩' for strings coming from an add-on;
-     *   - 'aircraft' for strings coming from the current aircraft.
+     *   - 'current-aircraft' for strings coming from the current aircraft.
      */
     void loadResourceForDefaultTranslation(
         const SGPath& xmlFile, const std::string& domain,

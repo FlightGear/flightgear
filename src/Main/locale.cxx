@@ -301,7 +301,7 @@ void FGLocale::loadCoreResourcesForDefaultTranslation()
 void FGLocale::loadAircraftTranslations()
 {
     loadResourcesFromAircraftOrAddonDir(fgGetString("/sim/aircraft-dir"),
-                                        "aircraft");
+                                        "current-aircraft");
 }
 
 void FGLocale::loadAddonTranslations()
@@ -402,7 +402,7 @@ void FGLocale::clear()
     _domains.clear();
 
     if (_currentLocale) {
-        _currentLocale->removeChild("aircraft");
+        _currentLocale->removeChild("current-aircraft");
         _currentLocale->removeChild("addons");
     }
 
