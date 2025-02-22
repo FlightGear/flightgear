@@ -43,15 +43,16 @@
 #include <Add-ons/AddonManager.hxx>
 #include <Add-ons/AddonMetadataParser.hxx>
 #include <Translations/DefaultTranslationParser.hxx>
+#include <Translations/GetLocalizedStringsSetup.hxx>
 #include <Translations/XLIFFParser.hxx>
 
 using std::string;
 using std::vector;
 namespace strutils = simgear::strutils;
 
-using flightgear::DefaultTranslationParser;
-using flightgear::TranslationResource;
 using flightgear::addons::Addon;
+using flightgear::DefaultTranslationParser;
+using flightgear::GetLocalizedStringsSetup;
 using flightgear::TranslationDomain;
 
 FGLocale::FGLocale(SGPropertyNode* root) :
@@ -502,23 +503,27 @@ void FGLocale::loadResourceForDefaultTranslation(
     }
 }
 
+const TranslationDomain*
+FGLocale::getDomain(const std::string& domain) const
+{
+    auto it = _domains.find(domain);
+
+    if (it == _domains.end()) {
+        SG_LOG(SG_GENERAL, SG_ALERT,
+               "FGLocale::getDomain(): unable to find requested domain '"
+                   << domain << "'.");
+        return nullptr;
+    }
+
+    return &it->second;
+}
+
 std::string
-FGLocale::getLocalizedStringWithIndex(const string& id, const string& context,
+FGLocale::getLocalizedStringWithIndex(const string& id, const string& resource,
                                       int index) const
 {
-    const string domainName = "core";
-    auto elt = _domains.find(domainName);
-
-    if (elt == _domains.end()) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
-               "While trying to retrieve a translation for " << context <<
-               '/' << id << ':' << index << ": domain '" << domainName <<
-               "' was not found");
-        return {};
-    } else {
-        const auto resource = elt->second.getResource(context);
-        return resource->getTranslation(id, index, 0); // XXX plural form index
-    }
+    assert(_inited);
+    return GetLocalizedStringsSetup().setIndex(index).getString(resource, id);
 }
 
 std::string
@@ -526,44 +531,22 @@ FGLocale::getLocalizedString(const string& id, const string& resource,
                              const std::string& defaultValue)
 {
     assert(_inited);
-    const std::string s = getLocalizedStringWithIndex(id, resource, 0);
-    return (s.empty()) ? defaultValue : s;
+    return GetLocalizedStringsSetup().getStringWithDefault(resource, id,
+                                                           defaultValue);
 }
 
 vector<string>
-FGLocale::getLocalizedStrings(const string& id, const string& context)
+FGLocale::getLocalizedStrings(const string& id, const string& resource)
 {
-    const string domainName = "core";
-    auto elt = _domains.find(domainName);
-
-    if (elt == _domains.end()) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
-               "While trying to retrieve all translations for " << context <<
-               '/' << id << ": domain '" << domainName << "' was not found");
-        return {};
-    } else {
-        const auto resource = elt->second.getResource(context);
-        return resource->getTranslations(id);
-    }
+    assert(_inited);
+    return GetLocalizedStringsSetup().getStrings(resource, id);
 }
 
 std::size_t FGLocale::getLocalizedStringCount(const string& id,
-                                              const string& context) const
+                                              const string& resource) const
 {
     assert(_inited);
-
-    const string domainName = "core";
-    auto elt = _domains.find(domainName);
-
-    if (elt == _domains.end()) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
-               "While trying to find the number of strings in " << context <<
-               '/' << id << ": domain '" << domainName << "' was not found");
-        return std::size_t(0);
-    } else {
-        const auto resource = elt->second.getResource(context);
-        return resource->getNumberOfStringsWithId(id);
-    }
+    return GetLocalizedStringsSetup().getStringCount(resource, id);
 }
 
 // Check for localized font

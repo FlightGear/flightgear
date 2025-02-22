@@ -32,6 +32,12 @@
 
 // forward decls
 class SGPath;
+
+namespace flightgear {
+    class GetLocalizedStringsSetup;
+    class TranslationDomain;
+};
+
 namespace simgear { class Dir; }
 
 
@@ -232,6 +238,8 @@ private:
      *  such part, return a copy of the input string.
      */
     static std::string removeEncodingPart(const std::string& locale);
+    const flightgear::TranslationDomain* getDomain(const std::string& domain)
+        const;
 
     // this is the ordered list of languages to try. It's the same as
     // returned by getUserLanguages(), except if the user has used
@@ -243,6 +251,9 @@ private:
     // Keys are domain names such as "core", "addons/⟨addonId⟩", etc.
     using DomainsMap = std::map<std::string, flightgear::TranslationDomain>;
     DomainsMap _domains;
+
+    // GetLocalizedStringsSetup uses our getDomain(), which is private.
+    friend class flightgear::GetLocalizedStringsSetup;
 };
 
 // global translation wrappers

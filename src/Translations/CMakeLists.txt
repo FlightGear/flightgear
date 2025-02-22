@@ -4,6 +4,7 @@
 include(FlightGearComponent)
 
 set(SOURCES DefaultTranslationParser.cxx
+            GetLocalizedStringsSetup.cxx
             LanguageInfo.cxx
             TranslationDomain.cxx
             TranslationResource.cxx
@@ -12,6 +13,7 @@ set(SOURCES DefaultTranslationParser.cxx
             )
 
 set(HEADERS DefaultTranslationParser.hxx
+            GetLocalizedStringsSetup.hxx
             LanguageInfo.hxx
             TranslationDomain.hxx
             TranslationResource.hxx
