@@ -62,6 +62,8 @@ private:
     int _index, _expectedPluralFormIndex;
     std::string _sourceText;
     std::vector<std::string> _targetTexts; // several elements = plural forms
+    // Certain <file> elements must be completely skipped
+    bool _skipElements = false;
 
     // We'll keep track of the <group> nesting state in a stack containing
     // std::unique_ptr<Group> instances.

@@ -44,7 +44,16 @@ void XLIFFParser::startElement(const char *name, const XMLAttributes &atts)
 {
     _text.clear();
     std::string tag(name);
-    if (tag == "trans-unit") {
+
+    if (_skipElements) {
+        return;
+    } else if (tag == "file") {
+        const char* origName_c = atts.getValue("original");
+
+        if (origName_c && !std::strcmp(origName_c, "Obsolete_PO_entries")) {
+            _skipElements = true; // skip all the contents of this <file> element
+        }
+    } else if (tag == "trans-unit") {
         startTransUnitElement(atts);
     } else if (tag == "group") {
         const char* resType_c = atts.getValue("restype");
@@ -114,7 +123,12 @@ XLIFFParser::parseSimpleTransUnitId(const std::string& id)
 void XLIFFParser::endElement(const char* name)
 {
     std::string tag(name);
-    if (tag == "source") {
+
+    if (tag == "file") {
+        _skipElements = false;
+    } else if (_skipElements) {
+        return;
+    } else if (tag == "source") {
         _sourceText = _text;
     } else if (tag == "target") {
         _targetTexts.push_back(std::move(_text));
