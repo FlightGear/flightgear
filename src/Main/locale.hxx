@@ -48,8 +48,15 @@ public:
     /**
      * Select the locale's primary language. When no language is given
      * (nullptr), a default is determined matching the system locale.
+     *
+     * Once this function retuns, getLanguageId() is safe to call.
      */
     bool selectLanguage(const std::string& language = {});
+    /**
+     * Return the value of _languageId, which uniquely identifies the language
+     * for the LanguageInfo class (handling of plural forms...).
+     */
+    std::string getLanguageId() const;
 
     /** Return the preferred language according to user choice and/or settings.
      *
@@ -187,9 +194,23 @@ protected:
      * Obtain user's default language setting.
      */
     string_list getUserLanguages();
+    /**
+     * Return the appropriate value for _languageId according to
+     * _currentLocale. When _currentLocale isn't nullptr, alert if the
+     * /sim/intl/locale[n]/language-id node doesn't exist.
+     */
+    std::string findLanguageId() const;
 
     SGPropertyNode_ptr _intl;
     SGPropertyNode_ptr _currentLocale;
+    /**
+     * This is used to fetch linguistic data such as the number of plural
+     * forms for the selected locale. The value is that of the 'language-id'
+     * (first and only) child of the _currentLocale node, except for the
+     * default locale which is characterized by _currentLocale == nullptr
+     * and _languageId == "default".
+     */
+    std::string _languageId;
     SGPropertyNode_ptr _fallbackLocale;
     std::string _currentLocaleString;
 

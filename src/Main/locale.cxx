@@ -248,22 +248,27 @@ bool FGLocale::selectLanguage(const std::string& language)
         }
     }
 
-    if (_currentLocale) {
-        if (_currentLocale->getNode("core", 0, true)->hasChild("xliff")) {
-            // Load translation for the selected locale
-            loadXLIFF(globals->get_fg_root(), _currentLocale, "core");
+    if (!_currentLocale) {
+        if (_currentLocaleString == "default") {
+            SG_LOG(SG_GENERAL, SG_INFO,
+                   "Using the default translation (“engineering English”).");
+        } else {
+            SG_LOG(SG_GENERAL, SG_WARN,
+                   "System locale not found or no internationalization "
+                   "settings specified in defaults.xml. Using the fallback "
+                   "translation (English).");
+            _currentLocale = _fallbackLocale;
+            assert(_currentLocale != nullptr);
+            result = false;
         }
-    } else if (_currentLocaleString == "default") {
-        SG_LOG(SG_GENERAL, SG_INFO,
-               "Using the default translation (“engineering English”).");
-    } else {
-        SG_LOG(SG_GENERAL, SG_WARN,
-               "System locale not found or no internationalization settings "
-               "specified in defaults.xml. Using the fallback translation "
-               "(English).");
-        _currentLocale = _fallbackLocale;
-        assert(_currentLocale != nullptr);
-        result = false;
+    }
+
+    _languageId = findLanguageId(); // set according to _currentLocale
+
+    if (_currentLocale &&
+        _currentLocale->getNode("core", 0, true)->hasChild("xliff")) {
+        // Load translations for the selected locale
+        loadXLIFF(globals->get_fg_root(), _currentLocale, "core");
     }
 
     // From this point on, if (_currentLocale == nullptr), it means
@@ -271,6 +276,37 @@ bool FGLocale::selectLanguage(const std::string& language)
     // so we won't load any XLIFF file (including from aircraft or add-ons).
     _inited = true;
     return result;
+}
+
+std::string FGLocale::findLanguageId() const
+{
+    std::string result = "default";
+
+    if (_currentLocale) {
+        SGPropertyNode* n = _currentLocale->getChild("language-id");
+
+        if (n) {
+            result = n->getStringValue();
+
+            if (result.empty()) {
+                SG_LOG(SG_GENERAL, SG_ALERT, "Unexpected empty string value of "
+                       << n->getPath() << "; will use 'default' but "
+                       "please fix this!");
+                result = "default";
+            }
+        } else {
+            SG_LOG(SG_GENERAL, SG_ALERT, "No 'language-id' child node of " <<
+                   _currentLocale->getPath() << "; will use 'default' but "
+                   "please fix this!");
+        }
+    }
+
+    return result;
+}
+
+std::string FGLocale::getLanguageId() const
+{
+    return _languageId;
 }
 
 void FGLocale::loadCoreResourcesForDefaultTranslation()
@@ -407,6 +443,7 @@ void FGLocale::clear()
     }
 
     _currentLocale.clear();
+    _languageId.clear();
 }
 
 // Return the preferred language according to user choice and/or settings
@@ -423,18 +460,13 @@ void FGLocale::loadXLIFF(const SGPath& basePath, SGPropertyNode* localeNode,
     SGPropertyNode* domainNode = localeNode->getNode(domain, 0, true);
     const string relPath = domainNode->getStringValue("xliff");
     const SGPath xliffPath = basePath / relPath;
-    const string languageId = localeNode->getStringValue("id");
 
     if (!xliffPath.exists()) {
         SG_LOG(SG_GENERAL, SG_ALERT, "No XLIFF file at " << xliffPath);
-    } else if (languageId.empty()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Unable to load " << xliffPath
-               << ": empty or missing subnode 'id' of "
-               << localeNode->getPath());
     } else {
         SG_LOG(SG_GENERAL, SG_INFO, "Loading XLIFF file at " << xliffPath);
         try {
-            flightgear::XLIFFParser visitor(languageId, &_domains[domain]);
+            flightgear::XLIFFParser visitor(_languageId, &_domains[domain]);
             readXML(xliffPath, visitor);
         } catch (sg_io_exception& ex) {
             SG_LOG(SG_GENERAL, SG_WARN, "failure parsing XLIFF: " << xliffPath
