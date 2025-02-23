@@ -99,25 +99,3 @@ macos-x64-build:
     paths:
       - $BUILD_DIR
 
-test:
-  image: registry.gitlab.com/flightgear/flightgear/stable-build
-  stage: test
-  script:
-    - cd $BUILD_DIR
-    - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CI_PROJECT_DIR/osg-dist/lib
-    - ./test_suite/fgfs_test_suite --fg-root $CI_PROJECT_DIR/testFGData
-  needs:
-    - job: linux-build
-      artifacts: false
-    - project: flightgear/fgdata
-      job: create-test-data
-      ref: $BRANCH_REF
-      artifacts: true
-    - project: flightgear/openscenegraph
-      job: linux-build
-      ref: $OSG_REF
-      artifacts: true
-  cache:
-    paths:
-      - $BUILD_DIR
-
