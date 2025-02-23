@@ -83,7 +83,6 @@ public:
         m_pathPrefixLength = m_downloadPath.utf8Str().length() + 1;
 
         m_urlTemplates = QStringList()
-                         << "https://flightgear-download.b-cdn.net/release-%1/FlightGear-%2.%3-data.txz"
                          << "http://mirrors.ibiblio.org/flightgear/ftp/release-%1/FlightGear-%2.%3-data.txz"
                          << "https://download.flightgear.org/release-%1/FlightGear-%2.%3-data.txz"
                          << "https://sourceforge.net/projects/flightgear/files/release-%1/FlightGear-%2.%3-data.txz/download";
@@ -170,8 +169,8 @@ public:
                     m_haveFirstMByte = true;
                 }
 
-                // take at most 1MB
-                localBytes = m_buffer.left(0x100000);
+                // take at most 8MB
+                localBytes = m_buffer.left(0x800000);
                 m_buffer.remove(0, localBytes.length());
             }
 
@@ -240,6 +239,7 @@ public:
     void processBytes()
     {
         QByteArray bytes = m_download->readAll();
+        qDebug() << Q_FUNC_INFO << "bytes:" << bytes.size();
         {
             std::lock_guard g(m_mutex);
             m_buffer.append(bytes);
