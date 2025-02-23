@@ -31,6 +31,7 @@ class NasalSysTests : public CppUnit::TestFixture
 {
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(NasalSysTests);
+    CPPUNIT_TEST(testNasalTestAPI);
     CPPUNIT_TEST(testStructEquality);
     CPPUNIT_TEST(testCommands);
     CPPUNIT_TEST(testAirportGhost);
@@ -38,6 +39,8 @@ class NasalSysTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testRoundFloor);
     CPPUNIT_TEST(testRange);
     CPPUNIT_TEST(testKeywordArgInHash);
+    CPPUNIT_TEST(testMemberAccess);
+    CPPUNIT_TEST(testRecursiveMemberAccess);
     CPPUNIT_TEST(testNullAccess);
     CPPUNIT_TEST(testNullishChain);
     CPPUNIT_TEST(testFindComm);
@@ -53,6 +56,7 @@ public:
     void tearDown();
 
     // The tests.
+    void testNasalTestAPI();
     void testStructEquality();
     void testCommands();
     void testAirportGhost();
@@ -60,6 +64,8 @@ public:
     void testRoundFloor();
     void testRange();
     void testKeywordArgInHash();
+    void testMemberAccess();
+    void testRecursiveMemberAccess();
     void testNullAccess();
     void testNullishChain();
     void testFindComm();

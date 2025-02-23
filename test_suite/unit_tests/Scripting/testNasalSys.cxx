@@ -61,11 +61,31 @@ void NasalSysTests::tearDown()
     FGTestApi::tearDown::shutdownTestGlobals();
 }
 
-bool NasalSysTests::checkNoNasalErrors()
+// Check that nasal test API reports failures where expected.
+void NasalSysTests::testNasalTestAPI()
 {
-    auto nasalSys = globals->get_subsystem<FGNasalSys>();
-    auto errors = nasalSys->getAndClearErrorList();
-    return errors.empty();
+    std::string good = "var x = 42;";
+    std::string runtimeError = "foo;";
+    std::string parseError = "{";
+
+    bool ok;
+    std::optional<string_list> errors;
+
+    ok = FGTestApi::executeNasal(good);
+    CPPUNIT_ASSERT(ok);
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(good);
+    CPPUNIT_ASSERT(errors && errors->empty());
+
+    ok = FGTestApi::executeNasal(runtimeError);
+    CPPUNIT_ASSERT(!ok);
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(runtimeError);
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+
+    ok = FGTestApi::executeNasal(parseError);
+    CPPUNIT_ASSERT(!ok);
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(parseError);
+    CPPUNIT_ASSERT(!errors);
 }
 
 // Test test
@@ -106,9 +126,6 @@ void NasalSysTests::testStructEquality()
 
 void NasalSysTests::testCommands()
 {
-    auto nasalSys = globals->get_subsystem<FGNasalSys>();
-    nasalSys->getAndClearErrorList();
-
     fgSetInt("/foo/test", 7);
     bool ok = FGTestApi::executeNasal(R"(
      var f = func { 
@@ -129,15 +146,14 @@ void NasalSysTests::testCommands()
     CPPUNIT_ASSERT(ok);
     CPPUNIT_ASSERT_EQUAL(15, fgGetInt("/foo/test"));
 
-    ok = FGTestApi::executeNasal(R"(
+    auto errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
        var g = func { print('fail'); };
        addcommand('do-foo', g);
     )");
-    
-    CPPUNIT_ASSERT(ok);
-    auto errors = nasalSys->getAndClearErrorList();
-    CPPUNIT_ASSERT_EQUAL(errors.size(), static_cast<size_t>(1));
-    
+
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+
     // old command should still be registered and work
     ok = globals->get_commands()->execute("do-foo", args);
     CPPUNIT_ASSERT(ok);
@@ -154,9 +170,6 @@ void NasalSysTests::testCommands()
   )");
     CPPUNIT_ASSERT(ok);
 
-    errors = nasalSys->getAndClearErrorList();
-    CPPUNIT_ASSERT_EQUAL(0UL, (unsigned long) errors.size());
-
     // should fail, command is removed
     ok = globals->get_commands()->execute("do-foo", args);
     CPPUNIT_ASSERT(!ok);
@@ -165,9 +178,6 @@ void NasalSysTests::testCommands()
 
 void NasalSysTests::testAirportGhost()
 {
-    auto nasalSys = globals->get_subsystem<FGNasalSys>();
-    nasalSys->getAndClearErrorList();
-
     bool ok = FGTestApi::executeNasal(R"(
         var apt = airportinfo('LFBD');
         var taxiways = apt.taxiways;    
@@ -182,9 +192,6 @@ void NasalSysTests::testFindComm()
     FGAirportRef apt = FGAirport::getByIdent("EDDM");
     FGTestApi::setPositionAndStabilise(apt->geod());
 
-    auto nasalSys = globals->get_subsystem<FGNasalSys>();
-    nasalSys->getAndClearErrorList();
-
     bool ok = FGTestApi::executeNasal(R"(
         var comm = findCommByFrequencyMHz(123.125);
         unitTest.assert_equal(comm.id, "ATIS");
@@ -198,7 +205,7 @@ void NasalSysTests::testFindComm()
         unitTest.assert_equal(comm2.id, "CLNC DEL");
     )");
 
-    CPPUNIT_ASSERT(ok && checkNoNasalErrors());
+    CPPUNIT_ASSERT(ok);
 }
 
 
@@ -240,9 +247,6 @@ void NasalSysTests::testCompileLarge()
 
 void NasalSysTests::testRoundFloor()
 {
-    auto nasalSys = globals->get_subsystem<FGNasalSys>();
-    nasalSys->getAndClearErrorList();
-
     bool ok = FGTestApi::executeNasal(R"(
         unitTest.assert_equal(math.round(121266, 1000), 121000);
         unitTest.assert_equal(math.round(121.1234, 0.01), 121.12);
@@ -263,9 +267,6 @@ void NasalSysTests::testRoundFloor()
 
 void NasalSysTests::testRange()
 {
-    auto nasalSys = globals->get_subsystem<FGNasalSys>();
-    nasalSys->getAndClearErrorList();
-
     bool ok = FGTestApi::executeNasal(R"(
         unitTest.assert_equal(range(5), [0, 1, 2, 3, 4]);
         unitTest.assert_equal(range(2, 8), [2, 3, 4, 5, 6, 7]);
@@ -277,9 +278,6 @@ void NasalSysTests::testRange()
 
 void NasalSysTests::testKeywordArgInHash()
 {
-    auto nasalSys = globals->get_subsystem<FGNasalSys>();
-    nasalSys->getAndClearErrorList();
-
     bool ok = FGTestApi::executeNasal(R"(
         var foo = func(arg1, kw1 = "", kw2 = nil)
         {
@@ -326,11 +324,128 @@ void NasalSysTests::testKeywordArgInHash()
     CPPUNIT_ASSERT(ok);
 }
 
+void NasalSysTests::testMemberAccess()
+{
+    // Hash
+    bool ok = FGTestApi::executeNasal(R"(
+        var h = {
+            foo: 42,
+        };
+
+        unitTest.assert_equal(h.foo, 42);
+        unitTest.assert_equal(h["foo"], h.foo);
+        unitTest.assert_equal(h["bar"], nil);
+
+        h.foo = "baz";
+        h.bar = 42;
+
+        unitTest.assert_equal(h.foo, "baz");
+        unitTest.assert_equal(h.bar, 42);
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    // Ghost
+    ok = FGTestApi::executeNasal(R"(
+        var wp = createWP(1, 2, "TEST");
+        unitTest.assert_equal(wp.id, "TEST");
+        wp.wp_role = "sid";
+        unitTest.assert_equal(wp.wp_role, "sid");
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    // Not found
+    auto errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
+        var h = {};
+        h.foo;
+    )");
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+
+    // Wrong type
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
+        nil.foo;
+    )");
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
+        var x = 42;
+        x.foo;
+    )");
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
+        [42].foo;
+    )");
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+}
+
+void NasalSysTests::testRecursiveMemberAccess()
+{
+    bool ok = FGTestApi::executeNasal(R"(
+        var p = {
+            foo: 1,
+            bar: 2,
+        };
+
+        var p2 = {
+            bar: 3,
+            baz: 4,
+        };
+
+        var h = {
+            parents: [p, p2],
+            foo: 42,
+        };
+
+        unitTest.assert_equal(h.foo, 42);
+        unitTest.assert_equal(h.bar, 2);
+        unitTest.assert_equal(h.baz, 4);
+
+        h.bar = 5;
+
+        unitTest.assert_equal(h.bar, 5);
+        unitTest.assert_equal(p.bar, 2);
+        unitTest.assert_equal(p2.bar, 3);
+
+        p2 = { foo: 42 };
+        p = { parents: [p2] };
+        h = { parents: [p] };
+
+        unitTest.assert_equal(h.foo, 42);
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    // parents must be a vector
+    auto errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
+        var p = {
+            foo: 42,
+        };
+        var h = {
+            parents: p,
+        };
+        h.foo;
+    )");
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+
+    // loop
+    errors = FGTestApi::executeNasalExpectRuntimeErrors(R"(
+        var p = {
+            foo: 42,
+        };
+        var h = {};
+        h.parents = [h, p];
+        h.foo;
+    )");
+    CPPUNIT_ASSERT(errors);
+    CPPUNIT_ASSERT_EQUAL(errors->size(), static_cast<size_t>(1));
+}
+
 void NasalSysTests::testNullAccess()
 {
-    auto nasalSys = globals->get_subsystem<FGNasalSys>();
-    nasalSys->getAndClearErrorList();
-
     bool ok = FGTestApi::executeNasal(R"(
         var s =  {
            bar: 42
@@ -341,19 +456,12 @@ void NasalSysTests::testNullAccess()
         var t = nil;
         var z = t?.bar;
         unitTest.assert_equal(z, nil);
-        
-
     )");
     CPPUNIT_ASSERT(ok);
-    auto errors = nasalSys->getAndClearErrorList();
-    CPPUNIT_ASSERT_EQUAL(errors.size(), static_cast<size_t>(0));
 }
 
 void NasalSysTests::testNullishChain()
 {
-    auto nasalSys = globals->get_subsystem<FGNasalSys>();
-    nasalSys->getAndClearErrorList();
-
     bool ok = FGTestApi::executeNasal(R"(
         var t = nil;
         var s = 'abc';
@@ -367,6 +475,4 @@ void NasalSysTests::testNullishChain()
     )");
 
     CPPUNIT_ASSERT(ok);
-    auto errors = nasalSys->getAndClearErrorList();
-    CPPUNIT_ASSERT_EQUAL(errors.size(), static_cast<size_t>(0));
 }
