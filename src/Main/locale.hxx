@@ -1,22 +1,6 @@
-// locale.hxx -- FlightGear Localization Support
-//
-// Written by Thorsten Brehm, started April 2012.
-//
-// Copyright (C) 2012 Thorsten Brehm - brehmt (at) gmail com
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+// SPDX-FileCopyrightText: (C) 2012  Thorsten Brehm - brehmt (at) gmail com
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileComment: FlightGear Localization Support
 
 #ifndef __FGLOCALE_HXX
 #define __FGLOCALE_HXX
@@ -45,6 +29,100 @@ namespace simgear { class Dir; }
 // FGLocale  //////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+/******************************************************************************
+ * Main concepts: default translation vs. other translations, etc.
+ *
+ * The “default translation” is made of all source strings found in the
+ * XML files present in $FG_ROOT/Translations/default/ (also in
+ * ⟨base dir⟩/Translations/default inside an aircraft or add-on). This
+ * translation corresponds to the /sim/intl/default-translation node (see
+ * $FG_ROOT/Translations/locale.xml). It does not correspond to any of the
+ * /sim/intl/locale[n] nodes.
+ *
+ * The default translation has only one form for any given string: the “source
+ * text” (this is what translators translate). Each of its strings is loaded
+ * in the _sourceText member of the corresponding TranslationUnit instance.
+ * Therefore, it can't have variations like singular and plural forms. It
+ * should use indeterminate style like “Here are %1 apple(s)”. Its language is
+ * referred to here as “engineering English”.
+ *
+ * Other translations are proper ones, that can have different forms depending
+ * on an integer that is optionally passed to the API functions
+ * (cd. GetLocalizedStringsSetup::setCardinalNumber()). These translations are
+ * all loaded from XLIFF files in Translations/⟨language dir⟩ where
+ * ⟨language dir⟩ is not 'default' (for aircraft and add-ons, use the most
+ * specific variant for ⟨language dir⟩, e.g. 'fr_FR' as opposed to just 'fr':
+ * this will allow correct selection of the locale node according to
+ * locale.xml). In such translations, each _sourceText of a TranslationUnit
+ * instance has:
+ *
+ *   - no translation if the string hasn't been translated yet (an empty
+ *     'target' text in the .xlf file counts as “no translation”);
+ *
+ *   - exactly one translation (_targetTexts[0] in the TranslationUnit) if the
+ *     string has has-plural="false" or no such attribute in the default
+ *     translation;
+ *
+ *   - a language-dependent number of translations that can be obtained by
+ *     passing the “language id” (cf. locale.xml) to
+ *     LanguageInfo::getNumberOfPluralForms() (these translations are loaded
+ *     into the _targetTexts vector of TranslationUnit instances);
+ *
+ * Language selection
+ * ------------------
+ *
+ * When fgfs is started with --language=default, it uses the default
+ * translation (“engineering English”). This is normally only useful for
+ * debugging. In this case, FGLocale::selectLanguage() sets _currentLocale to
+ * the empty shared pointer. In all other cases, FGLocale::selectLanguage()
+ * chooses one of the /sim/intl/locale[n] nodes according to --language, the
+ * user-level and system-level language settings, and the
+ * /sim/intl/locale[n]/lang nodes defined in locale.xml (if no match is found,
+ * it uses the “fallback locale” which corresponds to /sim/intl/locale[0] and
+ * is proper English with plural forms). This results in one XLIFF file to be
+ * loaded if present (also for the current aircraft and for registered
+ * add-ons).
+ *
+ * When FGLocale::selectLanguage() returns and FlightGear uses the default
+ * locale:
+ *
+ *   - _currentLocale is the empty shared pointer;
+ *   - _languageId is the "default" string;
+ *   - FlightGear did not and won't load any XLIFF file.
+ *
+ * When FGLocale::selectLanguage() returns and FlightGear does not use the
+ * default locale:
+ *
+ *   - _currentLocale points to the /sim/intl/locale[n] node corresponding to
+ *      the selected language;
+ *   - _languageId is the string value of /sim/intl/locale[n]/language-id;
+ *   - FlightGear loaded at least one XLIFF file indicated by
+ *     /sim/intl/locale[n]/core/xliff (unless none was there: abnormal
+ *      situation), and will possibly load more later from the current
+ *      aircraft and add-ons.
+ *
+ * XXX: FGLocale::selectLanguage() sets /sim/intl/current-locale to the value
+ * of _currentLocaleString. I think the _languageId value would be more useful
+ * for most uses, including locale-dependent font selection (e.g., for the
+ * splash screen or Canvas GUI). For instance, if we make no difference
+ * betweeen fr_FR, fr_BE, and fr_CA for the sake of translations, all of them
+ * are mapped to the same /sim/intl/locale[n] node which is characterized by
+ * its 'language-id' value; OTOH, all these “locales” would have their own
+ * value of _currentLocaleString, despite using the same XLIFF files (using
+ * the plural here because XLIFF files can be loaded from all these domains:
+ * 'core', 'current-aircraft' and 'addons/⟨addonId⟩').
+ *
+ *
+ * Resource vs. context
+ * --------------------
+ *
+ * Both terms mean essentially the same thing here. A resource can more easily
+ * be considered as something that _contains_ translation material, however
+ * when these terms refer to a single string parameter, they mean the same
+ * thing: the resource name such as “atc”, “menu”, “options”, “sys”, “tips”,
+ * etc.
+ ******************************************************************************/
+
 class FGLocale
 {
 public:
@@ -52,10 +130,16 @@ public:
     virtual ~FGLocale();
 
     /**
-     * Select the locale's primary language. When no language is given
-     * (nullptr), a default is determined matching the system locale.
+     * Select the locale's primary language according to user-level,
+     * system-level language settings and the @p language argument.
      *
-     * Once this function retuns, getLanguageId() is safe to call.
+     * @param language  locale specification such as fr, fr_FR or fr_FR.UTF-8;
+     *                  it takes precedence over system settings (pass an
+     *                  empty value if you want it to be ignored). The special
+     *                  value 'default' causes FlightGear to use the “default
+     *                  translation” (see above).
+     *
+     * Once this function returns, getLanguageId() is safe to call.
      */
     bool selectLanguage(const std::string& language = {});
     /**
@@ -70,9 +154,12 @@ public:
      *            found.
      *
      *  Note that this is not necessarily the same as the last value passed to
-     *  selectLanguage(), assuming it was non-null and non-empty, because the
-     *  latter may have an encoding specifier, while values returned by
+     *  selectLanguage(), assuming it was non-empty, because the latter may
+     *  have an encoding specifier, while values returned by
      *  getPreferredLanguage() never have that.
+     *
+     *  XXX getLanguageId() is probably more useful; remove
+     *  getPreferredLanguage() or change its semantics?
      */
     std::string getPreferredLanguage() const;
 
@@ -86,8 +173,16 @@ public:
                                             const std::string& context,
                                             int index) const;
     /**
-     * Obtain a single string from the localized resource matching the given identifier.
+     * Obtain a single string matching the given id, with fallback.
      * Selected context refers to "menu", "options", "dialog" etc.
+     *
+     * @param defaultValue  returned if the requested translation is missing
+     *                      or empty *and* the default translation (source
+     *                      text) is empty.
+     *
+     * Due to these conditions, this only makes sense when FlightGear uses the
+     * default translation and some translatable “strings” have been defined
+     * as empty elements (so that their “source text” is empty).
      */
     std::string getLocalizedString(const std::string& id,
                                    const std::string& resource,
@@ -97,7 +192,7 @@ public:
       * Obtain a list of translations that share the same tag name (id stem).
       *
       * @param id       name of the tag in the default translation XML file
-      * @param resource a string such as "menu", "options", etc.
+      * @param resource a string such as "menu", "options", "sys", etc.
       *
       * @return A vector of translated strings
       */
@@ -105,7 +200,9 @@ public:
                                                  const std::string& resource);
 
     /**
-     * Return the number of strings with the given id
+     * Return the number of strings with a given id in the specified context
+     *
+     * @parmam context  a string such as "menu", "options", "sys", etc.
      */
     std::size_t getLocalizedStringCount(const std::string& id,
                                         const std::string& context) const;
@@ -136,22 +233,19 @@ public:
     void clear();
 
     /**
-        @ brief given a node with children corresponding to different language / locale codes,
-        select one based on the user preferred langauge
+        @brief Given a node with children corresponding to different language
+               / locale codes, select one based on the user preferred language
      */
     SGPropertyNode_ptr selectLanguageNode(SGPropertyNode* langs) const;
 
 protected:
     /**
-     * Find property node matching given language.
+     * Find a property node matching the given language.
      */
-    SGPropertyNode* findLocaleNode      (const std::string& language);
+    SGPropertyNode* findLocaleNode(const std::string& language);
 
     /**
-     * XXXLoad default strings for the requested resource ("atc", "menu",  etc.).
-     *
-     * The strings are stored in the property tree under
-     * /sim/intl/locale[0]/⟨domain⟩/strings/⟨resource⟩.
+     * Load default strings for the requested resource ("atc", "menu",  etc.).
      *
      * To avoid confusing unrelated things, translatable strings from the
      * simulator core (FGData), from an add-on or from the current aircraft
@@ -162,17 +256,6 @@ protected:
      */
     void loadResourceForDefaultTranslation(
         const SGPath& xmlFile, const std::string& domain,
-        const std::string& resource);
-    /**
-     * Similar to loadResourceForDefaultTranslation(), except it gets the
-     * resource path from the Property Tree.
-     *
-     * The path is the string value of property node
-     * /sim/intl/locale[0]/⟨domain⟩/strings/⟨resource⟩; it is interpreted
-     * relatively to basePath.
-     */
-    bool loadResourceForDefaultTranslation_indirect(
-        const SGPath& basePath, const std::string& domain,
         const std::string& resource);
     /**
      * Load the default translation of core resources 'atc', 'menu',
@@ -190,20 +273,14 @@ protected:
         const simgear::Dir& defaultTranslationDir, const std::string& domain);
     void loadXLIFFFromAircraftOrAddonDir(const SGPath& basePath,
                                          const std::string& domain);
-
     /**
-     * Obtain a list of strings from locale node matching the given identifier and context.
+     * Obtain user's default language settings.
      */
-    simgear::PropertyList getLocalizedStrings(SGPropertyNode *localeNode, const char* id, const char* context);
-
-    /**
-     * Obtain user's default language setting.
-     */
-    string_list getUserLanguages();
+    string_list getUserLanguages() const;
     /**
      * Return the appropriate value for _languageId according to
-     * _currentLocale. When _currentLocale isn't nullptr, alert if the
-     * /sim/intl/locale[n]/language-id node doesn't exist.
+     * _currentLocale. When _currentLocale isn't the empty shared pointer,
+     * alert if the /sim/intl/locale[n]/language-id node doesn't exist.
      */
     std::string findLanguageId() const;
 
@@ -217,18 +294,29 @@ protected:
      * and _languageId == "default".
      */
     std::string _languageId;
+    /**
+     * Proper locale (corresponding to a /sim/intl/locale[n] node, as opposed
+     * to the default translation) used when none of the
+     * /sim/intl/locale[n]/lang nodes matches the --language value or other
+     * user language settings. Contrary to the default translation, this is
+     * normally proper English with two plural forms.
+     */
     SGPropertyNode_ptr _fallbackLocale;
+    /**
+     * Corresponds to user's language settings, possibly overridden by the
+     * --language value. Not sure this is very useful, contrary to
+     * _languageId.
+     */
     std::string _currentLocaleString;
 
     /**
-     * Load an XLIFF 1.2 file into the Property Tree under
-     * /sim/intl/locale[n]/⟨domain⟩/strings/⟨resource⟩.
+     * Load an XLIFF 1.2 file.
      *
      * @param basePath base for the relative path to XLIFF file that is the
      *                 string value of node /sim/intl/locale[n]/⟨domain⟩/xliff.
      * @param localeNode pointer to the /sim/intl/locale[n] node for the
      *                 current locale
-     * @param domain a string such as 'core' or 'addons/⟨addonId⟩'
+     * @param domain   a string such as 'core' or 'addons/⟨addonId⟩'
      */
     void loadXLIFF(const SGPath& basePath, SGPropertyNode* localeNode,
                    const std::string& domain);
