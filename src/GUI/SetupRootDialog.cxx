@@ -244,7 +244,7 @@ void SetupRootDialog::updatePromptText()
     switch (m_promptState) {
     case DefaultPathCheckFailed:
         t = tr("This copy of FlightGear does not include the base data files. " \
-               "Please select a suitable folder containing a previously download set of files.");
+               "Please select a suitable folder containing a previously downloaded set of files.");
         break;
 
     case ExplicitPathCheckFailed:
