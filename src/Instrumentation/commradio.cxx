@@ -469,6 +469,10 @@ private:
     flightgear::CommStationRef _commStationForFrequency;
 
     PropertyObject<double> _volume_norm;
+    PropertyObject<bool> _pushToTalk;
+    bool _fullDuplexConfig = false;
+    PropertyObject<bool> _fullDuplex;
+    PropertyObject<bool> _receivingFlag;
     PropertyObject<string> _atis;
     PropertyObject<bool> _addNoise;
     PropertyObject<double> _cutoffSignalQuality;
@@ -495,6 +499,7 @@ CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node) :
   readConfig(node, "comm");
   _soundPrefix = name() + "_" + std::to_string(number()) + "_";
   _useEightPointThree = node->getBoolValue("eight-point-three", false );
+  _fullDuplexConfig = node->getBoolValue("full-duplex", _fullDuplexConfig);
 }
 
 CommRadioImpl::~CommRadioImpl()
@@ -506,6 +511,9 @@ void CommRadioImpl::bind()
   SGPropertyNode_ptr n = fgGetNode(nodePath(), true);
   OutputProperties::bind(n);
 
+  _pushToTalk = PropertyObject<bool>(_rootNode->getNode("ptt", true));
+  _fullDuplex = PropertyObject<bool>::create(_rootNode->getNode("full-duplex", true), _fullDuplexConfig);
+  _receivingFlag = PropertyObject<bool>::create(_rootNode->getNode("receiving-flag", true), false);
   _volume_norm = PropertyObject<double>(_rootNode->getNode("volume", true));
   _atis = PropertyObject<string>(_rootNode->getNode("atis", true));
   if (!fgHasNode("/sim/atis/enabled")) fgSetBool("/sim/atis/enabled", true);
@@ -603,6 +611,7 @@ void CommRadioImpl::update(double dt)
     _atis = "";
     _stationTTL = 0.0;
     stopAudio();
+    _receivingFlag = false;
     return;
   }
 
@@ -625,6 +634,7 @@ void CommRadioImpl::update(double dt)
 
   if (!_commStationForFrequency.valid()) {
     stopAudio();
+    _receivingFlag = false;
     return;
   }
   
@@ -646,9 +656,11 @@ void CommRadioImpl::update(double dt)
       case FGPositioned::FREQ_AWOS: {
       if (_signalQuality_norm > 0.01) {
         _metarBridge->requestMetarForId(_airportId);
+        _receivingFlag = _fullDuplex || !_pushToTalk;
       } else {
         _metarBridge->clearMetar();
         _atis = "";
+        _receivingFlag = false;
       }
     }
       break;
@@ -656,6 +668,7 @@ void CommRadioImpl::update(double dt)
     default:
       _metarBridge->clearMetar();
       _atis = "";
+      _receivingFlag = false;
       break;
   }
   
@@ -714,17 +727,18 @@ void CommRadioImpl::updateAudio()
   _atis_enabled_prev = atis_enabled;
   
   // adjust volumes
+  const auto targetVolume = (_pushToTalk && !_fullDuplex) ? 0.0 : _volume_norm;
   const bool doSquelch = (_signalQuality_norm < _cutoffSignalQuality);
-  double atisVolume = doSquelch ? 0.0 : _volume_norm;
+  double atisVolume = doSquelch ? 0.0 : targetVolume;
   if (_addNoise) {
-    double noiseVol = (1.0 - _signalQuality_norm) * _volume_norm;
+    double noiseVol = (1.0 - _signalQuality_norm) * targetVolume;
     if (_cutoffSignalQuality < 0.01) {
       // ensure noise is still heard disabling squelch
       // see https://sourceforge.net/p/flightgear/codetickets/2846/
-      noiseVol = _volume_norm;
+      noiseVol = targetVolume;
     }
 
-    atisVolume = _signalQuality_norm * _volume_norm;
+    atisVolume = _signalQuality_norm * targetVolume;
     noiseSample->set_volume(doSquelch ? 0.0: noiseVol);
   }
   
