@@ -34,6 +34,8 @@ private:
     bool networkVisible;
     bool initSucceeded;
     SGPropertyNode_ptr trans_num;
+    SGPropertyNode_ptr splash_alpha;
+    double start_time;
     std::string destination;
 
     std::unique_ptr<FGAISchedule> userAircraftTrafficRef;
@@ -57,4 +59,6 @@ public:
     void removeController(FGATCController* controller);
 
     void reposition();
+private:
+    void initControllers();
 };
