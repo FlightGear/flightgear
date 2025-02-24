@@ -14,7 +14,9 @@ variables:
 
   MAC_IMAGE: macos-14-xcode-15
 
-
+  AQT_ARCHIVES: "qtbase qtquickcontrols2 qttools qtdeclarative qttranslations qtwebsockets qtimageformats qtsvg"
+  # last version with 10.14/10.15 support
+  AQT_MAC_VERSION: 6.2.4
 macos-build:
   stage: build
   tags:
@@ -24,6 +26,9 @@ macos-build:
       - export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
       - export HOMEBREW_NO_INSTALL_CLEANUP=1
       - brew install ninja cmake boost
+      - ./aqt install-qt mac desktop $AQT_MAC_VERSION clang_64
+         --outputdir qt-dist
+         --archives $AQT_ARCHIVES
   script:
     # ensure we use our FreeType and not the one from Homebrew
     # ours is UB, HomeBrew's is not
@@ -33,7 +38,7 @@ macos-build:
       -D CMAKE_BUILD_TYPE=RelWithDebInfo 
       -D CMAKE_INSTALL_PREFIX=$PREFIX_DIR
       -D CMAKE_OSX_ARCHITECTURES=arm64
-      -D CMAKE_PREFIX_PATH="$CI_PROJECT_DIR/osg-dist;$CI_PROJECT_DIR/simgear-dist"
+      -D CMAKE_PREFIX_PATH="$CI_PROJECT_DIR/osg-dist;$CI_PROJECT_DIR/simgear-dist;$CI_PROJECT_DIR/qt-dist/$AQT_MAC_VERSION/macos"
       
     - cmake --build $BUILD_DIR
     - cmake --build $BUILD_DIR --target install
@@ -66,6 +71,9 @@ macos-x64-build:
       - export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
       - export HOMEBREW_NO_INSTALL_CLEANUP=1
       - brew install ninja cmake boost
+      - ./aqt install-qt mac desktop $AQT_MAC_VERSION clang_64
+         --outputdir qt-dist
+         --archives $AQT_ARCHIVES
   script:
     # ensure we use our FreeType and not the one from Homebrew
     # ours is UB, HomeBrew's is not
@@ -75,7 +83,7 @@ macos-x64-build:
       -D CMAKE_BUILD_TYPE=RelWithDebInfo 
       -D CMAKE_INSTALL_PREFIX=$PREFIX_DIR
       -D CMAKE_OSX_ARCHITECTURES=x86_64
-      -D CMAKE_PREFIX_PATH="$CI_PROJECT_DIR/osg-dist;$CI_PROJECT_DIR/simgear-dist"
+      -D CMAKE_PREFIX_PATH="$CI_PROJECT_DIR/osg-dist;$CI_PROJECT_DIR/simgear-dist;$CI_PROJECT_DIR/qt-dist/$AQT_MAC_VERSION/macos"
 
     - cmake --build $BUILD_DIR
     - cmake --build $BUILD_DIR --target install
