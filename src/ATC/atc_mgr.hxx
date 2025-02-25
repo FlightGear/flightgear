@@ -61,4 +61,5 @@ public:
     void reposition();
 private:
     void initControllers();
+    void signalReady();
 };

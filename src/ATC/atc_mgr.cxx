@@ -48,7 +48,10 @@ FGATCManager::FGATCManager() :
     controller(NULL),
     prevController(NULL),
     networkVisible(false),
-    initSucceeded(false)
+    initSucceeded(false),
+    trans_num(NULL),
+    splash_alpha(NULL),
+    start_time(0)
 {
 }
 
@@ -67,7 +70,7 @@ void FGATCManager::postinit()
 {
     trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
     splash_alpha = fgGetNode("/sim/startup/splash-alpha", true);
-
+    initControllers();
     initSucceeded = true;
 }
 
@@ -194,7 +197,6 @@ void FGATCManager::initControllers() {
             string fltType = "ga";
             fp->setRunway(runway);
             fp->createTakeOff(userAircraft, false, dcs->parent(), userAircraft->getGeodPos(), 0, fltType);
-            userAircraft->setTakeOffStatus(AITakeOffStatus::QUEUED);
         } else {
             // We're on the ground somewhere. Handle this case later.
 
@@ -294,6 +296,21 @@ void FGATCManager::removeController(FGATCController *controller)
     }
 }
 
+void FGATCManager::signalReady()
+{
+    auto aiManager = globals->get_subsystem<FGAIManager>();
+    auto userAircraft = aiManager->getUserAircraft();
+    if (userAircraft) {
+        auto userAIFP = userAircraft->GetFlightPlan();
+        if (userAIFP && 
+            fgGetBool("/sim/ai/enabled") &&
+            userAIFP->getLeg() == AILeg::TAKEOFF && 
+            userAircraft->getTakeOffStatus() == AITakeOffStatus::NONE) {
+            userAircraft->setTakeOffStatus(AITakeOffStatus::QUEUED);
+        }
+    }
+}
+
 /**
 Update the subsystem.
 FlightGear invokes this method every time the subsystem should
@@ -305,158 +322,155 @@ update.  On first update, delta time will be 0.
 void FGATCManager::update ( double time ) {
     // SG_LOG(SG_ATC, SG_BULK, "ATC update code is running at time: " << time);
 
-    if (!controller) {
-        if (splash_alpha->getDoubleValue() == 0.0) {
-            // start after the splash has disapeared and a few seconds
-            start_time = globals->get_sim_time_sec() + 10 + rand()*10;;
+    if (splash_alpha->getDoubleValue() == 0.0 && start_time == 0) {
+        // start after the splash has disapeared and a few seconds
+        start_time = globals->get_sim_time_sec() + 1.0 + rand()%10;
+    }
+    if (start_time > 0 && start_time < globals->get_sim_time_sec()) {
+        signalReady();
+    }
+    // Test code: let my virtual co-pilot handle ATC
+    auto aiManager = globals->get_subsystem<FGAIManager>();
+    FGAIAircraft* user_ai_ac = aiManager->getUserAircraft();
+    FGAIFlightPlan *fp = user_ai_ac->GetFlightPlan();
+
+    // Update destination
+    string result = _routeManagerDestinationAirportNode->getStringValue();
+
+    if (destination != result && result != "") {
+        destination = result;
+        userAircraftScheduledFlight->setArrivalAirport(destination);
+        userAircraftScheduledFlight->initializeAirports();
+        userAircraftTrafficRef->clearAllFlights();
+        userAircraftTrafficRef->assign(userAircraftScheduledFlight.get());
+
+        auto userAircraft = aiManager->getUserAircraft();
+        userAircraft->setTrafficRef(userAircraftTrafficRef.get());
+    }
+
+    /* test code : find out how the routing develops */
+    if (fp) {
+        int size = fp->getNrOfWayPoints();
+        //SG_LOG(SG_ATC, SG_DEBUG, "Setting pos" << pos << " ");
+        //SG_LOG(SG_ATC, SG_DEBUG, "Setting intentions");
+        // This indicates that we have run out of waypoints: Im future versions, the
+        // user should be able to select a new route, but for now just shut down the
+        // system.
+        if (size < 3) {
+            return;
         }
-        if (start_time < globals->get_sim_time_sec()) {
-            initControllers();
-        }
-    } else {
-        // Test code: let my virtual co-pilot handle ATC
-        auto aiManager = globals->get_subsystem<FGAIManager>();
-        FGAIAircraft* user_ai_ac = aiManager->getUserAircraft();
-        FGAIFlightPlan *fp = user_ai_ac->GetFlightPlan();
-
-        // Update destination
-        string result = _routeManagerDestinationAirportNode->getStringValue();
-
-        if (destination != result && result != "") {
-            destination = result;
-            userAircraftScheduledFlight->setArrivalAirport(destination);
-            userAircraftScheduledFlight->initializeAirports();
-            userAircraftTrafficRef->clearAllFlights();
-            userAircraftTrafficRef->assign(userAircraftScheduledFlight.get());
-
-            auto userAircraft = aiManager->getUserAircraft();
-            userAircraft->setTrafficRef(userAircraftTrafficRef.get());
-        }
-
-        /* test code : find out how the routing develops */
-        if (fp) {
-            int size = fp->getNrOfWayPoints();
-            //SG_LOG(SG_ATC, SG_DEBUG, "Setting pos" << pos << " ");
-            //SG_LOG(SG_ATC, SG_DEBUG, "Setting intentions");
-            // This indicates that we have run out of waypoints: Im future versions, the
-            // user should be able to select a new route, but for now just shut down the
-            // system.
-            if (size < 3) {
-                return;
-            }
-    #if 0
-            // Test code: Print how far we're progressing along the taxi route.
-            SG_LOG(SG_ATC, SG_DEBUG, "Size of waypoint queue " << size);
-            for (int i = 0; i < size; i++) {
-                int val = fp->getRouteIndex(i);
-                SG_LOG(SG_ATC, SG_BULK, fp->getWayPoint(i)->getName() << " ");
-                //if ((val) && (val != pos)) {
-                //    intentions.push_back(val);
-                SG_LOG(SG_ATC, SG_BULK, "[done ]");
-                //}
-            }
+#if 0
+        // Test code: Print how far we're progressing along the taxi route.
+        SG_LOG(SG_ATC, SG_DEBUG, "Size of waypoint queue " << size);
+        for (int i = 0; i < size; i++) {
+            int val = fp->getRouteIndex(i);
+            SG_LOG(SG_ATC, SG_BULK, fp->getWayPoint(i)->getName() << " ");
+            //if ((val) && (val != pos)) {
+            //    intentions.push_back(val);
             SG_LOG(SG_ATC, SG_BULK, "[done ]");
-    #endif
+            //}
         }
+        SG_LOG(SG_ATC, SG_BULK, "[done ]");
+#endif
+    }
+    if (fp) {
+        SG_LOG(SG_ATC, SG_BULK, "User aircraft currently at leg : " << fp->getLeg());
+    }
+
+    // Call getATCController method; returns what FGATCController presently controls the user aircraft
+    // - e.g. FGStartupController
+    // controller = user_ai_ac->getATCController();
+    // FIXME the AIAircraft currently doesn't set this for the user aircraft
+
+    // Update the ATC dialog
+    //FGATCDialogNew::instance()->update(time);
+
+    // Controller manager - if controller is set, then will update controller
+    if (controller) {
+//        SG_LOG(SG_ATC, SG_DEBUG, "name of previous waypoint : " << fp->getPreviousWaypoint()->getName());
+        SG_LOG(SG_ATC, SG_BULK, "Currently under control of " << controller->getName());
+
+        // update aircraft information (simulates transponder)
+
+        controller->updateAircraftInformation(user_ai_ac->getID(),
+                                            user_ai_ac->getGeodPos(),
+                                            user_ai_ac->_getHeading(),
+                                            user_ai_ac->getSpeed(),
+                                            user_ai_ac->getAltitude(), time);
+
         if (fp) {
-            SG_LOG(SG_ATC, SG_BULK, "User aircraft currently at leg : " << fp->getLeg());
-        }
-
-        // Call getATCController method; returns what FGATCController presently controls the user aircraft
-        // - e.g. FGStartupController
-        // controller = user_ai_ac->getATCController();
-        // FIXME the AIAircraft currently doesn't set this for the user aircraft
-
-        // Update the ATC dialog
-        //FGATCDialogNew::instance()->update(time);
-
-        // Controller manager - if controller is set, then will update controller
-        if (controller) {
-    //        SG_LOG(SG_ATC, SG_DEBUG, "name of previous waypoint : " << fp->getPreviousWaypoint()->getName());
-            SG_LOG(SG_ATC, SG_BULK, "Currently under control of " << controller->getName());
-
-            // update aircraft information (simulates transponder)
-
-            controller->updateAircraftInformation(user_ai_ac->getID(),
-                                                user_ai_ac->getGeodPos(),
-                                                user_ai_ac->_getHeading(),
-                                                user_ai_ac->getSpeed(),
-                                                user_ai_ac->getAltitude(), time);
-
-            if (fp) {
-                switch (fp->getLeg()) {
-                case AILeg::STARTUP_PUSHBACK:              // Startup and Push back
-                    if (userAircraftTrafficRef->getDepartureAirport()->getDynamics())
-                        controller = userAircraftTrafficRef->getDepartureAirport()->getDynamics()->getStartupController();
-                    break;
-                case AILeg::TAXI:              // Taxiing to runway
-                    if (userAircraftTrafficRef->getDepartureAirport()->getDynamics()->getGroundController()->exists())
-                        controller = userAircraftTrafficRef->getDepartureAirport()->getDynamics()->getGroundController();
-                    break;
-                case AILeg::TAKEOFF:              //Take off tower controller
-                    if (userAircraftTrafficRef->getDepartureAirport()->getDynamics()) {
-                        controller = userAircraftTrafficRef->getDepartureAirport()->getDynamics()->getTowerController();
-                    } else {
-                        SG_LOG(SG_AI, SG_BULK, "Error: Could not find Dynamics at airport : " << userAircraftTrafficRef->getDepartureAirport()->getId());
-                    }
-                    break;
-                    /* TODO: link up with state system?
-                case AILeg::APPROACH:
-                    if (userAircraftTrafficRef->getArrivalAirport()->getDynamics()) {
-                        controller = trafficRef->getArrivalAirport()->getDynamics()->getApproachController();
-                    }
-                    break;
-                case AILeg::PARKING_TAXI:              // Taxiing for parking
-                    if (trafficRef->getArrivalAirport()->getDynamics()->getGroundController()->exists())
-                        controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundController();
-                    break;
-                    */
-                default:
-                    if(prevController) {
-                        SG_LOG(SG_AI, SG_BULK, "Will be signing off user ai " << user_ai_ac->getID() << " from " << prevController->getName());
-                    }
-                    controller = nullptr;
-                    break;
+            switch (fp->getLeg()) {
+            case AILeg::STARTUP_PUSHBACK:              // Startup and Push back
+                if (userAircraftTrafficRef->getDepartureAirport()->getDynamics())
+                    controller = userAircraftTrafficRef->getDepartureAirport()->getDynamics()->getStartupController();
+                break;
+            case AILeg::TAXI:              // Taxiing to runway
+                if (userAircraftTrafficRef->getDepartureAirport()->getDynamics()->getGroundController()->exists())
+                    controller = userAircraftTrafficRef->getDepartureAirport()->getDynamics()->getGroundController();
+                break;
+            case AILeg::TAKEOFF:              //Take off tower controller
+                if (userAircraftTrafficRef->getDepartureAirport()->getDynamics()) {
+                    controller = userAircraftTrafficRef->getDepartureAirport()->getDynamics()->getTowerController();
+                } else {
+                    SG_LOG(SG_AI, SG_BULK, "Error: Could not find Dynamics at airport : " << userAircraftTrafficRef->getDepartureAirport()->getId());
                 }
-
-                if ((controller != prevController) && prevController && !user_ai_ac->getDie()) {
-                    //If we are dead we are automatically erased
-                    prevController->signOff(user_ai_ac->getID());
+                break;
+                /* TODO: link up with state system?
+            case AILeg::APPROACH:
+                if (userAircraftTrafficRef->getArrivalAirport()->getDynamics()) {
+                    controller = trafficRef->getArrivalAirport()->getDynamics()->getApproachController();
                 }
-                prevController = controller;
+                break;
+            case AILeg::PARKING_TAXI:              // Taxiing for parking
+                if (trafficRef->getArrivalAirport()->getDynamics()->getGroundController()->exists())
+                    controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundController();
+                break;
+                */
+            default:
+                if(prevController) {
+                    SG_LOG(SG_AI, SG_BULK, "Will be signing off user ai " << user_ai_ac->getID() << " from " << prevController->getName());
+                }
+                controller = nullptr;
+                break;
             }
 
-            //string airport = fgGetString("/sim/presets/airport-id");
-            //FGAirport *apt = FGAirport::findByIdent(airport);
-            // AT this stage we should update the flightplan, so that waypoint incrementing is conducted as well as leg loading.
-
-            // Ground network visibility:
-            // a) check to see if the message to toggle visibility was called
-            // b) if so, toggle network visibility and reset the transmission
-            // c) thereafter disable rendering for the old controller (TODO: should this be earlier?)
-            // d) and render if enabled for the new controller
-            int n = trans_num->getIntValue();
-
-            if (n == 1) {
-                SG_LOG(SG_ATC, SG_DEBUG, "Toggling ground network visibility " << networkVisible);
-                networkVisible = !networkVisible;
-                trans_num->setIntValue(-1);
+            if ((controller != prevController) && prevController && !user_ai_ac->getDie()) {
+                //If we are dead we are automatically erased
+                prevController->signOff(user_ai_ac->getID());
             }
-
-            // stop rendering the old controller's groundnetwork
-            if ((controller != prevController) && (prevController)) {
-                prevController->render(false);
-            }
-
-            if (controller) {
-                // render the path for the present controller if the ground network is set to visible
-                controller->render(networkVisible);
-                SG_LOG(SG_ATC, SG_BULK, "Adding ground network to the scenegraph::update");
-            }
-
-            // reset previous controller for next update() iteration
             prevController = controller;
         }
+
+        //string airport = fgGetString("/sim/presets/airport-id");
+        //FGAirport *apt = FGAirport::findByIdent(airport);
+        // AT this stage we should update the flightplan, so that waypoint incrementing is conducted as well as leg loading.
+
+        // Ground network visibility:
+        // a) check to see if the message to toggle visibility was called
+        // b) if so, toggle network visibility and reset the transmission
+        // c) thereafter disable rendering for the old controller (TODO: should this be earlier?)
+        // d) and render if enabled for the new controller
+        int n = trans_num->getIntValue();
+
+        if (n == 1) {
+            SG_LOG(SG_ATC, SG_DEBUG, "Toggling ground network visibility " << networkVisible);
+            networkVisible = !networkVisible;
+            trans_num->setIntValue(-1);
+        }
+
+        // stop rendering the old controller's groundnetwork
+        if ((controller != prevController) && (prevController)) {
+            prevController->render(false);
+        }
+
+        if (controller) {
+            // render the path for the present controller if the ground network is set to visible
+            controller->render(networkVisible);
+            SG_LOG(SG_ATC, SG_BULK, "Adding ground network to the scenegraph::update");
+        }
+
+        // reset previous controller for next update() iteration
+        prevController = controller;
     }
 
    // update the active ATC stations
