@@ -155,6 +155,12 @@ private:
     LogDeque _recentLogEntries;
 };
 
+std::string lastPathComponent(const std::string& d)
+{
+    const auto lastSlash = d.rfind('/');
+    return d.substr(lastSlash+1);
+}
+
 } // namespace
 
 namespace flightgear {
@@ -174,7 +180,7 @@ public:
 
     using ErrorContext = std::map<std::string, std::string>;
     /**
-            strucutre representing a single error which has cocurred
+    @brief strucutre representing a single error which has occurred
      */
     struct ErrorOcurrence {
         simgear::ErrorCode code;
@@ -216,7 +222,10 @@ public:
     bool isMainAircraftPath(const std::string& path) const;
 
     /**
-        structure representing one or more errors, aggregated together
+    @brief structure representing one or more errors, aggregated together
+
+    This is what we send to Sentry, or present to the user, after combining occurences from
+    the same / related sources, or duplicates.
      */
     struct AggregateReport {
         Aggregation type;
@@ -363,7 +372,9 @@ public:
     void sendReportToSentry(AggregateReport& report)
     {
         const int catId = static_cast<int>(report.type);
-        flightgear::sentryReportUserError(static_categoryIds.at(catId), _displayNode->getStringValue());
+        flightgear::sentryReportUserError(static_categoryIds.at(catId), 
+        report.parameter, 
+        _displayNode->getStringValue());
     }
 
     void writeReportToStream(const AggregateReport& report, std::ostream& os) const;
@@ -388,11 +399,15 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
 
     if (oc.hasContextKey("primary-aircraft")) {
         const auto fullId = fgGetString("/sim/aircraft-id");
+
+        // we use the dir name so we combine reports from different variants, on Sentry
+        const auto aircraftDirName = lastPathComponent(fgGetString("/sim/aircraft-dir"));
+
         if (fullId != fgGetString("/sim/aircraft")) {
-            return getAggregate(Aggregation::MainAircraft, fullId);
+            return getAggregate(Aggregation::MainAircraft, aircraftDirName);
         }
 
-        return getAggregate(Aggregation::HangarAircraft, fullId);
+        return getAggregate(Aggregation::HangarAircraft, aircraftDirName);
     }
 
     if (oc.hasContextKey("multiplayer")) {
@@ -477,7 +492,8 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
     // get attributed. Collect them into their own category, which also
     // means we can display a more specific message
     if (oc.code == simgear::ErrorCode::LoadEffectsShaders) {
-        return getAggregate(Aggregation::ShadersEffects);
+        // we use the effect name to split shader errors
+        return getAggregate(Aggregation::ShadersEffects, oc.getContextValue("effect"));
     }
 
     return getAggregate(Aggregation::Unknown);
