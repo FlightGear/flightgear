@@ -1,6 +1,6 @@
 # CMake in FlightGear overview 
 
-CMake has evolved considerably in the past decade; if you're reading external tutorials abput it, ensure
+CMake has evolved considerably in the past decade; if you're reading external tutorials about it, ensure
 they mention 'modern CMake', or the information will be incorrect.
 
 The top-level `CMakeLists.txt` handles configuration options, finding dependencies, and scanning
@@ -40,14 +40,14 @@ automatically inherited from `Release`.
 
 Adding additional configurations is possible: for example for profiling. CMake also picks up
 the `CXXFLAGS` environment variable to pass ad-hoc compiler options, without modifying the
-build systen.
+build system.
 
 ## Dependencies
 
 All dependencies should be handled via an `IMPORTED` target: this ensures that include paths,
 link options, etc specific to the dependency are handled correctly across different platforms.
 
-For some dependencies, there may be a zFoo-Config.cmakez which defines such a target for
+For some dependencies, there may be a zFoo-Config.cmake which defines such a target for
 you automatically. Or there may be an existing `FindFoo.cmake` which does the same. If neither
 of these situations exist, create a custom finder file in `CMakeModules`, following the existing
 examples. 
