@@ -26,16 +26,22 @@
 typedef std::vector<FGATCController*> AtcVec;
 typedef std::vector<FGATCController*>::iterator AtcVecIterator;
 
+/**
+ * This subsystem performs two tasks. It provides the ATC controllers for the AI aircraft 
+ * and shaddows the users aircraft and does the basic ATC and AI interaction.
+*/
+
 class FGATCManager : public SGSubsystem
 {
 private:
     AtcVec activeStations;
-    FGATCController *controller, *prevController; // The ATC controller that is responsible for the user's aircraft.
-    bool networkVisible;
-    bool initSucceeded;
-    SGPropertyNode_ptr trans_num;
-    SGPropertyNode_ptr splash_alpha;
-    double start_time;
+    FGATCController *controller;
+    FGATCController *prevController; // The ATC controller that is responsible for the user's aircraft.
+    bool networkVisible = false;
+    bool initSucceeded = false;
+    SGPropertyNode_ptr transNum;
+    SGPropertyNode_ptr splashAlpha;
+    double startTime = 0.0;
     std::string destination;
 
     std::unique_ptr<FGAISchedule> userAircraftTrafficRef;

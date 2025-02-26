@@ -45,13 +45,8 @@ using std::string;
 Constructor, initializes values to private boolean and FGATCController instances
 */
 FGATCManager::FGATCManager() :
-    controller(NULL),
-    prevController(NULL),
-    networkVisible(false),
-    initSucceeded(false),
-    trans_num(NULL),
-    splash_alpha(NULL),
-    start_time(0)
+    controller(nullptr),
+    prevController(nullptr)
 {
 }
 
@@ -68,8 +63,8 @@ FGATCManager::~FGATCManager() {
 */
 void FGATCManager::postinit()
 {
-    trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
-    splash_alpha = fgGetNode("/sim/startup/splash-alpha", true);
+    transNum = fgGetNode("/sim/atc/transmission-num", true);
+    splashAlpha = fgGetNode("/sim/startup/splash-alpha", true);
     initControllers();
     initSucceeded = true;
 }
@@ -322,11 +317,11 @@ update.  On first update, delta time will be 0.
 void FGATCManager::update ( double time ) {
     // SG_LOG(SG_ATC, SG_BULK, "ATC update code is running at time: " << time);
 
-    if (splash_alpha->getDoubleValue() == 0.0 && start_time == 0) {
+    if (splashAlpha->getDoubleValue() == 0.0 && startTime == 0) {
         // start after the splash has disapeared and a few seconds
-        start_time = globals->get_sim_time_sec() + 1.0 + rand()%10;
+        startTime = globals->get_sim_time_sec() + 1.0 + rand()%10;
     }
-    if (start_time > 0 && start_time < globals->get_sim_time_sec()) {
+    if (startTime > 0 && startTime < globals->get_sim_time_sec()) {
         signalReady();
     }
     // Test code: let my virtual co-pilot handle ATC
@@ -450,12 +445,12 @@ void FGATCManager::update ( double time ) {
         // b) if so, toggle network visibility and reset the transmission
         // c) thereafter disable rendering for the old controller (TODO: should this be earlier?)
         // d) and render if enabled for the new controller
-        int n = trans_num->getIntValue();
+        int n = transNum->getIntValue();
 
         if (n == 1) {
             SG_LOG(SG_ATC, SG_DEBUG, "Toggling ground network visibility " << networkVisible);
             networkVisible = !networkVisible;
-            trans_num->setIntValue(-1);
+            transNum->setIntValue(-1);
         }
 
         // stop rendering the old controller's groundnetwork
