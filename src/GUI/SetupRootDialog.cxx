@@ -333,8 +333,14 @@ bool SetupRootDialog::runDialog(PromptState prompt)
     // try to initialise various Cocoa structures.
     flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
 
+    QEventLoop ev;
+
     SetupRootDialog dlg(prompt);
-    dlg.exec();
+    dlg.open();
+
+    connect(&dlg, &SetupRootDialog::finished, &ev, &QEventLoop::quit);
+    ev.exec();
+
     if (dlg.result() != QDialog::Accepted) {
         return false;
     }
