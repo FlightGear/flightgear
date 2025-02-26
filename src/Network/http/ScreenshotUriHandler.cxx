@@ -345,7 +345,7 @@ public:
         SG_LOG(SG_NETWORK, SG_DEBUG, "CanvasImageRequest:");
 
         if (NULL == osgDB::Registry::instance()->getReaderWriterForExtension(_type))
-            throw sg_format_exception("Unsupported image type: " + type, type);
+            throw sg_format_exception("Unsupported image type: " + type, type, {}, false /* don't report */);
 
         auto canvas_mgr = globals->get_subsystem<CanvasMgr>();
         if (!canvas_mgr) {
@@ -353,7 +353,7 @@ public:
         } else {
             canvas = canvas_mgr->getCanvas(canvasindex);
             if (!canvas) {
-                throw sg_error("CanvasImage:Canvas not found for index " + std::to_string(canvasindex));
+                throw sg_error("CanvasImage:Canvas not found for index " + std::to_string(canvasindex), {}, false /* don't report */);
             } else {
                 SG_LOG(SG_NETWORK, SG_DEBUG, "CanvasImage:Canvas found for index " << canvasindex);
                 //SG_LOG(SG_NETWORK, SG_DEBUG, "CanvasImageRequest: found camera " << camera << ", width=" << canvas->getSizeX() << ", height=%d\n" << canvas->getSizeY());
