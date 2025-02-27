@@ -180,7 +180,7 @@ public:
 
     using ErrorContext = std::map<std::string, std::string>;
     /**
-    @brief strucutre representing a single error which has occurred
+    @brief structure representing a single error which has occurred
      */
     struct ErrorOcurrence {
         simgear::ErrorCode code;
