@@ -97,7 +97,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGAuxiliary : public FGModel {
+class JSBSIM_API FGAuxiliary : public FGModel {
 public:
   /** Constructor
       @param Executive a pointer to the parent executive object */
@@ -119,6 +119,41 @@ public:
   bool Run(bool Holding) override;
 
 // GET functions
+
+  /** Compute the total pressure in front of the Pitot tube. It uses the
+  *   Rayleigh formula for supersonic speeds (See "Introduction to Aerodynamics
+  *   of a Compressible Fluid - H.W. Liepmann, A.E. Puckett - Wiley & sons
+  *   (1947)" §5.4 pp 75-80)
+  *   @param mach      The Mach number
+  *   @param pressure  Pressure in psf
+  *   @return The total pressure in front of the Pitot tube in psf */
+  double PitotTotalPressure(double mach, double pressure) const;
+
+  /** Compute the Mach number from the differential pressure (qc) and the
+  *   static pressure. Based on the formulas in the US Air Force Aircraft
+  *   Performance Flight Testing Manual (AFFTC-TIH-99-01).
+  *   @param qc        The differential/impact pressure
+  *   @param pressure  Pressure in psf
+  *   @return The Mach number */
+  double MachFromImpactPressure(double qc, double p) const;
+
+  /** Calculate the calibrated airspeed from the Mach number. Based on the
+  *   formulas in the US Air Force Aircraft Performance Flight Testing
+  *   Manual (AFFTC-TIH-99-01).
+  *   @param mach      The Mach number
+  *   @param pressure  Pressure in psf
+  *   @return The calibrated airspeed (CAS) in ft/s
+  * */
+  double VcalibratedFromMach(double mach, double pressure) const;
+
+  /** Calculate the Mach number from the calibrated airspeed.Based on the
+  *   formulas in the US Air Force Aircraft Performance Flight Testing
+  *   Manual (AFFTC-TIH-99-01).
+  *   @param vcas      The calibrated airspeed (CAS) in ft/s
+  *   @param pressure  Pressure in psf
+  *   @return The Mach number
+  * */
+  double MachFromVcalibrated(double vcas, double pressure) const;
 
   // Atmospheric parameters GET functions
   /** Returns Calibrated airspeed in feet/second.*/
@@ -237,14 +272,6 @@ public:
     else return BadUnits();
   }
 
-// Time routines, SET and GET functions, used by FGMSIS atmosphere
-
-  void SetDayOfYear    (int doy)    { day_of_year = doy;    }
-  void SetSecondsInDay (double sid) { seconds_in_day = sid; }
-
-  int    GetDayOfYear    (void) const { return day_of_year;    }
-  double GetSecondsInDay (void) const { return seconds_in_day; }
-
   double GetLongitudeRelativePosition (void) const;
   double GetLatitudeRelativePosition  (void) const;
   double GetDistanceRelativePosition  (void) const;
@@ -254,9 +281,8 @@ public:
   struct Inputs {
     double Pressure;
     double Density;
-    double DensitySL;
-    double PressureSL;
     double Temperature;
+    double StdDaySLsoundspeed;
     double SoundSpeed;
     double KinematicViscosity;
     double DistanceAGL;
@@ -311,8 +337,6 @@ private:
   double adot,bdot;
   double psigt, gamma;
   double Nx, Ny, Nz;
-  double seconds_in_day;  // seconds since current GMT day began
-  int    day_of_year;     // GMT day, 1 .. 366
 
   double hoverbcg, hoverbmac;
 

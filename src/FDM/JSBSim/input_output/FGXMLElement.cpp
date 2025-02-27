@@ -28,6 +28,7 @@
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <iostream>
 #include <sstream>  // for assembling the error messages / what of exceptions.
 #include <stdexcept>  // using domain_error, invalid_argument, and length_error.
 #include "FGXMLElement.h"
@@ -123,7 +124,7 @@ Element::Element(const string& nm)
     convert["N"]["LBS"] = 0.22482;
     convert["LBS"]["N"] = 1.0/convert["N"]["LBS"];
     // Velocity
-    convert["KTS"]["FT/SEC"] = 1.68781;
+    convert["KTS"]["FT/SEC"] = 1.6878098571;
     convert["FT/SEC"]["KTS"] = 1.0/convert["KTS"]["FT/SEC"];
     convert["M/S"]["FT/S"] = 3.2808399;
     convert["M/S"]["KTS"] = convert["M/S"]["FT/S"]/convert["KTS"]["FT/SEC"];
@@ -289,12 +290,12 @@ double Element::GetAttributeValueAsNumber(const string& attr)
   else {
     double number=0;
     if (is_number(trim(attribute)))
-      number = atof(attribute.c_str());
+      number = atof_locale_c(attribute);
     else {
       std::stringstream s;
       s << ReadFrom() << "Expecting numeric attribute value, but got: " << attribute;
       cerr << s.str() << endl;
-      throw invalid_argument(s.str());
+      throw BaseException(s.str());
     }
 
     return (number);
@@ -332,7 +333,7 @@ Element* Element::GetNextElement(void)
 
 string Element::GetDataLine(unsigned int i)
 {
-  if (data_lines.size() > 0) return data_lines[i];
+  if (!data_lines.empty()) return data_lines[i];
   else return string("");
 }
 
@@ -343,16 +344,16 @@ double Element::GetDataAsNumber(void)
   if (data_lines.size() == 1) {
     double number=0;
     if (is_number(trim(data_lines[0])))
-      number = atof(data_lines[0].c_str());
+      number = atof_locale_c(data_lines[0]);
     else {
       std::stringstream s;
       s << ReadFrom() << "Expected numeric value, but got: " << data_lines[0];
       cerr << s.str() << endl;
-      throw invalid_argument(s.str());
+      throw BaseException(s.str());
     }
 
     return number;
-  } else if (data_lines.size() == 0) {
+  } else if (data_lines.empty()) {
     std::stringstream s;
     s << ReadFrom() << "Expected numeric value, but got no data";
     cerr << s.str() << endl;
@@ -666,20 +667,20 @@ double Element::DisperseValue(Element *e, double val, const std::string& supplie
     double disp = e->GetAttributeValueAsNumber("dispersion");
     if (!supplied_units.empty()) disp *= convert[supplied_units][target_units];
     string attType = e->GetAttributeValue("type");
+    RandomNumberGenerator generator;
+
     if (attType == "gaussian" || attType == "gaussiansigned") {
-      double grn = FGJSBBase::GaussianRandomNumber();
-    if (attType == "gaussian") {
-      value = val + disp*grn;
-      } else { // Assume gaussiansigned
-        value = (val + disp*grn)*(fabs(grn)/grn);
-      }
+      double grn = generator.GetNormalRandomNumber();
+      if (attType == "gaussian")
+        value = val + disp*grn;
+      else // Assume gaussiansigned
+        value = (val + disp*grn)*FGJSBBase::sign(grn);
     } else if (attType == "uniform" || attType == "uniformsigned") {
-      double urn = ((((double)rand()/RAND_MAX)-0.5)*2.0);
-      if (attType == "uniform") {
-      value = val + disp * urn;
-      } else { // Assume uniformsigned
-        value = (val + disp * urn)*(fabs(urn)/urn);
-      }
+      double urn = generator.GetUniformRandomNumber();
+      if (attType == "uniform")
+        value = val + disp * urn;
+      else // Assume uniformsigned
+        value = (val + disp * urn)*FGJSBBase::sign(urn);
     } else {
       std::stringstream s;
       s << ReadFrom() << "Unknown dispersion type" << attType;

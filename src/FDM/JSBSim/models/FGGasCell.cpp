@@ -275,7 +275,7 @@ void FGGasCell::Calculate(double dt)
 
   //-- Gas temperature --
 
-  if (HeatTransferCoeff.size() > 0) {
+  if (!HeatTransferCoeff.empty()) {
     // The model is based on the ideal gas law.
     // However, it does look a bit fishy. Please verify.
     //   dT/dt = dU / (Cv n R)
@@ -326,7 +326,7 @@ void FGGasCell::Calculate(double dt)
     const double VolumeValved =
       ValveOpen * ValveCoefficient * DeltaPressure * dt;
     Contents =
-      max(0.0, Contents - Pressure * VolumeValved / (R * Temperature));
+      max(1E-8, Contents - Pressure * VolumeValved / (R * Temperature));
   }
 
   //-- Update ballonets. --

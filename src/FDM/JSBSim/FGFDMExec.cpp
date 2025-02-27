@@ -46,6 +46,7 @@ INCLUDES
 
 #include "FGFDMExec.h"
 #include "models/atmosphere/FGStandardAtmosphere.h"
+#include "models/atmosphere/FGMSIS.h"
 #include "models/atmosphere/FGWinds.h"
 #include "models/FGFCS.h"
 #include "models/FGPropulsion.h"
@@ -74,7 +75,8 @@ CLASS IMPLEMENTATION
 // Constructor
 
 FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr)
-  : Root(root), RandomEngine(new default_random_engine), FDMctr(fdmctr)
+  : Root(root), RandomSeed(0),
+    RandomGenerator(make_shared<RandomNumberGenerator>(RandomSeed)), FDMctr(fdmctr)
 {
   Frame           = 0;
   IC              = nullptr;
@@ -90,7 +92,6 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr)
   Terminate = false;
   StandAlone = false;
   ResetMode = 0;
-  RandomSeed = 0;
   HoldDown = false;
 
   IncrementThenHolding = false;  // increment then hold is off by default
@@ -328,9 +329,9 @@ bool FGFDMExec::Run(void)
 
   Debug(2);
 
-  for (unsigned int i=1; i<ChildFDMList.size(); i++) {
-    ChildFDMList[i]->AssignState( (FGPropagate*)Models[ePropagate] ); // Transfer state to the child FDM
-    ChildFDMList[i]->Run();
+  for (auto &ChildFDM: ChildFDMList) {
+    ChildFDM->AssignState( (FGPropagate*)Models[ePropagate] ); // Transfer state to the child FDM
+    ChildFDM->Run();
   }
 
   IncrTime();
@@ -371,7 +372,9 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Inertial->in.Position      = Propagate->GetLocation();
     break;
   case eAtmosphere:
-    Atmosphere->in.altitudeASL = Propagate->GetAltitudeASL();
+    Atmosphere->in.altitudeASL     = Propagate->GetAltitudeASL();
+    Atmosphere->in.GeodLatitudeDeg = Propagate->GetGeodLatitudeDeg();
+    Atmosphere->in.LongitudeDeg    = Propagate->GetLongitudeDeg();
     break;
   case eWinds:
     Winds->in.AltitudeASL      = Propagate->GetAltitudeASL();
@@ -384,8 +387,6 @@ void FGFDMExec::LoadInputs(unsigned int idx)
   case eAuxiliary:
     Auxiliary->in.Pressure     = Atmosphere->GetPressure();
     Auxiliary->in.Density      = Atmosphere->GetDensity();
-    Auxiliary->in.DensitySL    = Atmosphere->GetDensitySL();
-    Auxiliary->in.PressureSL   = Atmosphere->GetPressureSL();
     Auxiliary->in.Temperature  = Atmosphere->GetTemperature();
     Auxiliary->in.SoundSpeed   = Atmosphere->GetSoundSpeed();
     Auxiliary->in.KinematicViscosity = Atmosphere->GetKinematicViscosity();
@@ -533,11 +534,12 @@ void FGFDMExec::LoadInputs(unsigned int idx)
 
 void FGFDMExec::LoadPlanetConstants(void)
 {
-  Propagate->in.vOmegaPlanet     = Inertial->GetOmegaPlanet();
-  Accelerations->in.vOmegaPlanet = Inertial->GetOmegaPlanet();
-  Propagate->in.SemiMajor        = Inertial->GetSemimajor();
-  Propagate->in.SemiMinor        = Inertial->GetSemiminor();
-  Auxiliary->in.StandardGravity  = Inertial->GetStandardGravity();
+  Propagate->in.vOmegaPlanet       = Inertial->GetOmegaPlanet();
+  Accelerations->in.vOmegaPlanet   = Inertial->GetOmegaPlanet();
+  Propagate->in.SemiMajor          = Inertial->GetSemimajor();
+  Propagate->in.SemiMinor          = Inertial->GetSemiminor();
+  Auxiliary->in.StandardGravity    = Inertial->GetStandardGravity();
+  Auxiliary->in.StdDaySLsoundspeed = Atmosphere->StdDaySLsoundspeed;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -646,9 +648,8 @@ vector <string> FGFDMExec::EnumerateFDMs(void)
 
   FDMList.push_back(Aircraft->GetAircraftName());
 
-  for (unsigned int i=1; i<ChildFDMList.size(); i++) {
-    FDMList.push_back(ChildFDMList[i]->exec->GetAircraft()->GetAircraftName());
-  }
+  for (auto &ChildFDM: ChildFDMList)
+    FDMList.push_back(ChildFDM->exec->GetAircraft()->GetAircraftName());
 
   return FDMList;
 }
@@ -662,6 +663,82 @@ bool FGFDMExec::LoadScript(const SGPath& script, double deltaT,
 
   Script = new FGScript(this);
   result = Script->LoadScript(GetFullPath(script), deltaT, initfile);
+
+  return result;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGFDMExec::LoadPlanet(const SGPath& PlanetPath, bool useAircraftPath)
+{
+  SGPath PlanetFileName;
+
+  if(useAircraftPath && PlanetPath.isRelative()) {
+    PlanetFileName = AircraftPath/PlanetPath.utf8Str();
+  } else {
+    PlanetFileName = PlanetPath;
+  }
+
+  FGXMLFileRead XMLFileRead;
+  Element* document = XMLFileRead.LoadXMLDocument(PlanetFileName);
+
+  // Make sure that the document is valid
+  if (!document) {
+    stringstream s;
+    s << "File: " << PlanetFileName << " could not be read.";
+    cerr << s.str() << endl;
+    throw BaseException(s.str());
+  }
+
+  if (document->GetName() != "planet") {
+    stringstream s;
+    s << "File: " << PlanetFileName << " is not a planet file.";
+    cerr << s.str() << endl;
+    throw BaseException(s.str());
+  }
+
+  bool result = LoadPlanet(document);
+
+  if (!result)
+    cerr << endl << "Planet element has problems in file " << PlanetFileName << endl;
+
+  return result;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGFDMExec::LoadPlanet(Element* element)
+{
+  bool result = Models[eInertial]->Load(element);
+
+  if (result) {
+    // Reload the planet constants and re-initialize the models.
+    LoadPlanetConstants();
+    IC->InitializeIC();
+    InitializeModels();
+
+    // Process the atmosphere element. This element is OPTIONAL.
+    Element* atm_element = element->FindElement("atmosphere");
+    if (atm_element && atm_element->HasAttribute("model")) {
+      string model = atm_element->GetAttributeValue("model");
+      if (model == "MSIS") {
+        // Replace the existing atmosphere model
+        instance->Unbind(Models[eAtmosphere]);
+        Models[eAtmosphere] = new FGMSIS(this);
+        Atmosphere = static_cast<FGAtmosphere*>(Models[eAtmosphere]);
+
+        // Model initialization sequence
+        LoadInputs(eAtmosphere);
+        Atmosphere->InitModel();
+        result = Atmosphere->Load(atm_element);
+        if (!result) {
+          cerr << endl << "Incorrect definition of <atmosphere>." << endl;
+          return result;
+        }
+        InitializeModels();
+      }
+    }
+  }
 
   return result;
 }
@@ -729,15 +806,11 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     // Process the planet element. This element is OPTIONAL.
     element = document->FindElement("planet");
     if (element) {
-      result = Models[eInertial]->Load(element);
+      result = LoadPlanet(element);
       if (!result) {
         cerr << endl << "Planet element has problems in file " << aircraftCfgFileName << endl;
         return result;
       }
-      // Reload the planet constants and re-initialize the models.
-      LoadPlanetConstants();
-      IC->InitializeIC();
-      InitializeModels();
     }
 
     // Process the metrics element. This element is REQUIRED.
@@ -949,13 +1022,13 @@ void FGFDMExec::BuildPropertyCatalog(struct PropertyCatalogStructure* pcs)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGFDMExec::QueryPropertyCatalog(const string& in)
+string FGFDMExec::QueryPropertyCatalog(const string& in, const string& end_of_line)
 {
-  string results="";
-  for (unsigned i=0; i<PropertyCatalog.size(); i++) {
-    if (PropertyCatalog[i].find(in) != string::npos) results += PropertyCatalog[i] + "\n";
+  string results;
+  for (auto &catalogElm: PropertyCatalog) {
+    if (catalogElm.find(in) != string::npos) results += catalogElm + end_of_line;
   }
-  if (results.empty()) return "No matches found\n";
+  if (results.empty()) return "No matches found"+end_of_line;
   return results;
 }
 
@@ -966,9 +1039,8 @@ void FGFDMExec::PrintPropertyCatalog(void)
   cout << endl;
   cout << "  " << fgblue << highint << underon << "Property Catalog for "
        << modelName << reset << endl << endl;
-  for (unsigned i=0; i<PropertyCatalog.size(); i++) {
-    cout << "    " << PropertyCatalog[i] << endl;
-  }
+  for (auto &catalogElm: PropertyCatalog)
+    cout << "    " << catalogElm << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1182,9 +1254,7 @@ void FGFDMExec::DoTrim(int mode)
 void FGFDMExec::SRand(int sr)
 {
   RandomSeed = sr;
-  gaussian_random_number_phase = 0;
-  RandomEngine->seed(sr);
-  srand(RandomSeed);
+  RandomGenerator->seed(RandomSeed);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

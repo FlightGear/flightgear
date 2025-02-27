@@ -42,7 +42,6 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <memory>
-#include <random>
 
 #include "models/FGPropagate.h"
 #include "models/FGOutput.h"
@@ -182,7 +181,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGFDMExec : public FGJSBBase
+class JSBSIM_API FGFDMExec : public FGJSBBase
 {
   struct childData {
     FGFDMExec* exec;
@@ -256,6 +255,14 @@ public:
       each scheduled model without integrating i.e. dt=0.
       @return true if successful */
   bool RunIC(void);
+
+  /** Loads the planet.
+      Loads the definition of the planet on which the vehicle will evolve such as
+      its radius, gravity or its atmosphere characteristics.
+      @param PlanetPath The name of a planet definition file
+      @param useAircraftPath true if path is given relative to the aircraft path.
+      @return true if successful */
+  bool LoadPlanet(const SGPath& PlanetPath, bool useAircraftPath = true);
 
   /** Loads an aircraft model.
       @param AircraftPath path to the aircraft/ directory. For instance:
@@ -519,9 +526,10 @@ public:
   *   A string is returned that contains a carriage return delimited list of all
   *   strings in the property catalog that matches the supplied check string.
   *   @param check The string to search for in the property catalog.
+  *   @param end_of_line End of line (CR+LF if needed for Windows).
   *   @return the carriage-return-delimited string containing all matching strings
   *               in the catalog.  */
-  std::string QueryPropertyCatalog(const std::string& check);
+  std::string QueryPropertyCatalog(const std::string& check, const std::string& end_of_line="\n");
 
   // Print the contents of the property catalog for the loaded aircraft.
   void PrintPropertyCatalog(void);
@@ -616,8 +624,8 @@ public:
     TemplateFunctions[name] = new FGTemplateFunc(this, el);
   }
 
-  const std::shared_ptr<std::default_random_engine>& GetRandomEngine(void) const
-  { return RandomEngine; }
+  const std::shared_ptr<RandomNumberGenerator>& GetRandomGenerator(void) const
+  { return RandomGenerator; }
 
 private:
   unsigned int Frame;
@@ -675,8 +683,8 @@ private:
 
   bool HoldDown;
 
-  int RandomSeed;
-  std::shared_ptr<std::default_random_engine> RandomEngine;
+  unsigned int RandomSeed;
+  std::shared_ptr<RandomNumberGenerator> RandomGenerator;
 
   // The FDM counter is used to give each child FDM an unique ID. The root FDM
   // has the ID 0
@@ -694,6 +702,7 @@ private:
   int  SRand(void) const {return RandomSeed;}
   void LoadInputs(unsigned int idx);
   void LoadPlanetConstants(void);
+  bool LoadPlanet(Element* el);
   void LoadModelConstants(void);
   bool Allocate(void);
   bool DeAllocate(void);

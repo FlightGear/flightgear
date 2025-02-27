@@ -402,13 +402,13 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
     if (bad) {
       // We can't recover from the above - don't use this supercharger speed.
       BoostSpeeds--;
-      // TODO: put out a massive error message!
+      // TODO - put out a massive error message!
       break;
     }
     // Now sanity-check stuff that is recoverable.
     if (i < BoostSpeeds - 1) {
       if (BoostSwitchAltitude[i] < RatedAltitude[i]) {
-        // TODO: put out an error message
+        // TODO - put out an error message
         // But we can also make a reasonable estimate, as below.
         BoostSwitchAltitude[i] = RatedAltitude[i] + 1000;
       }
