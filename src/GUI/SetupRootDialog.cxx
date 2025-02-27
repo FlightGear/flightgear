@@ -102,6 +102,7 @@ public:
         QNetworkRequest req{m_downloadUrl};
         req.setMaximumRedirectsAllowed(5);
         req.setRawHeader("user-agent", "flighgtear-installer");
+        req.setPriority(QNetworkRequest::HighPriority);
 
         m_download = m_networkManager->get(req);
         m_download->setReadBufferSize(64 * 1024 * 1024);
@@ -174,17 +175,19 @@ public:
                 m_buffer.remove(0, localBytes.length());
             }
 
-            if (!localBytes.isEmpty()) {
+            if (localBytes.isEmpty()) {
+                QThread::msleep(100);
+            } else {
                 m_archive->extractBytes((const uint8_t*)localBytes.constData(), localBytes.size());
                 m_extractedBytes += localBytes.size();
+
+                const int percent = (m_totalSize > 0) ? (m_extractedBytes * 100) / m_totalSize : 0;
+
+                auto fullPathStr = m_archive->mostRecentExtractedPath().utf8Str();
+                fullPathStr.erase(0, m_pathPrefixLength);
+
+                emit installProgress(QString::fromStdString(fullPathStr), percent);
             }
-
-            const int percent = (m_totalSize > 0) ? (m_extractedBytes * 100) / m_totalSize : 0;
-
-            auto fullPathStr = m_archive->mostRecentExtractedPath().utf8Str();
-            fullPathStr.erase(0, m_pathPrefixLength);
-
-            emit installProgress(QString::fromStdString(fullPathStr), percent);
 
             if (m_archive->hasError()) {
                 m_error = true;
