@@ -155,7 +155,7 @@ SGPath Options::platformDefaultRoot() const
     
 } // of namespace flightgear
 
-string_list FGLocale::getUserLanguages()
+string_list FGLocale::getUserLanguages() const
 {
     CocoaAutoreleasePool ap;
     string_list result;

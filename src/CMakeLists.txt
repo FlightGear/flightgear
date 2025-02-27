@@ -26,6 +26,7 @@ foreach( mylibfolder
 		Systems
 		Time
 		Traffic
+                Translations
 		FDM
 		Viewer
 		Main
