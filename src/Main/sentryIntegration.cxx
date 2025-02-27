@@ -498,7 +498,7 @@ void sentryReportUserError(const std::string& aggregate, const std::string& para
 
     auto m = aggregate;
     if (!parameter.empty()) {
-        M += ":" + parameter;
+        m += ":" + parameter;
     }
 
     sentry_value_t event = sentry_value_new_event();
