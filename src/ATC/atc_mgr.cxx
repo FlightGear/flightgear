@@ -189,7 +189,9 @@ void FGATCManager::postinit()
             string fltType = "ga";
             fp->setRunway(runway);
             fp->createTakeOff(userAircraft, false, dcs->parent(), userAircraft->getGeodPos(), 0, fltType);
-            userAircraft->setTakeOffStatus(AITakeOffStatus::QUEUED);
+            if (fgGetBool("/sim/ai/enabled")) { 
+                userAircraft->setTakeOffStatus(AITakeOffStatus::QUEUED); 
+            }
         } else {
             // We're on the ground somewhere. Handle this case later.
 
