@@ -221,6 +221,8 @@ public:
      */
     bool isMainAircraftPath(const std::string& path) const;
 
+    bool isAnyAircraftPath(const std::string& path) const;
+
     /**
     @brief structure representing one or more errors, aggregated together
 
@@ -475,15 +477,23 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
     // error came from, trying to avoid 'unknown'
     if (isMainAircraftPath(oc.origin.asString())) {
         const auto fullId = fgGetString("/sim/aircraft-id");
+        const auto aircraftDirName = lastPathComponent(fgGetString("/sim/aircraft-dir"));
+
         if (fullId != fgGetString("/sim/aircraft")) {
-            return getAggregate(Aggregation::MainAircraft, fullId);
+            return getAggregate(Aggregation::MainAircraft, aircraftDirName);
         }
 
-        return getAggregate(Aggregation::HangarAircraft, fullId);
+        return getAggregate(Aggregation::HangarAircraft, aircraftDirName);
     }
 
     // GUI dialog errors often have no context
     if (oc.code == simgear::ErrorCode::GUIDialog) {
+        // check if it's an aircraft dialog
+        if (isMainAircraftPath(oc.origin.asString())) {
+            const auto aircraftDirName = lastPathComponent(fgGetString("/sim/aircraft-dir"));
+            return getAggregate(Aggregation::MainAircraft, aircraftDirName);
+        }
+
         // check if it's an add-on and use that
         return getAggregate(Aggregation::FGData);
     }
@@ -494,6 +504,14 @@ auto ErrorReporter::ErrorReporterPrivate::getAggregateForOccurence(const ErrorRe
     if (oc.code == simgear::ErrorCode::LoadEffectsShaders) {
         // we use the effect name to split shader errors
         return getAggregate(Aggregation::ShadersEffects, oc.getContextValue("effect"));
+    }
+
+    // if we've got this far, and the path looks like an aircraft path, assume it was a cross-aircraft
+    // error, and report as such
+    // see https://gitlab.com/flightgear/flightgear/-/issues/3008
+    if (isAnyAircraftPath(oc.origin.asString())) {
+        const auto aircraftDirName = lastPathComponent(fgGetString("/sim/aircraft-dir"));
+        return getAggregate(Aggregation::MainAircraft, aircraftDirName);
     }
 
     return getAggregate(Aggregation::Unknown);
@@ -711,6 +729,25 @@ bool ErrorReporter::ErrorReporterPrivate::isMainAircraftPath(const std::string& 
 {
     const auto pos = path.find(_aircraftDirectoryName);
     return pos != std::string::npos;
+}
+
+/**
+ * @brief helper to determine if a file looks like it belongs to an aircraft.
+ * 
+ * This is used to detect potential cross-aircraft packaging bugs which often lead to 
+ * 'not found' error reports. So we're looking for paths which look plausibly like any
+ * aircraft path, even though @ref isMainAircraftPath didn't match on them.
+ */
+bool ErrorReporter::ErrorReporterPrivate::isAnyAircraftPath(const std::string& path) const
+{
+    const auto pos = path.find("Aircraft/");
+    if (pos == 0) {
+        // relative path which starts with "Aircraft/"
+        return true;
+    }
+
+    // TODO: decide if we also include paths which contain 'Aircraft' as a component
+    return false;
 }
 
 
