@@ -45,8 +45,8 @@ typedef std::vector<FGAIFlightPlan*>::iterator FlightPlanVecIterator;
 typedef std::map<std::string, FlightPlanVec>   FlightPlanVecMap;
 
 class FGTrafficRecord;
-typedef std::list<FGTrafficRecord> TrafficVector;
-typedef std::list<FGTrafficRecord>::iterator TrafficVectorIterator;
+typedef std::list<SGSharedPtr<FGTrafficRecord>> TrafficVector;
+typedef std::list<SGSharedPtr<FGTrafficRecord>>::iterator TrafficVectorIterator;
 
 class ActiveRunway;
 typedef std::vector<ActiveRunway> ActiveRunwayVec;
@@ -63,17 +63,23 @@ typedef std::vector<int>::iterator intVecIterator;
 class FGATCInstruction
 {
 private:
-    bool holdPattern;
+    bool holdPattern = false;
     int  requestedArrivalTime{0};
-    bool holdPosition;
-    bool changeSpeed;
-    bool changeHeading;
-    bool changeAltitude;
-    bool resolveCircularWait;
+    bool holdPosition = false;
+    bool requestHoldPosition = false;
+    bool resumeTaxi = false;
+    bool changeSpeed = false;
+    bool changeHeading = false;
+    bool changeAltitude = false;
+    bool resolveCircularWait = false;
+    int waitsForId;
+    int waitingSince;
 
-    double speed;
+    double speed = std::numeric_limits<double>::max();
     double heading;
     double alt;
+
+
 public:
     FGATCInstruction();
 
@@ -90,6 +96,13 @@ public:
     bool getHoldPosition  () const {
         return holdPosition;
     };
+    bool getRequestHoldPosition  () const {
+        return requestHoldPosition;
+    };
+    bool getResumeTaxi() const {
+        return resumeTaxi;
+    };
+    
     bool getChangeSpeed   () const {
         return changeSpeed;
     };
@@ -113,11 +126,24 @@ public:
         return alt;
     };
 
+    int getWaitsForId  () const {
+        return waitsForId;
+    };
+    int getWaitingSince  () const {
+        return waitingSince;
+    };
+
     void setHoldPattern   (bool val) {
         holdPattern    = val;
     };
     void setHoldPosition  (bool val) {
         holdPosition   = val;
+    };
+    void setRequestHoldPosition  (bool val) {
+        requestHoldPosition   = val;
+    };
+    void setResumeTaxi  (bool val) {
+        resumeTaxi   = val;
     };
     void setChangeSpeed   (bool val) {
         changeSpeed    = val;
@@ -141,6 +167,14 @@ public:
     void setAlt         (double val) {
         alt     = val;
     };
+
+    void setWaitsForId(int id) {
+        waitsForId = id;
+    };
+    void setWaitingSince(int t) {
+        waitingSince = t;
+    };
+
 };
 
 
@@ -148,11 +182,10 @@ public:
  * class FGTrafficRecord
  * Represents the interaction of an AI Aircraft and ATC
  *************************************************************************************/
-class FGTrafficRecord
+class FGTrafficRecord : public SGReferenced
 {
 private:
     int id;
-    int waitsForId;
     int currentPos;
     int leg;
     int frequencyId;
@@ -160,12 +193,16 @@ private:
     bool allowTransmission;
     bool allowPushback;
     int priority;
-    int  plannedArrivalTime{0};
+    int plannedArrivalTime{0};
     time_t timer;
     intVec intentions;
     FGATCInstruction instruction;
     SGGeod pos;
-    double heading, speed, altitude, radius;
+    double heading;
+    double headingDiff;
+    double speed;
+    double altitude;
+    double radius;
     std::string callsign;
     std::string runway;
     SGSharedPtr<FGAIAircraft> aircraft;
@@ -232,7 +269,7 @@ public:
     };
     void setRunwaySlot( int val ) {
         if (plannedArrivalTime) {
-            SG_LOG(SG_ATC, SG_BULK, callsign << "| Runwayslot " << (val-plannedArrivalTime));
+            SG_LOG(SG_ATC, SG_BULK, callsign << "(" << id << ") Runwayslot timedelta " << (val-plannedArrivalTime));
         }
         instruction.setRunwaySlot(val);
     };
@@ -246,6 +283,10 @@ public:
     double getHeading  () const {
         return heading  ;
     };
+    /**The last diff of heading when turning.*/
+    double getHeadingDiff  () const {
+        return headingDiff  ;
+    };
     double getSpeed    () const {
         return speed    ;
     };
@@ -257,7 +298,10 @@ public:
     };
 
     int getWaitsForId  () const {
-        return waitsForId;
+        return instruction.getWaitsForId();
+    };
+    int getWaitingSince  () const {
+        return instruction.getWaitingSince();
     };
 
     void setSpeedAdjustment(double spd);
@@ -275,12 +319,31 @@ public:
     bool hasHoldPosition() const {
         return instruction.getHoldPosition();
     };
+    bool getRequestHoldPosition() const {
+        return instruction.getRequestHoldPosition();
+    };
+    bool getResumeTaxi() const {
+        return instruction.getResumeTaxi();
+    };
     void setHoldPosition (bool inst) {
         instruction.setHoldPosition(inst);
     };
-    void setWaitsForId(int id) {
-        waitsForId = id;
+    void setRequestHoldPosition (bool inst) {
+        instruction.setRequestHoldPosition(inst);
     };
+    void setResumeTaxi (bool inst) {
+        instruction.setResumeTaxi(inst);
+    };
+    int getWaitsForId() {
+        return instruction.getWaitsForId();
+    }
+    void setWaitsForId(int id) {
+        instruction.setWaitsForId(id);
+    };
+    void setWaitingSince(int id) {
+        instruction.setWaitingSince(id);
+    };
+
 
     void setResolveCircularWait()   {
         instruction.setResolveCircularWait(true);
@@ -351,6 +414,10 @@ public:
  **********************************************************************/
 class ActiveRunway
 {
+public:
+    /**Separation between aircraft in seconds.*/
+    const time_t SEPARATION = 120;
+
 private:
     const std::string rwy;
     int currentlyCleared;
@@ -367,6 +434,7 @@ public:
     {
         return rwy;
     };
+    /**Get id of cleared AI Aircraft*/
     int getCleared() const
     {
         return currentlyCleared;

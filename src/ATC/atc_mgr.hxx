@@ -19,6 +19,7 @@
 
 #include <AIModel/AIAircraft.hxx>
 #include <ATC/trafficcontrol.hxx>
+#include <ATC/EnRouteController.hxx>
 #include <Traffic/SchedFlight.hxx>
 #include <Traffic/Schedule.hxx>
 
@@ -31,6 +32,8 @@ class FGATCManager : public SGSubsystem
 private:
     AtcVec activeStations;
     FGATCController *controller, *prevController; // The ATC controller that is responsible for the user's aircraft.
+    FGATCController *enRouteController;
+
     bool networkVisible;
     bool initSucceeded;
     SGPropertyNode_ptr trans_num;
@@ -55,6 +58,8 @@ public:
 
     void addController(FGATCController* controller);
     void removeController(FGATCController* controller);
+
+    FGATCController* getEnRouteController();
 
     void reposition();
 };

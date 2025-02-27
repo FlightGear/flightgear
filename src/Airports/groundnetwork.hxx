@@ -91,7 +91,7 @@ public:
 
     double getHeading() const;
 
-    int getIndex()
+    int getIndex() const
     {
         return index;
     }
@@ -194,14 +194,6 @@ private:
     FGTaxiNodeVector m_nodes;
 
     FGTaxiNodeRef findNodeByIndex(int index) const;
-
-    //void printRoutingError(string);
-
-    void checkSpeedAdjustment(int id, double lat, double lon,
-                              double heading, double speed, double alt);
-    void checkHoldPosition(int id, double lat, double lon,
-                           double heading, double speed, double alt);
-
 
     void addSegment(const FGTaxiNodeRef& from, const FGTaxiNodeRef& to);
     void addParking(const FGParkingRef& park);

@@ -508,17 +508,21 @@ void FGGroundNetwork::unblockAllSegments(time_t now)
 
 void FGGroundNetwork::blockSegmentsEndingAt(const FGTaxiSegment* seg, int blockId, time_t blockTime, time_t now)
 {
-    if (!seg)
+    if (!seg) {
         throw sg_exception("Passed invalid segment");
+    }
 
+    long i = 0;
     const auto range = m_segmentsEndingAtNodeMap.equal_range(seg->getEnd());
     for (auto it = range.first; it != range.second; ++it) {
         // our inbound segment will be included, so skip it
         if (it->second == seg)
             continue;
 
+        i++;
         it->second->block(blockId, blockTime, now);
     }
+    SG_LOG(SG_ATC, SG_BULK, "blockSegmentsEndingAt " << "\t" << i << "\t" << seg->getIndex() << "\t" << blockId);
 }
 
 FGTaxiNodeRef FGGroundNetwork::findNodeByIndex(int index) const
@@ -558,6 +562,7 @@ FGParkingRef FGGroundNetwork::findParkingByName(const string& name) const
 void FGGroundNetwork::addSegment(const FGTaxiNodeRef& from, const FGTaxiNodeRef& to)
 {
     FGTaxiSegment* seg = new FGTaxiSegment(from, to);
+    
     segments.push_back(seg);
 
     FGTaxiNodeVector::iterator it = std::find(m_nodes.begin(), m_nodes.end(), from);

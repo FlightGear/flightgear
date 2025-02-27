@@ -11,6 +11,7 @@ foreach( unit_test_category
         Scripting
         AI
         Airports
+        ATC
         Autopilot
         GUI
     )

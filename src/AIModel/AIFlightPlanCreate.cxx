@@ -87,7 +87,7 @@ bool FGAIFlightPlan::create(FGAIAircraft* ac, FGAirport* dep,
         retVal = createDescent(ac, arr, SGGeod::fromDeg(longitude, latitude), speed, alt, fltType,
                                distance);
         break;
-    case AILeg::HOLD:
+    case AILeg::HOLD_PATTERN:
         retVal = createHold(ac, arr, SGGeod::fromDeg(longitude, latitude), speed, alt, fltType,
                             distance);
         break;
@@ -200,7 +200,7 @@ void FGAIFlightPlan::createArc(FGAIAircraft* ac, const SGGeod& center, int start
 
 void FGAIFlightPlan::createLine(FGAIAircraft* ac, const SGGeod& startPoint, double azimuth, double dist, double aElev, double dAlt, double vDescent, const char* pattern)
 {
-    double nPoints = dist / (vDescent * 2);
+    double nPoints = dist / (vDescent * 4);
     char buffer[20];
     double distIncrement = (dist / nPoints);
 
@@ -734,7 +734,7 @@ bool FGAIFlightPlan::createClimb(FGAIAircraft* ac, bool firstFlight,
             FGAIWaypoint* wpt = createInAir(ac, "5000ft climb", climb1, 5000, vClimb);
             pushBackWaypoint(wpt);
             int rightAngle = headingDiffRunway > 0 ? 90 : -90;
-            int firstTurnIncrement = headingDiffRunway > 0 ? 2 : -2;
+            int firstTurnIncrement = headingDiffRunway > 0 ? 4 : -4;
 
             SGGeod firstTurnCenter = SGGeodesy::direct(climb1, ac->getTrueHeadingDeg() + rightAngle, initialTurnRadius);
             createArc(ac, firstTurnCenter, ac->_getHeading() - rightAngle, course - rightAngle, firstTurnIncrement, initialTurnRadius, 5000, 100, vClimb, "climb-out%03d");

@@ -9,14 +9,17 @@
 
 #include <set>
 
+#include <simgear/structure/SGReferenced.hxx>
 #include <simgear/structure/SGWeakReferenced.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <ATC/ApproachController.hxx>
+#include <ATC/EnRouteController.hxx>
 #include <ATC/GroundController.hxx>
 #include <ATC/StartupController.hxx>
 #include <ATC/TowerController.hxx>
 #include <ATC/trafficcontrol.hxx>
+#include <ATC/AirportGroundRadar.hxx>
 
 #include "airports_fwd.hxx"
 #include "parking.hxx"
@@ -57,6 +60,9 @@ private:
     ParkingSet occupiedParkings;
 
     FGRunwayPreference rwyPrefs;
+
+    /**Controls all AI actifity at one airport*/
+    SGSharedPtr<AirportGroundRadar> groundRadar;
     FGStartupController startupController;
     FGTowerController towerController;
     FGApproachController approachController;

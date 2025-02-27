@@ -90,19 +90,19 @@ void FGApproachController::announcePosition(int id,
 
     // Add a new TrafficRecord if no one exsists for this aircraft.
     if (i == activeTraffic.end() || activeTraffic.empty()) {
-        FGTrafficRecord rec;
-        rec.setId(id);
+        FGTrafficRecord* rec = new FGTrafficRecord();
+        rec->setId(id);
 
-        rec.setPositionAndHeading(lat, lon, heading, speed, alt);
-        rec.setRunway(intendedRoute->getRunway());
-        rec.setLeg(leg);
-        rec.setCallsign(ref->getCallSign());
-        rec.setAircraft(ref);
-        rec.setPlannedArrivalTime(intendedRoute->getArrivalTime());
+        rec->setPositionAndHeading(lat, lon, heading, speed, alt);
+        rec->setRunway(intendedRoute->getRunway());
+        rec->setLeg(leg);
+        rec->setCallsign(ref->getCallSign());
+        rec->setAircraft(ref);
+        rec->setPlannedArrivalTime(intendedRoute->getArrivalTime());
         activeTraffic.push_back(rec);
     } else {
-        i->setPositionAndHeading(lat, lon, heading, speed, alt);
-        i->setPlannedArrivalTime(intendedRoute->getArrivalTime());
+        (*i)->setPositionAndHeading(lat, lon, heading, speed, alt);
+        (*i)->setPlannedArrivalTime(intendedRoute->getArrivalTime());
     }
 }
 
@@ -120,66 +120,66 @@ void FGApproachController::updateAircraftInformation(int id, SGGeod geod,
         SG_LOG(SG_ATC, SG_ALERT,
                "FGApproachController updating aircraft without traffic record at " << SG_ORIGIN);
     } else {
-        i->setPositionAndHeading(geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
+        (*i)->setPositionAndHeading(geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
         current = i;
-        if(current->getAircraft()) {
+        if((*current)->getAircraft()) {
             //FIXME No call to aircraft! -> set instruction
             time_t time_diff =
-                current->getAircraft()->
+                (*current)->getAircraft()->
                 checkForArrivalTime(string("final001"));
             if (time_diff != 0) {
-                SG_LOG(SG_ATC, SG_BULK, current->getCallsign() << "|ApproachController: checking for speed " << time_diff);
+                SG_LOG(SG_ATC, SG_BULK, (*current)->getCallsign() << "|ApproachController: checking for speed " << time_diff);
             }
             if (time_diff > 15) {
-                current->setSpeedAdjustment(current->getAircraft()->
+                (*current)->setSpeedAdjustment((*current)->getAircraft()->
                                             getPerformance()->vDescent() *
                                             1.35);
             } else if (time_diff > 5) {
-                current->setSpeedAdjustment(current->getAircraft()->
+                (*current)->setSpeedAdjustment((*current)->getAircraft()->
                                             getPerformance()->vDescent() *
                                             1.2);
             } else if (time_diff < -15) {
-                current->setSpeedAdjustment(current->getAircraft()->
+                (*current)->setSpeedAdjustment((*current)->getAircraft()->
                                             getPerformance()->vDescent() *
                                             0.65);
             } else if (time_diff < -5) {
-                current->setSpeedAdjustment(current->getAircraft()->
+                (*current)->setSpeedAdjustment((*current)->getAircraft()->
                                             getPerformance()->vDescent() *
                                             0.8);
             } else {
-                current->clearSpeedAdjustment();
+                (*current)->clearSpeedAdjustment();
             }
             if ((now - lastTransmission) > 15) {
                 available = true;
             }
             //Start of our status runimplicit "announce arrival"
             if (checkTransmissionState(ATCMessageState::NORMAL, ATCMessageState::NORMAL, current, now, MSG_ARRIVAL, ATC_AIR_TO_GROUND)) {
-                current->setRunwaySlot(getRunway(current->getRunway())->requestTimeSlot(current->getPlannedArrivalTime()));
-                current->setState(ATCMessageState::ACK_ARRIVAL);
+                (*current)->setRunwaySlot(getRunway((*current)->getRunway())->requestTimeSlot((*current)->getPlannedArrivalTime()));
+                (*current)->setState(ATCMessageState::ACK_ARRIVAL);
             }
             if (checkTransmissionState(ATCMessageState::ACK_ARRIVAL, ATCMessageState::ACK_ARRIVAL, current, now, MSG_ACKNOWLEDGE_ARRIVAL, ATC_GROUND_TO_AIR)) {
-                if (current->getRunwaySlot() > current->getPlannedArrivalTime()) {
-                    current->setState(ATCMessageState::HOLD);
+                if ((*current)->getRunwaySlot() > (*current)->getPlannedArrivalTime()) {
+                    (*current)->setState(ATCMessageState::HOLD_PATTERN);
                 } else {
-                    current->setState(ATCMessageState::CLEARED_TO_LAND);
+                    (*current)->setState(ATCMessageState::CLEARED_TO_LAND);
                 }
             }
-            if (checkTransmissionState(ATCMessageState::HOLD, ATCMessageState::HOLD, current, now, MSG_ACKNOWLEDGE_HOLD, ATC_AIR_TO_GROUND)) {
-                current->setState(ATCMessageState::ACK_HOLD);
+            if (checkTransmissionState(ATCMessageState::HOLD_PATTERN, ATCMessageState::HOLD_PATTERN, current, now, MSG_ACKNOWLEDGE_HOLD, ATC_AIR_TO_GROUND)) {
+                (*current)->setState(ATCMessageState::ACK_HOLD);
             }
             if (checkTransmissionState(ATCMessageState::CLEARED_TO_LAND, ATCMessageState::CLEARED_TO_LAND, current, now, MSG_CLEARED_TO_LAND, ATC_GROUND_TO_AIR)) {
-                current->setState(ATCMessageState::ACK_CLEARED_TO_LAND);
+                (*current)->setState(ATCMessageState::ACK_CLEARED_TO_LAND);
             }
             if (checkTransmissionState(ATCMessageState::ACK_CLEARED_TO_LAND, ATCMessageState::ACK_CLEARED_TO_LAND, current, now, MSG_ACKNOWLEDGE_CLEARED_TO_LAND, ATC_AIR_TO_GROUND)) {
-                current->setState(ATCMessageState::SWITCH_GROUND_TOWER);
+                (*current)->setState(ATCMessageState::SWITCH_GROUND_TOWER);
             }
             if (checkTransmissionState(ATCMessageState::SWITCH_GROUND_TOWER, ATCMessageState::SWITCH_GROUND_TOWER, current, now, MSG_SWITCH_TOWER_FREQUENCY, ATC_GROUND_TO_AIR)) {
             }
             if (checkTransmissionState(ATCMessageState::ACK_SWITCH_GROUND_TOWER, ATCMessageState::ACK_SWITCH_GROUND_TOWER, current, now, MSG_ACKNOWLEDGE_SWITCH_TOWER_FREQUENCY, ATC_AIR_TO_GROUND)) {
-                current->setState(ATCMessageState::LANDING_TAXI);
+                (*current)->setState(ATCMessageState::LANDING_TAXI);
             }
         }
-        //current->setSpeedAdjustment(current->getAircraft()->getPerformance()->vDescent() + time_diff);
+        //(*current)->setSpeedAdjustment((*current)->getAircraft()->getPerformance()->vDescent() + time_diff);
     }
     setDt(getDt() + dt);
 }
@@ -213,7 +213,9 @@ ActiveRunway *FGApproachController::getRunway(const string& name)
 
 void FGApproachController::render(bool visible) {
     // Must be BULK in order to prevent it being called each frame
-    SG_LOG(SG_ATC, SG_BULK, "FGApproachController::render function not yet implemented");
+    if (visible) {
+        SG_LOG(SG_ATC, SG_BULK, "FGApproachController::render function not yet implemented");
+    }
 }
 
 string FGApproachController::getName() {

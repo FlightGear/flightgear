@@ -87,21 +87,28 @@ void FGStartupController::announcePosition(int id,
 
     // Add a new TrafficRecord if no one exists for this aircraft.
     if (i == activeTraffic.end() || activeTraffic.empty()) {
-        FGTrafficRecord rec;
-        rec.setId(id);
+        FGTrafficRecord* rec = new FGTrafficRecord();
+        rec->setId(id);
 
-        rec.setPositionAndHeading(lat, lon, heading, speed, alt);
-        rec.setRunway(intendedRoute->getRunway());
-        rec.setLeg(leg);
-        rec.setPositionAndIntentions(currentPosition, intendedRoute);
-        rec.setCallsign(ref->getCallSign());
-        rec.setAircraft(ref);
-        rec.setHoldPosition(true);
-        activeTraffic.push_back(rec);
+        rec->setPositionAndHeading(lat, lon, heading, speed, alt);
+        rec->setRunway(intendedRoute->getRunway());
+        rec->setLeg(leg);
+        rec->setPositionAndIntentions(currentPosition, intendedRoute);
+        rec->setCallsign(ref->getCallSign());
+        rec->setAircraft(ref);
+        rec->setHoldPosition(true);
+        SGSharedPtr<FGTrafficRecord> sharedRec = static_cast<FGTrafficRecord*>(rec);
+        activeTraffic.push_back(sharedRec);
+        airportGroundRadar->add(sharedRec);
     } else {
-        i->setPositionAndIntentions(currentPosition, intendedRoute);
-        i->setPositionAndHeading(lat, lon, heading, speed, alt);
+        bool moved = airportGroundRadar->move(SGRect<double>(lat, lon), *i);
+        if (!moved) {
+                    SG_LOG(SG_ATC, SG_ALERT,
+               "Not moved " << (*i)->getCallsign() << "" );
 
+        }
+        (*i)->setPositionAndIntentions(currentPosition, intendedRoute);
+        (*i)->setPositionAndHeading(lat, lon, heading, speed, alt);
     }
 }
 
@@ -117,35 +124,36 @@ void FGStartupController::updateAircraftInformation(int id, SGGeod geod, double 
                "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
         return;
     } else {
-        i->setPositionAndHeading(geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
+        (*i)->setPositionAndHeading(geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
         current = i;
     }
     setDt(getDt() + dt);
 
-    int state = i->getState();
+    int state = (*i)->getState();
 
     // Sentry FLIGHTGEAR-2Q : don't crash on null TrafficRef
     // Sentry FLIGHTGEAR-129: don't crash on null aircraft
-    if (!i->getAircraft() || !i->getAircraft()->getTrafficRef()) {
+    if (!(*i)->getAircraft() || !(*i)->getAircraft()->getTrafficRef()) {
         SG_LOG(SG_ATC, SG_ALERT, "AI traffic: updating aircraft without traffic ref");
         return;
     }
 
     // The user controlled aircraft should have crashed here, because it doesn't have a traffic reference.
     // NOTE: if we create a traffic schedule for the user aircraft, we can use this to plan a flight.
-    time_t startTime = i->getAircraft()->getTrafficRef()->getDepartureTime();
+    time_t startTime = (*i)->getAircraft()->getTrafficRef()->getDepartureTime();
     time_t now = globals->get_time_params()->get_cur_time();
 
 
     if (((startTime - now) > 60 && (startTime - now)%60 == 0) ||
          ((startTime - now) < 60 && (startTime - now) > 0)) {
-        SG_LOG(SG_ATC, SG_BULK, i->getAircraft()->getTrafficRef()->getCallSign() << " is scheduled to depart in " << startTime - now << " seconds. Available = " << available << " at parking " << getGateName(i->getAircraft()));
+        SG_LOG(SG_ATC, SG_BULK, (*i)->getAircraft()->getTrafficRef()->getCallSign() << " is scheduled to depart in " << startTime - now << " seconds. Available = " << available << " at parking " << getGateName((*i)->getAircraft()));
     }
 
     if ((now - lastTransmission) > 3 + (rand() % 15)) {
         available = true;
     }
 
+//FIXME These messages can become interleaved and shouldn't be
     if (now >(startTime + 0)) {
         checkTransmissionState(ATCMessageState::NORMAL, ATCMessageState::NORMAL, i, now, MSG_ANNOUNCE_ENGINE_START, ATC_AIR_TO_GROUND);
     }
@@ -171,23 +179,26 @@ void FGStartupController::updateAircraftInformation(int id, SGGeod geod, double 
         checkTransmissionState(ATCMessageState::ACK_REPORT_RUNWAY, ATCMessageState::ACK_REPORT_RUNWAY, i, now, MSG_REQUEST_PUSHBACK_CLEARANCE, ATC_AIR_TO_GROUND);
     }
     if ((state == ATCMessageState::SWITCH_GROUND_TOWER) && available) {
+        bool pushbackBlocked = airportGroundRadar->isBlockedForPushback(*i);
         if (now > startTime + 200) {
-            if (i->pushBackAllowed()) {
-                i->allowRepeatedTransmissions();
-                transmit(&(*i), &(*parent), MSG_PERMIT_PUSHBACK_CLEARANCE,
+            if ((*i)->pushBackAllowed() && !pushbackBlocked) {
+                (*i)->allowRepeatedTransmissions();
+                transmit((*i), &(*parent), MSG_PERMIT_PUSHBACK_CLEARANCE,
                          ATC_GROUND_TO_AIR, true);
-                i->updateState();
+                (*i)->updateState();
             } else {
-                transmit(&(*i), &(*parent), MSG_HOLD_PUSHBACK_CLEARANCE,
-                         ATC_GROUND_TO_AIR, true);
-                i->suppressRepeatedTransmissions();
+                if ((*i)->allowTransmissions()) {
+                    transmit((*i), &(*parent), MSG_HOLD_PUSHBACK_CLEARANCE,
+                            ATC_GROUND_TO_AIR, true);
+                    (*i)->suppressRepeatedTransmissions();
+                }
             }
             lastTransmission = now;
             available = false;
         }
     }
     if ((state == ATCMessageState::ACK_SWITCH_GROUND_TOWER) && available) {
-        i->setHoldPosition(false);
+        (*i)->setHoldPosition(false);
     }
 }
 
@@ -235,13 +246,13 @@ void FGStartupController::render(bool visible)
         time_t now = globals->get_time_params()->get_cur_time();
 
         for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); ++i) {
-            if (i->isActive(300)) {
+            if ((*i)->isActive(300)) {
                 // Handle start point
-                int pos = i->getCurrentPosition();
-                SG_LOG(SG_ATC, SG_BULK, "rendering for " << i->getAircraft()->getCallSign() << "pos = " << pos);
+                int pos = (*i)->getCurrentPosition();
+                SG_LOG(SG_ATC, SG_BULK, "rendering for " << (*i)->getAircraft()->getCallSign() << "pos = " << pos);
                 if (pos > 0) {
                     FGTaxiSegment *segment = groundNet->findSegment(pos);
-                    SGGeod start = i->getPos();
+                    SGGeod start = (*i)->getPos();
                     SGGeod end  (segment->getEnd()->geod());
 
                     double length = SGGeodesy::distanceM(start, end);
@@ -260,10 +271,10 @@ void FGStartupController::render(bool visible)
                     obj_trans->setDataVariance(osg::Object::STATIC);
                     // Experimental: Calculate slope here, based on length, and the individual elevations
                     double elevationStart;
-                    if (isUserAircraft((i)->getAircraft())) {
+                    if (isUserAircraft((*i)->getAircraft())) {
                         elevationStart = fgGetDouble("/position/ground-elev-m");
                     } else {
-                        elevationStart = ((i)->getAircraft()->_getAltitude() * SG_FEET_TO_METER);
+                        elevationStart = ((*i)->getAircraft()->_getAltitude() * SG_FEET_TO_METER);
                     }
                     double elevationEnd   = segment->getEnd()->getElevationM();
                     if ((elevationEnd == 0) || (elevationEnd == parent->getElevation())) {
@@ -318,11 +329,11 @@ void FGStartupController::render(bool visible)
                 } else {
                     SG_LOG(SG_ATC, SG_DEBUG, "BIG FAT WARNING: current position is here : " << pos);
                 }
-                for (intVecIterator j = (i)->getIntentions().begin(); j != (i)->getIntentions().end(); ++j) {
+                for (intVecIterator j = (*i)->getIntentions().begin(); j != (*i)->getIntentions().end(); ++j) {
                     osg::Matrix obj_pos;
                     int k = (*j);
                     if (k > 0) {
-                        SG_LOG(SG_ATC, SG_BULK, "rendering for " << i->getAircraft()->getCallSign() << "intention = " << k);
+                        SG_LOG(SG_ATC, SG_BULK, "rendering for " << (*i)->getAircraft()->getCallSign() << "intention = " << k);
                         osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
                         obj_trans->setDataVariance(osg::Object::STATIC);
                         FGTaxiSegment *segment  = groundNet->findSegment(k);

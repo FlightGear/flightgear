@@ -32,6 +32,7 @@ extern double fgIsFinite(double x);
 #include "performancedata.hxx"
 #include "performancedb.hxx"
 
+#include <ATC/atc_mgr.hxx>
 #include <ATC/ATCController.hxx>
 #include <ATC/trafficcontrol.hxx>
 
@@ -468,6 +469,9 @@ void FGAIAircraft::ProcessFlightPlan(double dt, time_t now)
             tgt_altitude_ft = curr->getAltitude();
         }
 
+        if(holdPos) {
+            SG_LOG(SG_ATC, SG_WARN, getCallSign() << " should be blocked ");
+        }
         AccelTo(prev->getSpeed());
         hdg_lock = alt_lock = true;
         no_roll = (prev->getOn_ground() && curr->getOn_ground());
@@ -660,7 +664,7 @@ void FGAIAircraft::getGroundElev(double dt)
 
 void FGAIAircraft::doGroundAltitude()
 {
-    if ((fp->getLeg() == 7) && ((altitude_ft - tgt_altitude_ft) > 5)) {
+    if ((fp->getLeg() == AILeg::LANDING) && ((altitude_ft - tgt_altitude_ft) > 5)) {
         tgt_vs = -500;
     } else {
         if ((fabs(altitude_ft - (tgt_altitude_ft + groundOffset)) > 1000.0) ||
@@ -677,6 +681,11 @@ void FGAIAircraft::announcePositionToController()
 {
     if (!trafficRef) {
         return;
+    }    
+    const bool isUserAircraft = (manager == nullptr);
+
+    if ( isUserAircraft && globals->get_subsystem<FDMShell>()->is_suspended()) {
+        return;
     }
 
     int leg = fp->getLeg();
@@ -685,6 +694,7 @@ void FGAIAircraft::announcePositionToController()
         // throw an exception so this aircraft gets killed by the AIManager.
         throw sg_exception("bad AI flight plan. No current WP");
     }
+    auto mgr = globals->get_subsystem<FGATCManager>();
 
     // Note that leg has been incremented after creating the current leg, so we should use
     // leg numbers here that are one higher than the number that is used to create the leg
@@ -711,16 +721,41 @@ void FGAIAircraft::announcePositionToController()
             SG_LOG(SG_AI, SG_BULK, "Error: Could not find Dynamics at airport : " << trafficRef->getDepartureAirport()->getId());
         }
         break;
+    case AILeg::CLIMB:
+    case AILeg::CRUISE:
+        if (mgr && mgr->getEnRouteController()) {
+            controller = mgr->getEnRouteController();
+        }
+        break;
     case AILeg::APPROACH:
+    case AILeg::HOLD_PATTERN:
         if (trafficRef->getArrivalAirport()->getDynamics()) {
             controller = trafficRef->getArrivalAirport()->getDynamics()->getApproachController();
         }
         break;
+    case AILeg::LANDING:
+        if (trafficRef->getArrivalAirport()->getDynamics()) {
+            controller = trafficRef->getArrivalAirport()->getDynamics()->getTowerController();
+        }
+        break;
     case AILeg::PARKING_TAXI: // Taxiing for parking
-        if (trafficRef->getArrivalAirport()->getDynamics()->getGroundController()->exists())
+        if (trafficRef->getArrivalAirport()->getDynamics()->getGroundController()->exists()) {
             controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundController();
+        } else {
+            SG_LOG(SG_ATC, SG_ALERT, trafficRef->getArrivalAirport()->getId() << " doesn't have a groundcontroller" );
+        }
+        break;
+    case AILeg::PARKING: // Parked
+        if (controller) {
+            SG_LOG(SG_AI, SG_BULK, "Will be signing off from " << controller->getName());
+            controller->signOff(getID());
+        } else {
+            SG_LOG(SG_AI, SG_BULK, "Controller was null");
+        }
+        controller = nullptr;
         break;
     default:
+        SG_LOG(SG_AI, SG_ALERT, "AILeg " << leg << " not covered by a controller type");        
         if (prevController) {
             SG_LOG(SG_AI, SG_BULK, "Will be signing off from " << prevController->getName());
         }
@@ -729,6 +764,11 @@ void FGAIAircraft::announcePositionToController()
     }
 
     if ((controller != prevController) && prevController && !getDie()) {
+        // We update one last time to update the Radar state.
+        // FIXME Share the traffic record between controllers
+        prevController->announcePosition(getID(), fp.get(), fp->getCurrentWaypoint()->getRouteIndex(),
+                                     _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
+                                     trafficRef->getRadius(), leg, this);
         //If we are dead we are automatically erased
         prevController->signOff(getID());
     }
@@ -737,10 +777,12 @@ void FGAIAircraft::announcePositionToController()
         controller->announcePosition(getID(), fp.get(), fp->getCurrentWaypoint()->getRouteIndex(),
                                      _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
                                      trafficRef->getRadius(), leg, this);
+    } else {
+        SG_LOG(SG_AI, SG_ALERT, "Can't announcePosition " << this->getCallSign() << " no controller");        
     }
 }
 
-void FGAIAircraft::scheduleForATCTowerDepartureControl()
+void FGAIAircraft::scheduleForATCTowerRunwayControl()
 {
     if (!takeOffStatus) {
         int leg = fp->getLeg();
@@ -760,7 +802,9 @@ void FGAIAircraft::scheduleForATCTowerDepartureControl()
     takeOffStatus = AITakeOffStatus::QUEUED;
 }
 
-// Process ATC instructions and report back
+/** 
+ * Process ATC instructions and report back
+ */ 
 
 void FGAIAircraft::processATC(const FGATCInstruction& instruction)
 {
@@ -780,9 +824,14 @@ void FGAIAircraft::processATC(const FGATCInstruction& instruction)
         //holdtime = instruction.getHoldTime();
     }
 
+    waitsForId = instruction.getWaitsForId();
+
     // Hold Position
     if (instruction.getHoldPosition()) {
         holdPos = true;
+        if (onGround()) {
+            groundTargetSpeed = 0.0;
+        }
         AccelTo(0.0);
     } else {
         holdPos = false;
@@ -1006,7 +1055,9 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int 
         prev_dist_to_go = HUGE_VAL;
         return true;
     } else {
-        if (prev_dist_to_go == dist_to_go_m && fabs(groundTargetSpeed) > 0 && this->atGate().empty()) {
+        if (prev_dist_to_go == dist_to_go_m 
+            && fabs(groundTargetSpeed) > 0 
+            && this->atGate().empty()) {
             //FIXME must be suppressed when parked
             SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Aircraft stuck. Speed " << speed);
             stuckCounter++;
@@ -1069,7 +1120,7 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now)
     }
     if (prev->contains("DepartureHold"s)) {
         //std::cerr << "Passing point DepartureHold" << std::endl;
-        scheduleForATCTowerDepartureControl();
+        scheduleForATCTowerRunwayControl();
     }
     if (prev->contains("Accel"s)) {
         takeOffStatus = AITakeOffStatus::CLEARED_FOR_TAKEOFF;
@@ -1416,7 +1467,7 @@ int FGAIAircraft::determineNextLeg(int leg)
     if (leg == AILeg::APPROACH) {
         time_t now = globals->get_time_params()->get_cur_time();
         if (controller == nullptr || controller->getInstruction(getID()).getRunwaySlot() > now) {
-            return AILeg::HOLD;
+            return AILeg::HOLD_PATTERN;
         } else {
             return AILeg::LANDING;
         }
@@ -1464,9 +1515,9 @@ void FGAIAircraft::updateUserFlightPlan(double dt)
             int legDistance = SGGeodesy::distanceM(current->getPos(), last->getPos());
             int currDist = SGGeodesy::distanceM(getGeodPos(), current->getPos());
             int lastDist = SGGeodesy::distanceM(getGeodPos(), last->getPos());
-            SG_LOG(SG_ATC, SG_BULK, "Signing off from Tower "
-                                        << "\t currDist\t" << currDist << "\t legDistance\t" << legDistance << "\t" << lastDist << "\t" << getGeodPos().getLatitudeDeg() << "\t" << getGeodPos().getLongitudeDeg() << "\t" << current->getPos().getLatitudeDeg() << "\t" << current->getPos().getLongitudeDeg());
             if (currDist > legDistance) {
+                SG_LOG(SG_ATC, SG_BULK, "Signing off from Tower "
+                                            << "\t currDist\t" << currDist << "\t legDistance\t" << legDistance << "\t" << lastDist << "\t" << getGeodPos().getLatitudeDeg() << "\t" << getGeodPos().getLongitudeDeg() << "\t" << current->getPos().getLatitudeDeg() << "\t" << current->getPos().getLongitudeDeg());
                 // We are definitely beyond the airport
                 fp->incrementLeg();
             }
@@ -1736,6 +1787,8 @@ void FGAIAircraft::dumpCSVHeader(const std::unique_ptr<sg_ofstream>& o)
     (*o) << "roll\t";
     (*o) << "repositioned\t";
     (*o) << "stuckCounter\t";
+    (*o) << "blockerId\t";
+    (*o) << "holdPos\t";
     (*o) << std::endl;
 }
 
@@ -1810,6 +1863,8 @@ void FGAIAircraft::dumpCSV(const std::unique_ptr<sg_ofstream>& o, int lineIndex)
     (*o) << roll << "\t";
     (*o) << repositioned << "\t";
     (*o) << stuckCounter << "\t";
+    (*o) << waitsForId << "\t";
+    (*o) << holdPos << "\t";
     (*o) << std::endl;
 }
 

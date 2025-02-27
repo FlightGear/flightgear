@@ -22,6 +22,8 @@
 
 #include <Airports/airports_fwd.hxx>
 
+#include <random>
+
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <osg/MatrixTransform>
@@ -33,6 +35,7 @@
 #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 
+#include <ATC/AirportGroundRadar.hxx>
 #include <ATC/trafficcontrol.hxx>
 
 namespace ATCMessageState
@@ -46,28 +49,30 @@ namespace ATCMessageState
         // 2 = "Acknowledge "Resume taxi".
         ACK_RESUME_TAXI,
         // 3 = "Issue TaxiClearance"
-        TAXI_CLEARED = 3,
+        TAXI_CLEARED,
         // 4 = Acknowledge Taxi Clearance"
-        ACK_TAXI_CLEARED = 4,
+        ACK_TAXI_CLEARED,
         // 5 = Post acknowlegde taxiclearance: Start taxiing
-        START_TAXI = 5,
+        START_TAXI,
         // 6 = Report runway
-        REPORT_RUNWAY = 6,
+        REPORT_RUNWAY,
         // 7 = Acknowledge report runway
-        ACK_REPORT_RUNWAY = 7,
+        ACK_REPORT_RUNWAY,
         // 8 = Switch tower frequency
-        SWITCH_GROUND_TOWER = 8,
+        SWITCH_GROUND_TOWER,
         // 9 = Acknowledge switch tower frequency
-        ACK_SWITCH_GROUND_TOWER = 9,
+        ACK_SWITCH_GROUND_TOWER,
         // 10 = Cleared for takeoff
         CLEARED_TAKEOFF,
         ACK_CLEARED_TAKEOFF,
         ANNOUNCE_ARRIVAL,
         ACK_ARRIVAL,
-        HOLD,
+        HOLD_PATTERN,
         CLEARED_TO_LAND,
         ACK_CLEARED_TO_LAND,
-        LANDING_TAXI
+        LANDING_TAXI,
+        SWITCH_TOWER_TO_GROUND,
+        HOLD_POSITION
     };
 }
 
@@ -87,10 +92,13 @@ protected:
     bool available;
     time_t lastTransmission;
     TrafficVector activeTraffic;
-
+    std::default_random_engine generator;
     double dt_count;
     osg::Group* group;
     FGAirportDynamics *parent = nullptr;
+    /*Shared Groundradar. All controllers of an airport share it.*/
+    SGSharedPtr<AirportGroundRadar> airportGroundRadar;
+
 
     std::string formatATCFrequency3_2(int );
     std::string genTransponderCode(const std::string& fltRules);
@@ -131,16 +139,20 @@ public:
         MSG_HOLD,
         MSG_ACKNOWLEDGE_HOLD,
         MSG_CLEARED_TO_LAND,
-        MSG_ACKNOWLEDGE_CLEARED_TO_LAND
+        MSG_ACKNOWLEDGE_CLEARED_TO_LAND,
+        MSG_TAXI_PARK,
+        MSG_ACKNOWLEDGE_TAXI_PARK
     } AtcMsgId;
 
     typedef enum {
         ATC_AIR_TO_GROUND,
         ATC_GROUND_TO_AIR
     } AtcMsgDir;
+
     FGATCController();
     virtual ~FGATCController();
     void init();
+    void setAirportGroundRadar(SGSharedPtr<AirportGroundRadar> groundRadar);
 
     virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                   double lat, double lon,

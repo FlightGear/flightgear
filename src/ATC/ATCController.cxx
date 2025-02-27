@@ -77,6 +77,11 @@ void FGATCController::init()
     }
 }
 
+void FGATCController::setAirportGroundRadar(SGSharedPtr<AirportGroundRadar> groundRadar)
+{
+    airportGroundRadar = groundRadar;
+}
+
 string FGATCController::getGateName(FGAIAircraft* ref)
 {
     return ref->atGate();
@@ -90,10 +95,10 @@ bool FGATCController::isUserAircraft(FGAIAircraft* ac)
 bool FGATCController::checkTransmissionState(int minState, int maxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
                                              AtcMsgDir msgDir)
 {
-    int state = i->getState();
+    int state = (*i)->getState();
     if ((state >= minState) && (state <= maxState) && available) {
-        if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
-            SG_LOG(SG_ATC, SG_BULK, "Checking state " << state << " for " << i->getAircraft()->getCallSign());
+        if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft((*i)->getAircraft())) {
+            SG_LOG(SG_ATC, SG_BULK, "Checking state " << state << " for " << (*i)->getAircraft()->getCallSign());
             SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
             int n = trans_num->getIntValue();
             if (n == 0) {
@@ -103,13 +108,13 @@ bool FGATCController::checkTransmissionState(int minState, int maxState, Traffic
                 //auto atc = globals->get_subsystem<FGATCManager>();
                 //FGATCDialogNew::instance()->removeEntry(1);
             } else {
-                SG_LOG(SG_ATC, SG_BULK, "Sending message for " << i->getAircraft()->getCallSign());
-                transmit(&(*i), parent, msgId, msgDir, false);
+                SG_LOG(SG_ATC, SG_BULK, "Sending message for " << (*i)->getAircraft()->getCallSign());
+                transmit(*i, parent, msgId, msgDir, false);
                 return false;
             }
         }
-        transmit(&(*i), parent, msgId, msgDir, true);
-        i->updateState();
+        transmit(*i, parent, msgId, msgDir, true);
+        (*i)->updateState();
         lastTransmission = now;
         available = false;
         return true;
@@ -214,12 +219,20 @@ void FGATCController::transmit(FGTrafficRecord* rec, FGAirportDynamics* parent, 
         fltRules = rec->getAircraft()->getTrafficRef()->getFlightRules();
         transponderCode = genTransponderCode(fltRules);
         rec->getAircraft()->SetTransponderCode(transponderCode);
-        text =
-            receiver + ". Start-up approved. " + atisInformation +
-            " correct, runway " + activeRunway + ", " + SID + ", squawk " +
-            transponderCode + ". " +
-            "For " + instructionText + " clearance call " + taxiFreqStr + ". " +
-            sender + " control.";
+        if (stationFreq!=taxiFreq) {
+            text =
+                receiver + ". Start-up approved. " + atisInformation +
+                " correct, runway " + activeRunway + ", " + SID + ", squawk " +
+                transponderCode + ". " +
+                "For " + instructionText + " clearance call " + taxiFreqStr + ". " +
+                sender + " control.";
+        } else {
+            text =
+                receiver + ". Start-up approved. " + atisInformation +
+                " correct, runway " + activeRunway + ", " + SID + ", squawk " +
+                transponderCode + ". " +
+                sender + " control.";
+        }
         break;
     case MSG_DENY_ENGINE_START:
         text = receiver + ". Standby.";
@@ -237,12 +250,20 @@ void FGATCController::transmit(FGTrafficRecord* rec, FGAirportDynamics* parent, 
         activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
         transponderCode = rec->getAircraft()->GetTransponderCode();
 
-        text =
-            receiver + ". Start-up approved. " + atisInformation +
-            " correct, runway " + activeRunway + ", " + SID + ", squawk " +
-            transponderCode + ". " +
-            "For " + instructionText + " clearance call " + taxiFreqStr + ". " +
-            sender + ".";
+        if (stationFreq!=taxiFreq) {
+            text =
+                receiver + ". Start-up approved. " + atisInformation +
+                " correct, runway " + activeRunway + ", " + SID + ", squawk " +
+                transponderCode + ". " +
+                "For " + instructionText + " clearance call " + taxiFreqStr + ". " +
+                sender + ".";
+        } else {
+            text =
+                receiver + ". Start-up approved. " + atisInformation +
+                " correct, runway " + activeRunway + ", " + SID + ", squawk " +
+                transponderCode + ". " +
+                sender + ".";
+        }
         break;
     case MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY:
         taxiFreqStr = formatATCFrequency3_2(taxiFreq);
@@ -338,6 +359,12 @@ void FGATCController::transmit(FGTrafficRecord* rec, FGAirportDynamics* parent, 
     case MSG_ACKNOWLEDGE_HOLD:
         text = receiver + " holding as published . " + sender;
         break;
+    case MSG_TAXI_PARK:    
+        text = receiver + " taxi to " + rec->getAircraft()->GetFlightPlan()->getParkingGate()->getName() + " . " + sender;
+        break;
+    case MSG_ACKNOWLEDGE_TAXI_PARK:    
+        text = receiver + " taxi to " + rec->getAircraft()->GetFlightPlan()->getParkingGate()->getName() + " . " + sender;
+        break;
     default:
         text = text + sender + ". Transmitting unknown Message. MsgId " + std::to_string(msgId);
         break;
@@ -351,7 +378,7 @@ void FGATCController::transmit(FGTrafficRecord* rec, FGAirportDynamics* parent, 
             fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
         int onBoardRadioFreqI0 = (int)floor(onBoardRadioFreq0 * 100 + 0.5);
         int onBoardRadioFreqI1 = (int)floor(onBoardRadioFreq1 * 100 + 0.5);
-        SG_LOG(SG_ATC, SG_DEBUG, "Using " << onBoardRadioFreq0 << ", " << onBoardRadioFreq1 << " and " << stationFreq << " for " << text << std::endl);
+        SG_LOG(SG_ATC, SG_DEBUG, "COM1 : " << onBoardRadioFreq0 << " COM2 : " << onBoardRadioFreq1 << " Sending to " << formatATCFrequency3_2(stationFreq) << " Txt : " << text );
         if (stationFreq == 0) {
             SG_LOG(SG_ATC, SG_DEBUG, getName() << " stationFreq not found");
         }
@@ -401,11 +428,24 @@ void FGATCController::signOff(int id)
                "AI error: Aircraft without traffic record is signing off from " << getName() << " at " << SG_ORIGIN << " list " << activeTraffic.empty());
         return;
     }
-    SG_LOG(SG_ATC, SG_DEBUG, i->getCallsign() << " (" << i->getId() << ") signing off from " << getName() << "(" << getFrequency() << ")");
+    // if taken off or parked 
+    if ((((*i)->getLeg() > AILeg::TAKEOFF && (*i)->getLeg() < AILeg::APPROACH) ||
+        ((*i)->getLeg() >= AILeg::PARKING_TAXI)) && 
+        airportGroundRadar != nullptr) {
+        bool result = airportGroundRadar->remove(*i);
+        if (!result) {
+            SG_LOG(SG_ATC, SG_DEBUG, "Couldn't remove from index " << (*i));
+        }
+
+        SG_LOG(SG_ATC, SG_DEBUG, (*i)->getCallsign() << " (" << (*i)->getId() << ") signing off from " << getName() << "(" << getFrequency() << ") and removed from AirportGroundradar");
+    } else {
+        SG_LOG(SG_ATC, SG_DEBUG, (*i)->getCallsign() << " (" << (*i)->getId() << ") signing off from " << getName() << "(" << getFrequency() << ") Leg " << (*i)->getLeg() << " at " << (*i)->getPos().getLatitudeDeg() << " "  << (*i)->getPos().getLongitudeDeg());
+    }
+
     int oldSize = activeTraffic.size();
     activeTraffic.erase(i);
     if ((oldSize - activeTraffic.size()) != 1) {
-        SG_LOG(SG_ATC, SG_WARN, i->getCallsign() << " not removed ");
+        SG_LOG(SG_ATC, SG_WARN, (*i)->getCallsign() << " not removed ");
     }
 }
 
@@ -418,7 +458,7 @@ bool FGATCController::hasInstruction(int id)
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: checking ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
-        return i->hasInstruction();
+        return (*i)->hasInstruction();
     }
     return false;
 }
@@ -431,10 +471,10 @@ FGATCInstruction FGATCController::getInstruction(int id)
         TrafficVectorIterator i = searchActiveTraffic(id);
 
         if (i != activeTraffic.end())
-            return i->getInstruction();
+            return (*i)->getInstruction();
     }
 
-    SG_LOG(SG_ATC, SG_ALERT, "AI error: requesting ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
+    SG_LOG(SG_ATC, SG_ALERT, "AI error: requesting ATC instruction for aircraft without traffic record from " << getName());
     return FGATCInstruction();
 }
 
@@ -446,8 +486,12 @@ FGATCInstruction FGATCController::getInstruction(int id)
 */
 string FGATCController::formatATCFrequency3_2(int freq)
 {
-    char buffer[7]; // does this ever need to be freed?
-    snprintf(buffer, 7, "%3.2f", ((float)freq / 100.0));
+    char buffer[8]; // does this ever need to be freed?
+    if (freq>99999) {
+        snprintf(buffer, 8, "%3.3f", ((float)freq / 1000.0));
+    } else {
+        snprintf(buffer, 8, "%3.3f", ((float)freq / 100.0));
+    }
     return string(buffer);
 }
 
@@ -458,7 +502,6 @@ string FGATCController::genTransponderCode(const string& fltRules)
     if (fltRules == "VFR")
         return string("1200");
 
-    std::default_random_engine generator;
     std::uniform_int_distribution<unsigned> distribution(0, 7);
 
     unsigned val = (distribution(generator) * 1000 +
@@ -471,29 +514,39 @@ string FGATCController::genTransponderCode(const string& fltRules)
 
 void FGATCController::eraseDeadTraffic()
 {
-    auto it = std::remove_if(activeTraffic.begin(), activeTraffic.end(), [](const FGTrafficRecord& traffic) {
-        if (traffic.isDead()) {
-            SG_LOG(SG_ATC, SG_DEBUG, "Remove dead " << traffic.getId() << " " << traffic.isDead());
-        }
-        return traffic.isDead();
+    auto it = std::remove_if(activeTraffic.begin(), activeTraffic.end(), [](const FGTrafficRecord* traffic) {
+        if (traffic->isDead()) {
+            SG_LOG(SG_ATC, SG_DEBUG, "Remove dead " << traffic->getCallsign() << "(" << traffic->getId() << ") " << traffic->isDead());
+        }        
+        return traffic->isDead();
     });
+    if (it!=activeTraffic.end()) {
+        bool result = airportGroundRadar->remove(*it);
+        if (!result) {
+            SG_LOG(SG_ATC, SG_DEBUG, "Couldn't remove from index " << (*it));
+        }
+    }
     activeTraffic.erase(it, activeTraffic.end());
 }
 
-/*
+/**
 * Search activeTraffic vector to find matching id
 * @param id integer to search for in the vector
 * @return the matching item OR activeTraffic.end()
 */
 TrafficVectorIterator FGATCController::searchActiveTraffic(int id)
 {
+    if (activeTraffic.empty()) {
+        SG_LOG(SG_ATC, SG_DEBUG, "searchActiveTraffic empty list");
+        return activeTraffic.end();
+    }
     return std::find_if(activeTraffic.begin(), activeTraffic.end(),
-                        [id](const FGTrafficRecord& rec) { return rec.getId() == id; });
+                        [id](const FGTrafficRecord* rec) { return rec->getId() == id; });
 }
 
 void FGATCController::clearTrafficControllers()
 {
     for (const auto& traffic : activeTraffic) {
-        traffic.clearATCController();
+        traffic->clearATCController();
     }
 }
