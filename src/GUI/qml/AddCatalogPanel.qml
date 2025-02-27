@@ -95,7 +95,7 @@ Rectangle {
 
     Connections {
         target: _addOns.catalogs
-        onStatusOfAddingCatalogChanged: {
+        function onStatusOfAddingCatalogChanged() {
             var status = _addOns.catalogs.statusOfAddingCatalog;
             if (status == FG.CatalogListModel.Refreshing) {
                 // this can happen when adding the default catalog,
