@@ -483,7 +483,7 @@ void  sentryReportFatalError(const std::string& msg, const std::string& more)
     sentry_capture_event(event);
 }
 
-void sentryReportUserError(const std::string& aggregate, const std::string& details)
+void sentryReportUserError(const std::string& aggregate, const std::string& parameter, const std::string& details)
 {
     if (!static_sentryEnabled)
         return;
@@ -496,8 +496,13 @@ void sentryReportUserError(const std::string& aggregate, const std::string& deta
 
     sentry_set_context("what", info);
 
+    auto m = aggregate;
+    if (!parameter.empty()) {
+        m += ":" + parameter;
+    }
+
     sentry_value_t event = sentry_value_new_event();
-    sentry_value_set_by_key(event, "message", sentry_value_new_string(aggregate.c_str()));
+    sentry_value_set_by_key(event, "message", sentry_value_new_string(m.c_str()));
 
     sentry_capture_event(event);
 }
@@ -553,7 +558,7 @@ void sentryReportFatalError(const std::string&, const std::string&)
 {
 }
 
-void sentryReportUserError(const std::string&, const std::string&)
+void sentryReportUserError(const std::string&, const std::string&, const std::string&)
 {
 }
 

@@ -46,7 +46,7 @@ void sentryReportException(const std::string& msg, const std::string& location =
 
 void sentryReportFatalError(const std::string& msg, const std::string& more = {});
 
-void sentryReportUserError(const std::string& aggregate, const std::string& details);
+void sentryReportUserError(const std::string& aggregate, const std::string& parameter, const std::string& details);
 
 
 } // of namespace flightgear
