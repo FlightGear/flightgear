@@ -29,6 +29,8 @@
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <iostream>
+
 #include "FGXMLParse.h"
 #include "input_output/string_utilities.h"
 

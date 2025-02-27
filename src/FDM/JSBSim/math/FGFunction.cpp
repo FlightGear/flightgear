@@ -29,8 +29,6 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <iomanip>
-#include <random>
-#include <chrono>
 #include <memory>
 
 #include "simgear/misc/strutils.hxx"
@@ -292,17 +290,17 @@ void FGFunction::CheckOddOrEvenArguments(Element* el, OddEven odd_even)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-shared_ptr<default_random_engine> makeRandomEngine(Element *el, FGFDMExec* fdmex)
+shared_ptr<RandomNumberGenerator> makeRandomGenerator(Element *el, FGFDMExec* fdmex)
 {
   string seed_attr = el->GetAttributeValue("seed");
-  unsigned int seed;
   if (seed_attr.empty())
-    return fdmex->GetRandomEngine();
+    return fdmex->GetRandomGenerator();
   else if (seed_attr == "time_now")
-    seed = chrono::system_clock::now().time_since_epoch().count();
-  else
-    seed = atoi(seed_attr.c_str());
-  return make_shared<default_random_engine>(seed);
+    return make_shared<RandomNumberGenerator>();
+  else {
+    unsigned int seed = atoi(seed_attr.c_str());
+    return make_shared<RandomNumberGenerator>(seed);
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -367,6 +365,13 @@ void FGFunction::Load(Element* el, FGPropertyValue* var, FGFDMExec* fdmex,
     } else if (operation == "pi") {
       Parameters.push_back(new FGRealValue(M_PI));
     } else if (operation == "table" || operation == "t") {
+      string call_type = element->GetAttributeValue("type");
+      if (call_type == "internal") {
+        std::cerr << el->ReadFrom()
+                  << "An internal table cannot be nested within a function."
+                  << endl;
+        throw BaseException("An internal table cannot be nested within a function.");
+      }
       Parameters.push_back(new FGTable(PropertyManager, element, Prefix));
       // operations
     } else if (operation == "product") {
@@ -595,14 +600,28 @@ void FGFunction::Load(Element* el, FGPropertyValue* var, FGFDMExec* fdmex,
       double stddev = 1.0;
       string mean_attr = element->GetAttributeValue("mean");
       string stddev_attr = element->GetAttributeValue("stddev");
-      if (!mean_attr.empty())
-        mean = atof(mean_attr.c_str());
-      if (!stddev_attr.empty())
-        stddev = atof(stddev_attr.c_str());
-      auto distribution = make_shared<normal_distribution<double>>(mean, stddev);
-      auto generator(makeRandomEngine(element, fdmex));
-      auto f = [generator, distribution]()->double {
-                 return (*distribution.get())(*generator);
+      if (!mean_attr.empty()) {
+        if (is_number(trim(mean_attr)))
+          mean = atof_locale_c(mean_attr);
+        else {
+          cerr << element->ReadFrom()
+               << "Expecting a number, but got: " << mean_attr <<endl;
+          throw BaseException("Invalid number");
+        }
+      }
+      if (!stddev_attr.empty()) {
+        if (is_number(trim(stddev_attr)))
+          stddev = atof_locale_c(stddev_attr);
+        else {
+          cerr << element->ReadFrom()
+               << "Expecting a number, but got: " << stddev_attr <<endl;
+          throw BaseException("Invalid number");
+        }
+      }
+      auto generator(makeRandomGenerator(element, fdmex));
+      auto f = [generator, mean, stddev]()->double {
+                 double value = generator->GetNormalRandomNumber();
+                 return value*stddev + mean;
                };
       Parameters.push_back(new aFunc<decltype(f), 0>(f, PropertyManager, element,
                                                      Prefix));
@@ -611,14 +630,30 @@ void FGFunction::Load(Element* el, FGPropertyValue* var, FGFDMExec* fdmex,
       double upper = 1.0;
       string lower_attr = element->GetAttributeValue("lower");
       string upper_attr = element->GetAttributeValue("upper");
-      if (!lower_attr.empty())
-        lower = atof(lower_attr.c_str());
-      if (!upper_attr.empty())
-        upper = atof(upper_attr.c_str());
-      auto distribution = make_shared<uniform_real_distribution<double>>(lower, upper);
-      auto generator(makeRandomEngine(element, fdmex));
-      auto f = [generator, distribution]()->double {
-                 return (*distribution.get())(*generator);
+      if (!lower_attr.empty()) {
+        if (is_number(trim(lower_attr)))
+          lower = atof_locale_c(lower_attr);
+        else {
+          cerr << element->ReadFrom()
+               << "Expecting a number, but got: " << lower_attr <<endl;
+          throw BaseException("Invalid number");
+        }
+      }
+      if (!upper_attr.empty()) {
+        if (is_number(trim(upper_attr)))
+          upper = atof_locale_c(upper_attr);
+        else {
+          cerr << element->ReadFrom()
+               << "Expecting a number, but got: " << upper_attr <<endl;
+          throw BaseException("Invalid number");
+        }
+      }
+      auto generator(makeRandomGenerator(element, fdmex));
+      double a = 0.5*(upper-lower);
+      double b = 0.5*(upper+lower);
+      auto f = [generator, a, b]()->double {
+                 double value = generator->GetUniformRandomNumber();
+                 return value*a + b;
                };
       Parameters.push_back(new aFunc<decltype(f), 0>(f, PropertyManager, element,
                                                      Prefix));

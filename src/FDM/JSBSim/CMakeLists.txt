@@ -63,6 +63,8 @@ set(HEADERS
     models/FGPropulsion.h
     models/atmosphere/FGStandardAtmosphere.h
     models/atmosphere/FGWinds.h
+    models/atmosphere/FGMSIS.h
+    models/atmosphere/MSIS/nrlmsise-00.h
     models/flight_control/FGAccelerometer.h
     models/flight_control/FGActuator.h
     models/flight_control/FGAngles.h
@@ -110,7 +112,9 @@ set(SOURCES
     input_output/FGScript.cpp
     input_output/FGXMLElement.cpp
     input_output/FGXMLParse.cpp
+    input_output/FGXMLFileRead.cpp
     input_output/FGfdmSocket.cpp
+    input_output/string_utilities.cpp
     input_output/FGInputType.cpp
     input_output/FGInputSocket.cpp
     input_output/FGUDPInputSocket.cpp
@@ -154,6 +158,9 @@ set(SOURCES
     models/FGPropulsion.cpp
     models/atmosphere/FGStandardAtmosphere.cpp
     models/atmosphere/FGWinds.cpp
+    models/atmosphere/FGMSIS.cpp
+    models/atmosphere/MSIS/nrlmsise-00.c
+    models/atmosphere/MSIS/nrlmsise-00_data.c
     models/flight_control/FGAccelerometer.cpp
     models/flight_control/FGActuator.cpp
     models/flight_control/FGAngles.cpp
@@ -202,6 +209,7 @@ target_include_directories(JSBsim_bin PRIVATE ${PROJECT_SOURCE_DIR}/src/FDM/JSBS
 
 if (MSVC)
     set_target_properties(JSBsim_bin PROPERTIES DEBUG_POSTFIX d)
+    target_compile_definitions(JSBSim PUBLIC JSBSIM_STATIC_LINK)
 endif ()
 install(TARGETS JSBsim_bin RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 

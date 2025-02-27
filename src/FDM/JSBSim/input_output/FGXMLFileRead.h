@@ -35,12 +35,8 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <iostream>
-#include <fstream>
-
-#include "input_output/FGXMLParse.h"
+#include "FGXMLParse.h"
 #include "simgear/misc/sg_path.hxx"
-#include "simgear/io/iostreams/sgstream.hxx"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -48,7 +44,7 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
-class FGXMLFileRead {
+class JSBSIM_API FGXMLFileRead {
 public:
   FGXMLFileRead(void) {}
   ~FGXMLFileRead(void) {}
@@ -58,31 +54,8 @@ public:
     return LoadXMLDocument(XML_filename, file_parser, verbose);
   }
 
-  Element* LoadXMLDocument(const SGPath& XML_filename, FGXMLParse& fparse, bool verbose=true)
-  {
-    sg_ifstream infile;
-    SGPath filename(XML_filename);
-
-    if (!filename.isNull()) {
-      if (filename.extension().empty())
-        filename.concat(".xml");
-
-      infile.open(filename);
-      if ( !infile.is_open()) {
-        if (verbose) std::cerr << "Could not open file: " << filename << std::endl;
-        return 0L;
-      }
-    } else {
-      std::cerr << "No filename given." << std::endl;
-      return 0L;
-    }
-
-    readXML(infile, fparse, filename.utf8Str());
-    Element* document = fparse.GetDocument();
-    infile.close();
-
-    return document;
-  }
+  Element* LoadXMLDocument(const SGPath& XML_filename, FGXMLParse& fparse,
+                           bool verbose=true);
 
   void ResetParser(void) {file_parser.reset();}
 
