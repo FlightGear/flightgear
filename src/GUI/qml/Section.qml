@@ -53,7 +53,7 @@ Item {
 
     Connections {
         target: _config
-        onCollect: root.apply();
+        function onCollect() { root.apply(); }
     }
 
     Component.onCompleted: {
