@@ -45,10 +45,8 @@ using std::string;
 Constructor, initializes values to private boolean and FGATCController instances
 */
 FGATCManager::FGATCManager() :
-    controller(NULL),
-    prevController(NULL),
-    networkVisible(false),
-    initSucceeded(false)
+    controller(nullptr),
+    prevController(nullptr)
 {
 }
 
@@ -65,9 +63,14 @@ FGATCManager::~FGATCManager() {
 */
 void FGATCManager::postinit()
 {
-    int leg = 0;
+    transNum = fgGetNode("/sim/atc/transmission-num", true);
+    splashAlpha = fgGetNode("/sim/startup/splash-alpha", true);
+    initControllers();
+    initSucceeded = true;
+}
 
-    trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
+void FGATCManager::initControllers() {
+    int leg = 0;
 
     // Assign a controller to the user's aircraft.
     // Three scenarios are considered:
@@ -189,7 +192,6 @@ void FGATCManager::postinit()
             string fltType = "ga";
             fp->setRunway(runway);
             fp->createTakeOff(userAircraft, false, dcs->parent(), userAircraft->getGeodPos(), 0, fltType);
-            userAircraft->setTakeOffStatus(AITakeOffStatus::QUEUED);
         } else {
             // We're on the ground somewhere. Handle this case later.
 
@@ -234,7 +236,6 @@ void FGATCManager::postinit()
                                      userAircraft->getAltitude(),
                                      aircraftRadius, leg, userAircraft);
     }
-    initSucceeded = true;
 }
 
 /**
@@ -267,7 +268,7 @@ void FGATCManager::reposition()
         userAircraft->clearATCController();
     }
 
-    postinit(); // critical for position-init logic
+    initControllers(); // critical for position-init logic
 }
 
 /**
@@ -290,6 +291,21 @@ void FGATCManager::removeController(FGATCController *controller)
     }
 }
 
+void FGATCManager::signalReady()
+{
+    auto aiManager = globals->get_subsystem<FGAIManager>();
+    auto userAircraft = aiManager->getUserAircraft();
+    if (userAircraft) {
+        auto userAIFP = userAircraft->GetFlightPlan();
+        if (userAIFP && 
+            fgGetBool("/sim/ai/enabled") &&
+            userAIFP->getLeg() == AILeg::TAKEOFF && 
+            userAircraft->getTakeOffStatus() == AITakeOffStatus::NONE) {
+            userAircraft->setTakeOffStatus(AITakeOffStatus::QUEUED);
+        }
+    }
+}
+
 /**
 Update the subsystem.
 FlightGear invokes this method every time the subsystem should
@@ -301,6 +317,13 @@ update.  On first update, delta time will be 0.
 void FGATCManager::update ( double time ) {
     // SG_LOG(SG_ATC, SG_BULK, "ATC update code is running at time: " << time);
 
+    if (splashAlpha->getDoubleValue() == 0.0 && startTime == 0) {
+        // start after the splash has disapeared and a few seconds
+        startTime = globals->get_sim_time_sec() + 1.0 + rand()%10;
+    }
+    if (startTime > 0 && startTime < globals->get_sim_time_sec()) {
+        signalReady();
+    }
     // Test code: let my virtual co-pilot handle ATC
     auto aiManager = globals->get_subsystem<FGAIManager>();
     FGAIAircraft* user_ai_ac = aiManager->getUserAircraft();
@@ -312,9 +335,9 @@ void FGATCManager::update ( double time ) {
     if (destination != result && result != "") {
         destination = result;
         userAircraftScheduledFlight->setArrivalAirport(destination);
-		userAircraftScheduledFlight->initializeAirports();
-		userAircraftTrafficRef->clearAllFlights();
-		userAircraftTrafficRef->assign(userAircraftScheduledFlight.get());
+        userAircraftScheduledFlight->initializeAirports();
+        userAircraftTrafficRef->clearAllFlights();
+        userAircraftTrafficRef->assign(userAircraftScheduledFlight.get());
 
         auto userAircraft = aiManager->getUserAircraft();
         userAircraft->setTrafficRef(userAircraftTrafficRef.get());
@@ -365,10 +388,10 @@ void FGATCManager::update ( double time ) {
         // update aircraft information (simulates transponder)
 
         controller->updateAircraftInformation(user_ai_ac->getID(),
-                                              user_ai_ac->getGeodPos(),
-                                              user_ai_ac->_getHeading(),
-                                              user_ai_ac->getSpeed(),
-                                              user_ai_ac->getAltitude(), time);
+                                            user_ai_ac->getGeodPos(),
+                                            user_ai_ac->_getHeading(),
+                                            user_ai_ac->getSpeed(),
+                                            user_ai_ac->getAltitude(), time);
 
         if (fp) {
             switch (fp->getLeg()) {
@@ -422,12 +445,12 @@ void FGATCManager::update ( double time ) {
         // b) if so, toggle network visibility and reset the transmission
         // c) thereafter disable rendering for the old controller (TODO: should this be earlier?)
         // d) and render if enabled for the new controller
-        int n = trans_num->getIntValue();
+        int n = transNum->getIntValue();
 
         if (n == 1) {
             SG_LOG(SG_ATC, SG_DEBUG, "Toggling ground network visibility " << networkVisible);
             networkVisible = !networkVisible;
-            trans_num->setIntValue(-1);
+            transNum->setIntValue(-1);
         }
 
         // stop rendering the old controller's groundnetwork
