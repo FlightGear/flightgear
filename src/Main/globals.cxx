@@ -258,6 +258,11 @@ FGGlobals::~FGGlobals()
 
     props.clear();
 
+    if (event_mgr) {
+        delete event_mgr;
+    }
+//    event_mgr = nullptr;
+
     delete simgear::ResourceManager::instance();
 }
 
