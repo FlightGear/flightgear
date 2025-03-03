@@ -21,6 +21,7 @@
 #include <osgXR/Settings>
 
 #include <simgear/scene/util/RenderConstants.hxx>
+#include <simgear/scene/viewer/Compositor.hxx>
 #include <simgear/scene/viewer/CompositorPass.hxx>
 
 #include <Main/fg_props.hxx>
@@ -28,6 +29,8 @@
 
 namespace flightgear
 {
+using namespace simgear;
+using namespace compositor;
 
 // Unfortunately, this can't be scoped inside VRManager::instance().
 // If its initialisation completes after main() calls atexit(fgExitCleanup),
@@ -89,6 +92,22 @@ VRManager::VRManager() :
 
     // No need for a change listener, but it should still be resolvable
     _propMirrorEnabled.node(true);
+
+    // Determine what multiview support the default compositor implements.
+    std::string compositorPath = fgGetString("/sim/rendering/default-compositor",
+                                              "Compositor/default");
+    SGPropertyNode_ptr compositorProps = Compositor::loadPropertyList(compositorPath);
+    if (compositorProps.valid()) {
+        _settings->setViewAlignmentMask(compositorProps->getIntValue("multiview/view-align-mask", 0));
+
+        _settings->allowVRMode(osgXR::Settings::VRMODE_SLAVE_CAMERAS);
+        if (compositorProps->getBoolValue("multiview/sceneview", false))
+            _settings->allowVRMode(osgXR::Settings::VRMODE_SCENE_VIEW);
+
+        _settings->allowSwapchainMode(osgXR::Settings::SWAPCHAIN_MULTIPLE);
+        if (compositorProps->getBoolValue("multiview/intermediates-tiled", false))
+            _settings->allowSwapchainMode(osgXR::Settings::SWAPCHAIN_SINGLE);
+    }
 }
 
 VRManager *VRManager::instance()
@@ -165,7 +184,7 @@ void VRManager::setVRMode(const std::string& mode)
         vrMode = osgXR::Settings::VRMODE_SCENE_VIEW;
     }
 
-    _settings->setVRMode(vrMode);
+    _settings->setPreferredVRModeMask(1u << vrMode);
     syncSettings();
 }
 
@@ -223,6 +242,14 @@ void VRManager::doCreateView(osgXR::View *xrView)
     WindowBuilder *windowBuilder = WindowBuilder::getWindowBuilder();
     setValue(camNode->getNode("window/name", true),
              windowBuilder->getDefaultWindowName());
+    setValue(camNode->getNode("viewport/width", true), (int)xrView->getMVRWidth());
+    setValue(camNode->getNode("viewport/height", true), (int)xrView->getMVRHeight());
+    setValue(camNode->getNode("mvr-views", true), (int)xrView->getMVRViews());
+    setValue(camNode->getNode("mvr-view-id-global", true), xrView->getMVRViewIdGlobalStr());
+    setValue(camNode->getNode("mvr-view-id-vert", true), xrView->getMVRViewIdStr(GL_VERTEX_SHADER));
+    setValue(camNode->getNode("mvr-view-id-geom", true), xrView->getMVRViewIdStr(GL_GEOMETRY_SHADER));
+    setValue(camNode->getNode("mvr-view-id-frag", true), xrView->getMVRViewIdStr(GL_FRAGMENT_SHADER));
+    setValue(camNode->getNode("mvr-cells", true), (int)xrView->getMVRCells());
 
     // Build a camera
     CameraGroup *cgroup = CameraGroup::getDefault();
@@ -236,6 +263,9 @@ void VRManager::doCreateView(osgXR::View *xrView)
 
         postReloadCompositor(cgroup, info);
     }
+
+    // Get notified of subview changes
+    xrView->setCallback(new ViewCallback(this));
 }
 
 void VRManager::doDestroyView(osgXR::View *xrView)
@@ -275,14 +305,49 @@ void VRManager::onStopped()
     }
 }
 
+static osgXR::View::Flags getPassVRFlags(const simgear::compositor::Pass *pass)
+{
+    osgXR::View::Flags flags = osgXR::View::CAM_NO_BITS;
+
+    // If camera renders to the frame buffer, redirect to XR.
+    if ((pass->type == "scene" || pass->type == "quad")
+            && pass->camera->getRenderTargetImplementation() == osg::Camera::FRAME_BUFFER) {
+        flags |= osgXR::View::CAM_TOXR_BIT;
+    }
+
+    // If scene is rendered to a scaled viewport, perform multiview
+    // rendering.
+    if (pass->type == "scene"
+            && (pass->camera->getRenderTargetImplementation() == osg::Camera::FRAME_BUFFER
+                || (pass->viewport_width_scale
+                    && pass->viewport_height_scale))) {
+        flags |= osgXR::View::CAM_MVR_BIT;
+        flags |= osgXR::View::CAM_MVR_SHADING_BIT;
+    } else if (pass->type == "quad" && pass->multiview == "true") {
+        flags |= osgXR::View::CAM_MVR_SHADING_BIT;
+
+        if (!(flags & osgXR::View::CAM_TOXR_BIT)) {
+            // Fixed size MVR results in identically sized viewports
+            if (pass->viewport_width_scale == 0)
+                flags |= osgXR::View::CAM_MVR_FIXED_WIDTH_BIT;
+            if (pass->viewport_height_scale == 0)
+                flags |= osgXR::View::CAM_MVR_FIXED_HEIGHT_BIT;
+        }
+    }
+
+    return flags;
+}
+
 void VRManager::preReloadCompositor(CameraGroup *cgroup, CameraInfo *info)
 {
     osgXR::View *xrView = _xrViews[info];
 
     auto& passes = info->compositor->getPassList();
-    for (auto& pass: passes)
-        if (pass->type == "scene")
+    for (auto& pass: passes) {
+        auto flags = getPassVRFlags(pass);
+        if (flags)
             xrView->removeSlave(pass->camera);
+    }
 }
 
 void VRManager::postReloadCompositor(CameraGroup *cgroup, CameraInfo *info)
@@ -290,9 +355,34 @@ void VRManager::postReloadCompositor(CameraGroup *cgroup, CameraInfo *info)
     osgXR::View *xrView = _xrViews[info];
 
     auto& passes = info->compositor->getPassList();
-    for (auto& pass: passes)
-        if (pass->type == "scene")
-            xrView->addSlave(pass->camera);
+    for (auto& pass: passes) {
+        auto flags = getPassVRFlags(pass);
+        if (flags)
+            xrView->addSlave(pass->camera, flags);
+    }
+}
+
+void VRManager::updateSubView(osgXR::View *view, unsigned int subviewIndex,
+                              const osgXR::View::SubView &subview)
+{
+    auto it = _camInfos.find(view);
+    if (it != _camInfos.end()) {
+        osg::ref_ptr<CameraInfo> info = (*it).second;
+
+        osg::Matrix viewMatrix = subview.getViewMatrix();
+        osg::Matrix projMatrix = subview.getProjectionMatrix();
+
+        // see CameraGroup::update()
+        viewMatrix = info->viewOffset * viewMatrix;
+        if ((info->flags & CameraInfo::VIEW_ABSOLUTE) == 0) {
+            auto *masterCam = CameraGroup::getDefault()->getView()->getCamera();
+            viewMatrix = masterCam->getViewMatrix() * viewMatrix;
+        }
+
+        auto vp = subview.getViewport();
+        info->compositor->updateSubView(subviewIndex, viewMatrix, projMatrix,
+                                        osg::Vec4(vp.x, vp.y, vp.w, vp.h));
+    }
 }
 
 }

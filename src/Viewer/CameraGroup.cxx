@@ -506,6 +506,12 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     info->thisReference[1] = thisReference[1];
     info->viewOffset = vOff;
     info->projOffset = pOff;
+    info->mvr.views = cameraNode->getIntValue("mvr-views", 1);
+    info->mvr.viewIdGlobalStr = cameraNode->getStringValue("mvr-view-id-global", "");
+    info->mvr.viewIdStr[0] = cameraNode->getStringValue("mvr-view-id-vert", "0");
+    info->mvr.viewIdStr[1] = cameraNode->getStringValue("mvr-view-id-geom", "0");
+    info->mvr.viewIdStr[2] = cameraNode->getStringValue("mvr-view-id-frag", "0");
+    info->mvr.cells = cameraNode->getIntValue("mvr-cells", 1);
 
     osg::Viewport *viewport = new osg::Viewport(
         viewportNode->getDoubleValue("x"),
@@ -537,7 +543,8 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
                                         window->gc,
                                         viewport,
                                         compositor_path,
-                                        options);
+                                        options,
+                                        &info->mvr);
 
     if (compositor) {
         info->compositor.reset(compositor);
@@ -726,6 +733,13 @@ Compositor *CameraGroup::buildVRMirrorCompositor(osg::GraphicsContext* gc,
         camera->setComputeNearFarMode(CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
         camera->setCullingMode(CullSettings::NO_CULLING);
         camera->setProjectionResizePolicy(Camera::FIXED);
+
+        // OSG is buggy and treats draw buffer target as separate from FBO
+        // state. Be explicit about drawing to back buffer to reduce chance of
+        // inheriting a GL_NONE, which is particularly likely with single target
+        // CSM passes and stereo.
+        camera->setDrawBuffer(GL_BACK);
+        camera->setReadBuffer(GL_BACK);
 
         // The camera group will always update the camera
         camera->setReferenceFrame(Transform::ABSOLUTE_RF);
@@ -953,7 +967,8 @@ void reloadCompositors(CameraGroup *cgroup)
                                             gc,
                                             viewport,
                                             compositor_path,
-                                            options);
+                                            options,
+                                            &info->mvr);
         info->compositor.reset(compositor);
 
         if (info->reloadCompositorCallback.valid())

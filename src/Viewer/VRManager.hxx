@@ -47,16 +47,37 @@ class VRManager : public osgXR::Manager
                 ReloadCompositorCallback(VRManager *manager) :
                     _manager(manager)
                 {
-                };
+                }
 
-                virtual void preReloadCompositor(CameraGroup *cgroup, CameraInfo *info)
+                void preReloadCompositor(CameraGroup *cgroup, CameraInfo *info) override
                 {
                     _manager->preReloadCompositor(cgroup, info);
                 }
 
-                virtual void postReloadCompositor(CameraGroup *cgroup, CameraInfo *info)
+                void postReloadCompositor(CameraGroup *cgroup, CameraInfo *info) override
                 {
                     _manager->postReloadCompositor(cgroup, info);
+                }
+
+            protected:
+
+                osg::observer_ptr<VRManager> _manager;
+        };
+
+        class ViewCallback : public osgXR::View::Callback
+        {
+            public:
+
+                ViewCallback(VRManager *manager) :
+                    _manager(manager)
+                {
+                }
+
+                // Overridden from osgXR::View::Callback
+                void updateSubView(osgXR::View *view, unsigned int subviewIndex,
+                                   const osgXR::View::SubView &subview) override
+                {
+                    _manager->updateSubView(view, subviewIndex, subview);
                 }
 
             protected:
@@ -94,8 +115,13 @@ class VRManager : public osgXR::Manager
         void onRunning() override;
         void onStopped() override;
 
+        // Callback entry points
+
         void preReloadCompositor(CameraGroup *cgroup, CameraInfo *info);
         void postReloadCompositor(CameraGroup *cgroup, CameraInfo *info);
+
+        void updateSubView(osgXR::View *view, unsigned int subviewIndex,
+                           const osgXR::View::SubView &subview);
 
     protected:
 
