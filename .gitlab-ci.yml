@@ -62,25 +62,26 @@ windows-build:
     - C:\"Program Files (x86)\Microsoft Visual Studio"\2022\BuildTools\Common7\Tools\Launch-VsDevShell -SkipAutomaticLocation -Arch amd64
   # relocate our upstream deps outside the source dir, otherwise
   # CMake gets sad.
-    - Move-Item -Path $CI_PROJECT_DIR\boost $WIN_FG_DIR\boost
-    - Move-Item -Path $CI_PROJECT_DIR\msvc140 $WIN_FG_DIR\msvc140
+    - New-Item -ItemType Directory -Force -Path $env:WIN_FG_DIR | Out-Null
+    - Move-Item -Path $env:CI_PROJECT_DIR\boost -Destination $env:WIN_FG_DIR\boost
+    - Move-Item -Path $env:CI_PROJECT_DIR\msvc140 -Destination $env:WIN_FG_DIR\msvc140
 
   script:
     # should ideally be done inside CMake but this works for now
     # 
-    - $Env:PATH += ";$WIN_FG_DIR\msvc140\3rdparty.x64\bin"
+    - $Env:PATH += ";$env:WIN_FG_DIR\msvc140\3rdparty.x64\bin"
     #  -D CMAKE_BUILD_TYPE=RelWithDebInfo
 
     - cmake -B $env:BUILD_DIR -S $env:CI_PROJECT_DIR 
       -G "Visual Studio 17 2022" -A x64
       --fresh
       -D CMAKE_INSTALL_PREFIX=$env:PREFIX_DIR
-      -D MSVC_3RDPARTY_ROOT=$WIN_FG_DIR
+      -D MSVC_3RDPARTY_ROOT=$env:WIN_FG_DIR
       -D OSG_FSTREAM_EXPORT_FIXED:BOOL=ON
       -D CMAKE_PREFIX_PATH="$env:CI_PROJECT_DIR\simgear-dist;$env:CI_PROJECT_DIR\osg-dist"
 
-    - cmake --build $BUILD_DIR --config RelWithDebInfo
-    - cmake --build $BUILD_DIR --config RelWithDebInfo --target install
+    - cmake --build $env:BUILD_DIR --config RelWithDebInfo
+    - cmake --build $env:BUILD_DIR --config RelWithDebInfo --target install
   needs:
     - project: flightgear/simgear
       job: windows-build
@@ -160,5 +161,4 @@ test:
   cache:
     paths:
       - $BUILD_DIR
-
 
