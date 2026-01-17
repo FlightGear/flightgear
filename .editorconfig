@@ -1,0 +1,25 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[{CMakeLists.txt,*.cmake}]
+indent_size = 4
+
+[{Makefile,makefile,*.mk}]
+indent_style = tab
+indent_size = 4
+
+[*.{sh,bash,zsh}]
+indent_size = 4
+
+[*.md]
+trim_trailing_whitespace = false

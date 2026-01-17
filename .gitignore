@@ -5,6 +5,7 @@
 # Make exceptions for specific hidden directories/files.
 !.gitignore
 !.gitlab/**
+!.editorconfig
 
 # Editor/IDE temporary files
 *~
